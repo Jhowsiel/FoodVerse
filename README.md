@@ -14,7 +14,7 @@ Backend:
 
 Banco de Dados:
 
-Autenticação: 
+Autenticação:
 
 Pagamentos: 
 
