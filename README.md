@@ -3,3 +3,14 @@ Bem-vindo ao FoodVerse, a plataforma completa para restaurantes que une tecnolog
 
 📌 Sobre o Projeto
 O FoodVerse é um sistema integrado que oferece funcionalidades avançadas para clientes e gestores de restaurantes. Desde o cadastro de usuários até a gestão completa de pedidos, cardápios, promoções e muito mais, o FoodVerse é a solução ideal para modernizar o seu negócio.
+
+🛠️ Tecnologias
+Frontend: 
+
+Backend:
+
+Banco de Dados: 
+
+Autenticação: 
+
+Pagamentos: 
