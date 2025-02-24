@@ -10,7 +10,7 @@ Frontend:
 
 Backend:
 
-Banco de Dados: 
+Banco de Dados:
 
 Autenticação: 
 
