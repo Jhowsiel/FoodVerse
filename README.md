@@ -1,4 +1,5 @@
 🍽️ FoodVerse - README 🚀
+
 Bem-vindo ao FoodVerse, a plataforma completa para restaurantes que une tecnologia e gastronomia para oferecer uma experiência única tanto para clientes quanto para gestores. Este projeto foi desenvolvido como parte do Projeto Integrador (PI) do curso de Infomatica do Senac TBS e visa revolucionar a forma como restaurantes operam e interagem com seus clientes.
 
 📌 Sobre o Projeto
