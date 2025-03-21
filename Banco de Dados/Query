@@ -1,0 +1,21 @@
+use FoodVerse 
+create table tb_clientes(
+	userid int primary key,
+	username varchar(100),
+	namee varchar(100),
+	email varchar(100),
+	phone varchar(25),
+	passwordd varchar(100),
+	cpf varchar(11),
+	registrationDate date,
+	Islogin bit,
+)
+ 
+	create table tb_funcionarios(
+		userid int primary key,
+		namee varchar(100),
+		email varchar(100),
+		rolee varchar(100),
+		phone varchar(16),
+		passwordd varchar(100),
+)
