@@ -388,9 +388,6 @@
             </Component>
             <Component class="javax.swing.JLabel" name="jLabel11">
               <Properties>
-                <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
-                  <Image iconType="2" name="C:\Users\josiel.ssilva\Downloads\Sem t&#xed;tulo.png"/>
-                </Property>
                 <Property name="toolTipText" type="java.lang.String" value=""/>
               </Properties>
             </Component>
@@ -471,7 +468,7 @@
                                       <Group type="102" attributes="0">
                                           <Component id="cargoCozinheiro" min="-2" max="-2" attributes="0"/>
                                           <EmptySpace max="-2" attributes="0"/>
-                                          <Component id="cargoEntegador" min="-2" max="-2" attributes="0"/>
+                                          <Component id="cargoEntregador" min="-2" max="-2" attributes="0"/>
                                       </Group>
                                       <Group type="102" alignment="0" attributes="0">
                                           <EmptySpace min="-2" pref="189" max="-2" attributes="0"/>
@@ -482,6 +479,7 @@
                               </Group>
                               <Group type="102" attributes="0">
                                   <Group type="103" groupAlignment="0" attributes="0">
+                                      <Component id="erroCargo" min="-2" max="-2" attributes="0"/>
                                       <Component id="jLabel9" min="-2" max="-2" attributes="0"/>
                                       <Component id="errorSenha" min="-2" max="-2" attributes="0"/>
                                       <Component id="jLabel13" min="-2" max="-2" attributes="0"/>
@@ -546,10 +544,12 @@
                           <Component id="errorEmail" min="-2" max="-2" attributes="0"/>
                           <EmptySpace type="separate" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="cargoEntegador" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="cargoEntregador" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="cargoCozinheiro" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
-                          <EmptySpace pref="7" max="32767" attributes="0"/>
+                          <EmptySpace pref="24" max="32767" attributes="0"/>
+                          <Component id="erroCargo" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
                           <Component id="jLabel9" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="phoneInput" min="-2" pref="36" max="-2" attributes="0"/>
@@ -723,9 +723,9 @@
                 </Component>
                 <Component class="javax.swing.JPasswordField" name="passwordConfirmationInput">
                 </Component>
-                <Component class="javax.swing.JRadioButton" name="cargoEntegador">
+                <Component class="javax.swing.JRadioButton" name="cargoEntregador">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="Entegador"/>
+                    <Property name="text" type="java.lang.String" value="Entregador"/>
                   </Properties>
                 </Component>
                 <Component class="javax.swing.JRadioButton" name="cargoCozinheiro">
@@ -735,6 +735,8 @@
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cargoCozinheiroActionPerformed"/>
                   </Events>
+                </Component>
+                <Component class="javax.swing.JLabel" name="erroCargo">
                 </Component>
               </SubComponents>
             </Container>

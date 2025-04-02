@@ -29,6 +29,8 @@ public class TelaInicial extends javax.swing.JFrame {
 
         initComponents();
 
+        buttonGroup1.add(cargoCozinheiro); // Grupo de botoes
+        buttonGroup1.add(cargoEntregador); // Grupo de botoes
         centralizarPainel();  // Centralizar painel ao iniciar
 
         adicionarListenerRedimensionamento(); // Adicionar listener para redimensionamento
@@ -51,27 +53,6 @@ public class TelaInicial extends javax.swing.JFrame {
 });
     }
 
-    private void adicionarFocusListener(JTextField textField, String textoPadrao) {
-
-        textField.addFocusListener(new FocusListener() {
-
-            @Override
-            
-            public void focusGained(FocusEvent e) {
-                if (textField.getText().equals(textoPadrao)) {
-                    textField.setText(""); // Limpa o campo ao clicar
-                }
-            }
-            
-            @Override
-            public void focusLost(FocusEvent e) {
-                if (textField.getText().isEmpty()) {
-                    textField.setText(textoPadrao); // Retorna o texto padrão se estiver vazio
-                }
-            }
-        });
-
-    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -145,8 +126,9 @@ public class TelaInicial extends javax.swing.JFrame {
         jButton14 = new javax.swing.JButton();
         passwordInput = new javax.swing.JPasswordField();
         passwordConfirmationInput = new javax.swing.JPasswordField();
-        cargoEntegador = new javax.swing.JRadioButton();
+        cargoEntregador = new javax.swing.JRadioButton();
         cargoCozinheiro = new javax.swing.JRadioButton();
+        erroCargo = new javax.swing.JLabel();
         jLabel6 = new javax.swing.JLabel();
 
         jMenu1.setText("jMenu1");
@@ -306,7 +288,6 @@ public class TelaInicial extends javax.swing.JFrame {
         jLabel5.setForeground(new java.awt.Color(255, 255, 255));
         jLabel5.setText("FoodVerse - Gestão");
 
-        jLabel11.setIcon(new javax.swing.ImageIcon("C:\\Users\\josiel.ssilva\\Downloads\\Sem título.png")); // NOI18N
         jLabel11.setToolTipText("");
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
@@ -426,7 +407,7 @@ public class TelaInicial extends javax.swing.JFrame {
             }
         });
 
-        cargoEntegador.setText("Entegador");
+        cargoEntregador.setText("Entregador");
 
         cargoCozinheiro.setText("Cozinheiro");
         cargoCozinheiro.addActionListener(new java.awt.event.ActionListener() {
@@ -447,13 +428,14 @@ public class TelaInicial extends javax.swing.JFrame {
                             .addGroup(jPanel6Layout.createSequentialGroup()
                                 .addComponent(cargoCozinheiro)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(cargoEntegador))
+                                .addComponent(cargoEntregador))
                             .addGroup(jPanel6Layout.createSequentialGroup()
                                 .addGap(189, 189, 189)
                                 .addComponent(jLabel7)))
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(erroCargo)
                             .addComponent(jLabel9)
                             .addComponent(errorSenha)
                             .addComponent(jLabel13)
@@ -510,9 +492,11 @@ public class TelaInicial extends javax.swing.JFrame {
                 .addComponent(errorEmail)
                 .addGap(18, 18, 18)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(cargoEntegador)
+                    .addComponent(cargoEntregador)
                     .addComponent(cargoCozinheiro))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 7, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 24, Short.MAX_VALUE)
+                .addComponent(erroCargo)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel9)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(phoneInput, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -628,8 +612,12 @@ public class TelaInicial extends javax.swing.JFrame {
         String password = passwordInput.getText();
         String confirmationPassword = passwordConfirmationInput.getText();
 
+        if(!cargoCozinheiro.isSelected() && cargoEntregador.isSelected()){
+            erroCargo.setText("Selecione um cargo");
+            return;
+        }
         String cargo = cargoCozinheiro.isSelected() ? cargoCozinheiro.getText()
-                : cargoEntegador.isSelected() ? cargoEntegador.getText() : "";
+                : cargoEntregador.isSelected() ? cargoEntregador.getText() : "";
 
         Funcionario func = new Funcionario(name, cargo, "000111", phone, userName, email, password, false, "26/03/2025");
 
@@ -739,9 +727,10 @@ public class TelaInicial extends javax.swing.JFrame {
     private javax.swing.ButtonGroup buttonGroup5;
     private javax.swing.ButtonGroup buttonGroup6;
     private javax.swing.JRadioButton cargoCozinheiro;
-    private javax.swing.JRadioButton cargoEntegador;
+    private javax.swing.JRadioButton cargoEntregador;
     private javax.swing.JTextField emailInput;
     private javax.swing.JTextField emailInput1;
+    private javax.swing.JLabel erroCargo;
     private javax.swing.JLabel errorConfirmationPassword;
     private javax.swing.JLabel errorEmail;
     private javax.swing.JLabel errorName;
