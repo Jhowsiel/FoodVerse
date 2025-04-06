@@ -296,7 +296,7 @@ public class TelaInicial extends javax.swing.JFrame {
 
         LogoFood.setFont(new java.awt.Font("Arial Black", 1, 36)); // NOI18N
         LogoFood.setForeground(new java.awt.Color(255, 255, 255));
-        LogoFood.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/senac/food/verse/imagens/logo.png"))); // NOI18N
+        LogoFood.setIcon(new javax.swing.ImageIcon(getClass().getResource("/imagens/logo.png"))); // NOI18N
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
@@ -307,7 +307,7 @@ public class TelaInicial extends javax.swing.JFrame {
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(LogoFood))
-                .addContainerGap(80, Short.MAX_VALUE))
+                .addContainerGap(1179, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -316,7 +316,7 @@ public class TelaInicial extends javax.swing.JFrame {
                 .addComponent(LogoFood, javax.swing.GroupLayout.PREFERRED_SIZE, 133, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(42, 42, 42)
                 .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(598, Short.MAX_VALUE))
+                .addContainerGap(610, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout LoginPainelLayout = new javax.swing.GroupLayout(LoginPainel);
@@ -336,6 +336,7 @@ public class TelaInicial extends javax.swing.JFrame {
         getContentPane().add(LoginPainel, "card3");
 
         CadastroPainel.setName(""); // NOI18N
+        CadastroPainel.setLayout(new javax.swing.BoxLayout(CadastroPainel, javax.swing.BoxLayout.LINE_AXIS));
 
         jPanel7.setBackground(new java.awt.Color(51, 51, 51));
 
@@ -543,7 +544,7 @@ public class TelaInicial extends javax.swing.JFrame {
         jPanel7Layout.setHorizontalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
-                .addContainerGap(979, Short.MAX_VALUE)
+                .addContainerGap(991, Short.MAX_VALUE)
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, 720, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -552,29 +553,14 @@ public class TelaInicial extends javax.swing.JFrame {
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
-                .addContainerGap(194, Short.MAX_VALUE)
+                .addContainerGap(206, Short.MAX_VALUE)
                 .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, 133, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(63, 63, 63))
         );
 
-        javax.swing.GroupLayout CadastroPainelLayout = new javax.swing.GroupLayout(CadastroPainel);
-        CadastroPainel.setLayout(CadastroPainelLayout);
-        CadastroPainelLayout.setHorizontalGroup(
-            CadastroPainelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(CadastroPainelLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-        CadastroPainelLayout.setVerticalGroup(
-            CadastroPainelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(CadastroPainelLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
+        CadastroPainel.add(jPanel7);
 
         getContentPane().add(CadastroPainel, "card3");
 
