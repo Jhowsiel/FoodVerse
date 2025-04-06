@@ -1,7 +1,7 @@
 com\senac\food\verse\ValidarCadastro.class
-com\senac\food\verse\TelaInicial$16.class
 com\senac\food\verse\TelaInicial$3.class
 com\senac\food\verse\Usuario.class
+com\senac\food\verse\Dashboard$1.class
 com\senac\food\verse\TelaInicial$14.class
 com\senac\food\verse\ConexaoBanco.class
 com\senac\food\verse\FuncionarioInterface.class
@@ -24,4 +24,5 @@ com\senac\food\verse\Admin.class
 com\senac\food\verse\TelaInicial$5.class
 com\senac\food\verse\TelaInicial$12.class
 com\senac\food\verse\TelaInicial.class
+com\senac\food\verse\Dashboard.class
 com\senac\food\verse\TelaInicial$8.class

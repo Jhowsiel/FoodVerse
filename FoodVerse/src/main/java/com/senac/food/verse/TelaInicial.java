@@ -98,8 +98,7 @@ public class TelaInicial extends javax.swing.JFrame {
         senhaInput1 = new javax.swing.JPasswordField();
         jLabel8 = new javax.swing.JLabel();
         jLabel10 = new javax.swing.JLabel();
-        jLabel5 = new javax.swing.JLabel();
-        jLabel11 = new javax.swing.JLabel();
+        javax.swing.JLabel LogoFood = new javax.swing.JLabel();
         CadastroPainel = new javax.swing.JPanel();
         jPanel7 = new javax.swing.JPanel();
         jPanel6 = new javax.swing.JPanel();
@@ -176,16 +175,21 @@ public class TelaInicial extends javax.swing.JFrame {
         jMenuItem3.setText("jMenuItem3");
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("#800080");
+        setTitle("FoodVerse - Acesso");
+        setBackground(new java.awt.Color(51, 51, 51));
+        setFont(new java.awt.Font("Arial", 0, 12)); // NOI18N
+        setLocation(new java.awt.Point(0, 0));
         getContentPane().setLayout(new java.awt.CardLayout());
 
-        LoginPainel.setLayout(new java.awt.CardLayout());
+        LoginPainel.setBackground(new java.awt.Color(51, 51, 51));
+        LoginPainel.setFont(LoginPainel.getFont().deriveFont((float)12));
 
         jPanel4.setBackground(new java.awt.Color(51, 51, 51));
+        jPanel4.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
 
         jPanel5.setBackground(new java.awt.Color(255, 255, 255));
 
-        jButton5.setBackground(new java.awt.Color(204, 0, 0));
+        jButton5.setBackground(new java.awt.Color(201, 16, 21));
         jButton5.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
         jButton5.setForeground(new java.awt.Color(255, 255, 255));
         jButton5.setText("ENTRAR");
@@ -199,7 +203,7 @@ public class TelaInicial extends javax.swing.JFrame {
         jLabel2.setText("Acesso de Usuarios");
         jLabel2.setToolTipText("");
 
-        jButton6.setBackground(new java.awt.Color(255, 0, 0));
+        jButton6.setBackground(new java.awt.Color(201, 16, 21));
         jButton6.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
         jButton6.setForeground(new java.awt.Color(255, 255, 255));
         jButton6.setText("LOGIN");
@@ -253,8 +257,7 @@ public class TelaInicial extends javax.swing.JFrame {
                         .addGroup(jPanel5Layout.createSequentialGroup()
                             .addComponent(jButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 267, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGap(18, 18, 18)
-                            .addComponent(jButton7, javax.swing.GroupLayout.PREFERRED_SIZE, 293, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGap(21, 21, 21))
+                            .addComponent(jButton7, javax.swing.GroupLayout.DEFAULT_SIZE, 314, Short.MAX_VALUE))
                         .addComponent(emailInput1, javax.swing.GroupLayout.Alignment.LEADING))
                     .addGroup(jPanel5Layout.createSequentialGroup()
                         .addGap(6, 6, 6)
@@ -291,46 +294,48 @@ public class TelaInicial extends javax.swing.JFrame {
                 .addContainerGap(50, Short.MAX_VALUE))
         );
 
-        jLabel5.setFont(new java.awt.Font("Arial Black", 1, 36)); // NOI18N
-        jLabel5.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel5.setIcon(new javax.swing.ImageIcon("C:\\Users\\josiel.ssilva\\Downloads\\Sem título-1 (2).png")); // NOI18N
-
-        jLabel11.setToolTipText("");
+        LogoFood.setFont(new java.awt.Font("Arial Black", 1, 36)); // NOI18N
+        LogoFood.setForeground(new java.awt.Color(255, 255, 255));
+        LogoFood.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/senac/food/verse/imagens/logo.png"))); // NOI18N
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addContainerGap(884, Short.MAX_VALUE)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addGap(291, 291, 291)
-                .addComponent(jLabel11)
-                .addGap(250, 250, 250))
+                .addGap(306, 306, 306)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(LogoFood))
+                .addContainerGap(80, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addGap(29, 29, 29)
-                        .addComponent(jLabel11, javax.swing.GroupLayout.PREFERRED_SIZE, 302, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addGap(272, 272, 272)
-                        .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 133, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(52, 52, 52)
+                .addComponent(LogoFood, javax.swing.GroupLayout.PREFERRED_SIZE, 133, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(42, 42, 42)
                 .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(414, Short.MAX_VALUE))
+                .addContainerGap(598, Short.MAX_VALUE))
         );
 
-        LoginPainel.add(jPanel4, "card2");
+        javax.swing.GroupLayout LoginPainelLayout = new javax.swing.GroupLayout(LoginPainel);
+        LoginPainel.setLayout(LoginPainelLayout);
+        LoginPainelLayout.setHorizontalGroup(
+            LoginPainelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(LoginPainelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(18, 18, 18))
+        );
+        LoginPainelLayout.setVerticalGroup(
+            LoginPainelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jPanel4, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
 
         getContentPane().add(LoginPainel, "card3");
 
         CadastroPainel.setName(""); // NOI18N
-        CadastroPainel.setLayout(new java.awt.CardLayout());
 
         jPanel7.setBackground(new java.awt.Color(51, 51, 51));
 
@@ -340,7 +345,7 @@ public class TelaInicial extends javax.swing.JFrame {
         jLabel7.setText("Cadastro de Usuarios");
         jLabel7.setToolTipText("");
 
-        jButton15.setBackground(new java.awt.Color(204, 0, 0));
+        jButton15.setBackground(new java.awt.Color(201, 16, 21));
         jButton15.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
         jButton15.setForeground(new java.awt.Color(255, 255, 255));
         jButton15.setText("LOGIN");
@@ -405,7 +410,7 @@ public class TelaInicial extends javax.swing.JFrame {
         jLabel15.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         jLabel15.setText("Confirme a senha");
 
-        jButton14.setBackground(new java.awt.Color(204, 0, 0));
+        jButton14.setBackground(new java.awt.Color(201, 16, 21));
         jButton14.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         jButton14.setForeground(new java.awt.Color(255, 255, 255));
         jButton14.setText("Cadastrar");
@@ -469,7 +474,7 @@ public class TelaInicial extends javax.swing.JFrame {
                                 .addComponent(passwordConfirmationInput, javax.swing.GroupLayout.Alignment.LEADING)
                                 .addComponent(passwordInput, javax.swing.GroupLayout.Alignment.LEADING)
                                 .addComponent(phoneInput, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 626, Short.MAX_VALUE)))
-                        .addGap(0, 50, Short.MAX_VALUE))))
+                        .addGap(0, 40, Short.MAX_VALUE))))
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -531,18 +536,18 @@ public class TelaInicial extends javax.swing.JFrame {
 
         jLabel12.setFont(new java.awt.Font("Arial Black", 1, 36)); // NOI18N
         jLabel12.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel12.setIcon(new javax.swing.ImageIcon("C:\\Users\\josiel.ssilva\\Downloads\\Sem título-1 (2).png")); // NOI18N
+        jLabel12.setIcon(new javax.swing.ImageIcon(getClass().getResource("/imagens/logo.png"))); // NOI18N
 
         javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
         jPanel7.setLayout(jPanel7Layout);
         jPanel7Layout.setHorizontalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
-                .addContainerGap(860, Short.MAX_VALUE)
-                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                    .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addGap(581, 581, 581))
+                .addContainerGap(979, Short.MAX_VALUE)
+                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, 720, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(540, 540, 540))
         );
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -554,7 +559,22 @@ public class TelaInicial extends javax.swing.JFrame {
                 .addGap(63, 63, 63))
         );
 
-        CadastroPainel.add(jPanel7, "card2");
+        javax.swing.GroupLayout CadastroPainelLayout = new javax.swing.GroupLayout(CadastroPainel);
+        CadastroPainel.setLayout(CadastroPainelLayout);
+        CadastroPainelLayout.setHorizontalGroup(
+            CadastroPainelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(CadastroPainelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        CadastroPainelLayout.setVerticalGroup(
+            CadastroPainelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(CadastroPainelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
 
         getContentPane().add(CadastroPainel, "card3");
 
@@ -750,14 +770,12 @@ public class TelaInicial extends javax.swing.JFrame {
     private javax.swing.JFrame jFrame1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
-    private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
