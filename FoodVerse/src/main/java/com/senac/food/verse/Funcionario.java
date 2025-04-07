@@ -5,8 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
 
 public class Funcionario extends Usuario implements FuncionarioInterface {
 
