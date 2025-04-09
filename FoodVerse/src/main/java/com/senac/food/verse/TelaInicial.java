@@ -626,7 +626,7 @@ public class TelaInicial extends javax.swing.JFrame {
         String cargo = cargoCozinheiro.isSelected() ? cargoCozinheiro.getText()
                 : cargoEntregador.isSelected() ? cargoEntregador.getText() : "";
 
-        Funcionario func = new Funcionario(name, cargo, "000111", phone, userName, email, password, false, "26/03/2025");
+          Funcionario func = new Funcionario(name, cargo, "000111", phone, userName, email, password, false, "26/03/2025", "temporario");
 
         boolean[] validacoes = {
             validator.validarNome(name, errorName),
