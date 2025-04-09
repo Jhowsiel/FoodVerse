@@ -13,15 +13,17 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
     String role;
     String acessCode;
     String phone;
+    String status;
 
     // Construtor
     public Funcionario(String name, String role, String acessCode, String phone, String userName, String email,
-            String password, Boolean isLogin, String registrationDate) {
+            String password, Boolean isLogin, String registrationDate, String status) {
         super(userName, email, password, isLogin, registrationDate);
         this.name = name;
         this.role = role;
         this.acessCode = acessCode;
         this.phone = phone;
+        this.status = status;
     }
 
     @Override
@@ -44,8 +46,8 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
             conn = banco.abrirConexao();
 
             // Query parametrizada para evitar SQL Injection
-            String query = "INSERT INTO tb_funcionarios (name, userName, email, role, phone, password, acessCode, registrationDate) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            String query = "INSERT INTO tb_funcionarios (name, userName, email, role, phone, password, acessCode, registrationDate, status) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             // Prepare the statement
             stmt = conn.prepareStatement(query);
@@ -57,6 +59,7 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
             stmt.setString(6, password);
             stmt.setString(7, acessCode);
             stmt.setString(8, registrationDate);
+            stmt.setString(9, status);
 
             // Executar e verificar sucesso
             int linhasAfetadas = stmt.executeUpdate();

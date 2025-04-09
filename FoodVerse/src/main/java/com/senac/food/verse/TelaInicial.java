@@ -10,6 +10,7 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.sql.PreparedStatement;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -22,13 +23,20 @@ import javax.swing.JTextField;
  */
 public class TelaInicial extends javax.swing.JFrame {
 
+    private final Dashboard dashboard;
+    
     /**
      * Creates new form LoginAdmin
      */
+    
     public TelaInicial() {
 
         initComponents();
 
+        
+        dashboard = new Dashboard();
+        LoginPainel.add(dashboard, "Dashboard");
+        
         buttonGroup1.add(cargoCozinheiro); // Grupo de botoes
         buttonGroup1.add(cargoEntregador); // Grupo de botoes
         centralizarPainel();  // Centralizar painel ao iniciar
@@ -93,9 +101,9 @@ public class TelaInicial extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
         jButton6 = new javax.swing.JButton();
         jButton7 = new javax.swing.JButton();
-        emailInput1 = new javax.swing.JTextField();
+        emailLogin = new javax.swing.JTextField();
         recuperarSenha1 = new javax.swing.JLabel();
-        senhaInput1 = new javax.swing.JPasswordField();
+        senhaLogin = new javax.swing.JPasswordField();
         jLabel8 = new javax.swing.JLabel();
         jLabel10 = new javax.swing.JLabel();
         javax.swing.JLabel LogoFood = new javax.swing.JLabel();
@@ -223,10 +231,10 @@ public class TelaInicial extends javax.swing.JFrame {
             }
         });
 
-        emailInput1.setFont(new java.awt.Font("Arial", 0, 12)); // NOI18N
-        emailInput1.addActionListener(new java.awt.event.ActionListener() {
+        emailLogin.setFont(new java.awt.Font("Arial", 0, 12)); // NOI18N
+        emailLogin.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                emailInput1ActionPerformed(evt);
+                emailLoginActionPerformed(evt);
             }
         });
 
@@ -234,8 +242,8 @@ public class TelaInicial extends javax.swing.JFrame {
         recuperarSenha1.setForeground(new java.awt.Color(255, 102, 102));
         recuperarSenha1.setText("Esqueceu a senha");
 
-        senhaInput1.setFont(new java.awt.Font("Arial", 0, 12)); // NOI18N
-        senhaInput1.setActionCommand("<Not Set>");
+        senhaLogin.setFont(new java.awt.Font("Arial", 0, 12)); // NOI18N
+        senhaLogin.setActionCommand("<Not Set>");
 
         jLabel8.setFont(new java.awt.Font("Arial", 0, 12)); // NOI18N
         jLabel8.setText("E-mail");
@@ -253,12 +261,12 @@ public class TelaInicial extends javax.swing.JFrame {
                     .addComponent(recuperarSenha1)
                     .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 604, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addComponent(senhaInput1, javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(senhaLogin, javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(jPanel5Layout.createSequentialGroup()
                             .addComponent(jButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 267, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGap(18, 18, 18)
                             .addComponent(jButton7, javax.swing.GroupLayout.DEFAULT_SIZE, 314, Short.MAX_VALUE))
-                        .addComponent(emailInput1, javax.swing.GroupLayout.Alignment.LEADING))
+                        .addComponent(emailLogin, javax.swing.GroupLayout.Alignment.LEADING))
                     .addGroup(jPanel5Layout.createSequentialGroup()
                         .addGap(6, 6, 6)
                         .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -282,11 +290,11 @@ public class TelaInicial extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel8)
                 .addGap(2, 2, 2)
-                .addComponent(emailInput1, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(emailLogin, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(2, 2, 2)
                 .addComponent(jLabel10)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(senhaInput1, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(senhaLogin, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(12, 12, 12)
                 .addComponent(recuperarSenha1)
                 .addGap(34, 34, 34)
@@ -567,9 +575,9 @@ public class TelaInicial extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void emailInput1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_emailInput1ActionPerformed
+    private void emailLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_emailLoginActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_emailInput1ActionPerformed
+    }//GEN-LAST:event_emailLoginActionPerformed
 
     private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
         // TODO add your handling code here:
@@ -583,6 +591,14 @@ public class TelaInicial extends javax.swing.JFrame {
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
         // TODO add your handling code here:
+       Funcionario func = new Funcionario(null, null, null, null, null, null, false,null, null);
+   
+       
+        if (func.verificarUsuario(emailLogin.getText(), senhaLogin.getText())) {
+             CardLayout cl = (CardLayout) LoginPainel.getLayout();
+             cl.show(dashboard,"Dashboard");
+        }
+        
     }//GEN-LAST:event_jButton5ActionPerformed
 
     private void phoneInputtelefoneInputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_phoneInputtelefoneInputActionPerformed
@@ -625,8 +641,8 @@ public class TelaInicial extends javax.swing.JFrame {
 
         String cargo = cargoCozinheiro.isSelected() ? cargoCozinheiro.getText()
                 : cargoEntregador.isSelected() ? cargoEntregador.getText() : "";
-
-        Funcionario func = new Funcionario(name, cargo, "000111", phone, userName, email, password, false, "26/03/2025");
+        
+        Funcionario func = new Funcionario(name, cargo, phone, userName, email, password, false, "26/03/2025", "temporario");
 
         boolean[] validacoes = {
             validator.validarNome(name, errorName),
@@ -736,7 +752,7 @@ public class TelaInicial extends javax.swing.JFrame {
     private javax.swing.JRadioButton cargoCozinheiro;
     private javax.swing.JRadioButton cargoEntregador;
     private javax.swing.JTextField emailInput;
-    private javax.swing.JTextField emailInput1;
+    private javax.swing.JTextField emailLogin;
     private javax.swing.JLabel erroCargo;
     private javax.swing.JLabel errorConfirmationPassword;
     private javax.swing.JLabel errorEmail;
@@ -788,7 +804,7 @@ public class TelaInicial extends javax.swing.JFrame {
     private javax.swing.JTextField phoneInput;
     private javax.swing.JLabel recuperarSenha1;
     private javax.swing.JLabel recuperarSenha4;
-    private javax.swing.JPasswordField senhaInput1;
+    private javax.swing.JPasswordField senhaLogin;
     private javax.swing.JTextField usernameInput;
     // End of variables declaration//GEN-END:variables
 }

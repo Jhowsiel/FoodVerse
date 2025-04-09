@@ -255,13 +255,13 @@
                               <Component id="recuperarSenha1" alignment="0" min="-2" max="-2" attributes="0"/>
                               <Component id="jButton5" alignment="0" min="-2" pref="604" max="-2" attributes="0"/>
                               <Group type="103" alignment="0" groupAlignment="1" max="-2" attributes="0">
-                                  <Component id="senhaInput1" alignment="0" max="32767" attributes="0"/>
+                                  <Component id="senhaLogin" alignment="0" max="32767" attributes="0"/>
                                   <Group type="102" alignment="1" attributes="0">
                                       <Component id="jButton6" min="-2" pref="267" max="-2" attributes="0"/>
                                       <EmptySpace type="separate" max="-2" attributes="0"/>
                                       <Component id="jButton7" pref="314" max="32767" attributes="0"/>
                                   </Group>
-                                  <Component id="emailInput1" alignment="0" max="32767" attributes="0"/>
+                                  <Component id="emailLogin" alignment="0" max="32767" attributes="0"/>
                               </Group>
                               <Group type="102" attributes="0">
                                   <EmptySpace min="6" pref="6" max="-2" attributes="0"/>
@@ -293,11 +293,11 @@
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="jLabel8" min="-2" max="-2" attributes="0"/>
                           <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
-                          <Component id="emailInput1" min="-2" pref="36" max="-2" attributes="0"/>
+                          <Component id="emailLogin" min="-2" pref="36" max="-2" attributes="0"/>
                           <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
                           <Component id="jLabel10" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
-                          <Component id="senhaInput1" min="-2" pref="36" max="-2" attributes="0"/>
+                          <Component id="senhaLogin" min="-2" pref="36" max="-2" attributes="0"/>
                           <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
                           <Component id="recuperarSenha1" min="-2" max="-2" attributes="0"/>
                           <EmptySpace min="-2" pref="34" max="-2" attributes="0"/>
@@ -368,14 +368,14 @@
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton7ActionPerformed"/>
                   </Events>
                 </Component>
-                <Component class="javax.swing.JTextField" name="emailInput1">
+                <Component class="javax.swing.JTextField" name="emailLogin">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                       <Font name="Arial" size="12" style="0"/>
                     </Property>
                   </Properties>
                   <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="emailInput1ActionPerformed"/>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="emailLoginActionPerformed"/>
                   </Events>
                 </Component>
                 <Component class="javax.swing.JLabel" name="recuperarSenha1">
@@ -389,7 +389,7 @@
                     <Property name="text" type="java.lang.String" value="Esqueceu a senha"/>
                   </Properties>
                 </Component>
-                <Component class="javax.swing.JPasswordField" name="senhaInput1">
+                <Component class="javax.swing.JPasswordField" name="senhaLogin">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                       <Font name="Arial" size="12" style="0"/>
