@@ -345,6 +345,7 @@ public class TelaInicial extends javax.swing.JFrame {
         CadastroPainel.setLayout(new java.awt.CardLayout());
 
         jPanel7.setBackground(new java.awt.Color(51, 51, 51));
+        jPanel7.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         btnCadastro2.setBackground(new java.awt.Color(255, 255, 255));
 
@@ -457,9 +458,7 @@ public class TelaInicial extends javax.swing.JFrame {
                         .addGroup(btnCadastro2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(erroCargo)
                             .addComponent(jLabel9)
-                            .addComponent(errorSenha)
                             .addComponent(jLabel13)
-                            .addComponent(errorPhone)
                             .addComponent(nameInput, javax.swing.GroupLayout.PREFERRED_SIZE, 626, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(btnCadastro2Layout.createSequentialGroup()
                                 .addComponent(btnLogin2, javax.swing.GroupLayout.PREFERRED_SIZE, 299, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -473,36 +472,45 @@ public class TelaInicial extends javax.swing.JFrame {
                             .addComponent(emailInput, javax.swing.GroupLayout.PREFERRED_SIZE, 626, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel4)
                             .addComponent(errorEmail)
-                            .addComponent(recuperarSenha4)
                             .addComponent(errorConfirmationPassword)
-                            .addComponent(btnCadastrar, javax.swing.GroupLayout.PREFERRED_SIZE, 630, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel15)
                             .addGroup(btnCadastro2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                                 .addComponent(passwordConfirmationInput, javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(passwordInput, javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(phoneInput, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 626, Short.MAX_VALUE)))
-                        .addGap(0, 40, Short.MAX_VALUE))))
+                                .addComponent(phoneInput, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 626, Short.MAX_VALUE))
+                            .addGroup(btnCadastro2Layout.createSequentialGroup()
+                                .addComponent(errorSenha)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(btnCadastro2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(btnCadastrar, javax.swing.GroupLayout.PREFERRED_SIZE, 630, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(recuperarSenha4))))
+                        .addGap(0, 46, Short.MAX_VALUE))
+                    .addGroup(btnCadastro2Layout.createSequentialGroup()
+                        .addComponent(errorPhone)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(btnCadastro2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(passwordInput, javax.swing.GroupLayout.PREFERRED_SIZE, 626, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel15))
+                        .addGap(44, 44, 44))))
         );
         btnCadastro2Layout.setVerticalGroup(
             btnCadastro2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(btnCadastro2Layout.createSequentialGroup()
-                .addGap(20, 20, 20)
-                .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
+                .addContainerGap()
+                .addComponent(jLabel7)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(btnCadastro2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnLogin2)
                     .addComponent(jButton16))
-                .addGap(40, 40, 40)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(usernameInput, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(errorUsername, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jLabel3)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(nameInput, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(errorName)
                 .addGap(18, 18, 18)
                 .addComponent(jLabel4)
@@ -514,57 +522,39 @@ public class TelaInicial extends javax.swing.JFrame {
                 .addGroup(btnCadastro2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cargoEntregador)
                     .addComponent(cargoCozinheiro))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 24, Short.MAX_VALUE)
-                .addComponent(erroCargo)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jLabel9)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(phoneInput, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(erroCargo)
+                .addGap(36, 36, 36)
+                .addComponent(jLabel13)
+                .addGap(18, 18, 18)
+                .addComponent(passwordInput, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel15, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(errorPhone)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jLabel13)
+                .addComponent(passwordConfirmationInput, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(4, 4, 4)
+                .addComponent(recuperarSenha4)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(passwordInput, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(btnCadastrar)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(errorSenha)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jLabel15, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(passwordConfirmationInput, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(73, 73, 73)
                 .addComponent(errorConfirmationPassword)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(recuperarSenha4)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(btnCadastrar)
-                .addGap(12, 12, 12))
+                .addGap(116, 116, 116))
         );
+
+        jPanel7.add(btnCadastro2, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 140, -1, 790));
 
         jLabel12.setFont(new java.awt.Font("Arial Black", 1, 36)); // NOI18N
         jLabel12.setForeground(new java.awt.Color(255, 255, 255));
         jLabel12.setIcon(new javax.swing.ImageIcon(getClass().getResource("/imagens/logo.png"))); // NOI18N
-
-        javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
-        jPanel7.setLayout(jPanel7Layout);
-        jPanel7Layout.setHorizontalGroup(
-            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
-                .addContainerGap(991, Short.MAX_VALUE)
-                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btnCadastro2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, 720, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(540, 540, 540))
-        );
-        jPanel7Layout.setVerticalGroup(
-            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
-                .addContainerGap(206, Short.MAX_VALUE)
-                .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, 133, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btnCadastro2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(63, 63, 63))
-        );
+        jPanel7.add(jLabel12, new org.netbeans.lib.awtextra.AbsoluteConstraints(6, 6, 720, 130));
 
         CadastroPainel.add(jPanel7, "card2");
 
@@ -764,7 +754,7 @@ public class TelaInicial extends javax.swing.JFrame {
                 CardLayout layout = (CardLayout) getContentPane().getLayout();
                 layout.show(getContentPane(), "DashBoard"); // Mantém o painel existente para funcionários
             }
-
+//
             pack();
             setLocationRelativeTo(null);
 
@@ -780,32 +770,22 @@ public class TelaInicial extends javax.swing.JFrame {
        
     }//GEN-LAST:event_btnEntrarActionPerformed
 
-    private void phoneInputtelefoneInputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_phoneInputtelefoneInputActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_phoneInputtelefoneInputActionPerformed
+    private void btnPedidosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPedidosActionPerformed
+        CardLayout cl = (CardLayout) PanelBody.getLayout();
+        cl.show(PanelBody, "Pedidos");
+    }//GEN-LAST:event_btnPedidosActionPerformed
 
-    private void usernameInputusernameInput1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_usernameInputusernameInput1ActionPerformed
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
+    }//GEN-LAST:event_jButton1ActionPerformed
 
-    }//GEN-LAST:event_usernameInputusernameInput1ActionPerformed
-
-    private void nameInputnomeInputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nameInputnomeInputActionPerformed
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_nameInputnomeInputActionPerformed
+    }//GEN-LAST:event_jButton2ActionPerformed
 
-    private void emailInputemailInputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_emailInputemailInputActionPerformed
+    private void cargoCozinheiroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cargoCozinheiroActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_emailInputemailInputActionPerformed
-
-    private void jButton16jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton16jButton3ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton16jButton3ActionPerformed
-
-    private void btnLogin2jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLogin2jButton2ActionPerformed
-        // TODO add your handling code here:
-        LoginPainel.setVisible(true);
-        CadastroPainel.setVisible(false);
-    }//GEN-LAST:event_btnLogin2jButton2ActionPerformed
+    }//GEN-LAST:event_cargoCozinheiroActionPerformed
 
     private void btnCadastrarjButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCadastrarjButton4ActionPerformed
         // TODO add your handling code here:
@@ -819,8 +799,8 @@ public class TelaInicial extends javax.swing.JFrame {
         String confirmationPassword = passwordConfirmationInput.getText();
 
         String cargo = cargoCozinheiro.isSelected() ? cargoCozinheiro.getText()
-                : cargoEntregador.isSelected() ? cargoEntregador.getText() : "";
-        
+        : cargoEntregador.isSelected() ? cargoEntregador.getText() : "";
+
         Funcionario func = new Funcionario(name, cargo, phone, userName, email, password, false, "26/03/2025", "temporario");
 
         boolean[] validacoes = {
@@ -847,25 +827,34 @@ public class TelaInicial extends javax.swing.JFrame {
         } else {
             JOptionPane.showMessageDialog(null, "Corrija os erros antes de continuar.", "Erro", JOptionPane.ERROR_MESSAGE);
         }
-               
+
     }//GEN-LAST:event_btnCadastrarjButton4ActionPerformed
 
-    private void cargoCozinheiroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cargoCozinheiroActionPerformed
+    private void phoneInputtelefoneInputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_phoneInputtelefoneInputActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_cargoCozinheiroActionPerformed
+    }//GEN-LAST:event_phoneInputtelefoneInputActionPerformed
 
-    private void btnPedidosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPedidosActionPerformed
-        CardLayout cl = (CardLayout) PanelBody.getLayout();
-        cl.show(PanelBody, "Pedidos");
-    }//GEN-LAST:event_btnPedidosActionPerformed
-
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void usernameInputusernameInput1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_usernameInputusernameInput1ActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_usernameInputusernameInput1ActionPerformed
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+    private void nameInputnomeInputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nameInputnomeInputActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jButton2ActionPerformed
+    }//GEN-LAST:event_nameInputnomeInputActionPerformed
+
+    private void emailInputemailInputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_emailInputemailInputActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_emailInputemailInputActionPerformed
+
+    private void jButton16jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton16jButton3ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButton16jButton3ActionPerformed
+
+    private void btnLogin2jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLogin2jButton2ActionPerformed
+        // TODO add your handling code here:
+        LoginPainel.setVisible(true);
+        CadastroPainel.setVisible(false);
+    }//GEN-LAST:event_btnLogin2jButton2ActionPerformed
 
     /**
      * @param args the command line arguments

@@ -96,7 +96,7 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
         resultSet = stmt.executeQuery();
 
         if (resultSet.next()) {
-            role = resultSet.getString("role"); // Obtém a role do resultado
+            role = resultSet.getString("role"); // Obtém a role do resultado.
         }
 
     } catch (SQLException ex) {
