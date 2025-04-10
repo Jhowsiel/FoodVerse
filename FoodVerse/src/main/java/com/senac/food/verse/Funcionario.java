@@ -79,28 +79,44 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
     }
 
     //MÉTODOS
-   public Boolean verificarUsuario(String email, String senha) {
-       System.out.println(senha);
+   public static String verificarUsuario(String email, String senha) {
+    System.out.println(senha);
     ConexaoBanco banco = new ConexaoBanco();
-    boolean resultUsuario = false;
+    Connection conn = null;
+    PreparedStatement stmt = null;
+    java.sql.ResultSet resultSet = null;
+    String role = null; // Inicializa a role como null
 
     try {
-        banco.abrirConexao();
-        String query = "SELECT * FROM tb_funcionarios WHERE email = ? AND password = ?";
-        PreparedStatement stmt = banco.conn.prepareStatement(query);
+        conn = banco.abrirConexao();
+        String query = "SELECT role FROM tb_funcionarios WHERE email = ? AND password = ?"; // Seleciona a role
+        stmt = conn.prepareStatement(query);
         stmt.setString(1, email);
         stmt.setString(2, senha);
-        banco.resultSet = stmt.executeQuery();
+        resultSet = stmt.executeQuery();
 
-        resultUsuario = banco.resultSet.next(); // Se encontrou, retorna true
+        if (resultSet.next()) {
+            role = resultSet.getString("role"); // Obtém a role do resultado
+        }
 
-        stmt.close();
-        banco.fecharConexao();
-
-    } catch (Exception ex) {
-        System.out.println("Erro ao consultar usuário: " + ex.getMessage());
+    } catch (SQLException ex) {
+        System.err.println("Erro ao consultar usuário: " + ex.getMessage());
+    } finally {
+        try {
+            if (resultSet != null) {
+                resultSet.close();
+            }
+            if (stmt != null) {
+                stmt.close();
+            }
+            if (conn != null) {
+                banco.fecharConexao();
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao fechar recursos: " + e.getMessage());
+        }
     }
-    return resultUsuario;
+    return role; // Retorna a role (ou null se o login falhou)
 }
 
     public String getStatus() {
