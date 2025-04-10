@@ -23,7 +23,7 @@ import javax.swing.JTextField;
  */
 public class TelaInicial extends javax.swing.JFrame {
 
-    private final Dashboard dashboard;
+
     
     /**
      * Creates new form LoginAdmin
@@ -31,12 +31,7 @@ public class TelaInicial extends javax.swing.JFrame {
     
     public TelaInicial() {
 
-        initComponents();
-
-        
-        dashboard = new Dashboard();
-        LoginPainel.add(dashboard, "Dashboard");
-        
+        initComponents();    
         buttonGroup1.add(cargoCozinheiro); // Grupo de botoes
         buttonGroup1.add(cargoEntregador); // Grupo de botoes
         centralizarPainel();  // Centralizar painel ao iniciar
@@ -191,6 +186,7 @@ public class TelaInicial extends javax.swing.JFrame {
 
         LoginPainel.setBackground(new java.awt.Color(51, 51, 51));
         LoginPainel.setFont(LoginPainel.getFont().deriveFont((float)12));
+        LoginPainel.setLayout(new java.awt.CardLayout());
 
         jPanel4.setBackground(new java.awt.Color(51, 51, 51));
         jPanel4.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
@@ -327,24 +323,12 @@ public class TelaInicial extends javax.swing.JFrame {
                 .addContainerGap(610, Short.MAX_VALUE))
         );
 
-        javax.swing.GroupLayout LoginPainelLayout = new javax.swing.GroupLayout(LoginPainel);
-        LoginPainel.setLayout(LoginPainelLayout);
-        LoginPainelLayout.setHorizontalGroup(
-            LoginPainelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(LoginPainelLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(18, 18, 18))
-        );
-        LoginPainelLayout.setVerticalGroup(
-            LoginPainelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel4, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
+        LoginPainel.add(jPanel4, "LoginPainel");
 
         getContentPane().add(LoginPainel, "card3");
 
         CadastroPainel.setName(""); // NOI18N
-        CadastroPainel.setLayout(new javax.swing.BoxLayout(CadastroPainel, javax.swing.BoxLayout.LINE_AXIS));
+        CadastroPainel.setLayout(new java.awt.CardLayout());
 
         jPanel7.setBackground(new java.awt.Color(51, 51, 51));
 
@@ -568,7 +552,7 @@ public class TelaInicial extends javax.swing.JFrame {
                 .addGap(63, 63, 63))
         );
 
-        CadastroPainel.add(jPanel7);
+        CadastroPainel.add(jPanel7, "card2");
 
         getContentPane().add(CadastroPainel, "card3");
 
@@ -590,14 +574,12 @@ public class TelaInicial extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton6ActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
-        // TODO add your handling code here:
-       Funcionario func = new Funcionario(null, null, null, null, null, null, false,null, null);
-   
+       // TODO add your handling code here:
+    Funcionario func = new Funcionario(null, null, null, null, null, null, false, null, null);
+
+    if (func.loginFuncionario(emailLogin.getText(), senhaLogin.getText())) {
        
-        if (func.verificarUsuario(emailLogin.getText(), senhaLogin.getText())) {
-             CardLayout cl = (CardLayout) LoginPainel.getLayout();
-             cl.show(dashboard,"Dashboard");
-        }
+    }
         
     }//GEN-LAST:event_jButton5ActionPerformed
 
