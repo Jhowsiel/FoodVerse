@@ -6,22 +6,19 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 public class Funcionario extends Usuario implements FuncionarioInterface {
 
     String name;
     String role;
-    String acessCode;
     String phone;
     String status;
 
     // Construtor
-    public Funcionario(String name, String role, String acessCode, String phone, String userName, String email,
+    public Funcionario(String name, String role, String phone, String userName, String email,
             String password, Boolean isLogin, String registrationDate, String status) {
         super(userName, email, password, isLogin, registrationDate);
         this.name = name;
         this.role = role;
-        this.acessCode = acessCode;
         this.phone = phone;
         this.status = status;
     }
@@ -33,9 +30,8 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
 
     @Override
     public boolean cadastrarFuncionario() {
-        String telefoneFormatado = Formatador.formatarTelefone(phone);
-                
-                
+        String telefoneFormatado = Formatador.formatarTelefone(this.phone);
+
         boolean cadastroEfetuado = false;
         ConexaoBanco banco = new ConexaoBanco();
         Connection conn = null;
@@ -46,20 +42,19 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
             conn = banco.abrirConexao();
 
             // Query parametrizada para evitar SQL Injection
-            String query = "INSERT INTO tb_funcionarios (name, userName, email, role, phone, password, acessCode, registrationDate, status) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String query = "INSERT INTO tb_funcionarios (name, userName, email, role, phone, password, registrationDate, status) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
             // Prepare the statement
             stmt = conn.prepareStatement(query);
-            stmt.setString(1, name);
-            stmt.setString(2, userName);
-            stmt.setString(3, email);
-            stmt.setString(4, role);
+            stmt.setString(1, this.name);
+            stmt.setString(2, this.userName);
+            stmt.setString(3, this.email);
+            stmt.setString(4, this.role);
             stmt.setString(5, telefoneFormatado);
-            stmt.setString(6, password);
-            stmt.setString(7, acessCode);
-            stmt.setString(8, registrationDate);
-            stmt.setString(9, status);
+            stmt.setString(6, this.password);
+            stmt.setString(7, this.registrationDate);
+            stmt.setString(8, this.status);
 
             // Executar e verificar sucesso
             int linhasAfetadas = stmt.executeUpdate();
@@ -81,5 +76,34 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
             }
         }
         return cadastroEfetuado;
+    }
+
+    //MÉTODOS
+   public Boolean verificarUsuario(String email, String senha) {
+       System.out.println(senha);
+    ConexaoBanco banco = new ConexaoBanco();
+    boolean resultUsuario = false;
+
+    try {
+        banco.abrirConexao();
+        String query = "SELECT * FROM tb_funcionarios WHERE email = ? AND password = ?";
+        PreparedStatement stmt = banco.conn.prepareStatement(query);
+        stmt.setString(1, email);
+        stmt.setString(2, senha);
+        banco.resultSet = stmt.executeQuery();
+
+        resultUsuario = banco.resultSet.next(); // Se encontrou, retorna true
+
+        stmt.close();
+        banco.fecharConexao();
+
+    } catch (Exception ex) {
+        System.out.println("Erro ao consultar usuário: " + ex.getMessage());
+    }
+    return resultUsuario;
+}
+
+    public String getStatus() {
+        return status;
     }
 }
