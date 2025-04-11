@@ -13,7 +13,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-
 /**
  *
  * @author thiag
@@ -739,10 +738,10 @@ public class TelaInicial extends javax.swing.JFrame {
         if (userRole != null) {
             // Login bem-sucedido!
             System.out.println("Login OK para: " + email + " com função: " + userRole);
-            
+
             // mosta o painel certo
             Funcionario.permissaoFunc(userRole, this);
-            
+
             pack();
             setLocationRelativeTo(null);
 
@@ -810,7 +809,9 @@ public class TelaInicial extends javax.swing.JFrame {
         if (isValido) {
             // Chamar o método para cadastrar o funcionário no banco
             func.cadastrarFuncionario();
-
+            validator.limparCampos(usernameInput, nameInput, emailInput, phoneInput, passwordInput, passwordConfirmationInput);
+             LoginPainel.setVisible(true);
+            CadastroPainel.setVisible(false);
             JOptionPane.showMessageDialog(null, "Usuário cadastrado com sucesso!");
         } else {
             JOptionPane.showMessageDialog(null, "Corrija os erros antes de continuar.", "Erro", JOptionPane.ERROR_MESSAGE);

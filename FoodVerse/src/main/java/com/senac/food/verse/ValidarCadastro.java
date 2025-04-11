@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JLabel;
+import javax.swing.JTextField;
 
 public class ValidarCadastro {
 
@@ -14,7 +15,7 @@ public class ValidarCadastro {
         if (username.isEmpty()) {
             showError(label, "Este campo é obrigatório");
             return false;
-        } 
+        }
         clearError(label);
         return verificarDisponibilidade("userName", username, label);
     }
@@ -24,18 +25,18 @@ public class ValidarCadastro {
         if (email.isEmpty()) {
             showError(label, "Este campo é obrigatório");
             return false;
-        } 
-        
+        }
+
         // Expressão regular para validar e-mail
         String regex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(email);
-        
+
         if (!matcher.matches()) {
             showError(label, "Formato de e-mail inválido");
             return false;
-        } 
-        
+        }
+
         clearError(label);
         return verificarDisponibilidade("email", email, label);
     }
@@ -78,8 +79,12 @@ public class ValidarCadastro {
             System.out.println("Erro ao consultar " + coluna + ": " + ex.getMessage());
         } finally {
             try {
-                if (pstmt != null) pstmt.close();
-                if (conn != null) banco.fecharConexao();
+                if (pstmt != null) {
+                    pstmt.close();
+                }
+                if (conn != null) {
+                    banco.fecharConexao();
+                }
             } catch (Exception e) {
                 System.out.println("Erro ao fechar conexão: " + e.getMessage());
             }
@@ -96,21 +101,27 @@ public class ValidarCadastro {
         clearError(label);
         return true;
     }
-    
+
     // validar as senhas
     public boolean validarAsSenhas(String senha, String confirmationSenha, JLabel labelSenha, JLabel labelConfirmation) {
-    if (senha.isEmpty()) {
-        showError(labelSenha, "Este campo é obrigatório");
-        return false;
-    } else if (!senha.equals(confirmationSenha)) { // Fixed variable name
-        showError(labelConfirmation, "As senhas não coincidem"); // Show error message
-        return false;
-    } else {
-        clearError(labelSenha);
-        clearError(labelConfirmation);
-        return true;
+        String regex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
+
+        if (senha.isEmpty()) {
+            showError(labelSenha, "Este campo é obrigatório");
+            return false;
+        } else if (!senha.matches(regex)) {
+            showError(labelSenha, "A senha deve conter pelo menos 8 caracteres, incluindo uma letra maiúscula, uma minúscula, um número e um caractere especial.");
+            return false;
+        } else if (!senha.equals(confirmationSenha)) {
+            showError(labelConfirmation, "As senhas não coincidem");
+            return false;
+        } else {
+            clearError(labelSenha);
+            clearError(labelConfirmation);
+            return true;
+        }
     }
- }
+
     // Exibe mensagem de erro
     public void showError(JLabel label, String message) {
         label.setText(message);
@@ -121,5 +132,14 @@ public class ValidarCadastro {
     public void clearError(JLabel label) {
         label.setText("");
         label.setForeground(Color.WHITE);
+    }
+
+    public void limparCampos(JTextField username, JTextField nome, JTextField email, JTextField phone, JTextField senha, JTextField confirmarSenha) {
+        username.setText("");
+        nome.setText("");
+        email.setText("");
+        phone.setText("");
+        senha.setText("");
+        confirmarSenha.setText("");
     }
 }
