@@ -19,39 +19,35 @@ import javax.swing.JTextField;
  */
 public class TelaInicial extends javax.swing.JFrame {
 
-
-    
     /**
      * Creates new form LoginAdmin
      */
-    
     public TelaInicial() {
 
-        initComponents();    
+        initComponents();
         buttonGroup1.add(cargoCozinheiro); // Grupo de botoes
         buttonGroup1.add(cargoEntregador); // Grupo de botoes
         centralizarPainel();  // Centralizar painel ao iniciar
 
         adicionarListenerRedimensionamento(); // Adicionar listener para redimensionamento
-        
+
         phoneInput.addKeyListener(new KeyAdapter() {
-    @Override
-    public void keyReleased(KeyEvent e) {
-        String texto = phoneInput.getText();
+            @Override
+            public void keyReleased(KeyEvent e) {
+                String texto = phoneInput.getText();
 
-        // Limitar para no máximo 11 dígitos (apenas contando os números)
-        String somenteNumeros = texto.replaceAll("[^0-9]", "");
-        if (somenteNumeros.length() > 11) {
-            somenteNumeros = somenteNumeros.substring(0, 11);
-        }
-        
-        // Chama o método de formatação da classe Formatador
-        String phoneFormatado = Formatador.formatarTelefone(somenteNumeros);
-        phoneInput.setText(phoneFormatado);
-    }
-});
-    }
+                // Limitar para no máximo 11 dígitos (apenas contando os números)
+                String somenteNumeros = texto.replaceAll("[^0-9]", "");
+                if (somenteNumeros.length() > 11) {
+                    somenteNumeros = somenteNumeros.substring(0, 11);
+                }
 
+                // Chama o método de formatação da classe Formatador
+                String phoneFormatado = Formatador.formatarTelefone(somenteNumeros);
+                phoneInput.setText(phoneFormatado);
+            }
+        });
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -718,8 +714,8 @@ public class TelaInicial extends javax.swing.JFrame {
     }//GEN-LAST:event_btnLoginActionPerformed
 
     private void btnEntrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEntrarActionPerformed
-        
-       String email = emailLogin.getText();
+
+        String email = emailLogin.getText();
         String senha = new String(senhaLogin.getPassword());
 
         if (email.trim().isEmpty() || senha.isEmpty()) {
@@ -730,7 +726,7 @@ public class TelaInicial extends javax.swing.JFrame {
         String userRole = null; // Variável para guardar a função do usuário
 
         try {
-            userRole = Funcionario.verificarUsuario(email, senha);
+            userRole = Funcionario.loginFuncionario(email, senha);
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Ocorreu um erro ao tentar fazer login:\n" + e.getMessage(), "Erro de Login", JOptionPane.ERROR_MESSAGE);
@@ -742,19 +738,10 @@ public class TelaInicial extends javax.swing.JFrame {
         if (userRole != null) {
             // Login bem-sucedido!
             System.out.println("Login OK para: " + email + " com função: " + userRole);
-
-            if (userRole.equals("admin")) {
-                // Usuário é um administrador
-                System.out.println("Exibindo Dashboard de Administrador...");
-                CardLayout layout = (CardLayout) getContentPane().getLayout();
-                layout.show(getContentPane(), "DashBoardAdmin"); // Supondo que você tenha um painel para administradores
-            } else {
-                // Usuário não é um administrador (funcionário normal)
-                System.out.println("Exibindo Dashboard de Funcionário...");
-                CardLayout layout = (CardLayout) getContentPane().getLayout();
-                layout.show(getContentPane(), "DashBoard"); // Mantém o painel existente para funcionários
-            }
-//
+            
+            // mosta o painel certo
+            Funcionario.permissaoFunc(userRole, this);
+            
             pack();
             setLocationRelativeTo(null);
 
@@ -767,7 +754,7 @@ public class TelaInicial extends javax.swing.JFrame {
             senhaLogin.setText("");
             senhaLogin.requestFocus();
         }
-       
+
     }//GEN-LAST:event_btnEntrarActionPerformed
 
     private void btnPedidosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPedidosActionPerformed
@@ -799,7 +786,7 @@ public class TelaInicial extends javax.swing.JFrame {
         String confirmationPassword = passwordConfirmationInput.getText();
 
         String cargo = cargoCozinheiro.isSelected() ? cargoCozinheiro.getText()
-        : cargoEntregador.isSelected() ? cargoEntregador.getText() : "";
+                : cargoEntregador.isSelected() ? cargoEntregador.getText() : "";
 
         Funcionario func = new Funcionario(name, cargo, phone, userName, email, password, false, "26/03/2025", "temporario");
 
