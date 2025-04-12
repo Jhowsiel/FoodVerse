@@ -4,6 +4,7 @@ import java.awt.CardLayout;
 import java.awt.Container;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -129,6 +130,45 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
             CardLayout layout = (CardLayout) frame.getContentPane().getLayout();
             layout.show(frame.getContentPane(), "DashBoard");
         }
+    }
+
+    public static String buscarNoBanco(String coluna, String valor) {
+        ConexaoBanco banco = new ConexaoBanco();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet resultSet = null;
+        String username = null;
+
+        try {
+            conn = banco.abrirConexao();
+            String query = "SELECT username FROM tb_funcionarios WHERE " + coluna + " = ?";
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, valor);
+            resultSet = stmt.executeQuery();
+
+            if (resultSet.next()) {
+                username = resultSet.getString("username");
+            }
+
+        } catch (SQLException ex) {
+            System.err.println("Erro ao consultar usuário: " + ex.getMessage());
+        } finally {
+            try {
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conn != null) {
+                    banco.fecharConexao();
+                }
+            } catch (SQLException e) {
+                System.err.println("Erro ao fechar recursos: " + e.getMessage());
+            }
+        }
+
+        return username;
     }
 
     public String getStatus() {

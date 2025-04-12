@@ -29,7 +29,7 @@ public String registrationDate;
         return userId;
     }
 
-    public String getUserName() {
+    public  String getUserName() {
         return userName;
     }
 

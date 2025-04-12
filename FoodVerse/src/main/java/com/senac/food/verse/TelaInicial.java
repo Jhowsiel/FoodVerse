@@ -137,7 +137,7 @@ public class TelaInicial extends javax.swing.JFrame {
         PanelBody = new javax.swing.JPanel();
         jPanel1 = new javax.swing.JPanel();
         PanelHead = new javax.swing.JPanel();
-        jLabel6 = new javax.swing.JLabel();
+        nomeExibicao = new javax.swing.JLabel();
         iconUser = new javax.swing.JLabel();
         PanelHead1 = new javax.swing.JPanel();
         jButton1 = new javax.swing.JButton();
@@ -637,9 +637,9 @@ public class TelaInicial extends javax.swing.JFrame {
         PanelHead.setBackground(new java.awt.Color(201, 16, 21));
         PanelHead.setLayout(new java.awt.BorderLayout());
 
-        jLabel6.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        jLabel6.setText("Bem-vindo, Usuario X!");
-        PanelHead.add(jLabel6, java.awt.BorderLayout.PAGE_END);
+        nomeExibicao.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        nomeExibicao.setText("Bem-vindo, Usuario X!");
+        PanelHead.add(nomeExibicao, java.awt.BorderLayout.PAGE_END);
 
         iconUser.setText("ICON Usuaroio");
         PanelHead.add(iconUser, java.awt.BorderLayout.PAGE_START);
@@ -747,7 +747,8 @@ public class TelaInicial extends javax.swing.JFrame {
 
             emailLogin.setText("");
             senhaLogin.setText("");
-
+            String username =  Funcionario.buscarNoBanco("email", email);
+            nomeExibicao.setText("Bem-vindo, Usuario " + username + "!");
         } else {
             // Login falhou
             JOptionPane.showMessageDialog(this, "Email ou senha inválidos.", "Erro de Login", JOptionPane.ERROR_MESSAGE);
@@ -797,7 +798,7 @@ public class TelaInicial extends javax.swing.JFrame {
             validator.validarTelefone(phone, errorPhone),
             validator.validarAsSenhas(password, confirmationPassword, errorSenha, errorConfirmationPassword)
         };
-
+        
         boolean isValido = true;
         for (boolean validacao : validacoes) {
             if (!validacao) {
@@ -965,7 +966,6 @@ public class TelaInicial extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
-    private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
@@ -987,6 +987,7 @@ public class TelaInicial extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel7;
     private javax.swing.JScrollBar jScrollBar1;
     private javax.swing.JTextField nameInput;
+    private javax.swing.JLabel nomeExibicao;
     private javax.swing.JPasswordField passwordConfirmationInput;
     private javax.swing.JPasswordField passwordInput;
     private javax.swing.JTextField phoneInput;
