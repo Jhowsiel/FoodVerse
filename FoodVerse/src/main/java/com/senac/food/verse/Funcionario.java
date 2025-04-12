@@ -132,7 +132,7 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
         }
     }
 
-    public static String buscarNoBanco(String coluna, String valor) {
+    public static String buscarUsernameNoBanco(String coluna, String valor) {
         ConexaoBanco banco = new ConexaoBanco();
         Connection conn = null;
         PreparedStatement stmt = null;

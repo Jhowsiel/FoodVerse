@@ -747,8 +747,8 @@ public class TelaInicial extends javax.swing.JFrame {
 
             emailLogin.setText("");
             senhaLogin.setText("");
-            String username =  Funcionario.buscarNoBanco("email", email);
-            nomeExibicao.setText("Bem-vindo, Usuario " + username + "!");
+            String username =  Funcionario.buscarUsernameNoBanco("email", email);
+            nomeExibicao.setText("Bem-vindo, " + username + "!");
         } else {
             // Login falhou
             JOptionPane.showMessageDialog(this, "Email ou senha inválidos.", "Erro de Login", JOptionPane.ERROR_MESSAGE);
