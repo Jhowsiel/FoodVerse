@@ -8,6 +8,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class Funcionario extends Usuario implements FuncionarioInterface {
 
@@ -132,26 +134,26 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
         }
     }
 
-    public static String buscarUsernameNoBanco(String coluna, String valor) {
+    public static String buscarNoBanco(String colunaFiltro, String valorFiltro, String colunaDesejada) {
         ConexaoBanco banco = new ConexaoBanco();
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet resultSet = null;
-        String username = null;
+        String valorEncontrado = null;
 
         try {
             conn = banco.abrirConexao();
-            String query = "SELECT username FROM tb_funcionarios WHERE " + coluna + " = ?";
+            String query = "SELECT " + colunaDesejada + " FROM tb_funcionarios WHERE " + colunaFiltro + " = ?";
             stmt = conn.prepareStatement(query);
-            stmt.setString(1, valor);
+            stmt.setString(1, valorFiltro);
             resultSet = stmt.executeQuery();
 
             if (resultSet.next()) {
-                username = resultSet.getString("username");
+                valorEncontrado = resultSet.getString(colunaDesejada);
             }
 
         } catch (SQLException ex) {
-            System.err.println("Erro ao consultar usuário: " + ex.getMessage());
+            System.err.println("Erro ao consultar valor: " + ex.getMessage());
         } finally {
             try {
                 if (resultSet != null) {
@@ -168,10 +170,13 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
             }
         }
 
-        return username;
+        return valorEncontrado;
     }
 
-    public String getStatus() {
-        return status;
+    public static String pegarDataAtual() {
+        LocalDate dataAtual = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return dataAtual.format(formatter);
+
     }
 }

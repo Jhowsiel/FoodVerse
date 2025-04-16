@@ -482,6 +482,8 @@
                                           <Component id="cargoCozinheiro" min="-2" max="-2" attributes="0"/>
                                           <EmptySpace max="-2" attributes="0"/>
                                           <Component id="cargoEntregador" min="-2" max="-2" attributes="0"/>
+                                          <EmptySpace min="-2" pref="43" max="-2" attributes="0"/>
+                                          <Component id="erroCargos" min="-2" max="-2" attributes="0"/>
                                       </Group>
                                       <Group type="102" alignment="0" attributes="0">
                                           <EmptySpace min="-2" pref="189" max="-2" attributes="0"/>
@@ -570,6 +572,7 @@
                           <Group type="103" groupAlignment="3" attributes="0">
                               <Component id="cargoEntregador" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="cargoCozinheiro" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="erroCargos" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace type="unrelated" max="-2" attributes="0"/>
                           <Component id="jLabel9" min="-2" max="-2" attributes="0"/>
@@ -767,6 +770,11 @@
                   </Events>
                 </Component>
                 <Component class="javax.swing.JLabel" name="erroCargo">
+                </Component>
+                <Component class="javax.swing.JLabel" name="erroCargos">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="erro"/>
+                  </Properties>
                 </Component>
               </SubComponents>
             </Container>

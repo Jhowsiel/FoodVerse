@@ -19,6 +19,7 @@ com\senac\food\verse\Formatador.class
 com\senac\food\verse\Cliente.class
 com\senac\food\verse\PedidosPanel$3.class
 com\senac\food\verse\TelaInicial$9.class
+com\senac\food\verse\NtpTime.class
 com\senac\food\verse\TelaInicial$15.class
 com\senac\food\verse\TelaInicial$2.class
 com\senac\food\verse\ClienteInterface.class

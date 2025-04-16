@@ -122,6 +122,17 @@ public class ValidarCadastro {
         }
     }
 
+    //validar os cargos
+    public boolean validarCargos(String cargo,  JLabel label) {
+        if (cargo.isEmpty()) {
+            showError(label, "Por favor, preencha um cargo");
+            return false;
+        } else {
+           clearError(label);
+           return true;
+        }
+    }
+    
     // Exibe mensagem de erro
     public void showError(JLabel label, String message) {
         label.setText(message);

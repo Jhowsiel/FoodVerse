@@ -1,5 +1,6 @@
 package com.senac.food.verse;
 
+import static com.senac.food.verse.NtpTime.pegarDataAtualNTP;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.event.FocusEvent;
@@ -123,6 +124,7 @@ public class TelaInicial extends javax.swing.JFrame {
         cargoEntregador = new javax.swing.JRadioButton();
         cargoCozinheiro = new javax.swing.JRadioButton();
         erroCargo = new javax.swing.JLabel();
+        erroCargos = new javax.swing.JLabel();
         jLabel12 = new javax.swing.JLabel();
         DashBoardPainel = new javax.swing.JPanel();
         PanelSide = new javax.swing.JPanel();
@@ -433,6 +435,8 @@ public class TelaInicial extends javax.swing.JFrame {
             }
         });
 
+        erroCargos.setText("erro");
+
         javax.swing.GroupLayout btnCadastro2Layout = new javax.swing.GroupLayout(btnCadastro2);
         btnCadastro2.setLayout(btnCadastro2Layout);
         btnCadastro2Layout.setHorizontalGroup(
@@ -445,7 +449,9 @@ public class TelaInicial extends javax.swing.JFrame {
                             .addGroup(btnCadastro2Layout.createSequentialGroup()
                                 .addComponent(cargoCozinheiro)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(cargoEntregador))
+                                .addComponent(cargoEntregador)
+                                .addGap(43, 43, 43)
+                                .addComponent(erroCargos))
                             .addGroup(btnCadastro2Layout.createSequentialGroup()
                                 .addGap(189, 189, 189)
                                 .addComponent(jLabel7)))
@@ -517,7 +523,8 @@ public class TelaInicial extends javax.swing.JFrame {
                 .addGap(18, 18, 18)
                 .addGroup(btnCadastro2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cargoEntregador)
-                    .addComponent(cargoCozinheiro))
+                    .addComponent(cargoCozinheiro)
+                    .addComponent(erroCargos))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jLabel9)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -736,6 +743,13 @@ public class TelaInicial extends javax.swing.JFrame {
 
         // --- Tratamento do Resultado do Login e da Função ---
         if (userRole != null) {
+            
+            String statusUsuario = Funcionario.buscarNoBanco("email", email, "status");
+            
+             if ("temporario".equalsIgnoreCase(statusUsuario)) {
+            JOptionPane.showMessageDialog(this, "Seu acesso está temporário. Por favor, espere o administrador verificar o seu cadastro.", "Acesso Temporário", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
             // Login bem-sucedido!
             System.out.println("Login OK para: " + email + " com função: " + userRole);
 
@@ -747,8 +761,8 @@ public class TelaInicial extends javax.swing.JFrame {
 
             emailLogin.setText("");
             senhaLogin.setText("");
-            String username =  Funcionario.buscarUsernameNoBanco("email", email);
-            nomeExibicao.setText("Bem-vindo, " + username + "!");
+            String username = Funcionario.buscarNoBanco("email", email, "username");
+            nomeExibicao.setText("Bem-vindo, " + username + "!");   
         } else {
             // Login falhou
             JOptionPane.showMessageDialog(this, "Email ou senha inválidos.", "Erro de Login", JOptionPane.ERROR_MESSAGE);
@@ -785,16 +799,18 @@ public class TelaInicial extends javax.swing.JFrame {
         String phone = phoneInput.getText();
         String password = passwordInput.getText();
         String confirmationPassword = passwordConfirmationInput.getText();
+        String dataAtual = pegarDataAtualNTP();
 
         String cargo = cargoCozinheiro.isSelected() ? cargoCozinheiro.getText()
                 : cargoEntregador.isSelected() ? cargoEntregador.getText() : "";
 
-        Funcionario func = new Funcionario(name, cargo, phone, userName, email, password, false, "26/03/2025", "temporario");
+        Funcionario func = new Funcionario(name, cargo, phone, userName, email, password, false, dataAtual, "temporario");
 
         boolean[] validacoes = {
             validator.validarNome(name, errorName),
             validator.validarUsername(userName, errorUsername),
             validator.validarEmail(email, errorEmail),
+            validator.validarCargos(cargo, erroCargos),
             validator.validarTelefone(phone, errorPhone),
             validator.validarAsSenhas(password, confirmationPassword, errorSenha, errorConfirmationPassword)
         };
@@ -941,6 +957,7 @@ public class TelaInicial extends javax.swing.JFrame {
     private javax.swing.JTextField emailInput;
     private javax.swing.JTextField emailLogin;
     private javax.swing.JLabel erroCargo;
+    private javax.swing.JLabel erroCargos;
     private javax.swing.JLabel errorConfirmationPassword;
     private javax.swing.JLabel errorEmail;
     private javax.swing.JLabel errorName;
