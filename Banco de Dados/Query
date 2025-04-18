@@ -2,6 +2,43 @@ create database FoodVerseDB
 
 use FoodVerseDB
 
+create table tb_clientes (
+	ID_cliente int identity primary key,
+	user_name varchar(100),
+	name varchar(100),
+	email varchar(100),
+	phone varchar(100),
+	password varchar(255),
+	cpf varchar(11),
+	registrationDate varchar(10),
+	isLogin bit
+)
+
+create table tb_produtos (
+	ID_produto int identity primary key,
+	nome_produto varchar(100),
+	desc_produto varchar(255),
+	preco_produto decimal(10,2)
+)
+
+create table tb_pedidos (
+	ID_pedido int identity primary key,
+	data_pedido varchar(10),
+	estoque int,
+	ID_cliente int,
+	FOREIGN KEY (ID_cliente) REFERENCES tb_clientes(ID_cliente)
+
+)
+
+create table tb_pedidos_produtos (
+	ID_pedido int,
+	FOREIGN KEY (ID_pedido) REFERENCES tb_pedidos(ID_pedido),
+	ID_produto int,
+	FOREIGN KEY (ID_produto) REFERENCES tb_produtos(ID_produto),
+	PRIMARY KEY (ID_pedido, ID_produto),
+	quantidade int
+
+)
 
 CREATE TABLE tb_funcionarios (
     id INT identity PRIMARY KEY,
@@ -14,5 +51,3 @@ CREATE TABLE tb_funcionarios (
     registrationDate varchar(20),
     status varchar(20)
 );
-
-    select * from tb_funcionarios
