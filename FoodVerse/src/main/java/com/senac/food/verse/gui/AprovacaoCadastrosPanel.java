@@ -674,19 +674,112 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnSelecionarTodosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSelecionarTodosActionPerformed
-        // TODO add your handling code here:
+        // Selecionar todos os itens na tabela
+    DefaultTableModel modelo = (DefaultTableModel) tabelaCadastros.getModel();
+    for (int i = 0; i < modelo.getRowCount(); i++) {
+        modelo.setValueAt(true, i, 0);
+        }
     }//GEN-LAST:event_btnSelecionarTodosActionPerformed
 
     private void btnLimparSelecaoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimparSelecaoActionPerformed
-        // TODO add your handling code here:
+        // Limpar todas as seleções na tabela
+    DefaultTableModel modelo = (DefaultTableModel) tabelaCadastros.getModel();
+    for (int i = 0; i < modelo.getRowCount(); i++) {
+        modelo.setValueAt(false, i, 0);
+        }
     }//GEN-LAST:event_btnLimparSelecaoActionPerformed
 
     private void btnAprovarSelecionadosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAprovarSelecionadosActionPerformed
-        // TODO add your handling code here:
+        // Aprovar os cadastros selecionados
+    DefaultTableModel modelo = (DefaultTableModel) tabelaCadastros.getModel();
+    List<Integer> rowsToRemove = new ArrayList<>();
+    List<Integer> idsToApprove = new ArrayList<>();
+    
+    // Coletar linhas selecionadas
+    for (int i = 0; i < modelo.getRowCount(); i++) {
+        Boolean isSelected = (Boolean) modelo.getValueAt(i, 0);
+        if (isSelected) {
+            rowsToRemove.add(i);
+            idsToApprove.add(funcionariosIds.get(i));
+        }
+    }
+    
+    if (idsToApprove.isEmpty()) {
+        JOptionPane.showMessageDialog(null, 
+                "Nenhum cadastro selecionado para aprovação.", 
+                "Atenção", JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+    
+    // Aprovar cadastros selecionados
+    boolean aprovacaoRealizada = aprovarCadastros(idsToApprove);
+    
+    if (aprovacaoRealizada) {
+        JOptionPane.showMessageDialog(null, 
+                "Cadastros aprovados com sucesso!", 
+                "Confirmação", JOptionPane.INFORMATION_MESSAGE);
+        
+        // Remover linhas da tabela (de trás para frente para não afetar os índices)
+        for (int i = rowsToRemove.size() - 1; i >= 0; i--) {
+            int row = rowsToRemove.get(i);
+            modelo.removeRow(row);
+            funcionariosIds.remove(row);
+        }
+    } else {
+        JOptionPane.showMessageDialog(null, 
+                "Erro ao aprovar cadastros. Tente novamente.", 
+                "Erro", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_btnAprovarSelecionadosActionPerformed
 
     private void btnExcluirSelecionadosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExcluirSelecionadosActionPerformed
-        // TODO add your handling code here:
+        // Excluir os cadastros selecionados
+    DefaultTableModel modelo = (DefaultTableModel) tabelaCadastros.getModel();
+    List<Integer> rowsToRemove = new ArrayList<>();
+    List<Integer> idsToDelete = new ArrayList<>();
+    
+    // Coletar linhas selecionadas
+    for (int i = 0; i < modelo.getRowCount(); i++) {
+        Boolean isSelected = (Boolean) modelo.getValueAt(i, 0);
+        if (isSelected) {
+            rowsToRemove.add(i);
+            idsToDelete.add(funcionariosIds.get(i));
+        }
+    }
+    
+    if (idsToDelete.isEmpty()) {
+        JOptionPane.showMessageDialog(null, 
+                "Nenhum cadastro selecionado para exclusão.", 
+                "Atenção", JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+    
+    // Confirmar exclusão
+    int confirmacao = JOptionPane.showConfirmDialog(null,
+            "Tem certeza que deseja excluir os cadastros selecionados?",
+            "Confirmação de Exclusão", JOptionPane.YES_NO_OPTION);
+    
+    if (confirmacao == JOptionPane.YES_OPTION) {
+        // Excluir cadastros selecionados
+        boolean exclusaoRealizada = excluirCadastros(idsToDelete);
+        
+        if (exclusaoRealizada) {
+            JOptionPane.showMessageDialog(null, 
+                    "Cadastros excluídos com sucesso!", 
+                    "Confirmação", JOptionPane.INFORMATION_MESSAGE);
+            
+            // Remover linhas da tabela (de trás para frente para não afetar os índices)
+            for (int i = rowsToRemove.size() - 1; i >= 0; i--) {
+                int row = rowsToRemove.get(i);
+                modelo.removeRow(row);
+                funcionariosIds.remove(row);
+            }
+        } else {
+            JOptionPane.showMessageDialog(null, 
+                    "Erro ao excluir cadastros. Tente novamente.", 
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+        }
     }//GEN-LAST:event_btnExcluirSelecionadosActionPerformed
 
 
