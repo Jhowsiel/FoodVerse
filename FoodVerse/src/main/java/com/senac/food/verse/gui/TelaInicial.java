@@ -32,6 +32,10 @@ public class TelaInicial extends javax.swing.JFrame {
         buttonGroup1.add(cargoCozinheiro); // Grupo de botoes
         buttonGroup1.add(cargoEntregador); // Grupo de botoes
         centralizarPainel();  // Centralizar painel ao iniciar
+        
+        AprovacaoCadastrosPanel painelAprovacao = new AprovacaoCadastrosPanel();
+        PanelBody.add(painelAprovacao, "AprovacaoCadastros");
+
 
         adicionarListenerRedimensionamento(); // Adicionar listener para redimensionamento
 
@@ -134,10 +138,10 @@ public class TelaInicial extends javax.swing.JFrame {
         PanelSidebar = new javax.swing.JPanel();
         jLabel5 = new javax.swing.JLabel();
         PanelSubSidebar = new javax.swing.JPanel();
+        btnAprovacaoCadastros = new javax.swing.JButton();
         btnPedidos = new javax.swing.JButton();
         btnCardapio = new javax.swing.JButton();
         btnEstoque = new javax.swing.JButton();
-        jButton4 = new javax.swing.JButton();
         jButton8 = new javax.swing.JButton();
         PanelBody = new javax.swing.JPanel();
         jPanel1 = new javax.swing.JPanel();
@@ -596,6 +600,14 @@ public class TelaInicial extends javax.swing.JFrame {
 
         PanelSubSidebar.setLayout(new java.awt.GridLayout(0, 1, 0, 10));
 
+        btnAprovacaoCadastros.setText("Cadastros");
+        btnAprovacaoCadastros.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAprovacaoCadastrosActionPerformed(evt);
+            }
+        });
+        PanelSubSidebar.add(btnAprovacaoCadastros);
+
         btnPedidos.setText("Pedidos");
         btnPedidos.setBorderPainted(false);
         btnPedidos.setFocusPainted(false);
@@ -611,9 +623,6 @@ public class TelaInicial extends javax.swing.JFrame {
 
         btnEstoque.setText("Estoque");
         PanelSubSidebar.add(btnEstoque);
-
-        jButton4.setText("jButton4");
-        PanelSubSidebar.add(jButton4);
 
         jButton8.setText("jButton5");
         PanelSubSidebar.add(jButton8);
@@ -865,6 +874,11 @@ public class TelaInicial extends javax.swing.JFrame {
         CadastroPainel.setVisible(false);
     }//GEN-LAST:event_btnLogin2jButton2ActionPerformed
 
+    private void btnAprovacaoCadastrosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAprovacaoCadastrosActionPerformed
+        CardLayout cl = (CardLayout) PanelBody.getLayout();
+        cl.show(PanelBody, "AprovacaoCadastros");
+    }//GEN-LAST:event_btnAprovacaoCadastrosActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -940,6 +954,7 @@ public class TelaInicial extends javax.swing.JFrame {
     private javax.swing.JPanel PanelSide;
     private javax.swing.JPanel PanelSidebar;
     private javax.swing.JPanel PanelSubSidebar;
+    private javax.swing.JButton btnAprovacaoCadastros;
     private javax.swing.JButton btnCadastrar;
     private javax.swing.JButton btnCadastro;
     private javax.swing.JPanel btnCadastro2;
@@ -971,7 +986,6 @@ public class TelaInicial extends javax.swing.JFrame {
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton16;
     private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton8;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem1;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem2;
