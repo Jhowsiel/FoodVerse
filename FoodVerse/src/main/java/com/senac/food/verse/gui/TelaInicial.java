@@ -1,5 +1,8 @@
-package com.senac.food.verse;
+package com.senac.food.verse.gui;
 
+import com.senac.food.verse.Formatador;
+import com.senac.food.verse.Funcionario;
+import com.senac.food.verse.ValidarCadastro;
 import static com.senac.food.verse.NtpTime.pegarDataAtualNTP;
 import java.awt.CardLayout;
 import java.awt.Color;
