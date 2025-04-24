@@ -758,7 +758,7 @@ public class TelaInicial extends javax.swing.JFrame {
             
             String statusUsuario = Funcionario.buscarNoBanco("email", email, "status");
             
-             if ("temporario".equalsIgnoreCase(statusUsuario)) {
+             if ("pendente".equalsIgnoreCase(statusUsuario)) {
             JOptionPane.showMessageDialog(this, "Seu acesso está temporário. Por favor, espere o administrador verificar o seu cadastro.", "Acesso Temporário", JOptionPane.WARNING_MESSAGE);
             return;
         }

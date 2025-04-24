@@ -20,6 +20,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
+import javax.swing.Timer;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
@@ -78,6 +79,9 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
 
         // Carregar dados
         carregarCadastrosPendentes();
+        
+        // atualizar dados
+        iniciarAtualizacaoAutomatica();
 
         // Configurar ações dos botões
         configurarAcoesBotoes();
@@ -91,11 +95,11 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
             
             if (value != null) {
                 String status = value.toString();
-                if ("PENDING".equals(status)) {
+                if ("pendente".equals(status)) {
                     c.setForeground(new Color(255, 165, 0)); // Laranja
-                } else if ("APPROVED".equals(status)) {
+                } else if ("aprovado".equals(status)) {
                     c.setForeground(new Color(0, 128, 0)); // Verde
-                } else if ("REJECT".equals(status)) {
+                } else if ("rejeitado".equals(status)) {
                     c.setForeground(new Color(255, 0, 0)); // Vermelho
                 }
             }
@@ -355,14 +359,14 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
         
         try {
             conn = banco.abrirConexao();
-            String query = "SELECT id, name, email, role, registrationDate, status FROM tb_funcionarios WHERE status = 'PENDING'";
+            String query = "SELECT userID, name, email, role, registrationDate, status FROM tb_funcionarios WHERE status = 'pendente'";
             stmt = conn.prepareStatement(query);
             rs = stmt.executeQuery();
             
             DefaultTableModel modelo = (DefaultTableModel) tabelaCadastros.getModel();
             
             while (rs.next()) {
-                int id = rs.getInt("id");
+                int id = rs.getInt("userID");
                 String nome = rs.getString("name");
                 String email = rs.getString("email");
                 String cargo = rs.getString("role");
@@ -388,6 +392,11 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
             }
         }
     }
+    
+    private void iniciarAtualizacaoAutomatica() {
+    Timer timer = new Timer(60000, e -> carregarCadastrosPendentes()); // A cada 60s
+    timer.start();
+}
 
     private void limparTabela() {
         DefaultTableModel modelo = (DefaultTableModel) tabelaCadastros.getModel();
@@ -397,6 +406,8 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
 
     // Método para aprovar cadastros no banco de dados
     private boolean aprovarCadastros(List<Integer> ids) {
+        this.carregarCadastrosPendentes();
+                
         ConexaoBanco banco = new ConexaoBanco();
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -406,7 +417,7 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
             conn = banco.abrirConexao();
             conn.setAutoCommit(false); // Iniciar transação
 
-            String query = "UPDATE tb_funcionarios SET status = 'APPROVED' WHERE id = ?";
+            String query = "UPDATE tb_funcionarios SET status = 'aprovado' WHERE userID = ?";
             stmt = conn.prepareStatement(query);
 
             for (Integer id : ids) {
@@ -461,7 +472,7 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
             conn = banco.abrirConexao();
             conn.setAutoCommit(false); // Iniciar transação
 
-            String query = "DELETE FROM tb_funcionarios WHERE id = ?";
+            String query = "DELETE FROM tb_funcionarios WHERE userID = ?";
             stmt = conn.prepareStatement(query);
 
             for (Integer id : ids) {
@@ -515,7 +526,7 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
         try {
             conn = banco.abrirConexao();
 
-            String query = "UPDATE tb_funcionarios SET status = 'APPROVED' WHERE id = ?";
+            String query = "UPDATE tb_funcionarios SET status = 'aprovado' WHERE userID = ?";
             stmt = conn.prepareStatement(query);
             stmt.setInt(1, id);
 
@@ -546,7 +557,7 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
         try {
             conn = banco.abrirConexao();
 
-            String query = "DELETE FROM tb_funcionarios WHERE id = ?";
+            String query = "DELETE FROM tb_funcionarios WHERE userID = ?";
             stmt = conn.prepareStatement(query);
             stmt.setInt(1, id);
 
