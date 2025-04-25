@@ -34,7 +34,10 @@ public class TelaInicial extends javax.swing.JFrame {
         centralizarPainel();  // Centralizar painel ao iniciar
         
         AprovacaoCadastrosPanel painelAprovacao = new AprovacaoCadastrosPanel();
+        PedidosPanel pedidosPainel = new PedidosPanel();
+        
         PanelBody.add(painelAprovacao, "AprovacaoCadastros");
+        PanelBody.add(pedidosPainel, "Pedidos");
 
 
         adicionarListenerRedimensionamento(); // Adicionar listener para redimensionamento

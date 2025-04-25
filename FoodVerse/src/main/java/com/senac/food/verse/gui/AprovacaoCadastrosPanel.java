@@ -26,7 +26,6 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
-
 public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
 
     private List<Integer> funcionariosIds;
@@ -79,7 +78,7 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
 
         // Carregar dados
         carregarCadastrosPendentes();
-        
+
         // atualizar dados
         iniciarAtualizacaoAutomatica();
 
@@ -89,10 +88,11 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
 
     // Renderizador para a coluna de status
     class StatusRenderer extends DefaultTableCellRenderer {
+
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
             Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            
+
             if (value != null) {
                 String status = value.toString();
                 if ("pendente".equals(status)) {
@@ -103,22 +103,23 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
                     c.setForeground(new Color(255, 0, 0)); // Vermelho
                 }
             }
-            
+
             return c;
         }
     }
 
     // Renderizador para os botões de ação
     class ButtonRenderer extends JButton implements TableCellRenderer {
+
         public ButtonRenderer() {
             setOpaque(true);
             setCursor(new Cursor(Cursor.HAND_CURSOR));
         }
-        
+
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
             setText("Opções");
-            
+
             if (isSelected) {
                 setBackground(table.getSelectionBackground());
                 setForeground(table.getSelectionForeground());
@@ -126,23 +127,24 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
                 setBackground(table.getBackground());
                 setForeground(table.getForeground());
             }
-            
+
             return this;
         }
     }
 
     // Editor para os botões de ação
     class ButtonEditor extends DefaultCellEditor {
+
         private JButton button;
         private String label;
         private boolean isPushed;
         private int currentRow;
-        
+
         public ButtonEditor(JCheckBox checkBox) {
             super(checkBox);
             button = new JButton();
             button.setOpaque(true);
-            
+
             button.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -150,7 +152,7 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
                 }
             });
         }
-        
+
         @Override
         public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
             if (isSelected) {
@@ -160,32 +162,32 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
                 button.setForeground(table.getForeground());
                 button.setBackground(table.getBackground());
             }
-            
+
             label = (value == null) ? "Opções" : value.toString();
             button.setText(label);
             isPushed = true;
             currentRow = row;
-            
+
             return button;
         }
-        
+
         @Override
         public Object getCellEditorValue() {
             if (isPushed) {
                 // Obter o ID do funcionário correspondente à linha
                 int funcionarioId = funcionariosIds.get(currentRow);
-                
+
                 // Criar o menu de opções
                 String[] opcoes = {"Aprovar", "Excluir", "Cancelar"};
-                int escolha = JOptionPane.showOptionDialog(button, 
-                        "Escolha uma ação para este cadastro:", 
-                        "Opções", 
-                        JOptionPane.DEFAULT_OPTION, 
-                        JOptionPane.INFORMATION_MESSAGE, 
-                        null, 
-                        opcoes, 
+                int escolha = JOptionPane.showOptionDialog(button,
+                        "Escolha uma ação para este cadastro:",
+                        "Opções",
+                        JOptionPane.DEFAULT_OPTION,
+                        JOptionPane.INFORMATION_MESSAGE,
+                        null,
+                        opcoes,
                         opcoes[0]);
-                
+
                 if (escolha == 0) { // Aprovar
                     boolean sucesso = aprovarCadastro(funcionarioId);
                     if (sucesso) {
@@ -197,11 +199,11 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
                         JOptionPane.showMessageDialog(button, "Erro ao aprovar cadastro.", "Erro", JOptionPane.ERROR_MESSAGE);
                     }
                 } else if (escolha == 1) { // Excluir
-                    int confirmacao = JOptionPane.showConfirmDialog(button, 
-                            "Tem certeza que deseja excluir este cadastro?", 
-                            "Confirmação de Exclusão", 
+                    int confirmacao = JOptionPane.showConfirmDialog(button,
+                            "Tem certeza que deseja excluir este cadastro?",
+                            "Confirmação de Exclusão",
                             JOptionPane.YES_NO_OPTION);
-                    
+
                     if (confirmacao == JOptionPane.YES_OPTION) {
                         boolean sucesso = excluirCadastro(funcionarioId);
                         if (sucesso) {
@@ -218,7 +220,7 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
             isPushed = false;
             return label;
         }
-        
+
         @Override
         public boolean stopCellEditing() {
             isPushed = false;
@@ -237,7 +239,7 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
                 }
             }
         });
-        
+
         // Evento para limpar a seleção
         btnLimparSelecao.addActionListener(new ActionListener() {
             @Override
@@ -248,123 +250,24 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
                 }
             }
         });
-        
-        // Evento para aprovar os cadastros selecionados
-        btnAprovarSelecionados.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                DefaultTableModel modelo = (DefaultTableModel) tabelaCadastros.getModel();
-                List<Integer> rowsToRemove = new ArrayList<>();
-                List<Integer> idsToApprove = new ArrayList<>();
-                
-                // Coletar linhas selecionadas
-                for (int i = 0; i < modelo.getRowCount(); i++) {
-                    Boolean isSelected = (Boolean) modelo.getValueAt(i, 0);
-                    if (isSelected) {
-                        rowsToRemove.add(i);
-                        idsToApprove.add(funcionariosIds.get(i));
-                    }
-                }
-                
-                if (idsToApprove.isEmpty()) {
-                    JOptionPane.showMessageDialog(null, 
-                            "Nenhum cadastro selecionado para aprovação.", 
-                            "Atenção", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-                
-                // Aprovar cadastros selecionados
-                boolean aprovacaoRealizada = aprovarCadastros(idsToApprove);
-                
-                if (aprovacaoRealizada) {
-                    JOptionPane.showMessageDialog(null, 
-                            "Cadastros aprovados com sucesso!", 
-                            "Confirmação", JOptionPane.INFORMATION_MESSAGE);
-                    
-                    // Remover linhas da tabela (de trás para frente para não afetar os índices)
-                    for (int i = rowsToRemove.size() - 1; i >= 0; i--) {
-                        int row = rowsToRemove.get(i);
-                        modelo.removeRow(row);
-                        funcionariosIds.remove(row);
-                    }
-                } else {
-                    JOptionPane.showMessageDialog(null, 
-                            "Erro ao aprovar cadastros. Tente novamente.", 
-                            "Erro", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        });
-        
-        // Evento para excluir os cadastros selecionados
-        btnExcluirSelecionados.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                DefaultTableModel modelo = (DefaultTableModel) tabelaCadastros.getModel();
-                List<Integer> rowsToRemove = new ArrayList<>();
-                List<Integer> idsToDelete = new ArrayList<>();
-                
-                // Coletar linhas selecionadas
-                for (int i = 0; i < modelo.getRowCount(); i++) {
-                    Boolean isSelected = (Boolean) modelo.getValueAt(i, 0);
-                    if (isSelected) {
-                        rowsToRemove.add(i);
-                        idsToDelete.add(funcionariosIds.get(i));
-                    }
-                }
-                
-                if (idsToDelete.isEmpty()) {
-                    JOptionPane.showMessageDialog(null, 
-                            "Nenhum cadastro selecionado para exclusão.", 
-                            "Atenção", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-                
-                // Confirmar exclusão
-                int confirmacao = JOptionPane.showConfirmDialog(null,
-                        "Tem certeza que deseja excluir os cadastros selecionados?",
-                        "Confirmação de Exclusão", JOptionPane.YES_NO_OPTION);
-                
-                if (confirmacao == JOptionPane.YES_OPTION) {
-                    // Excluir cadastros selecionados
-                    boolean exclusaoRealizada = excluirCadastros(idsToDelete);
-                    
-                    if (exclusaoRealizada) {
-                        JOptionPane.showMessageDialog(null, 
-                                "Cadastros excluídos com sucesso!", 
-                                "Confirmação", JOptionPane.INFORMATION_MESSAGE);
-                        
-                        // Remover linhas da tabela (de trás para frente para não afetar os índices)
-                        for (int i = rowsToRemove.size() - 1; i >= 0; i--) {
-                            int row = rowsToRemove.get(i);
-                            modelo.removeRow(row);
-                            funcionariosIds.remove(row);
-                        }
-                    } else {
-                        JOptionPane.showMessageDialog(null, 
-                                "Erro ao excluir cadastros. Tente novamente.", 
-                                "Erro", JOptionPane.ERROR_MESSAGE);
-                    }
-                }
-            }
-        });
     }
 
     private void carregarCadastrosPendentes() {
         limparTabela();
-        
+
         ConexaoBanco banco = new ConexaoBanco();
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        
+
         try {
             conn = banco.abrirConexao();
             String query = "SELECT userID, name, email, role, registrationDate, status FROM tb_funcionarios WHERE status = 'pendente'";
             stmt = conn.prepareStatement(query);
             rs = stmt.executeQuery();
-            
+
             DefaultTableModel modelo = (DefaultTableModel) tabelaCadastros.getModel();
-            
+
             while (rs.next()) {
                 int id = rs.getInt("userID");
                 String nome = rs.getString("name");
@@ -372,31 +275,37 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
                 String cargo = rs.getString("role");
                 String dataRegistro = rs.getString("registrationDate");
                 String status = rs.getString("status");
-                
+
                 // Adicionar ID à lista de IDs
                 funcionariosIds.add(id);
-                
+
                 // Adicionar linha na tabela (com checkbox desmarcado por padrão)
                 modelo.addRow(new Object[]{false, nome, email, cargo, dataRegistro, status, "Ações"});
             }
-            
+
         } catch (SQLException ex) {
             Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Erro ao carregar cadastros pendentes", ex);
         } finally {
             try {
-                if (rs != null) rs.close();
-                if (stmt != null) stmt.close();
-                if (conn != null) banco.fecharConexao();
+                if (rs != null) {
+                    rs.close();
+                }
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conn != null) {
+                    banco.fecharConexao();
+                }
             } catch (SQLException ex) {
                 Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Erro ao fechar recursos", ex);
             }
         }
     }
-    
+
     private void iniciarAtualizacaoAutomatica() {
-    Timer timer = new Timer(60000, e -> carregarCadastrosPendentes()); // A cada 60s
-    timer.start();
-}
+        Timer timer = new Timer(60000, e -> carregarCadastrosPendentes()); // A cada 60s
+        timer.start();
+    }
 
     private void limparTabela() {
         DefaultTableModel modelo = (DefaultTableModel) tabelaCadastros.getModel();
@@ -407,7 +316,7 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
     // Método para aprovar cadastros no banco de dados
     private boolean aprovarCadastros(List<Integer> ids) {
         this.carregarCadastrosPendentes();
-                
+
         ConexaoBanco banco = new ConexaoBanco();
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -448,7 +357,9 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
             }
         } finally {
             try {
-                if (stmt != null) stmt.close();
+                if (stmt != null) {
+                    stmt.close();
+                }
                 if (conn != null) {
                     conn.setAutoCommit(true);
                     banco.fecharConexao();
@@ -503,7 +414,9 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
             }
         } finally {
             try {
-                if (stmt != null) stmt.close();
+                if (stmt != null) {
+                    stmt.close();
+                }
                 if (conn != null) {
                     conn.setAutoCommit(true);
                     banco.fecharConexao();
@@ -537,8 +450,12 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
             Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Erro ao aprovar cadastro", ex);
         } finally {
             try {
-                if (stmt != null) stmt.close();
-                if (conn != null) banco.fecharConexao();
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conn != null) {
+                    banco.fecharConexao();
+                }
             } catch (SQLException ex) {
                 Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Erro ao fechar recursos", ex);
             }
@@ -568,8 +485,12 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
             Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Erro ao excluir cadastro", ex);
         } finally {
             try {
-                if (stmt != null) stmt.close();
-                if (conn != null) banco.fecharConexao();
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conn != null) {
+                    banco.fecharConexao();
+                }
             } catch (SQLException ex) {
                 Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Erro ao fechar recursos", ex);
             }
@@ -582,6 +503,7 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
     public void recarregarTabela() {
         carregarCadastrosPendentes();
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -686,26 +608,110 @@ public class AprovacaoCadastrosPanel extends javax.swing.JPanel {
 
     private void btnSelecionarTodosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSelecionarTodosActionPerformed
         // Selecionar todos os itens na tabela
-    DefaultTableModel modelo = (DefaultTableModel) tabelaCadastros.getModel();
-    for (int i = 0; i < modelo.getRowCount(); i++) {
-        modelo.setValueAt(true, i, 0);
+        DefaultTableModel modelo = (DefaultTableModel) tabelaCadastros.getModel();
+        for (int i = 0; i < modelo.getRowCount(); i++) {
+            modelo.setValueAt(true, i, 0);
         }
     }//GEN-LAST:event_btnSelecionarTodosActionPerformed
 
     private void btnLimparSelecaoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimparSelecaoActionPerformed
         // Limpar todas as seleções na tabela
-    DefaultTableModel modelo = (DefaultTableModel) tabelaCadastros.getModel();
-    for (int i = 0; i < modelo.getRowCount(); i++) {
-        modelo.setValueAt(false, i, 0);
+        DefaultTableModel modelo = (DefaultTableModel) tabelaCadastros.getModel();
+        for (int i = 0; i < modelo.getRowCount(); i++) {
+            modelo.setValueAt(false, i, 0);
         }
     }//GEN-LAST:event_btnLimparSelecaoActionPerformed
 
     private void btnAprovarSelecionadosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAprovarSelecionadosActionPerformed
         // Aprovar os cadastros selecionados
+        DefaultTableModel modelo = (DefaultTableModel) tabelaCadastros.getModel();
+        List<Integer> rowsToRemove = new ArrayList<>();
+        List<Integer> idsToApprove = new ArrayList<>();
+
+        // Coletar linhas selecionadas
+        for (int i = 0; i < modelo.getRowCount(); i++) {
+            Boolean isSelected = (Boolean) modelo.getValueAt(i, 0);
+            if (isSelected) {
+                rowsToRemove.add(i);
+                idsToApprove.add(funcionariosIds.get(i));
+            }
+        }
+
+        if (idsToApprove.isEmpty()) {
+            JOptionPane.showMessageDialog(null,
+                    "Nenhum cadastro selecionado para aprovação.",
+                    "Atenção", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Aprovar cadastros selecionados
+        boolean aprovacaoRealizada = aprovarCadastros(idsToApprove);
+
+        if (aprovacaoRealizada) {
+            JOptionPane.showMessageDialog(null,
+                    "Cadastros aprovados com sucesso!",
+                    "Confirmação", JOptionPane.INFORMATION_MESSAGE);
+
+            // Remover linhas da tabela (de trás para frente para não afetar os índices)
+            for (int i = rowsToRemove.size() - 1; i >= 0; i--) {
+                int row = rowsToRemove.get(i);
+                modelo.removeRow(row);
+                funcionariosIds.remove(row);
+            }
+        } else {
+            JOptionPane.showMessageDialog(null,
+                    "Erro ao aprovar cadastros. Tente novamente.",
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_btnAprovarSelecionadosActionPerformed
 
     private void btnExcluirSelecionadosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExcluirSelecionadosActionPerformed
-    
+        DefaultTableModel modelo = (DefaultTableModel) tabelaCadastros.getModel();
+        List<Integer> rowsToRemove = new ArrayList<>();
+        List<Integer> idsToDelete = new ArrayList<>();
+
+        // Coletar linhas selecionadas
+        for (int i = 0; i < modelo.getRowCount(); i++) {
+            Boolean isSelected = (Boolean) modelo.getValueAt(i, 0);
+            if (isSelected) {
+                rowsToRemove.add(i);
+                idsToDelete.add(funcionariosIds.get(i));
+            }
+        }
+
+        if (idsToDelete.isEmpty()) {
+            JOptionPane.showMessageDialog(null,
+                    "Nenhum cadastro selecionado para exclusão.",
+                    "Atenção", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Confirmar exclusão
+        int confirmacao = JOptionPane.showConfirmDialog(null,
+                "Tem certeza que deseja excluir os cadastros selecionados?",
+                "Confirmação de Exclusão", JOptionPane.YES_NO_OPTION);
+
+        if (confirmacao == JOptionPane.YES_OPTION) {
+            // Excluir cadastros selecionados
+            boolean exclusaoRealizada = excluirCadastros(idsToDelete);
+
+            if (exclusaoRealizada) {
+                JOptionPane.showMessageDialog(null,
+                        "Cadastros excluídos com sucesso!",
+                        "Confirmação", JOptionPane.INFORMATION_MESSAGE);
+
+                // Remover linhas da tabela (de trás para frente para não afetar os índices)
+                for (int i = rowsToRemove.size() - 1; i >= 0; i--) {
+                    int row = rowsToRemove.get(i);
+                    modelo.removeRow(row);
+                    funcionariosIds.remove(row);
+                }
+            } else {
+                JOptionPane.showMessageDialog(null,
+                        "Erro ao excluir cadastros. Tente novamente.",
+                        "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }//GEN-LAST:event_btnExcluirSelecionadosActionPerformed
 
 
