@@ -41,7 +41,7 @@ create table tb_pedidos_produtos (
 )
 
 CREATE TABLE tb_funcionarios (
-    id INT identity PRIMARY KEY,
+    userID INT identity PRIMARY KEY,
     name VARCHAR(100),
     userName VARCHAR(50),
     email VARCHAR(100) ,
