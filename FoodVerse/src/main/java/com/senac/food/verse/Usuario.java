@@ -1,13 +1,13 @@
-
 package com.senac.food.verse;
 
 public class Usuario {
-public int userId;
-public  String userName;
-public String email;
-public   String password;
-public  Boolean isLogin;
-public String registrationDate;
+
+    public int userId;
+    public String userName;
+    public String email;
+    public String password;
+    public Boolean isLogin;
+    public String registrationDate;
 
     public Usuario(String userName, String email, String password, Boolean isLogin, String registrationDate) {
         this.userName = userName;
@@ -20,16 +20,16 @@ public String registrationDate;
     public boolean chechLogin() {
         return this.isLogin;
     }
-    
+
     public void login() {
         System.out.println("Logado com Sucesso!");
     }
-        
+
     public int getUserId() {
         return userId;
     }
 
-    public  String getUserName() {
+    public String getUserName() {
         return userName;
     }
 

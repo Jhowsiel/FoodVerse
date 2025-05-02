@@ -1,11 +1,18 @@
 package com.senac.food.verse.gui;
+
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
  */
+import com.senac.food.verse.ConexaoBanco;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
-
 
 /**
  *
@@ -22,7 +29,6 @@ public class PedidosPanel extends javax.swing.JPanel {
         carregarPedidos();
     }
 
-    
     private void configurarTabela() {
         // Modelo de dados da tabela
         String[] colunas = {"Nº Pedido", "Mesa", "Itens", "Status", "Hora"};
@@ -33,7 +39,7 @@ public class PedidosPanel extends javax.swing.JPanel {
             }
         };
         tabelaPedidos.setModel(model);
-        
+
         // Configurar largura das colunas
         tabelaPedidos.getColumnModel().getColumn(0).setPreferredWidth(80);  // Nº Pedido
         tabelaPedidos.getColumnModel().getColumn(1).setPreferredWidth(60);   // Mesa
@@ -43,15 +49,64 @@ public class PedidosPanel extends javax.swing.JPanel {
     }
 
     private void carregarPedidos() {
-        // Exemplo com dados mockados - substituir por conexão com BD
-        DefaultTableModel model = (DefaultTableModel) tabelaPedidos.getModel();
-        model.setRowCount(0); // Limpa a tabela
-        
-        // Dados de exemplo
-        model.addRow(new Object[]{"001", "Mesa 5", "2x Pizza, 1x Refri", "Preparando", "12:30"});
-        model.addRow(new Object[]{"002", "Mesa 2", "1x Lasanha", "Aguardando", "12:45"});
+        ConexaoBanco banco = new ConexaoBanco();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = banco.abrirConexao();
+
+            String query = """
+            SELECT 
+                p.ID_pedido AS pedido,
+                r.num_pessoas AS mesa,
+                STRING_AGG(prod.nome_produto + ' x' + CAST(pp.quantidade AS VARCHAR), ', ') AS itens,
+                p.status_pedido AS status,
+                FORMAT(p.data_pedido, 'HH:mm') AS hora
+            FROM tb_pedidos p
+            JOIN tb_reservas r ON p.ID_reserva = r.ID_reserva
+            JOIN tb_pedidos_produtos pp ON p.ID_pedido = pp.ID_pedido
+            JOIN tb_produtos prod ON pp.ID_produto = prod.ID_produto
+            GROUP BY p.ID_pedido, r.num_pessoas, p.data_pedido, p.status_pedido
+        """;
+
+            stmt = conn.prepareStatement(query);
+            rs = stmt.executeQuery();
+
+            DefaultTableModel modelo = (DefaultTableModel) tabelaPedidos.getModel();
+            modelo.setRowCount(0); // Limpa a tabela
+
+            while (rs.next()) {
+                String id = rs.getString("pedido");
+                String mesa = rs.getString("mesa");
+                String itens = rs.getString("itens");
+                String status = rs.getString("status");
+                String hora = rs.getString("hora");
+
+                modelo.addRow(new Object[]{id, mesa, itens, status, hora});
+            }
+
+        } catch (SQLException ex) {
+            Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Erro ao carregar pedidos do banco", ex);
+            JOptionPane.showMessageDialog(this, "Erro ao carregar pedidos do banco.");
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conn != null) {
+                    banco.fecharConexao();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Erro ao fechar recursos", ex);
+            }
+        }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -175,11 +230,11 @@ public class PedidosPanel extends javax.swing.JPanel {
 
     private void btnProntoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnProntoActionPerformed
         int linhaSelecionada = tabelaPedidos.getSelectedRow();
-        if(linhaSelecionada >= 0) {
-            ((DefaultTableModel)tabelaPedidos.getModel())
-                .setValueAt("Pronto", linhaSelecionada, 3);
+        if (linhaSelecionada >= 0) {
+            ((DefaultTableModel) tabelaPedidos.getModel())
+                    .setValueAt("Pronto", linhaSelecionada, 3);
         }
-        
+
     }//GEN-LAST:event_btnProntoActionPerformed
 
     private void btnCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelarActionPerformed

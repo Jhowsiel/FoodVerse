@@ -7,7 +7,6 @@ com\senac\food\verse\gui\TelaInicial$4.class
 com\senac\food\verse\gui\TelaInicial$13.class
 com\senac\food\verse\gui\TelaInicial$19.class
 com\senac\food\verse\gui\TelaInicial$7.class
-com\senac\food\verse\gui\AprovacaoCadastrosPanel$9.class
 com\senac\food\verse\gui\PedidosPanel$3.class
 com\senac\food\verse\gui\TelaInicial$16.class
 com\senac\food\verse\gui\AprovacaoCadastrosPanel$ButtonRenderer.class
@@ -48,5 +47,4 @@ com\senac\food\verse\gui\AprovacaoCadastrosPanel$ButtonEditor.class
 com\senac\food\verse\gui\AprovacaoCadastrosPanel.class
 com\senac\food\verse\gui\PedidosPanel.class
 com\senac\food\verse\gui\AprovacaoCadastrosPanel$2.class
-com\senac\food\verse\gui\AprovacaoCadastrosPanel$8.class
 com\senac\food\verse\Admin.class
