@@ -1,53 +1,113 @@
-create database FoodVerseDB
+CREATE DATABASE FoodVerseDB;
 
-use FoodVerseDB
+USE FoodVerseDB;
 
-create table tb_clientes (
-	ID_cliente int identity primary key,
-	user_name varchar(100),
-	name varchar(100),
-	email varchar(100),
-	phone varchar(100),
-	password varchar(255),
-	cpf varchar(11),
-	registrationDate varchar(10),
-	isLogin bit
-)
 
-create table tb_produtos (
-	ID_produto int identity primary key,
-	nome_produto varchar(100),
-	desc_produto varchar(255),
-	preco_produto decimal(10,2)
-)
+-- Tabela: tb_clientes
+CREATE TABLE tb_clientes (
+    UserId INT IDENTITY PRIMARY KEY,
+    user_name VARCHAR(100),
+    name VARCHAR(100),
+    email VARCHAR(100),
+    phone VARCHAR(100),
+    password VARCHAR(255),
+    cpf VARCHAR(255),
+    registrationDate DATE,
+    isLogin BIT
+);
 
-create table tb_pedidos (
-	ID_pedido int identity primary key,
-	data_pedido varchar(10),
-	estoque int,
-	ID_cliente int,
-	FOREIGN KEY (ID_cliente) REFERENCES tb_clientes(ID_cliente)
+-- Tabela: tb_produtos
+CREATE TABLE tb_produtos (
+    ID_produto INT IDENTITY PRIMARY KEY,
+    nome_produto VARCHAR(100),
+    des_produto VARCHAR(255),
+    preco_produto DECIMAL(10,2)
+);
 
-)
+-- Tabela: tb_reservas (com coluna mesa)
+CREATE TABLE tb_reservas (
+    ID_reserva INT IDENTITY PRIMARY KEY,
+    ID_cliente INT,
+    data_reserva DATETIME,
+    num_pessoas INT,
+    mesa VARCHAR(10), -- adicionada a coluna de mesa
+    FOREIGN KEY (ID_cliente) REFERENCES tb_clientes(UserId)
+);
 
-create table tb_pedidos_produtos (
-	ID_pedido int,
-	FOREIGN KEY (ID_pedido) REFERENCES tb_pedidos(ID_pedido),
-	ID_produto int,
-	FOREIGN KEY (ID_produto) REFERENCES tb_produtos(ID_produto),
-	PRIMARY KEY (ID_pedido, ID_produto),
-	quantidade int
+-- Tabela: tb_pedidos (com FK para reservas)
+CREATE TABLE tb_pedidos (
+    ID_pedido INT IDENTITY PRIMARY KEY,
+    data_pedido DATETIME,
+    ID_cliente INT,
+    status_pedido VARCHAR(50),
+    tipo_pedido VARCHAR(50),
+    ID_reserva INT NULL,
+    FOREIGN KEY (ID_cliente) REFERENCES tb_clientes(UserId),
+    FOREIGN KEY (ID_reserva) REFERENCES tb_reservas(ID_reserva)
+);
 
-)
+-- Tabela: tb_pedidos_produtos (associativa)
+CREATE TABLE tb_pedidos_produtos (
+    ID_pedido INT,
+    ID_produto INT,
+    quantidade INT,
+    PRIMARY KEY (ID_pedido, ID_produto),
+    FOREIGN KEY (ID_pedido) REFERENCES tb_pedidos(ID_pedido),
+    FOREIGN KEY (ID_produto) REFERENCES tb_produtos(ID_produto)
+);
 
+-- Tabela: tb_cupons
+CREATE TABLE tb_cupons (
+    ID_cupom INT IDENTITY PRIMARY KEY,
+    codigo_cupom VARCHAR(50),
+    desconto DECIMAL(5,2),
+    validade DATE
+);
+
+-- Tabela: tb_avaliacoes
+CREATE TABLE tb_avaliacoes (
+    ID_avaliacao INT IDENTITY PRIMARY KEY,
+    ID_cliente INT,
+    ID_produto INT,
+    comentario VARCHAR(255),
+    nota INT,
+    data_avaliacao DATE,
+    FOREIGN KEY (ID_cliente) REFERENCES tb_clientes(UserId),
+    FOREIGN KEY (ID_produto) REFERENCES tb_produtos(ID_produto)
+);
+
+-- Tabela: tb_pagamentos
+CREATE TABLE tb_pagamentos (
+    ID_pagamento INT IDENTITY PRIMARY KEY,
+    ID_pedido INT,
+    metodo_pagamento VARCHAR(50),
+    valor_total DECIMAL(10,2),
+    data_pagamento DATE,
+    FOREIGN KEY (ID_pedido) REFERENCES tb_pedidos(ID_pedido)
+);
+
+-- Tabela: tb_fidelidade
+CREATE TABLE tb_fidelidade (
+    ID_fidelidade INT IDENTITY PRIMARY KEY,
+    ID_cliente INT,
+    pontos INT,
+    cashback DECIMAL(10,2),
+    FOREIGN KEY (ID_cliente) REFERENCES tb_clientes(UserId)
+);
+
+-- Tabela: tb_funcionarios
 CREATE TABLE tb_funcionarios (
-    userID INT identity PRIMARY KEY,
+    userID INT IDENTITY PRIMARY KEY,
     name VARCHAR(100),
     userName VARCHAR(50),
-    email VARCHAR(100) ,
-    role VARCHAR(50) ,
-    phone VARCHAR(20) ,
+    email VARCHAR(100),
+    role VARCHAR(50),
+    phone VARCHAR(20),
     password VARCHAR(255),
-    registrationDate varchar(20),
-    status varchar(20)
+    registrationDate VARCHAR(20),
+    status VARCHAR(20)
 );
+
+INSERT INTO tb_funcionarios (name, userName, email, role, phone, password, registrationDate, status)
+VALUES ('1', '1', '1', 'Cozinheiro', '11999998888', '1', '2025-04-30', 'aprovado');
+
