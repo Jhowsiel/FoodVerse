@@ -27,6 +27,13 @@ public class TelaInicial extends javax.swing.JFrame {
      * Creates new form LoginAdmin
      */
     public TelaInicial() {
+        
+          try {
+        // Aplica o visual moderno estilo Flat
+        javax.swing.UIManager.setLookAndFeel(new com.formdev.flatlaf.FlatLightLaf());
+    } catch (Exception ex) {
+        System.err.println("Erro ao aplicar FlatLaf: " + ex.getMessage());
+    }
 
         initComponents();
         buttonGroup1.add(cargoCozinheiro); // Grupo de botoes
