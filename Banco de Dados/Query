@@ -41,6 +41,7 @@ CREATE TABLE tb_pedidos (
     ID_cliente INT,
     status_pedido VARCHAR(50),
     tipo_pedido VARCHAR(50),
+	tipo_entrega VARCHAR(20),
     ID_reserva INT NULL,
     FOREIGN KEY (ID_cliente) REFERENCES tb_clientes(UserId),
     FOREIGN KEY (ID_reserva) REFERENCES tb_reservas(ID_reserva)
@@ -110,4 +111,3 @@ CREATE TABLE tb_funcionarios (
 
 INSERT INTO tb_funcionarios (name, userName, email, role, phone, password, registrationDate, status)
 VALUES ('1', '1', '1', 'Cozinheiro', '11999998888', '1', '2025-04-30', 'aprovado');
-
