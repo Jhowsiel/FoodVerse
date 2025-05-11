@@ -7,6 +7,7 @@ com\senac\food\verse\gui\TelaInicial$4.class
 com\senac\food\verse\gui\TelaInicial$13.class
 com\senac\food\verse\gui\TelaInicial$19.class
 com\senac\food\verse\gui\TelaInicial$7.class
+com\senac\food\verse\gui\PedidosPanel$3.class
 com\senac\food\verse\gui\TelaInicial$16.class
 com\senac\food\verse\gui\AprovacaoCadastrosPanel$ButtonRenderer.class
 com\senac\food\verse\ClienteInterface.class
@@ -19,7 +20,9 @@ com\senac\food\verse\gui\TelaInicial$3.class
 com\senac\food\verse\gui\TelaInicial$9.class
 com\senac\food\verse\gui\AprovacaoCadastrosPanel$ButtonEditor$1.class
 com\senac\food\verse\gui\AprovacaoCadastrosPanel$3.class
+com\senac\food\verse\PedidoDAO.class
 com\senac\food\verse\gui\TelaInicial$15.class
+com\senac\food\verse\gui\PedidosPanel$4.class
 com\senac\food\verse\gui\TelaInicial$12.class
 com\senac\food\verse\gui\HomePanel.class
 com\senac\food\verse\gui\PedidosPanel$2.class
@@ -29,9 +32,11 @@ com\senac\food\verse\ConexaoBanco.class
 com\senac\food\verse\FuncionarioInterface.class
 com\senac\food\verse\gui\TelaInicial$14.class
 com\senac\food\verse\gui\TelaInicial$18.class
+com\senac\food\verse\gui\PedidosPanel$5.class
 com\senac\food\verse\gui\AprovacaoCadastrosPanel$StatusRenderer.class
 com\senac\food\verse\gui\AprovacaoCadastrosPanel$1.class
 com\senac\food\verse\Formatador.class
+com\senac\food\verse\RoundedLabel.class
 com\senac\food\verse\gui\TelaInicial$11.class
 com\senac\food\verse\gui\AprovacaoCadastrosPanel$4.class
 com\senac\food\verse\Cliente.class

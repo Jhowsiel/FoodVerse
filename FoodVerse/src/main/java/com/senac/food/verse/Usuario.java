@@ -17,7 +17,7 @@ public class Usuario {
         this.registrationDate = registrationDate;
     }
 
-    public boolean chechLogin() {
+    public boolean checkLogin() {
         return this.isLogin;
     }
 
