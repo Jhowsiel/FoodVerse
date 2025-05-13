@@ -20,9 +20,11 @@ com\senac\food\verse\gui\TelaInicial$3.class
 com\senac\food\verse\gui\TelaInicial$9.class
 com\senac\food\verse\gui\AprovacaoCadastrosPanel$ButtonEditor$1.class
 com\senac\food\verse\gui\AprovacaoCadastrosPanel$3.class
+com\senac\food\verse\gui\PedidosPanel$2$1.class
 com\senac\food\verse\PedidoDAO.class
 com\senac\food\verse\gui\TelaInicial$15.class
 com\senac\food\verse\gui\PedidosPanel$4.class
+com\senac\food\verse\gui\PedidosPanel$7.class
 com\senac\food\verse\gui\TelaInicial$12.class
 com\senac\food\verse\gui\HomePanel.class
 com\senac\food\verse\gui\PedidosPanel$2.class
@@ -49,6 +51,6 @@ com\senac\food\verse\gui\TelaInicial$5.class
 com\senac\food\verse\gui\AprovacaoCadastrosPanel$ButtonEditor.class
 com\senac\food\verse\gui\AprovacaoCadastrosPanel.class
 com\senac\food\verse\gui\PedidosPanel.class
+com\senac\food\verse\gui\PedidosPanel$6.class
 com\senac\food\verse\gui\AprovacaoCadastrosPanel$2.class
 com\senac\food\verse\Admin.class
-com\senac\food\verse\gui\PedidosPanel$1$1.class

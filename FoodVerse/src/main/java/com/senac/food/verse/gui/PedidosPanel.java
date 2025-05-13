@@ -16,6 +16,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.sql.Connection;
@@ -42,7 +44,7 @@ import javax.swing.table.DefaultTableModel;
  *
  * @author josie
  */
-public class PedidosPanel extends javax.swing.JPanel {
+public final class PedidosPanel extends javax.swing.JPanel {
 
     /**
      * Creates new form PedidosPanel
@@ -52,7 +54,18 @@ public class PedidosPanel extends javax.swing.JPanel {
         estilizarComboBoxSeta();
         criarMenuPedido();
         quantidadePedidosPendentes();
+        limparInput();
 
+        inputBuscar.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                String textoDigitado = inputBuscar.getText().trim();
+                if (!textoDigitado.equals("") && !textoDigitado.equalsIgnoreCase("Buscar")) {
+                    buscarPedidos(textoDigitado);
+                } else {
+                    criarMenuPedido(); // Mostra todos se estiver vazio
+                }
+            }
+        });
     }
 
     private void estilizarComboBoxSeta() {
@@ -205,6 +218,7 @@ public class PedidosPanel extends javax.swing.JPanel {
         jPanel3.setLayout(new BoxLayout(jPanel3, BoxLayout.Y_AXIS));
 
         for (Pedidos pedido : pedidos) {
+            //ajudar a criar o cardMenu
             JPanel pedidoCard = criarPedidoCard(pedido);
             jPanel3.add(Box.createVerticalStrut(10)); // Espaço entre os cards
             jPanel3.add(pedidoCard);
@@ -214,12 +228,58 @@ public class PedidosPanel extends javax.swing.JPanel {
         jPanel3.repaint();
     }
 
+    private void buscarPedidos(String pesquisa) {
+        PedidoDAO dao = new PedidoDAO();
+        ArrayList<Pedidos> pedidos = dao.buscarTodosPedidos();
+
+        jPanel3.removeAll();
+
+        String pesquisaFormatada = pesquisa.toLowerCase().replace("#", "").trim();
+        for (Pedidos pedido : pedidos) {
+
+            if (pedido.getIdPedido().trim().toLowerCase().contains(pesquisaFormatada)
+                    || pedido.getStatusPedido().trim().toLowerCase().contains(pesquisaFormatada)
+                    || pedido.getTipoPedido().trim().toLowerCase().contains(pesquisaFormatada)) {
+
+                JPanel pedidoCard = criarPedidoCard(pedido);
+                jPanel3.add(Box.createVerticalStrut(10));
+                jPanel3.add(pedidoCard);
+            }
+        }
+
+        jPanel3.revalidate();
+        jPanel3.repaint();
+    }
+
     public void quantidadePedidosPendentes() {
         PedidoDAO dao = new PedidoDAO();
-        int quantidade = dao.quantidadePedidos(); 
-        
-        System.out.println(quantidade);
-        quantidadePedidos.setText(String.valueOf(quantidade)); 
+
+        dao.buscarTodosPedidos();
+
+        int quantidade = dao.quantidadePedidosPendentes();
+
+        System.out.println("Quantidade de pedidos pendentes: " + quantidade);
+        quantidadePedidos.setText(String.valueOf(quantidade));
+    }
+
+    public void limparInput() {
+        inputBuscar.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                // Limpa o texto quando o campo recebe o foco
+                if (inputBuscar.getText().equals("Buscar")) {
+                    inputBuscar.setText("");
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                // Caso o campo perca o foco e esteja vazio, restaura o texto original
+                if (inputBuscar.getText().isEmpty()) {
+                    inputBuscar.setText("Buscar");
+                }
+            }
+        });
     }
 
     /**
@@ -232,7 +292,7 @@ public class PedidosPanel extends javax.swing.JPanel {
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
-        jTextField1 = new javax.swing.JTextField();
+        inputBuscar = new javax.swing.JTextField();
         jComboBox1 = new javax.swing.JComboBox<>();
         jSeparator1 = new javax.swing.JSeparator();
         jLabel1 = new javax.swing.JLabel();
@@ -244,10 +304,10 @@ public class PedidosPanel extends javax.swing.JPanel {
 
         jPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
-        jTextField1.setText("Buscar");
-        jTextField1.addActionListener(new java.awt.event.ActionListener() {
+        inputBuscar.setText("Buscar");
+        inputBuscar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextField1ActionPerformed(evt);
+                inputBuscarActionPerformed(evt);
             }
         });
 
@@ -290,7 +350,7 @@ public class PedidosPanel extends javax.swing.JPanel {
                         .addComponent(quantidadePedidos)
                         .addContainerGap())
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jTextField1, javax.swing.GroupLayout.DEFAULT_SIZE, 157, Short.MAX_VALUE)
+                        .addComponent(inputBuscar, javax.swing.GroupLayout.DEFAULT_SIZE, 157, Short.MAX_VALUE)
                         .addGap(18, 18, 18)
                         .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18))))
@@ -301,7 +361,7 @@ public class PedidosPanel extends javax.swing.JPanel {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(inputBuscar, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -322,19 +382,27 @@ public class PedidosPanel extends javax.swing.JPanel {
 
     }//GEN-LAST:event_jComboBox1ActionPerformed
 
-    private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jTextField1ActionPerformed
+    private void inputBuscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputBuscarActionPerformed
+
+        String textoDigitado = inputBuscar.getText().trim();
+        System.out.println(textoDigitado);
+
+        if (!textoDigitado.equals("") && !textoDigitado.equalsIgnoreCase("Buscar")) {
+            buscarPedidos(textoDigitado);
+        } else {
+            criarMenuPedido(); // Mostra todos se o campo estiver vazio
+        }
+    }//GEN-LAST:event_inputBuscarActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JTextField inputBuscar;
     private javax.swing.JComboBox<String> jComboBox1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JSeparator jSeparator3;
-    private javax.swing.JTextField jTextField1;
     private javax.swing.JLabel quantidadePedidos;
     // End of variables declaration//GEN-END:variables
 }
