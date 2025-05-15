@@ -49,12 +49,24 @@ public final class PedidosPanel extends javax.swing.JPanel {
     /**
      * Creates new form PedidosPanel
      */
+    private final PedidoDAO dao = new PedidoDAO();
+
     public PedidosPanel() {
         initComponents();
         estilizarComboBoxSeta();
+        dao.buscarTodosPedidos();
         criarMenuPedido();
-        quantidadePedidosPendentes();
+        atualizarContadorPendentes();
         limparInput();
+
+        new javax.swing.Timer(10_000, e -> {
+            if (dao.haNovoPedido()) {
+                dao.recarregarPedidos();
+                criarMenuPedido();
+                atualizarContadorPendentes();
+                System.out.println("Novos pedidos! Interface atualizada.");
+            }
+        }).start();
 
         inputBuscar.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
@@ -211,7 +223,6 @@ public final class PedidosPanel extends javax.swing.JPanel {
     }
 
     public void criarMenuPedido() {
-        PedidoDAO dao = new PedidoDAO();
         ArrayList<Pedidos> pedidos = dao.buscarTodosPedidos();
 
         jPanel3.removeAll(); // Limpa os pedidos anteriores
@@ -229,7 +240,6 @@ public final class PedidosPanel extends javax.swing.JPanel {
     }
 
     private void buscarPedidos(String pesquisa) {
-        PedidoDAO dao = new PedidoDAO();
         ArrayList<Pedidos> pedidos = dao.buscarTodosPedidos();
 
         jPanel3.removeAll();
@@ -251,15 +261,9 @@ public final class PedidosPanel extends javax.swing.JPanel {
         jPanel3.repaint();
     }
 
-    public void quantidadePedidosPendentes() {
-        PedidoDAO dao = new PedidoDAO();
-
-        dao.buscarTodosPedidos();
-
-        int quantidade = dao.quantidadePedidosPendentes();
-
-        System.out.println("Quantidade de pedidos pendentes: " + quantidade);
-        quantidadePedidos.setText(String.valueOf(quantidade));
+    private void atualizarContadorPendentes() {
+        int qtd = dao.quantidadePedidosPendentes();
+        quantidadePedidos.setText(String.valueOf(qtd));
     }
 
     public void limparInput() {
@@ -298,6 +302,7 @@ public final class PedidosPanel extends javax.swing.JPanel {
         jLabel1 = new javax.swing.JLabel();
         quantidadePedidos = new javax.swing.JLabel();
         jSeparator3 = new javax.swing.JSeparator();
+        JScrollPanel = new javax.swing.JScrollPane();
         jPanel3 = new javax.swing.JPanel();
 
         setLayout(new java.awt.BorderLayout());
@@ -311,7 +316,7 @@ public final class PedidosPanel extends javax.swing.JPanel {
             }
         });
 
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Todos" }));
+        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Todos", "Pendente", "Pronto", "Entregue", "Cancelado", "Finalizado" }));
         jComboBox1.setToolTipText("");
         jComboBox1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         jComboBox1.addActionListener(new java.awt.event.ActionListener() {
@@ -328,12 +333,14 @@ public final class PedidosPanel extends javax.swing.JPanel {
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 307, Short.MAX_VALUE)
+            .addGap(0, 296, Short.MAX_VALUE)
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 372, Short.MAX_VALUE)
+            .addGap(0, 392, Short.MAX_VALUE)
         );
+
+        JScrollPanel.setViewportView(jPanel3);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -345,6 +352,9 @@ public final class PedidosPanel extends javax.swing.JPanel {
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(JScrollPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                        .addContainerGap())
+                    .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(quantidadePedidos)
@@ -354,7 +364,6 @@ public final class PedidosPanel extends javax.swing.JPanel {
                         .addGap(18, 18, 18)
                         .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18))))
-            .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -369,17 +378,37 @@ public final class PedidosPanel extends javax.swing.JPanel {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
                     .addComponent(quantidadePedidos))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jSeparator3, javax.swing.GroupLayout.PREFERRED_SIZE, 3, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(jSeparator3, javax.swing.GroupLayout.PREFERRED_SIZE, 9, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(JScrollPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 383, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         add(jPanel1, java.awt.BorderLayout.LINE_START);
     }// </editor-fold>//GEN-END:initComponents
 
     private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox1ActionPerformed
+        String filtroSelecionado = jComboBox1.getSelectedItem().toString().toLowerCase();
+        System.out.println(filtroSelecionado);
 
+        if (filtroSelecionado.equalsIgnoreCase("Todos")) {
+            criarMenuPedido(); // mostra todos
+        } else {
+            ArrayList<Pedidos> pedidos = dao.buscarTodosPedidos();
+
+            jPanel3.removeAll();
+            for (Pedidos pedido : pedidos) {
+                if (pedido.getStatusPedido().equalsIgnoreCase(filtroSelecionado)) {
+                    JPanel pedidoCard = criarPedidoCard(pedido);
+                    jPanel3.add(Box.createVerticalStrut(10));
+                    jPanel3.add(pedidoCard);
+                }
+            }
+
+            jPanel3.revalidate();
+            jPanel3.repaint();
+        }
     }//GEN-LAST:event_jComboBox1ActionPerformed
 
     private void inputBuscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputBuscarActionPerformed
@@ -396,6 +425,7 @@ public final class PedidosPanel extends javax.swing.JPanel {
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JScrollPane JScrollPanel;
     private javax.swing.JTextField inputBuscar;
     private javax.swing.JComboBox<String> jComboBox1;
     private javax.swing.JLabel jLabel1;
