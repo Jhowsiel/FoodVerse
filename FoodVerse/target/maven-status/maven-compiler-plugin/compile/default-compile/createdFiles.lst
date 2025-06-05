@@ -12,6 +12,7 @@ com\senac\food\verse\gui\TelaInicial$16.class
 com\senac\food\verse\gui\AprovacaoCadastrosPanel$ButtonRenderer.class
 com\senac\food\verse\ClienteInterface.class
 com\senac\food\verse\gui\AprovacaoCadastrosPanel$7.class
+com\senac\food\verse\ItemPedido.class
 com\senac\food\verse\Pedidos.class
 com\senac\food\verse\AdminInterface.class
 com\senac\food\verse\Funcionario.class

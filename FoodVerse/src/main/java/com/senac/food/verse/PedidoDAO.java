@@ -3,6 +3,7 @@ package com.senac.food.verse;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class PedidoDAO {
 
@@ -19,22 +20,50 @@ public class PedidoDAO {
         try {
             conexao.abrirConexao();
 
-            String sql = "SELECT p.ID_pedido, s.status_nome, t.tipo_nome, p.modo_consumo "
+            String sql = "SELECT "
+                    + "p.ID_pedido, "
+                    + "c.name AS nome_cliente, "
+                    + // pegar nome do cliente na tabela tb_clientes
+                    "p.data_pedido AS hora_pedido, "
+                    + "p.hora_entrega, "
+                    + "p.codigo_localizador, "
+                    + "p.endereco_completo, "
+                    + "p.nome_entregador, "
+                    + "p.telefone_entregador, "
+                    + "p.modo_consumo, "
+                    + "p.observacoes, "
+                    + "s.status_nome, "
+                    + "t.tipo_nome "
                     + "FROM tb_pedidos p "
+                    + "JOIN tb_clientes c ON p.ID_cliente = c.UserId "
                     + "JOIN tb_status_pedido s ON p.status_id = s.status_id "
                     + "JOIN tb_tipo_pedido t ON p.tipo_id = t.tipo_id";
+
             ResultSet rs = conexao.stmt.executeQuery(sql);
 
             while (rs.next()) {
                 String idPedido = rs.getString("ID_pedido");
+                String nomeCliente = rs.getString("nome_cliente");
+                String horaPedido = rs.getString("hora_pedido");
+                String horaEntrega = rs.getString("hora_entrega");
+                String codigoLocalizador = rs.getString("codigo_localizador");
+                String enderecoCompleto = rs.getString("endereco_completo");
+                String nomeEntregador = rs.getString("nome_entregador");
+                String telefoneEntregador = rs.getString("telefone_entregador");
+                String modoConsumo = rs.getString("modo_consumo");
+                String observacoes = rs.getString("observacoes");
                 String statusPedido = rs.getString("status_nome");
                 String tipoPedido = rs.getString("tipo_nome");
-                String modoConsumo = rs.getString("modo_consumo");
 
-                Pedidos pedido = new Pedidos(idPedido, statusPedido, tipoPedido, modoConsumo);
+                List<ItemPedido> itens = buscarItensDoPedido(idPedido);
+
+                Pedidos pedido = new Pedidos(idPedido, nomeCliente, horaPedido, horaEntrega,
+                        codigoLocalizador, enderecoCompleto, nomeEntregador,
+                        telefoneEntregador, modoConsumo, observacoes,
+                        itens, statusPedido, tipoPedido);
+
                 listaPedidos.add(pedido);
 
-                // atualiza o último ID carregado
                 if (ultimoIdCarregado == null || idPedido.compareTo(ultimoIdCarregado) > 0) {
                     ultimoIdCarregado = idPedido;
                 }
@@ -51,7 +80,7 @@ public class PedidoDAO {
 
     public void recarregarPedidos() {
         listaPedidos.clear();
-        buscarTodosPedidos(); // recarrega e atualiza ultimoIdCarregado
+        buscarTodosPedidos();
     }
 
     public boolean haNovoPedido() {
@@ -69,7 +98,7 @@ public class PedidoDAO {
 
                 if (novoUltimoId != null && !novoUltimoId.equals(ultimoIdCarregado)) {
                     temNovo = true;
-                    ultimoIdCarregado = novoUltimoId; // já atualiza o ID
+                    ultimoIdCarregado = novoUltimoId;
                 }
             }
 
@@ -133,6 +162,40 @@ public class PedidoDAO {
             System.out.println("Erro ao buscar status: " + ex.getMessage());
         }
         return null;
+    }
+
+    // Método para buscar os itens de um pedido pelo id do pedido
+    private List<ItemPedido> buscarItensDoPedido(String idPedido) {
+        List<ItemPedido> itens = new ArrayList<>();
+        ConexaoBanco conexao = new ConexaoBanco();
+
+        try {
+            conexao.abrirConexao();
+
+            String sql = "SELECT * FROM tb_itens_pedido WHERE pedido_id = ?";
+            try (java.sql.PreparedStatement pstmt = conexao.conn.prepareStatement(sql)) {
+                pstmt.setString(1, idPedido);
+
+                ResultSet rs = pstmt.executeQuery();
+
+                while (rs.next()) {
+                    // Ajuste os nomes das colunas conforme seu banco e a classe ItemPedido
+                    String idItem = rs.getString("id_item");
+                    String nomeProduto = rs.getString("nome_produto");
+                    int quantidade = rs.getInt("quantidade");
+                    double preco = rs.getDouble("preco");
+
+                    ItemPedido item = new ItemPedido(idItem, nomeProduto, quantidade, preco);
+                    itens.add(item);
+                }
+            }
+            conexao.fecharConexao();
+
+        } catch (SQLException ex) {
+            System.out.println("Erro ao buscar itens do pedido: " + ex.getMessage());
+        }
+
+        return itens;
     }
 
 }

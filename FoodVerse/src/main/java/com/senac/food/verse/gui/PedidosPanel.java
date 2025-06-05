@@ -5,15 +5,20 @@ package com.senac.food.verse.gui;
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
  */
 import com.senac.food.verse.ConexaoBanco;
+import com.senac.food.verse.ItemPedido;
 import com.senac.food.verse.PedidoDAO;
 import com.senac.food.verse.Pedidos;
 import com.senac.food.verse.RoundedLabel;
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.event.FocusAdapter;
@@ -58,6 +63,8 @@ public final class PedidosPanel extends javax.swing.JPanel {
         criarMenuPedido();
         atualizarContadorPendentes();
         limparInput();
+        
+        TelaPedido.setVisible(false);
 
         new javax.swing.Timer(10_000, e -> {
             if (dao.haNovoPedido()) {
@@ -143,8 +150,7 @@ public final class PedidosPanel extends javax.swing.JPanel {
 
             @Override
             public void mouseClicked(MouseEvent e) {
-                // aqui você dispara a lógica para mostrar detalhes no main
-                System.out.println("Clicou no pedido #" + pedido.getIdPedido());
+                mostrarDetalhesPedido(pedido);
             }
         });
 
@@ -238,6 +244,147 @@ public final class PedidosPanel extends javax.swing.JPanel {
         jPanel3.revalidate();
         jPanel3.repaint();
     }
+    
+private void mostrarDetalhesPedido(Pedidos pedido) {
+    TelaPedido.removeAll();
+
+    JPanel detalhes = new JPanel();
+    detalhes.setLayout(new BoxLayout(detalhes, BoxLayout.Y_AXIS));
+    detalhes.setBackground(Color.WHITE);
+    detalhes.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
+
+    // Cabeçalho com nome do cliente, ID e horário do pedido
+    JLabel clienteInfo = new JLabel(pedido.getNomeCliente() + " - Pedido #" + pedido.getIdPedido());
+    clienteInfo.setFont(new Font("Segoe UI", Font.BOLD, 20));
+    clienteInfo.setForeground(new Color(33, 37, 41));  // cinza escuro
+    clienteInfo.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    JLabel horarioInfo = new JLabel("Feito às " + pedido.getHoraPedido());
+    horarioInfo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    horarioInfo.setForeground(new Color(73, 80, 87));
+    horarioInfo.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    JLabel localizador = new JLabel("Localizador do pedido: " + pedido.getCodigoLocalizador());
+    localizador.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+    localizador.setForeground(new Color(108, 117, 125));
+    localizador.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    JPanel header = new JPanel(new GridLayout(3, 1));
+    header.setBackground(Color.WHITE);
+    header.add(clienteInfo);
+    header.add(horarioInfo);
+    header.add(localizador);
+
+    // Entrega prevista e botão "Entrar em contato"
+    JPanel topRight = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+    topRight.setBackground(Color.WHITE);
+
+    JLabel entregaPrevista = new JLabel("Entrega prevista: " + pedido.getHoraEntrega());
+    entregaPrevista.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    entregaPrevista.setForeground(new Color(73, 80, 87));
+    topRight.add(entregaPrevista);
+
+    JButton btnContato = new JButton("Entrar em contato");
+    btnContato.setBackground(new Color(0, 123, 255));
+    btnContato.setForeground(Color.WHITE);
+    btnContato.setFocusPainted(false);
+    btnContato.setFont(new Font("Segoe UI", Font.BOLD, 13));
+    btnContato.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    topRight.add(btnContato);
+
+    JPanel headerContainer = new JPanel(new BorderLayout());
+    headerContainer.setBackground(Color.WHITE);
+    headerContainer.add(header, BorderLayout.CENTER);
+    headerContainer.add(topRight, BorderLayout.EAST);
+
+    detalhes.add(headerContainer);
+    detalhes.add(Box.createVerticalStrut(20));
+
+    // Modo de entrega e observações
+    JLabel modoEntrega = new JLabel("Modo de entrega: " + pedido.getModoEntrega());
+    modoEntrega.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    modoEntrega.setForeground(new Color(73, 80, 87));
+    modoEntrega.setAlignmentX(Component.LEFT_ALIGNMENT);
+    detalhes.add(modoEntrega);
+
+    if (pedido.getObservacoes() != null && !pedido.getObservacoes().isEmpty()) {
+        JLabel observacoes = new JLabel("<html><i>" + pedido.getObservacoes() + "</i></html>");
+        observacoes.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        observacoes.setForeground(new Color(220, 53, 69));  // vermelho suave
+        observacoes.setAlignmentX(Component.LEFT_ALIGNMENT);
+        detalhes.add(Box.createVerticalStrut(5));
+        detalhes.add(observacoes);
+    }
+
+    detalhes.add(Box.createVerticalStrut(20));
+
+    // Endereço com ícone
+    JLabel endereco = new JLabel("📍 " + pedido.getEnderecoCompleto());
+    endereco.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    endereco.setForeground(new Color(73, 80, 87));
+    endereco.setAlignmentX(Component.LEFT_ALIGNMENT);
+    detalhes.add(endereco);
+
+    detalhes.add(Box.createVerticalStrut(20));
+
+    // Entregador
+    JLabel entregador = new JLabel("Entregador a caminho: " + pedido.getNomeEntregador() + " - " + pedido.getTelefoneEntregador());
+    entregador.setFont(new Font("Segoe UI", Font.BOLD, 15));
+    entregador.setForeground(new Color(40, 167, 69));  // verde vibrante
+    entregador.setAlignmentX(Component.LEFT_ALIGNMENT);
+    detalhes.add(entregador);
+
+    detalhes.add(Box.createVerticalStrut(25));
+
+    // Itens do pedido (sem observações)
+    if (pedido.getItens() != null && !pedido.getItens().isEmpty()) {
+        JLabel tituloItens = new JLabel("Itens do pedido:");
+        tituloItens.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        tituloItens.setForeground(new Color(33, 37, 41));
+        tituloItens.setAlignmentX(Component.LEFT_ALIGNMENT);
+        detalhes.add(tituloItens);
+        detalhes.add(Box.createVerticalStrut(10));
+
+        for (ItemPedido item : pedido.getItens()) {
+            JPanel itemPanel = new JPanel(new BorderLayout());
+            itemPanel.setBackground(new Color(245, 245, 245));
+            itemPanel.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(220, 220, 220)),
+                    BorderFactory.createEmptyBorder(10, 15, 10, 15)));
+
+            JLabel nomeItem = new JLabel(item.getQuantidade() + "x " + item.getNomeProduto());
+            nomeItem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            nomeItem.setForeground(new Color(33, 37, 41));
+            itemPanel.add(nomeItem, BorderLayout.WEST);
+
+            JLabel preco = new JLabel("R$ " + String.format("%.2f", item.getPreco()));
+            preco.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            preco.setForeground(new Color(33, 37, 41));
+            itemPanel.add(preco, BorderLayout.EAST);
+
+            detalhes.add(itemPanel);
+            detalhes.add(Box.createVerticalStrut(10));
+        }
+    }
+
+    // Botão Avisar pedido pronto
+    JButton btnAvisarPronto = new JButton("Avisar pedido pronto");
+    btnAvisarPronto.setBackground(new Color(40, 167, 69));
+    btnAvisarPronto.setForeground(Color.WHITE);
+    btnAvisarPronto.setFocusPainted(false);
+    btnAvisarPronto.setFont(new Font("Segoe UI", Font.BOLD, 15));
+    btnAvisarPronto.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    btnAvisarPronto.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+    detalhes.add(Box.createVerticalStrut(30));
+    detalhes.add(btnAvisarPronto);
+
+    TelaPedido.add(detalhes, BorderLayout.CENTER);
+    TelaPedido.revalidate();
+    TelaPedido.repaint();
+    TelaPedido.setVisible(true);
+}
+
 
     private void buscarPedidos(String pesquisa) {
         ArrayList<Pedidos> pedidos = dao.buscarTodosPedidos();
@@ -295,7 +442,8 @@ public final class PedidosPanel extends javax.swing.JPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPanel1 = new javax.swing.JPanel();
+        jLabel2 = new javax.swing.JLabel();
+        MenuPedido = new javax.swing.JPanel();
         inputBuscar = new javax.swing.JTextField();
         jComboBox1 = new javax.swing.JComboBox<>();
         jSeparator1 = new javax.swing.JSeparator();
@@ -304,10 +452,14 @@ public final class PedidosPanel extends javax.swing.JPanel {
         jSeparator3 = new javax.swing.JSeparator();
         JScrollPanel = new javax.swing.JScrollPane();
         jPanel3 = new javax.swing.JPanel();
+        TelaPedido = new javax.swing.JPanel();
+        jLabel3 = new javax.swing.JLabel();
+
+        jLabel2.setText("jLabel2");
 
         setLayout(new java.awt.BorderLayout());
 
-        jPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+        MenuPedido.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
         inputBuscar.setText("Buscar");
         inputBuscar.addActionListener(new java.awt.event.ActionListener() {
@@ -342,40 +494,40 @@ public final class PedidosPanel extends javax.swing.JPanel {
 
         JScrollPanel.setViewportView(jPanel3);
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        javax.swing.GroupLayout MenuPedidoLayout = new javax.swing.GroupLayout(MenuPedido);
+        MenuPedido.setLayout(MenuPedidoLayout);
+        MenuPedidoLayout.setHorizontalGroup(
+            MenuPedidoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jSeparator1, javax.swing.GroupLayout.Alignment.TRAILING)
             .addComponent(jSeparator3, javax.swing.GroupLayout.Alignment.TRAILING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+            .addGroup(MenuPedidoLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGroup(MenuPedidoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(MenuPedidoLayout.createSequentialGroup()
                         .addComponent(JScrollPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                         .addContainerGap())
-                    .addGroup(jPanel1Layout.createSequentialGroup()
+                    .addGroup(MenuPedidoLayout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(quantidadePedidos)
                         .addContainerGap())
-                    .addGroup(jPanel1Layout.createSequentialGroup()
+                    .addGroup(MenuPedidoLayout.createSequentialGroup()
                         .addComponent(inputBuscar, javax.swing.GroupLayout.DEFAULT_SIZE, 157, Short.MAX_VALUE)
                         .addGap(18, 18, 18)
                         .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18))))
         );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+        MenuPedidoLayout.setVerticalGroup(
+            MenuPedidoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(MenuPedidoLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(MenuPedidoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(inputBuscar, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(MenuPedidoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
                     .addComponent(quantidadePedidos))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -385,7 +537,14 @@ public final class PedidosPanel extends javax.swing.JPanel {
                 .addContainerGap())
         );
 
-        add(jPanel1, java.awt.BorderLayout.LINE_START);
+        add(MenuPedido, java.awt.BorderLayout.LINE_START);
+
+        TelaPedido.setLayout(new java.awt.BorderLayout());
+
+        jLabel3.setText("monkey");
+        TelaPedido.add(jLabel3, java.awt.BorderLayout.CENTER);
+
+        add(TelaPedido, java.awt.BorderLayout.CENTER);
     }// </editor-fold>//GEN-END:initComponents
 
     private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox1ActionPerformed
@@ -426,10 +585,13 @@ public final class PedidosPanel extends javax.swing.JPanel {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JScrollPane JScrollPanel;
+    private javax.swing.JPanel MenuPedido;
+    private javax.swing.JPanel TelaPedido;
     private javax.swing.JTextField inputBuscar;
     private javax.swing.JComboBox<String> jComboBox1;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JPanel jPanel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JSeparator jSeparator3;
