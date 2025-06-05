@@ -1,7 +1,17 @@
+-- Drop database se existir (evita erro se já existir)
+IF EXISTS (SELECT * FROM sys.databases WHERE name = 'FoodVerseDB')
+BEGIN
+    ALTER DATABASE FoodVerseDB SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE FoodVerseDB;
+END
+GO
+
+-- Criação do banco de dados
 CREATE DATABASE FoodVerseDB;
+GO
 
 USE FoodVerseDB;
-
+GO
 
 -- Tabela: tb_clientes
 CREATE TABLE tb_clientes (
@@ -15,6 +25,7 @@ CREATE TABLE tb_clientes (
     registrationDate DATE,
     isLogin BIT
 );
+GO
 
 -- Tabela: tb_produtos
 CREATE TABLE tb_produtos (
@@ -23,39 +34,62 @@ CREATE TABLE tb_produtos (
     des_produto VARCHAR(255),
     preco_produto DECIMAL(10,2)
 );
+GO
 
--- Tabela: tb_reservas (com coluna mesa)
+-- Tabela: tb_reservas
 CREATE TABLE tb_reservas (
     ID_reserva INT IDENTITY PRIMARY KEY,
     ID_cliente INT,
     data_reserva DATETIME,
     num_pessoas INT,
-    mesa VARCHAR(10), -- adicionada a coluna de mesa
+    mesa VARCHAR(10),
     FOREIGN KEY (ID_cliente) REFERENCES tb_clientes(UserId)
 );
+GO
 
--- Tabela: tb_pedidos (com FK para reservas)
+-- Tabela: tb_status_pedido
+CREATE TABLE tb_status_pedido (
+    status_id INT PRIMARY KEY, -- Vou manter o ID fixo, pois você usou explicitamente IDs
+    status_nome VARCHAR(50)
+);
+GO
+
+-- Tabela: tb_tipo_pedido
+CREATE TABLE tb_tipo_pedido (
+    tipo_id INT IDENTITY PRIMARY KEY,
+    tipo_nome VARCHAR(50)
+);
+GO
+
+-- Tabela: tb_pedidos
 CREATE TABLE tb_pedidos (
-    ID_pedido INT IDENTITY PRIMARY KEY,
+    ID_pedido VARCHAR(10) PRIMARY KEY,
     data_pedido DATETIME,
     ID_cliente INT,
-    status_pedido VARCHAR(50),
-    tipo_pedido VARCHAR(50),
-	tipo_entrega VARCHAR(20),
+    status_id INT,
+    tipo_id INT,
+    modo_consumo VARCHAR(20),
     ID_reserva INT NULL,
+    nome_entregador VARCHAR(100) NULL,
+    telefone_entregador VARCHAR(20) NULL,
+    observacoes VARCHAR(255) NULL,
     FOREIGN KEY (ID_cliente) REFERENCES tb_clientes(UserId),
+    FOREIGN KEY (status_id) REFERENCES tb_status_pedido(status_id),
+    FOREIGN KEY (tipo_id) REFERENCES tb_tipo_pedido(tipo_id),
     FOREIGN KEY (ID_reserva) REFERENCES tb_reservas(ID_reserva)
 );
+GO
 
--- Tabela: tb_pedidos_produtos (associativa)
+-- Tabela: tb_pedidos_produtos (itens do pedido)
 CREATE TABLE tb_pedidos_produtos (
-    ID_pedido INT,
+    ID_pedido VARCHAR(10),
     ID_produto INT,
     quantidade INT,
     PRIMARY KEY (ID_pedido, ID_produto),
     FOREIGN KEY (ID_pedido) REFERENCES tb_pedidos(ID_pedido),
     FOREIGN KEY (ID_produto) REFERENCES tb_produtos(ID_produto)
 );
+GO
 
 -- Tabela: tb_cupons
 CREATE TABLE tb_cupons (
@@ -64,6 +98,7 @@ CREATE TABLE tb_cupons (
     desconto DECIMAL(5,2),
     validade DATE
 );
+GO
 
 -- Tabela: tb_avaliacoes
 CREATE TABLE tb_avaliacoes (
@@ -76,16 +111,18 @@ CREATE TABLE tb_avaliacoes (
     FOREIGN KEY (ID_cliente) REFERENCES tb_clientes(UserId),
     FOREIGN KEY (ID_produto) REFERENCES tb_produtos(ID_produto)
 );
+GO
 
 -- Tabela: tb_pagamentos
 CREATE TABLE tb_pagamentos (
     ID_pagamento INT IDENTITY PRIMARY KEY,
-    ID_pedido INT,
+    ID_pedido VARCHAR(10),
     metodo_pagamento VARCHAR(50),
     valor_total DECIMAL(10,2),
     data_pagamento DATE,
     FOREIGN KEY (ID_pedido) REFERENCES tb_pedidos(ID_pedido)
 );
+GO
 
 -- Tabela: tb_fidelidade
 CREATE TABLE tb_fidelidade (
@@ -95,6 +132,7 @@ CREATE TABLE tb_fidelidade (
     cashback DECIMAL(10,2),
     FOREIGN KEY (ID_cliente) REFERENCES tb_clientes(UserId)
 );
+GO
 
 -- Tabela: tb_funcionarios
 CREATE TABLE tb_funcionarios (
@@ -105,9 +143,76 @@ CREATE TABLE tb_funcionarios (
     role VARCHAR(50),
     phone VARCHAR(20),
     password VARCHAR(255),
-    registrationDate VARCHAR(20),
+    registrationDate DATE,
     status VARCHAR(20)
 );
+GO
+
+-- Inserir dados exemplo nas tabelas
 
 INSERT INTO tb_funcionarios (name, userName, email, role, phone, password, registrationDate, status)
-VALUES ('1', '1', '1', 'Cozinheiro', '11999998888', '1', '2025-04-30', 'aprovado');
+VALUES ('Carlos Cozinheiro', 'carlos', 'carlos@email.com', 'Cozinheiro', '11999998888', 'senha123', '2025-04-30', 'aprovado');
+GO
+
+INSERT INTO tb_clientes (user_name, name, email, phone, password, cpf, registrationDate, isLogin)
+VALUES ('joaosilva', 'João Silva', 'joao@email.com', '11999998888', 'senha123', '12345678900', GETDATE(), 0);
+GO
+
+INSERT INTO tb_produtos (nome_produto, des_produto, preco_produto)
+VALUES 
+('Pizza Margherita', 'Pizza com tomate, mussarela e manjericão', 45.00),
+('Refrigerante', 'Lata 350ml', 6.00);
+GO
+
+INSERT INTO tb_reservas (ID_cliente, data_reserva, num_pessoas, mesa)
+VALUES (1, GETDATE(), 4, 'A01');
+GO
+
+INSERT INTO tb_tipo_pedido (tipo_nome)
+VALUES ('Lanche'), ('Comida'), ('Bebida');
+GO
+
+INSERT INTO tb_status_pedido (status_id, status_nome)
+VALUES 
+(1, 'pendente'),
+(2, 'em preparo'),
+(3, 'pronto'),
+(4, 'entregue'),
+(5, 'cancelado'),
+(6, 'finalizado');
+GO
+
+-- Inserir pedidos iniciais (com campos adicionais: entregador, telefone, observações)
+INSERT INTO tb_pedidos (ID_pedido, data_pedido, ID_cliente, status_id, tipo_id, modo_consumo, ID_reserva, nome_entregador, telefone_entregador, observacoes)
+VALUES
+('P001', GETDATE(), 1, 1, 1, 'No local', 1, 'Carlos', '11999998888', 'Sem cebola no lanche'),
+('P002', GETDATE(), 1, 2, 2, 'Delivery', NULL, 'Ana', '11988887777', NULL);
+GO
+
+-- Associar produtos aos pedidos
+INSERT INTO tb_pedidos_produtos (ID_pedido, ID_produto, quantidade) VALUES
+('P001', 1, 1),
+('P001', 2, 2),
+('P002', 1, 2);
+GO
+
+-- Inserir mais pedidos para testes (com vários status e tipos)
+INSERT INTO tb_pedidos (ID_pedido, data_pedido, ID_cliente, status_id, tipo_id, modo_consumo, ID_reserva, nome_entregador, telefone_entregador, observacoes)
+VALUES
+('P003', GETDATE(), 1, 1, 1, 'No local', 1, 'Lucas', '11977776666', NULL),
+('P004', GETDATE(), 1, 2, 2, 'Delivery', NULL, 'Mariana', '11966665555', 'Urgente'),
+('P005', GETDATE(), 1, 3, 3, 'No local', 1, 'Joana', '11955554444', NULL),
+('P006', GETDATE(), 1, 4, 1, 'Delivery', NULL, 'Carlos', '11999998888', 'Por favor, rápido!'),
+('P007', GETDATE(), 1, 5, 2, 'No local', 1, NULL, NULL, 'Cliente cancelou'),
+('P008', GETDATE(), 1, 6, 3, 'Delivery', NULL, 'Ana', '11988887777', NULL);
+GO
+
+-- Associar produtos aos novos pedidos
+INSERT INTO tb_pedidos_produtos (ID_pedido, ID_produto, quantidade) VALUES
+('P003', 1, 1), ('P003', 2, 1),
+('P004', 1, 2),
+('P005', 2, 3),
+('P006', 1, 1), ('P006', 2, 2),
+('P007', 1, 1),
+('P008', 2, 1);
+GO
