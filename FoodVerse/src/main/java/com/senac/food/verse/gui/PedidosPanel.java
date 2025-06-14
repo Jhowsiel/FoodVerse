@@ -30,6 +30,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BorderFactory;
@@ -41,8 +42,10 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.LayoutStyle;
 import javax.swing.SwingConstants;
+import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -63,7 +66,7 @@ public final class PedidosPanel extends javax.swing.JPanel {
         criarMenuPedido();
         atualizarContadorPendentes();
         limparInput();
-        
+
         TelaPedido.setVisible(false);
 
         new javax.swing.Timer(10_000, e -> {
@@ -244,145 +247,206 @@ public final class PedidosPanel extends javax.swing.JPanel {
         jPanel3.revalidate();
         jPanel3.repaint();
     }
-    
+
+private void estilizarBotao(JButton botao, Color corFundo, int tamanhoFonte) {
+    botao.setFont(new Font("Segoe UI", Font.BOLD, tamanhoFonte));
+    botao.setForeground(Color.WHITE);
+    botao.setBackground(corFundo);
+    botao.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+    botao.setFocusPainted(false);
+    botao.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(corFundo.darker(), 1),
+        BorderFactory.createEmptyBorder(10, 20, 10, 20)
+    ));
+    botao.setAlignmentX(Component.CENTER_ALIGNMENT);
+    botao.setOpaque(true);
+}
+
 private void mostrarDetalhesPedido(Pedidos pedido) {
     TelaPedido.removeAll();
 
     JPanel detalhes = new JPanel();
     detalhes.setLayout(new BoxLayout(detalhes, BoxLayout.Y_AXIS));
-    detalhes.setBackground(Color.WHITE);
-    detalhes.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
+    detalhes.setBackground(Color.decode("#F9FAFB")); // tom neutro e moderno
+    detalhes.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-    // Cabeçalho com nome do cliente, ID e horário do pedido
-    JLabel clienteInfo = new JLabel(pedido.getNomeCliente() + " - Pedido #" + pedido.getIdPedido());
-    clienteInfo.setFont(new Font("Segoe UI", Font.BOLD, 20));
-    clienteInfo.setForeground(new Color(33, 37, 41));  // cinza escuro
-    clienteInfo.setAlignmentX(Component.LEFT_ALIGNMENT);
+    JButton btnVoltar = new JButton("← Voltar");
+    estilizarBotao(btnVoltar, new Color(108, 117, 125), 13);
+    btnVoltar.setAlignmentX(Component.LEFT_ALIGNMENT);
+    btnVoltar.addActionListener(e -> TelaPedido.setVisible(false));
+    detalhes.add(btnVoltar);
+    detalhes.add(Box.createVerticalStrut(20));
 
-    JLabel horarioInfo = new JLabel("Feito às " + pedido.getHoraPedido());
-    horarioInfo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-    horarioInfo.setForeground(new Color(73, 80, 87));
-    horarioInfo.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-    JLabel localizador = new JLabel("Localizador do pedido: " + pedido.getCodigoLocalizador());
-    localizador.setFont(new Font("Segoe UI", Font.ITALIC, 12));
-    localizador.setForeground(new Color(108, 117, 125));
-    localizador.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-    JPanel header = new JPanel(new GridLayout(3, 1));
+    // HEADER
+    JPanel header = new JPanel(new BorderLayout());
     header.setBackground(Color.WHITE);
-    header.add(clienteInfo);
-    header.add(horarioInfo);
-    header.add(localizador);
+    header.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(230, 230, 230)),
+        BorderFactory.createEmptyBorder(15, 20, 15, 20)
+    ));
 
-    // Entrega prevista e botão "Entrar em contato"
-    JPanel topRight = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-    topRight.setBackground(Color.WHITE);
+    // Header Left
+    JPanel headerLeft = new JPanel();
+    headerLeft.setLayout(new BoxLayout(headerLeft, BoxLayout.Y_AXIS));
+    headerLeft.setBackground(Color.WHITE);
 
-    JLabel entregaPrevista = new JLabel("Entrega prevista: " + pedido.getHoraEntrega());
-    entregaPrevista.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-    entregaPrevista.setForeground(new Color(73, 80, 87));
-    topRight.add(entregaPrevista);
+    JLabel clienteNome = new JLabel(pedido.getNomeCliente());
+    clienteNome.setFont(new Font("Segoe UI", Font.BOLD, 20));
+    clienteNome.setForeground(new Color(33, 37, 41));
+
+    JLabel pedidoId = new JLabel("Pedido #" + pedido.getIdPedido());
+    pedidoId.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+    pedidoId.setForeground(new Color(108, 117, 125));
+
+    JLabel localizador = new JLabel("Localizador: " + pedido.getCodigoLocalizador());
+    localizador.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+    localizador.setForeground(new Color(173, 181, 189));
+
+    headerLeft.add(clienteNome);
+    headerLeft.add(Box.createVerticalStrut(4));
+    headerLeft.add(pedidoId);
+    headerLeft.add(Box.createVerticalStrut(4));
+    headerLeft.add(localizador);
+
+    // Header Right
+    JPanel headerRight = new JPanel();
+    headerRight.setLayout(new BoxLayout(headerRight, BoxLayout.Y_AXIS));
+    headerRight.setBackground(Color.WHITE);
+    headerRight.setAlignmentY(Component.TOP_ALIGNMENT);
+
+    JLabel entregaPrevista = new JLabel("Entrega: " + pedido.getHoraEntrega());
+    entregaPrevista.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+    entregaPrevista.setForeground(new Color(52, 58, 64));
 
     JButton btnContato = new JButton("Entrar em contato");
-    btnContato.setBackground(new Color(0, 123, 255));
-    btnContato.setForeground(Color.WHITE);
-    btnContato.setFocusPainted(false);
-    btnContato.setFont(new Font("Segoe UI", Font.BOLD, 13));
-    btnContato.setCursor(new Cursor(Cursor.HAND_CURSOR));
-    topRight.add(btnContato);
+    estilizarBotao(btnContato, new Color(0, 123, 255), 13);
 
-    JPanel headerContainer = new JPanel(new BorderLayout());
-    headerContainer.setBackground(Color.WHITE);
-    headerContainer.add(header, BorderLayout.CENTER);
-    headerContainer.add(topRight, BorderLayout.EAST);
+    headerRight.add(entregaPrevista);
+    headerRight.add(Box.createVerticalStrut(8));
+    headerRight.add(btnContato);
 
-    detalhes.add(headerContainer);
+    header.add(headerLeft, BorderLayout.CENTER);
+    header.add(headerRight, BorderLayout.EAST);
+    detalhes.add(header);
     detalhes.add(Box.createVerticalStrut(20));
 
-    // Modo de entrega e observações
-    JLabel modoEntrega = new JLabel("Modo de entrega: " + pedido.getModoEntrega());
-    modoEntrega.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-    modoEntrega.setForeground(new Color(73, 80, 87));
-    modoEntrega.setAlignmentX(Component.LEFT_ALIGNMENT);
-    detalhes.add(modoEntrega);
-
-    if (pedido.getObservacoes() != null && !pedido.getObservacoes().isEmpty()) {
-        JLabel observacoes = new JLabel("<html><i>" + pedido.getObservacoes() + "</i></html>");
-        observacoes.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        observacoes.setForeground(new Color(220, 53, 69));  // vermelho suave
-        observacoes.setAlignmentX(Component.LEFT_ALIGNMENT);
-        detalhes.add(Box.createVerticalStrut(5));
-        detalhes.add(observacoes);
-    }
-
-    detalhes.add(Box.createVerticalStrut(20));
-
-    // Endereço com ícone
-    JLabel endereco = new JLabel("📍 " + pedido.getEnderecoCompleto());
-    endereco.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-    endereco.setForeground(new Color(73, 80, 87));
-    endereco.setAlignmentX(Component.LEFT_ALIGNMENT);
-    detalhes.add(endereco);
-
-    detalhes.add(Box.createVerticalStrut(20));
+    // Cards
+    detalhes.add(criarCard("🛡 Entrega sem contato", "O cliente solicitou deixar o pedido na portaria."));
+    detalhes.add(Box.createVerticalStrut(15));
+    detalhes.add(criarCard("📍 Endereço", pedido.getEnderecoCompleto()));
+    detalhes.add(Box.createVerticalStrut(15));
 
     // Entregador
-    JLabel entregador = new JLabel("Entregador a caminho: " + pedido.getNomeEntregador() + " - " + pedido.getTelefoneEntregador());
-    entregador.setFont(new Font("Segoe UI", Font.BOLD, 15));
-    entregador.setForeground(new Color(40, 167, 69));  // verde vibrante
-    entregador.setAlignmentX(Component.LEFT_ALIGNMENT);
-    detalhes.add(entregador);
+    detalhes.add(criarEntregaHeader(pedido));
+    detalhes.add(Box.createVerticalStrut(20));
 
-    detalhes.add(Box.createVerticalStrut(25));
-
-    // Itens do pedido (sem observações)
     if (pedido.getItens() != null && !pedido.getItens().isEmpty()) {
-        JLabel tituloItens = new JLabel("Itens do pedido:");
-        tituloItens.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        tituloItens.setForeground(new Color(33, 37, 41));
-        tituloItens.setAlignmentX(Component.LEFT_ALIGNMENT);
-        detalhes.add(tituloItens);
+        JLabel lblItens = new JLabel("Itens do Pedido:");
+        lblItens.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblItens.setForeground(new Color(33, 37, 41));
+        lblItens.setAlignmentX(Component.LEFT_ALIGNMENT);
+        detalhes.add(lblItens);
         detalhes.add(Box.createVerticalStrut(10));
 
         for (ItemPedido item : pedido.getItens()) {
-            JPanel itemPanel = new JPanel(new BorderLayout());
-            itemPanel.setBackground(new Color(245, 245, 245));
-            itemPanel.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(new Color(220, 220, 220)),
-                    BorderFactory.createEmptyBorder(10, 15, 10, 15)));
-
-            JLabel nomeItem = new JLabel(item.getQuantidade() + "x " + item.getNomeProduto());
-            nomeItem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-            nomeItem.setForeground(new Color(33, 37, 41));
-            itemPanel.add(nomeItem, BorderLayout.WEST);
-
-            JLabel preco = new JLabel("R$ " + String.format("%.2f", item.getPreco()));
-            preco.setFont(new Font("Segoe UI", Font.BOLD, 14));
-            preco.setForeground(new Color(33, 37, 41));
-            itemPanel.add(preco, BorderLayout.EAST);
-
-            detalhes.add(itemPanel);
-            detalhes.add(Box.createVerticalStrut(10));
+            detalhes.add(criarItemCard(item));
         }
     }
 
-    // Botão Avisar pedido pronto
-    JButton btnAvisarPronto = new JButton("Avisar pedido pronto");
-    btnAvisarPronto.setBackground(new Color(40, 167, 69));
-    btnAvisarPronto.setForeground(Color.WHITE);
-    btnAvisarPronto.setFocusPainted(false);
-    btnAvisarPronto.setFont(new Font("Segoe UI", Font.BOLD, 15));
-    btnAvisarPronto.setCursor(new Cursor(Cursor.HAND_CURSOR));
-    btnAvisarPronto.setAlignmentX(Component.CENTER_ALIGNMENT);
+    JButton btnFinalizar = new JButton("✔ Avisar que o pedido está pronto");
+    estilizarBotao(btnFinalizar, new Color(25, 135, 84), 15);
+    btnFinalizar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
+    detalhes.add(Box.createVerticalStrut(20));
+    detalhes.add(btnFinalizar);
 
-    detalhes.add(Box.createVerticalStrut(30));
-    detalhes.add(btnAvisarPronto);
+    JScrollPane scrollPane = new JScrollPane(detalhes);
+    scrollPane.setBorder(null);
+    scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
-    TelaPedido.add(detalhes, BorderLayout.CENTER);
+    TelaPedido.setLayout(new BorderLayout());
+    TelaPedido.add(scrollPane, BorderLayout.CENTER);
     TelaPedido.revalidate();
     TelaPedido.repaint();
     TelaPedido.setVisible(true);
+}
+
+private JPanel criarCard(String titulo, String descricao) {
+    JPanel card = new JPanel();
+    card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+    card.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(230, 230, 230)),
+        BorderFactory.createEmptyBorder(12, 20, 12, 20)
+    ));
+    card.setBackground(Color.WHITE);
+    card.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    JLabel lblTitulo = new JLabel(titulo);
+    lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 14));
+
+    JLabel lblDesc = new JLabel("<html>" + descricao + "</html>");
+    lblDesc.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+    lblDesc.setForeground(new Color(90, 90, 90));
+
+    card.add(lblTitulo);
+    card.add(Box.createVerticalStrut(5));
+    card.add(lblDesc);
+
+    return card;
+}
+
+private JPanel criarEntregaHeader(Pedidos pedido) {
+    JPanel panel = new JPanel(new BorderLayout());
+    panel.setBackground(new Color(209, 250, 229));
+    panel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+
+    JLabel lblEsquerda = new JLabel("Entregador a caminho");
+    lblEsquerda.setFont(new Font("Segoe UI", Font.BOLD, 14));
+    lblEsquerda.setForeground(new Color(25, 135, 84));
+
+    JLabel lblDireita = new JLabel("<html>" + pedido.getNomeEntregador() + "<br/>" + pedido.getTelefoneEntregador() + " • Moto</html>");
+    lblDireita.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+    lblDireita.setForeground(new Color(33, 37, 41));
+
+    panel.add(lblEsquerda, BorderLayout.WEST);
+    panel.add(lblDireita, BorderLayout.EAST);
+
+    return panel;
+}
+
+private JPanel criarItemCard(ItemPedido item) {
+    JPanel itemPanel = new JPanel(new BorderLayout());
+    itemPanel.setBackground(Color.WHITE);
+    itemPanel.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(230, 230, 230)),
+        BorderFactory.createEmptyBorder(10, 15, 10, 15)
+    ));
+
+    JLabel nome = new JLabel(item.getQuantidade() + "x " + item.getNomeProduto());
+    nome.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    nome.setForeground(new Color(33, 37, 41));
+
+    JLabel preco = new JLabel("R$ " + String.format("%.2f", item.getPreco()));
+    preco.setFont(new Font("Segoe UI", Font.BOLD, 14));
+    preco.setForeground(new Color(33, 37, 41));
+
+    itemPanel.add(nome, BorderLayout.WEST);
+    itemPanel.add(preco, BorderLayout.EAST);
+
+    JPanel container = new JPanel();
+    container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+    container.setBackground(Color.WHITE);
+    container.add(itemPanel);
+
+    if (item.getObservacao() != null && !item.getObservacao().isEmpty()) {
+        JLabel obs = new JLabel("📝 " + item.getObservacao());
+        obs.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        obs.setForeground(new Color(108, 117, 125));
+        obs.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
+        container.add(obs);
+    }
+
+    container.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+    return container;
 }
 
 
@@ -453,7 +517,6 @@ private void mostrarDetalhesPedido(Pedidos pedido) {
         JScrollPanel = new javax.swing.JScrollPane();
         jPanel3 = new javax.swing.JPanel();
         TelaPedido = new javax.swing.JPanel();
-        jLabel3 = new javax.swing.JLabel();
 
         jLabel2.setText("jLabel2");
 
@@ -540,10 +603,6 @@ private void mostrarDetalhesPedido(Pedidos pedido) {
         add(MenuPedido, java.awt.BorderLayout.LINE_START);
 
         TelaPedido.setLayout(new java.awt.BorderLayout());
-
-        jLabel3.setText("monkey");
-        TelaPedido.add(jLabel3, java.awt.BorderLayout.CENTER);
-
         add(TelaPedido, java.awt.BorderLayout.CENTER);
     }// </editor-fold>//GEN-END:initComponents
 
@@ -591,7 +650,6 @@ private void mostrarDetalhesPedido(Pedidos pedido) {
     private javax.swing.JComboBox<String> jComboBox1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JSeparator jSeparator3;

@@ -1,5 +1,6 @@
 package com.senac.food.verse;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -165,37 +166,47 @@ public class PedidoDAO {
     }
 
     // Método para buscar os itens de um pedido pelo id do pedido
-    private List<ItemPedido> buscarItensDoPedido(String idPedido) {
-        List<ItemPedido> itens = new ArrayList<>();
-        ConexaoBanco conexao = new ConexaoBanco();
+   private List<ItemPedido> buscarItensDoPedido(String idPedido) {
+    List<ItemPedido> itens = new ArrayList<>();
+    ConexaoBanco conexao = new ConexaoBanco();
 
-        try {
-            conexao.abrirConexao();
+    try {
+        conexao.abrirConexao();
 
-            String sql = "SELECT * FROM tb_itens_pedido WHERE pedido_id = ?";
-            try (java.sql.PreparedStatement pstmt = conexao.conn.prepareStatement(sql)) {
-                pstmt.setString(1, idPedido);
+        String sql = """
+            SELECT 
+                pp.ID_produto,
+                pr.nome_produto,
+                pr.preco_produto,
+                pp.quantidade
+            FROM tb_pedidos_produtos pp
+            JOIN tb_produtos pr ON pp.ID_produto = pr.ID_produto
+            WHERE pp.ID_pedido = ?
+        """;
 
-                ResultSet rs = pstmt.executeQuery();
+        try (PreparedStatement pstmt = conexao.conn.prepareStatement(sql)) {
+            pstmt.setString(1, idPedido);
+            ResultSet rs = pstmt.executeQuery();
 
-                while (rs.next()) {
-                    // Ajuste os nomes das colunas conforme seu banco e a classe ItemPedido
-                    String idItem = rs.getString("id_item");
-                    String nomeProduto = rs.getString("nome_produto");
-                    int quantidade = rs.getInt("quantidade");
-                    double preco = rs.getDouble("preco");
+            while (rs.next()) {
+                String idProduto = rs.getString("ID_produto");
+                String nomeProduto = rs.getString("nome_produto");
+                int quantidade = rs.getInt("quantidade");
+                double precoUnitario = rs.getDouble("preco_produto");
+                double precoTotal = precoUnitario * quantidade;
 
-                    ItemPedido item = new ItemPedido(idItem, nomeProduto, quantidade, preco);
-                    itens.add(item);
-                }
+                ItemPedido item = new ItemPedido(idProduto, nomeProduto, quantidade, precoTotal);
+                itens.add(item);
             }
-            conexao.fecharConexao();
-
-        } catch (SQLException ex) {
-            System.out.println("Erro ao buscar itens do pedido: " + ex.getMessage());
         }
 
-        return itens;
+    } catch (SQLException ex) {
+        System.out.println("Erro ao buscar itens do pedido: " + ex.getMessage());
+    } finally {
+        conexao.fecharConexao();
     }
+
+    return itens;
+}
 
 }

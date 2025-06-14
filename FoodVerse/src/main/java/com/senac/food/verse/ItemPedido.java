@@ -28,4 +28,8 @@ public class ItemPedido {
     public double getPreco() {
         return preco;
     }
+
+    public String getObservacao() {
+        return "observaões do pedido";
+    }
 }
