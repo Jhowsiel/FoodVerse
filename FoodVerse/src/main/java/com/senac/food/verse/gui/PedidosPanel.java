@@ -20,6 +20,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.Image;
+import java.awt.Insets;
 import java.awt.RenderingHints;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -29,8 +30,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BorderFactory;
@@ -43,8 +46,12 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.LayoutStyle;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
+import javax.swing.border.AbstractBorder;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
 
@@ -79,6 +86,7 @@ public final class PedidosPanel extends javax.swing.JPanel {
         }).start();
 
         inputBuscar.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 String textoDigitado = inputBuscar.getText().trim();
                 if (!textoDigitado.equals("") && !textoDigitado.equalsIgnoreCase("Buscar")) {
@@ -122,6 +130,20 @@ public final class PedidosPanel extends javax.swing.JPanel {
         });
     }
 
+    public void PaineisPedidos(Pedidos pedido) {
+        if ("pendente".equalsIgnoreCase(pedido.getStatusPedido())
+                && "Delivery".equalsIgnoreCase(pedido.getModoEntrega())) {
+            mostrarPedidoPendenteDelivery(pedido);
+            return;
+        }
+        if ("pronto".equalsIgnoreCase(pedido.getStatusPedido())) {
+            return;
+        }
+        if ("entregue".equalsIgnoreCase(pedido.getStatusPedido())) {
+            return;
+        }
+    }
+
     private JPanel criarPedidoCard(Pedidos pedido) {
         // --- Painel principal ---
         JPanel card = new JPanel() {
@@ -153,7 +175,8 @@ public final class PedidosPanel extends javax.swing.JPanel {
 
             @Override
             public void mouseClicked(MouseEvent e) {
-                mostrarDetalhesPedido(pedido);
+                PaineisPedidos(pedido);
+
             }
         });
 
@@ -248,120 +271,223 @@ public final class PedidosPanel extends javax.swing.JPanel {
         jPanel3.repaint();
     }
 
-private void estilizarBotao(JButton botao, Color corFundo, int tamanhoFonte) {
-    botao.setFont(new Font("Segoe UI", Font.BOLD, tamanhoFonte));
-    botao.setForeground(Color.WHITE);
-    botao.setBackground(corFundo);
-    botao.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-    botao.setFocusPainted(false);
-    botao.setBorder(BorderFactory.createCompoundBorder(
-        BorderFactory.createLineBorder(corFundo.darker(), 1),
-        BorderFactory.createEmptyBorder(10, 20, 10, 20)
-    ));
-    botao.setAlignmentX(Component.CENTER_ALIGNMENT);
-    botao.setOpaque(true);
-}
+    private void estilizarBotao(JButton botao, Color corFundo, int tamanhoFonte) {
+        botao.setFont(new Font("Segoe UI", Font.BOLD, tamanhoFonte));
+        botao.setForeground(Color.WHITE);
+        botao.setBackground(corFundo);
+        botao.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        botao.setFocusPainted(false);
+        botao.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(corFundo.darker(), 1, true),
+                new RoundedBorder(12)
+        ));
+        botao.setAlignmentX(Component.CENTER_ALIGNMENT);
+        botao.setOpaque(true);
+        botao.setFocusable(false);
+        botao.setToolTipText(botao.getText());
+    }
 
-private void mostrarDetalhesPedido(Pedidos pedido) {
+    private void mostrarPedidoPendenteDelivery(Pedidos pedido) {
     TelaPedido.removeAll();
 
     JPanel detalhes = new JPanel();
     detalhes.setLayout(new BoxLayout(detalhes, BoxLayout.Y_AXIS));
-    detalhes.setBackground(Color.decode("#F9FAFB")); // tom neutro e moderno
-    detalhes.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+    detalhes.setBackground(Color.WHITE);
+    detalhes.setBorder(BorderFactory.createEmptyBorder(10, 16, 10, 16));
+    detalhes.setPreferredSize(new Dimension(TelaPedido.getWidth(), TelaPedido.getHeight()));
 
-    JButton btnVoltar = new JButton("← Voltar");
-    estilizarBotao(btnVoltar, new Color(108, 117, 125), 13);
-    btnVoltar.setAlignmentX(Component.LEFT_ALIGNMENT);
-    btnVoltar.addActionListener(e -> TelaPedido.setVisible(false));
-    detalhes.add(btnVoltar);
-    detalhes.add(Box.createVerticalStrut(20));
-
-    // HEADER
-    JPanel header = new JPanel(new BorderLayout());
-    header.setBackground(Color.WHITE);
-    header.setBorder(BorderFactory.createCompoundBorder(
-        BorderFactory.createLineBorder(new Color(230, 230, 230)),
-        BorderFactory.createEmptyBorder(15, 20, 15, 20)
+    JPanel bannerCliente = new JPanel();
+    bannerCliente.setBackground(new Color(248, 249, 250));
+    bannerCliente.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(240, 240, 240, 150)),
+            BorderFactory.createEmptyBorder(12, 20, 12, 20)
     ));
+    bannerCliente.setLayout(new BoxLayout(bannerCliente, BoxLayout.Y_AXIS));
+    JLabel lblConfirme = new JLabel("Confirme o pedido para ver os dados do cliente");
+    lblConfirme.setForeground(new Color(220, 53, 69));
+    lblConfirme.setFont(new Font("Arial", Font.BOLD, 13));
+    JLabel lblObs = new JLabel("As informações do cliente estão ocultas até que o pedido seja confirmado.");
+    lblObs.setForeground(new Color(120, 120, 120));
+    lblObs.setFont(new Font("Arial", Font.PLAIN, 11));
+    bannerCliente.add(lblConfirme);
+    bannerCliente.add(lblObs);
+    detalhes.add(bannerCliente);
+    detalhes.add(Box.createVerticalStrut(4));
 
-    // Header Left
-    JPanel headerLeft = new JPanel();
-    headerLeft.setLayout(new BoxLayout(headerLeft, BoxLayout.Y_AXIS));
-    headerLeft.setBackground(Color.WHITE);
-
-    JLabel clienteNome = new JLabel(pedido.getNomeCliente());
-    clienteNome.setFont(new Font("Segoe UI", Font.BOLD, 20));
-    clienteNome.setForeground(new Color(33, 37, 41));
-
-    JLabel pedidoId = new JLabel("Pedido #" + pedido.getIdPedido());
-    pedidoId.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-    pedidoId.setForeground(new Color(108, 117, 125));
-
-    JLabel localizador = new JLabel("Localizador: " + pedido.getCodigoLocalizador());
-    localizador.setFont(new Font("Segoe UI", Font.ITALIC, 12));
-    localizador.setForeground(new Color(173, 181, 189));
-
-    headerLeft.add(clienteNome);
-    headerLeft.add(Box.createVerticalStrut(4));
-    headerLeft.add(pedidoId);
-    headerLeft.add(Box.createVerticalStrut(4));
-    headerLeft.add(localizador);
-
-    // Header Right
-    JPanel headerRight = new JPanel();
-    headerRight.setLayout(new BoxLayout(headerRight, BoxLayout.Y_AXIS));
-    headerRight.setBackground(Color.WHITE);
-    headerRight.setAlignmentY(Component.TOP_ALIGNMENT);
-
-    JLabel entregaPrevista = new JLabel("Entrega: " + pedido.getHoraEntrega());
-    entregaPrevista.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-    entregaPrevista.setForeground(new Color(52, 58, 64));
-
-    JButton btnContato = new JButton("Entrar em contato");
-    estilizarBotao(btnContato, new Color(0, 123, 255), 13);
-
-    headerRight.add(entregaPrevista);
-    headerRight.add(Box.createVerticalStrut(8));
-    headerRight.add(btnContato);
-
-    header.add(headerLeft, BorderLayout.CENTER);
-    header.add(headerRight, BorderLayout.EAST);
+    JPanel header = new JPanel();
+    header.setOpaque(false);
+    header.setLayout(new BoxLayout(header, BoxLayout.X_AXIS));
+    JLabel lblPedido = new JLabel("Pedido #" + pedido.getIdPedido());
+    lblPedido.setFont(new Font("Arial", Font.PLAIN, 13));
+    lblPedido.setForeground(new Color(33, 37, 41));
+    JLabel lblFeito = new JLabel(" • Feito às ");
+    lblFeito.setFont(new Font("Arial", Font.PLAIN, 13));
+    lblFeito.setForeground(new Color(108, 117, 125));
+    JLabel lblHora = new JLabel(pedido.getHoraPedido() != null ? pedido.getHoraPedido() : "--:--");
+    lblHora.setFont(new Font("Arial", Font.BOLD, 13));
+    header.add(lblPedido);
+    header.add(lblFeito);
+    header.add(lblHora);
     detalhes.add(header);
-    detalhes.add(Box.createVerticalStrut(20));
 
-    // Cards
-    detalhes.add(criarCard("🛡 Entrega sem contato", "O cliente solicitou deixar o pedido na portaria."));
-    detalhes.add(Box.createVerticalStrut(15));
-    detalhes.add(criarCard("📍 Endereço", pedido.getEnderecoCompleto()));
-    detalhes.add(Box.createVerticalStrut(15));
 
-    // Entregador
-    detalhes.add(criarEntregaHeader(pedido));
-    detalhes.add(Box.createVerticalStrut(20));
+    detalhes.add(Box.createVerticalStrut(4));
 
-    if (pedido.getItens() != null && !pedido.getItens().isEmpty()) {
-        JLabel lblItens = new JLabel("Itens do Pedido:");
-        lblItens.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        lblItens.setForeground(new Color(33, 37, 41));
-        lblItens.setAlignmentX(Component.LEFT_ALIGNMENT);
-        detalhes.add(lblItens);
-        detalhes.add(Box.createVerticalStrut(10));
+    JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+    row.setOpaque(false);
 
-        for (ItemPedido item : pedido.getItens()) {
-            detalhes.add(criarItemCard(item));
-        }
+    JLabel iconeRelogio = new JLabel("\u23F0");
+    iconeRelogio.setFont(new Font("Segoe UI Symbol", Font.PLAIN, 14));
+    iconeRelogio.setForeground(new Color(120, 120, 120));
+    row.add(iconeRelogio);
+    row.add(Box.createHorizontalStrut(4));
+
+    JLabel lblEntrega = new JLabel("Entrega prevista: " + (pedido.getHoraEntrega() != null ? pedido.getHoraEntrega() : "--:--"));
+    lblEntrega.setFont(new Font("Arial", Font.PLAIN, 12));
+    row.add(lblEntrega);
+    row.add(Box.createHorizontalStrut(8));
+
+    JPanel pedidosBox = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+    pedidosBox.setBackground(new Color(240, 240, 240));
+    pedidosBox.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220, 150)));
+    JLabel iconeEstrela = new JLabel("\u2605");
+    iconeEstrela.setForeground(new Color(108, 117, 125));
+    iconeEstrela.setFont(new Font("Arial", Font.PLAIN, 11));
+    JLabel lblQtdPedidos = new JLabel(pedido.getQtdPedidos() + " pedidos");
+    lblQtdPedidos.setFont(new Font("Arial", Font.PLAIN, 11));
+    lblQtdPedidos.setForeground(new Color(108, 117, 125));
+    pedidosBox.add(iconeEstrela);
+    pedidosBox.add(lblQtdPedidos);
+    row.add(pedidosBox);
+    detalhes.add(row);
+    detalhes.add(Box.createVerticalStrut(4));
+
+    JLabel tagEntregaParceira = new JLabel("Entrega Parceira");
+    tagEntregaParceira.setFont(new Font("Arial", Font.PLAIN, 10));
+    tagEntregaParceira.setOpaque(true);
+    tagEntregaParceira.setBackground(new Color(248, 249, 250));
+    tagEntregaParceira.setForeground(new Color(220, 53, 69));
+    tagEntregaParceira.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(220, 53, 69)),
+            new EmptyBorder(2, 6, 2, 6)
+    ));
+    detalhes.add(tagEntregaParceira);
+    detalhes.add(Box.createVerticalStrut(4));
+
+    JPanel painelPedido = new JPanel();
+    painelPedido.setLayout(new BoxLayout(painelPedido, BoxLayout.Y_AXIS));
+    painelPedido.setBackground(Color.WHITE);
+    painelPedido.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(230, 230, 230, 150)),
+            new EmptyBorder(4, 8, 4, 8)
+    ));
+    painelPedido.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+
+    JPanel pendenteBanner = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+    pendenteBanner.setBackground(new Color(255, 235, 236));
+    pendenteBanner.setBorder(new EmptyBorder(14, 20, 14, 20));
+    pendenteBanner.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
+    JLabel lblPendente = new JLabel("Pendente");
+    lblPendente.setFont(new Font("Arial", Font.BOLD, 13));
+    lblPendente.setForeground(new Color(220, 53, 69));
+    JLabel lblTempo = new JLabel("   5 minutos para confirmar o pedido");
+    lblTempo.setFont(new Font("Arial", Font.PLAIN, 11));
+    lblTempo.setForeground(new Color(220, 53, 69));
+    pendenteBanner.add(lblPendente);
+    pendenteBanner.add(lblTempo);
+    painelPedido.add(pendenteBanner);
+
+    JPanel itemsPanel = new JPanel();
+    itemsPanel.setLayout(new BoxLayout(itemsPanel, BoxLayout.Y_AXIS));
+    itemsPanel.setBackground(Color.WHITE);
+    itemsPanel.setBorder(new EmptyBorder(2, 8, 2, 8));
+
+    NumberFormat formatBR = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+
+    for (ItemPedido item : pedido.getItens()) {
+        JPanel linhaItem = new JPanel(new BorderLayout());
+        linhaItem.setBackground(Color.WHITE);
+        JLabel lblQtdItem = new JLabel(item.getQuantidade() + "x " + item.getNomeProduto());
+        lblQtdItem.setFont(new Font("Arial", Font.PLAIN, 15));
+        JLabel lblPrecoItem = new JLabel(formatBR.format(item.getPreco()));
+        lblPrecoItem.setFont(new Font("Arial", Font.PLAIN, 13));
+        linhaItem.add(lblQtdItem, BorderLayout.WEST);
+        linhaItem.add(lblPrecoItem, BorderLayout.EAST);
+        itemsPanel.add(linhaItem);
+        itemsPanel.add(Box.createVerticalStrut(1));
     }
 
-    JButton btnFinalizar = new JButton("✔ Avisar que o pedido está pronto");
-    estilizarBotao(btnFinalizar, new Color(25, 135, 84), 15);
-    btnFinalizar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
-    detalhes.add(Box.createVerticalStrut(20));
-    detalhes.add(btnFinalizar);
+    itemsPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
+    itemsPanel.add(Box.createVerticalStrut(4));
+
+    JPanel linhaSubtotal = new JPanel(new BorderLayout());
+    linhaSubtotal.setBackground(Color.WHITE);
+    linhaSubtotal.setBorder(new EmptyBorder(2, 0, 0, 0));
+    JLabel lblSubtotal = new JLabel("Subtotal");
+    lblSubtotal.setFont(new Font("Arial", Font.PLAIN, 15));
+    JLabel lblPrecoSubtotal = new JLabel(formatBR.format(39.99));
+    lblPrecoSubtotal.setFont(new Font("Arial", Font.BOLD, 13));
+    linhaSubtotal.add(lblSubtotal, BorderLayout.WEST);
+    linhaSubtotal.add(lblPrecoSubtotal, BorderLayout.EAST);
+    itemsPanel.add(linhaSubtotal);
+
+    painelPedido.add(itemsPanel);
+    painelPedido.add(new JSeparator());
+
+    JPanel pagamentoBanner = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+    pagamentoBanner.setBackground(new Color(245, 245, 245));
+    pagamentoBanner.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(230, 230, 230, 150)),
+            new EmptyBorder(20, 20, 20, 20)
+    ));
+    pagamentoBanner.setMaximumSize(new Dimension(Integer.MAX_VALUE, 64));
+
+    JLabel iconePagamento = new JLabel("\u0024");
+    iconePagamento.setFont(new Font("Arial", Font.BOLD, 18));
+    iconePagamento.setForeground(new Color(120, 120, 120));
+    pagamentoBanner.add(iconePagamento);
+    pagamentoBanner.add(Box.createHorizontalStrut(10));
+
+    JPanel textoPagamento = new JPanel();
+    textoPagamento.setOpaque(false);
+    textoPagamento.setLayout(new BoxLayout(textoPagamento, BoxLayout.Y_AXIS));
+    JLabel lblConfirmePagamento = new JLabel("Confirme o pedido para ver a forma de pagamento");
+    lblConfirmePagamento.setFont(new Font("Arial", Font.BOLD, 12));
+    lblConfirmePagamento.setForeground(new Color(120, 120, 120));
+    JLabel lblObsPagamento = new JLabel("As informações de pagamento estão ocultas até que o pedido seja confirmado.");
+    lblObsPagamento.setFont(new Font("Arial", Font.PLAIN, 10));
+    lblObsPagamento.setForeground(new Color(120, 120, 120));
+    textoPagamento.add(lblConfirmePagamento);
+    textoPagamento.add(lblObsPagamento);
+
+    pagamentoBanner.add(textoPagamento);
+    painelPedido.add(pagamentoBanner);
+
+    detalhes.add(painelPedido);
+    detalhes.add(Box.createVerticalStrut(4));
+
+    JPanel panelBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+    panelBotoes.setOpaque(false);
+
+    JButton btnCancelar = new JButton("Cancelar");
+    estilizarBotao(btnCancelar, Color.WHITE, 13);
+    btnCancelar.setForeground(new Color(220, 53, 69));
+    btnCancelar.setBorder(BorderFactory.createLineBorder(new Color(220, 53, 69), 1));
+    btnCancelar.setPreferredSize(new Dimension(110, 30));
+
+    JButton btnConfirmar = new JButton("Confirmar pedido");
+    estilizarBotao(btnConfirmar, new Color(220, 53, 69), 13);
+    btnConfirmar.setPreferredSize(new Dimension(140, 34));
+
+    panelBotoes.add(btnCancelar);
+    panelBotoes.add(Box.createHorizontalStrut(8));
+    panelBotoes.add(btnConfirmar);
+
+    detalhes.add(panelBotoes);
 
     JScrollPane scrollPane = new JScrollPane(detalhes);
     scrollPane.setBorder(null);
-    scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+    scrollPane.getVerticalScrollBar().setUnitIncrement(14);
 
     TelaPedido.setLayout(new BorderLayout());
     TelaPedido.add(scrollPane, BorderLayout.CENTER);
@@ -370,85 +496,40 @@ private void mostrarDetalhesPedido(Pedidos pedido) {
     TelaPedido.setVisible(true);
 }
 
-private JPanel criarCard(String titulo, String descricao) {
-    JPanel card = new JPanel();
-    card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-    card.setBorder(BorderFactory.createCompoundBorder(
-        BorderFactory.createLineBorder(new Color(230, 230, 230)),
-        BorderFactory.createEmptyBorder(12, 20, 12, 20)
-    ));
-    card.setBackground(Color.WHITE);
-    card.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-    JLabel lblTitulo = new JLabel(titulo);
-    lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 14));
+    class RoundedBorder extends AbstractBorder {
 
-    JLabel lblDesc = new JLabel("<html>" + descricao + "</html>");
-    lblDesc.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-    lblDesc.setForeground(new Color(90, 90, 90));
+        private final int radius;
+        private final int padding;
 
-    card.add(lblTitulo);
-    card.add(Box.createVerticalStrut(5));
-    card.add(lblDesc);
+        public RoundedBorder(int radius) {
+            this(radius, 8);
+        }
 
-    return card;
-}
+        public RoundedBorder(int radius, int padding) {
+            this.radius = radius;
+            this.padding = padding;
+        }
 
-private JPanel criarEntregaHeader(Pedidos pedido) {
-    JPanel panel = new JPanel(new BorderLayout());
-    panel.setBackground(new Color(209, 250, 229));
-    panel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        @Override
+        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(new Color(230, 230, 230));
+            g2.drawRoundRect(x, y, width - 1, height - 1, radius, radius);
+        }
 
-    JLabel lblEsquerda = new JLabel("Entregador a caminho");
-    lblEsquerda.setFont(new Font("Segoe UI", Font.BOLD, 14));
-    lblEsquerda.setForeground(new Color(25, 135, 84));
+        @Override
+        public Insets getBorderInsets(Component c) {
+            return new Insets(padding, padding, padding, padding);
+        }
 
-    JLabel lblDireita = new JLabel("<html>" + pedido.getNomeEntregador() + "<br/>" + pedido.getTelefoneEntregador() + " • Moto</html>");
-    lblDireita.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-    lblDireita.setForeground(new Color(33, 37, 41));
-
-    panel.add(lblEsquerda, BorderLayout.WEST);
-    panel.add(lblDireita, BorderLayout.EAST);
-
-    return panel;
-}
-
-private JPanel criarItemCard(ItemPedido item) {
-    JPanel itemPanel = new JPanel(new BorderLayout());
-    itemPanel.setBackground(Color.WHITE);
-    itemPanel.setBorder(BorderFactory.createCompoundBorder(
-        BorderFactory.createLineBorder(new Color(230, 230, 230)),
-        BorderFactory.createEmptyBorder(10, 15, 10, 15)
-    ));
-
-    JLabel nome = new JLabel(item.getQuantidade() + "x " + item.getNomeProduto());
-    nome.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-    nome.setForeground(new Color(33, 37, 41));
-
-    JLabel preco = new JLabel("R$ " + String.format("%.2f", item.getPreco()));
-    preco.setFont(new Font("Segoe UI", Font.BOLD, 14));
-    preco.setForeground(new Color(33, 37, 41));
-
-    itemPanel.add(nome, BorderLayout.WEST);
-    itemPanel.add(preco, BorderLayout.EAST);
-
-    JPanel container = new JPanel();
-    container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
-    container.setBackground(Color.WHITE);
-    container.add(itemPanel);
-
-    if (item.getObservacao() != null && !item.getObservacao().isEmpty()) {
-        JLabel obs = new JLabel("📝 " + item.getObservacao());
-        obs.setFont(new Font("Segoe UI", Font.ITALIC, 12));
-        obs.setForeground(new Color(108, 117, 125));
-        obs.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
-        container.add(obs);
+        @Override
+        public Insets getBorderInsets(Component c, Insets insets) {
+            insets.left = insets.right = insets.top = insets.bottom = padding;
+            return insets;
+        }
     }
-
-    container.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
-    return container;
-}
-
 
     private void buscarPedidos(String pesquisa) {
         ArrayList<Pedidos> pedidos = dao.buscarTodosPedidos();

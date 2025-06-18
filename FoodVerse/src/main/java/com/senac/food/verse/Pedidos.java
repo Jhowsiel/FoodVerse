@@ -3,6 +3,7 @@ package com.senac.food.verse;
 import java.util.List;
 
 public class Pedidos {
+
     private String idPedido;
     private String nomeCliente;
     private String horaPedido;
@@ -25,9 +26,9 @@ public class Pedidos {
     }
 
     public Pedidos(String idPedido, String nomeCliente, String horaPedido, String horaEntrega,
-                   String codigoLocalizador, String enderecoCompleto, String nomeEntregador,
-                   String telefoneEntregador, String modoEntrega, String observacoes,
-                   List<ItemPedido> itens, String statusPedido, String tipoPedido) {
+            String codigoLocalizador, String enderecoCompleto, String nomeEntregador,
+            String telefoneEntregador, String modoEntrega, String observacoes,
+            List<ItemPedido> itens, String statusPedido, String tipoPedido) {
         this.idPedido = idPedido;
         this.nomeCliente = nomeCliente;
         this.horaPedido = horaPedido;
@@ -64,7 +65,7 @@ public class Pedidos {
     }
 
     public String getHoraEntrega() {
-        return horaEntrega;
+        return "50min";
     }
 
     public String getCodigoLocalizador() {
@@ -94,5 +95,12 @@ public class Pedidos {
     public List<ItemPedido> getItens() {
         return itens;
     }
-    
+
+    public Object getQtdPedidos() {
+       return null;
+    }
+
+    public boolean isEntregaParceira() {
+        return false;
+    }
 }
