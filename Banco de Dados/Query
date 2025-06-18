@@ -1,19 +1,15 @@
--- Drop database se existir (evita erro se já existir)
-IF EXISTS (SELECT * FROM sys.databases WHERE name = 'FoodVerseDB')
+F EXISTS (SELECT * FROM sys.databases WHERE name = 'FoodVerseDB')
 BEGIN
-    ALTER DATABASE FoodVerseDB SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
     DROP DATABASE FoodVerseDB;
 END
 GO
 
--- Criação do banco de dados
 CREATE DATABASE FoodVerseDB;
 GO
 
 USE FoodVerseDB;
 GO
 
--- Tabela: tb_clientes
 CREATE TABLE tb_clientes (
     UserId INT IDENTITY PRIMARY KEY,
     user_name VARCHAR(100),
@@ -27,7 +23,6 @@ CREATE TABLE tb_clientes (
 );
 GO
 
--- Tabela: tb_produtos
 CREATE TABLE tb_produtos (
     ID_produto INT IDENTITY PRIMARY KEY,
     nome_produto VARCHAR(100),
@@ -36,7 +31,6 @@ CREATE TABLE tb_produtos (
 );
 GO
 
--- Tabela: tb_reservas
 CREATE TABLE tb_reservas (
     ID_reserva INT IDENTITY PRIMARY KEY,
     ID_cliente INT,
@@ -47,32 +41,32 @@ CREATE TABLE tb_reservas (
 );
 GO
 
--- Tabela: tb_status_pedido
 CREATE TABLE tb_status_pedido (
-    status_id INT PRIMARY KEY, -- Vou manter o ID fixo, pois você usou explicitamente IDs
+    status_id INT PRIMARY KEY,
     status_nome VARCHAR(50)
 );
 GO
 
--- Tabela: tb_tipo_pedido
 CREATE TABLE tb_tipo_pedido (
     tipo_id INT IDENTITY PRIMARY KEY,
     tipo_nome VARCHAR(50)
 );
 GO
 
--- Tabela: tb_pedidos
 CREATE TABLE tb_pedidos (
     ID_pedido VARCHAR(10) PRIMARY KEY,
     data_pedido DATETIME,
+    hora_entrega DATETIME NULL,
+    codigo_localizador VARCHAR(50) NULL,
     ID_cliente INT,
     status_id INT,
     tipo_id INT,
     modo_consumo VARCHAR(20),
-    ID_reserva INT NULL,
+    endereco_completo VARCHAR(255),
     nome_entregador VARCHAR(100) NULL,
     telefone_entregador VARCHAR(20) NULL,
     observacoes VARCHAR(255) NULL,
+    ID_reserva INT NULL,
     FOREIGN KEY (ID_cliente) REFERENCES tb_clientes(UserId),
     FOREIGN KEY (status_id) REFERENCES tb_status_pedido(status_id),
     FOREIGN KEY (tipo_id) REFERENCES tb_tipo_pedido(tipo_id),
@@ -80,7 +74,6 @@ CREATE TABLE tb_pedidos (
 );
 GO
 
--- Tabela: tb_pedidos_produtos (itens do pedido)
 CREATE TABLE tb_pedidos_produtos (
     ID_pedido VARCHAR(10),
     ID_produto INT,
@@ -91,7 +84,6 @@ CREATE TABLE tb_pedidos_produtos (
 );
 GO
 
--- Tabela: tb_cupons
 CREATE TABLE tb_cupons (
     ID_cupom INT IDENTITY PRIMARY KEY,
     codigo_cupom VARCHAR(50),
@@ -100,7 +92,6 @@ CREATE TABLE tb_cupons (
 );
 GO
 
--- Tabela: tb_avaliacoes
 CREATE TABLE tb_avaliacoes (
     ID_avaliacao INT IDENTITY PRIMARY KEY,
     ID_cliente INT,
@@ -113,7 +104,6 @@ CREATE TABLE tb_avaliacoes (
 );
 GO
 
--- Tabela: tb_pagamentos
 CREATE TABLE tb_pagamentos (
     ID_pagamento INT IDENTITY PRIMARY KEY,
     ID_pedido VARCHAR(10),
@@ -124,7 +114,6 @@ CREATE TABLE tb_pagamentos (
 );
 GO
 
--- Tabela: tb_fidelidade
 CREATE TABLE tb_fidelidade (
     ID_fidelidade INT IDENTITY PRIMARY KEY,
     ID_cliente INT,
@@ -134,7 +123,6 @@ CREATE TABLE tb_fidelidade (
 );
 GO
 
--- Tabela: tb_funcionarios
 CREATE TABLE tb_funcionarios (
     userID INT IDENTITY PRIMARY KEY,
     name VARCHAR(100),
@@ -143,15 +131,13 @@ CREATE TABLE tb_funcionarios (
     role VARCHAR(50),
     phone VARCHAR(20),
     password VARCHAR(255),
-    registrationDate DATE,
+    registrationDate VARCHAR(20),
     status VARCHAR(20)
 );
 GO
 
--- Inserir dados exemplo nas tabelas
-
 INSERT INTO tb_funcionarios (name, userName, email, role, phone, password, registrationDate, status)
-VALUES ('Carlos Cozinheiro', 'carlos', 'carlos@email.com', 'Cozinheiro', '11999998888', 'senha123', '2025-04-30', 'aprovado');
+VALUES ('João Silva', 'joaosilva', 'joao@email.com', 'Cozinheiro', '11999998888', 'senha123', '2025-04-30', 'aprovado');
 GO
 
 INSERT INTO tb_clientes (user_name, name, email, phone, password, cpf, registrationDate, isLogin)
@@ -182,37 +168,35 @@ VALUES
 (6, 'finalizado');
 GO
 
--- Inserir pedidos iniciais (com campos adicionais: entregador, telefone, observações)
-INSERT INTO tb_pedidos (ID_pedido, data_pedido, ID_cliente, status_id, tipo_id, modo_consumo, ID_reserva, nome_entregador, telefone_entregador, observacoes)
-VALUES
-('P001', GETDATE(), 1, 1, 1, 'No local', 1, 'Carlos', '11999998888', 'Sem cebola no lanche'),
-('P002', GETDATE(), 1, 2, 2, 'Delivery', NULL, 'Ana', '11988887777', NULL);
+INSERT INTO tb_pedidos 
+(ID_pedido, data_pedido, hora_entrega, codigo_localizador, ID_cliente, status_id, tipo_id, modo_consumo, endereco_completo, nome_entregador, telefone_entregador, observacoes, ID_reserva)
+VALUES 
+('P001', GETDATE(), NULL, 'LOC001', 1, 1, 1, 'No local', NULL, NULL, NULL, NULL, 1),
+('P002', GETDATE(), DATEADD(hour, 1, GETDATE()), 'LOC002', 1, 2, 2, 'Delivery', 'Rua A, 100 - Bairro B', 'João Entregador', '11999998888', 'Entrega rápida', NULL),
+('P013', GETDATE(), DATEADD(hour, 2, GETDATE()), 'LOC013', 1, 1, 2, 'Delivery', 'Av. Paulista, 1000 - Bela Vista - São Paulo/SP', 'Maria Entregadora', '11988887777', 'Pedido especial', NULL);
 GO
 
--- Associar produtos aos pedidos
-INSERT INTO tb_pedidos_produtos (ID_pedido, ID_produto, quantidade) VALUES
+INSERT INTO tb_pedidos_produtos (ID_pedido, ID_produto, quantidade)
+VALUES 
 ('P001', 1, 1),
 ('P001', 2, 2),
-('P002', 1, 2);
+('P002', 1, 2),
+('P013', 1, 1);
 GO
 
--- Inserir mais pedidos para testes (com vários status e tipos)
-INSERT INTO tb_pedidos (ID_pedido, data_pedido, ID_cliente, status_id, tipo_id, modo_consumo, ID_reserva, nome_entregador, telefone_entregador, observacoes)
-VALUES
-('P003', GETDATE(), 1, 1, 1, 'No local', 1, 'Lucas', '11977776666', NULL),
-('P004', GETDATE(), 1, 2, 2, 'Delivery', NULL, 'Mariana', '11966665555', 'Urgente'),
-('P005', GETDATE(), 1, 3, 3, 'No local', 1, 'Joana', '11955554444', NULL),
-('P006', GETDATE(), 1, 4, 1, 'Delivery', NULL, 'Carlos', '11999998888', 'Por favor, rápido!'),
-('P007', GETDATE(), 1, 5, 2, 'No local', 1, NULL, NULL, 'Cliente cancelou'),
-('P008', GETDATE(), 1, 6, 3, 'Delivery', NULL, 'Ana', '11988887777', NULL);
+INSERT INTO tb_funcionarios (name, userName, email, role, phone, password, registrationDate, status)
+VALUES 
+('Carlos Pending', 'carlosp', 'carlos.pendente1@email.com', 'Atendente', '11988887771', 'senha456', CONVERT(VARCHAR(10), GETDATE(), 120), 'pendente'),
+('Maria Pending', 'mariap', 'maria.pendente2@email.com', 'Garçonete', '11977776662', 'senha789', CONVERT(VARCHAR(10), GETDATE(), 120), 'pendente'),
+('Lucas Pending', 'lucasp', 'lucas.pendente3@email.com', 'Cozinheiro', '11966665553', 'senha101', CONVERT(VARCHAR(10), GETDATE(), 120), 'pendente'),
+('Ana Pending', 'anap', 'ana.pendente4@email.com', 'Caixa', '11955554444', 'senha202', CONVERT(VARCHAR(10), GETDATE(), 120), 'pendente'),
+('Bruno Pending', 'brunop', 'bruno.pendente5@email.com', 'Entregador', '11944443335', 'senha303', CONVERT(VARCHAR(10), GETDATE(), 120), 'pendente'),
+('Julia Pending', 'juliap', 'julia.pendente6@email.com', 'Atendente', '11933332226', 'senha404', CONVERT(VARCHAR(10), GETDATE(), 120), 'pendente');
 GO
 
--- Associar produtos aos novos pedidos
-INSERT INTO tb_pedidos_produtos (ID_pedido, ID_produto, quantidade) VALUES
-('P003', 1, 1), ('P003', 2, 1),
-('P004', 1, 2),
-('P005', 2, 3),
-('P006', 1, 1), ('P006', 2, 2),
-('P007', 1, 1),
-('P008', 2, 1);
+
+INSERT INTO tb_funcionarios (name, userName, email, role, phone, password, registrationDate, status)
+VALUES 
+('João Silva', 'joaosilva', 'joao@email.com', 'Cozinheiro', '11999998888', 'senha123', '2025-04-30', 'aprovado'),
+('Admin', 'admin', '1', 'Administrador', '11999990000', '1', CONVERT(VARCHAR(10), GETDATE(), 120), 'aprovado');
 GO
