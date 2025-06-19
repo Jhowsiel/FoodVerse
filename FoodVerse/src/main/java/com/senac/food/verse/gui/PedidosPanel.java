@@ -22,6 +22,8 @@ import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
@@ -131,54 +133,39 @@ public final class PedidosPanel extends javax.swing.JPanel {
     }
 
     public void PaineisPedidos(Pedidos pedido) {
-        if ("pendente".equalsIgnoreCase(pedido.getStatusPedido())
+        // Permite abrir detalhes para pendente e em preparo do delivery
+        if (("pendente".equalsIgnoreCase(pedido.getStatusPedido())
+                || "em preparo".equalsIgnoreCase(pedido.getStatusPedido()))
                 && "Delivery".equalsIgnoreCase(pedido.getModoEntrega())) {
-            mostrarPedidoPendenteDelivery(pedido);
+            mostrarPedidoPendenteDelivery(pedido); // ou pode ser mostrarPedidoDetalhesDelivery
             return;
         }
+        // Se quiser permitir para outros status, adicione aqui:
         if ("pronto".equalsIgnoreCase(pedido.getStatusPedido())) {
+            // mostrarPedidoPronto(pedido);
             return;
         }
         if ("entregue".equalsIgnoreCase(pedido.getStatusPedido())) {
+            // mostrarPedidoEntregue(pedido);
             return;
         }
     }
+    // Exemplo de campo statusLabel como variável de instância
+    private JLabel statusLabelCardSelecionado = null;
 
     private JPanel criarPedidoCard(Pedidos pedido) {
-        // --- Painel principal ---
         JPanel card = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                // Antialiasing caso queira desenhar algo extra
                 Graphics2D g2 = (Graphics2D) g;
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                        RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             }
         };
         card.setLayout(new GroupLayout(card));
         card.setBackground(Color.WHITE);
         card.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
         card.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-
-        // --- Hover e clique ---
-        card.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                card.setBackground(new Color(245, 245, 245));
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                card.setBackground(Color.WHITE);
-            }
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                PaineisPedidos(pedido);
-
-            }
-        });
 
         // --- Componentes internos ---
         GroupLayout layout = (GroupLayout) card.getLayout();
@@ -218,13 +205,12 @@ public final class PedidosPanel extends javax.swing.JPanel {
         RoundedLabel modoEntrega = new RoundedLabel(
                 pedido.getModoEntrega(),
                 icon,
-                new Color(240, 230, 255), // fundo lilás claro
-                new Color(180, 130, 255), // borda roxa suave
-                16, 16, // arco de cantos
-                6 // padding interno
+                new Color(240, 230, 255),
+                new Color(180, 130, 255),
+                16, 16,
+                6
         );
 
-        // --- Layout ---
         layout.setHorizontalGroup(
                 layout.createParallelGroup(GroupLayout.Alignment.LEADING)
                         .addGroup(layout.createSequentialGroup()
@@ -234,9 +220,7 @@ public final class PedidosPanel extends javax.swing.JPanel {
                                 .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED, 0, Short.MAX_VALUE)
                                 .addComponent(tempoLabel))
                         .addComponent(statusLabel)
-                        .addComponent(modoEntrega, GroupLayout.PREFERRED_SIZE,
-                                GroupLayout.DEFAULT_SIZE,
-                                GroupLayout.PREFERRED_SIZE)
+                        .addComponent(modoEntrega, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
         );
         layout.setVerticalGroup(
                 layout.createSequentialGroup()
@@ -250,6 +234,25 @@ public final class PedidosPanel extends javax.swing.JPanel {
                         .addComponent(modoEntrega)
                         .addGap(6)
         );
+
+        // Passa a referência do statusLabel para o campo de instância ao clicar
+        card.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                card.setBackground(new Color(245, 245, 245));
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                card.setBackground(Color.WHITE);
+            }
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                statusLabelCardSelecionado = statusLabel; // Salva label do card selecionado
+                PaineisPedidos(pedido);
+            }
+        });
 
         return card;
     }
@@ -287,6 +290,7 @@ public final class PedidosPanel extends javax.swing.JPanel {
         botao.setToolTipText(botao.getText());
     }
 
+    // Método para mostrar pedido pendente com endereço centralizado após confirmação
     private void mostrarPedidoPendenteDelivery(Pedidos pedido) {
     TelaPedido.removeAll();
 
@@ -296,24 +300,33 @@ public final class PedidosPanel extends javax.swing.JPanel {
     detalhes.setBorder(BorderFactory.createEmptyBorder(10, 16, 10, 16));
     detalhes.setPreferredSize(new Dimension(TelaPedido.getWidth(), TelaPedido.getHeight()));
 
-    JPanel bannerCliente = new JPanel();
-    bannerCliente.setBackground(new Color(248, 249, 250));
-    bannerCliente.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(240, 240, 240, 150)),
-            BorderFactory.createEmptyBorder(12, 20, 12, 20)
-    ));
-    bannerCliente.setLayout(new BoxLayout(bannerCliente, BoxLayout.Y_AXIS));
-    JLabel lblConfirme = new JLabel("Confirme o pedido para ver os dados do cliente");
-    lblConfirme.setForeground(new Color(220, 53, 69));
-    lblConfirme.setFont(new Font("Arial", Font.BOLD, 13));
-    JLabel lblObs = new JLabel("As informações do cliente estão ocultas até que o pedido seja confirmado.");
-    lblObs.setForeground(new Color(120, 120, 120));
-    lblObs.setFont(new Font("Arial", Font.PLAIN, 11));
-    bannerCliente.add(lblConfirme);
-    bannerCliente.add(lblObs);
-    detalhes.add(bannerCliente);
-    detalhes.add(Box.createVerticalStrut(4));
+    // Banner Cliente
+    boolean mostrarEndereco = "em preparo".equalsIgnoreCase(pedido.getStatusPedido()) ||
+                              "pronto".equalsIgnoreCase(pedido.getStatusPedido()) ||
+                              "entregue".equalsIgnoreCase(pedido.getStatusPedido());
+    if (!mostrarEndereco) {
+        JPanel bannerCliente = new JPanel();
+        bannerCliente.setBackground(new Color(248, 249, 250));
+        bannerCliente.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(240, 240, 240, 150)),
+                BorderFactory.createEmptyBorder(12, 20, 12, 20)
+        ));
+        bannerCliente.setLayout(new BoxLayout(bannerCliente, BoxLayout.Y_AXIS));
+        JLabel lblConfirme = new JLabel("Confirme o pedido para ver os dados do cliente");
+        lblConfirme.setForeground(new Color(220, 53, 69));
+        lblConfirme.setFont(new Font("Arial", Font.BOLD, 13));
+        lblConfirme.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JLabel lblObs = new JLabel("As informações do cliente estão ocultas até que o pedido seja confirmado.");
+        lblObs.setForeground(new Color(120, 120, 120));
+        lblObs.setFont(new Font("Arial", Font.PLAIN, 11));
+        lblObs.setAlignmentX(Component.CENTER_ALIGNMENT);
+        bannerCliente.add(lblConfirme);
+        bannerCliente.add(lblObs);
+        detalhes.add(bannerCliente);
+        detalhes.add(Box.createVerticalStrut(8));
+    }
 
+    // Header do Pedido
     JPanel header = new JPanel();
     header.setOpaque(false);
     header.setLayout(new BoxLayout(header, BoxLayout.X_AXIS));
@@ -330,9 +343,9 @@ public final class PedidosPanel extends javax.swing.JPanel {
     header.add(lblHora);
     detalhes.add(header);
 
+    detalhes.add(Box.createVerticalStrut(6));
 
-    detalhes.add(Box.createVerticalStrut(4));
-
+    // Linha de info de entrega
     JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
     row.setOpaque(false);
 
@@ -360,8 +373,9 @@ public final class PedidosPanel extends javax.swing.JPanel {
     pedidosBox.add(lblQtdPedidos);
     row.add(pedidosBox);
     detalhes.add(row);
-    detalhes.add(Box.createVerticalStrut(4));
+    detalhes.add(Box.createVerticalStrut(10));
 
+    // Tag "Entrega Parceira"
     JLabel tagEntregaParceira = new JLabel("Entrega Parceira");
     tagEntregaParceira.setFont(new Font("Arial", Font.PLAIN, 10));
     tagEntregaParceira.setOpaque(true);
@@ -369,11 +383,18 @@ public final class PedidosPanel extends javax.swing.JPanel {
     tagEntregaParceira.setForeground(new Color(220, 53, 69));
     tagEntregaParceira.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(220, 53, 69)),
-            new EmptyBorder(2, 6, 2, 6)
+            new EmptyBorder(2, 8, 2, 8)
     ));
+    tagEntregaParceira.setAlignmentX(Component.CENTER_ALIGNMENT);
     detalhes.add(tagEntregaParceira);
-    detalhes.add(Box.createVerticalStrut(4));
+    detalhes.add(Box.createVerticalStrut(12));
 
+    // Adiciona endereço somente se já tiver confirmado
+    if (mostrarEndereco) {
+        adicionarEnderecoAcimaDeEntregaParceira(detalhes, tagEntregaParceira, pedido);
+    }
+
+    // Painel de itens do pedido
     JPanel painelPedido = new JPanel();
     painelPedido.setLayout(new BoxLayout(painelPedido, BoxLayout.Y_AXIS));
     painelPedido.setBackground(Color.WHITE);
@@ -387,14 +408,21 @@ public final class PedidosPanel extends javax.swing.JPanel {
     pendenteBanner.setBackground(new Color(255, 235, 236));
     pendenteBanner.setBorder(new EmptyBorder(14, 20, 14, 20));
     pendenteBanner.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
-    JLabel lblPendente = new JLabel("Pendente");
+    JLabel lblPendente = new JLabel(
+            pedido.getStatusPedido().equalsIgnoreCase("pendente") ? "Pendente" :
+            pedido.getStatusPedido().equalsIgnoreCase("em preparo") ? "Em Preparo" :
+            pedido.getStatusPedido().equalsIgnoreCase("pronto") ? "Pronto" :
+            pedido.getStatusPedido().equalsIgnoreCase("entregue") ? "Entregue" : pedido.getStatusPedido()
+    );
     lblPendente.setFont(new Font("Arial", Font.BOLD, 13));
     lblPendente.setForeground(new Color(220, 53, 69));
     JLabel lblTempo = new JLabel("   5 minutos para confirmar o pedido");
     lblTempo.setFont(new Font("Arial", Font.PLAIN, 11));
     lblTempo.setForeground(new Color(220, 53, 69));
     pendenteBanner.add(lblPendente);
-    pendenteBanner.add(lblTempo);
+    if (pedido.getStatusPedido().equalsIgnoreCase("pendente")) {
+        pendenteBanner.add(lblTempo);
+    }
     painelPedido.add(pendenteBanner);
 
     JPanel itemsPanel = new JPanel();
@@ -403,7 +431,6 @@ public final class PedidosPanel extends javax.swing.JPanel {
     itemsPanel.setBorder(new EmptyBorder(2, 8, 2, 8));
 
     NumberFormat formatBR = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
-
     for (ItemPedido item : pedido.getItens()) {
         JPanel linhaItem = new JPanel(new BorderLayout());
         linhaItem.setBackground(Color.WHITE);
@@ -414,7 +441,7 @@ public final class PedidosPanel extends javax.swing.JPanel {
         linhaItem.add(lblQtdItem, BorderLayout.WEST);
         linhaItem.add(lblPrecoItem, BorderLayout.EAST);
         itemsPanel.add(linhaItem);
-        itemsPanel.add(Box.createVerticalStrut(1));
+        itemsPanel.add(Box.createVerticalStrut(2));
     }
 
     itemsPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
@@ -425,7 +452,7 @@ public final class PedidosPanel extends javax.swing.JPanel {
     linhaSubtotal.setBorder(new EmptyBorder(2, 0, 0, 0));
     JLabel lblSubtotal = new JLabel("Subtotal");
     lblSubtotal.setFont(new Font("Arial", Font.PLAIN, 15));
-    JLabel lblPrecoSubtotal = new JLabel(formatBR.format(39.99));
+    JLabel lblPrecoSubtotal = new JLabel(formatBR.format(39.99)); // Troque por seu cálculo real
     lblPrecoSubtotal.setFont(new Font("Arial", Font.BOLD, 13));
     linhaSubtotal.add(lblSubtotal, BorderLayout.WEST);
     linhaSubtotal.add(lblPrecoSubtotal, BorderLayout.EAST);
@@ -434,6 +461,7 @@ public final class PedidosPanel extends javax.swing.JPanel {
     painelPedido.add(itemsPanel);
     painelPedido.add(new JSeparator());
 
+    // Pagamento
     JPanel pagamentoBanner = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
     pagamentoBanner.setBackground(new Color(245, 245, 245));
     pagamentoBanner.setBorder(BorderFactory.createCompoundBorder(
@@ -464,25 +492,44 @@ public final class PedidosPanel extends javax.swing.JPanel {
     painelPedido.add(pagamentoBanner);
 
     detalhes.add(painelPedido);
-    detalhes.add(Box.createVerticalStrut(4));
+    detalhes.add(Box.createVerticalStrut(12));
 
+    // Painel de Botões (rodapé)
     JPanel panelBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
     panelBotoes.setOpaque(false);
 
-    JButton btnCancelar = new JButton("Cancelar");
-    estilizarBotao(btnCancelar, Color.WHITE, 13);
-    btnCancelar.setForeground(new Color(220, 53, 69));
-    btnCancelar.setBorder(BorderFactory.createLineBorder(new Color(220, 53, 69), 1));
-    btnCancelar.setPreferredSize(new Dimension(110, 30));
+    // Só mostra o cancelar se for pendente!
+    if ("pendente".equalsIgnoreCase(pedido.getStatusPedido())) {
+        JButton btnCancelar = new JButton("Cancelar");
+        estilizarBotao(btnCancelar, Color.WHITE, 13);
+        btnCancelar.setForeground(new Color(220, 53, 69));
+        btnCancelar.setBorder(BorderFactory.createLineBorder(new Color(220, 53, 69), 1));
+        btnCancelar.setPreferredSize(new Dimension(110, 30));
+        panelBotoes.add(btnCancelar);
+        panelBotoes.add(Box.createHorizontalStrut(8));
 
-    JButton btnConfirmar = new JButton("Confirmar pedido");
-    estilizarBotao(btnConfirmar, new Color(220, 53, 69), 13);
-    btnConfirmar.setPreferredSize(new Dimension(140, 34));
+        JButton btnConfirmar = new JButton("Confirmar pedido");
+        estilizarBotao(btnConfirmar, new Color(220, 53, 69), 13);
+        btnConfirmar.setPreferredSize(new Dimension(140, 34));
+        panelBotoes.add(btnConfirmar);
 
-    panelBotoes.add(btnCancelar);
-    panelBotoes.add(Box.createHorizontalStrut(8));
-    panelBotoes.add(btnConfirmar);
+        btnConfirmar.addActionListener((ActionEvent e) -> {
+            mudarStatusPedidoBanco(pedido.getIdPedido(), "em preparo");
+            mostrarPedidoPendenteDelivery(pedido); // Recarrega painel com status atualizado
+        });
+    } else if ("em preparo".equalsIgnoreCase(pedido.getStatusPedido())) {
+        JButton btnFinalizar = new JButton("Finalizar");
+        estilizarBotao(btnFinalizar, new Color(25, 135, 84), 13);
+        btnFinalizar.setPreferredSize(new Dimension(130, 34));
+        panelBotoes.add(btnFinalizar);
 
+        btnFinalizar.addActionListener(ev -> {
+            mudarStatusPedidoBanco(pedido.getIdPedido(), "pronto");
+            mostrarPedidoPendenteDelivery(pedido); // Recarrega painel com status atualizado
+            JOptionPane.showMessageDialog(TelaPedido, "Pedido finalizado com sucesso!", "Finalizado", JOptionPane.INFORMATION_MESSAGE);
+        });
+    }
+    // Adiciona o painel de botões no final
     detalhes.add(panelBotoes);
 
     JScrollPane scrollPane = new JScrollPane(detalhes);
@@ -496,6 +543,103 @@ public final class PedidosPanel extends javax.swing.JPanel {
     TelaPedido.setVisible(true);
 }
 
+    private void mudarStatusPedidoBanco(String idPedido, String statusNovo) {
+        ConexaoBanco banco = new ConexaoBanco();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = banco.abrirConexao();
+            // 1. Buscar o status_id
+            String queryStatus = "SELECT status_id FROM tb_status_pedido WHERE status_nome = ?";
+            stmt = conn.prepareStatement(queryStatus);
+            stmt.setString(1, statusNovo);
+            rs = stmt.executeQuery();
+            int statusId = -1;
+            if (rs.next()) {
+                statusId = rs.getInt("status_id");
+            }
+            rs.close();
+            stmt.close();
+
+            if (statusId != -1) {
+                // 2. Atualizar o pedido clicado
+                String queryUpdate = "UPDATE tb_pedidos SET status_id = ? WHERE ID_pedido = ?";
+                stmt = conn.prepareStatement(queryUpdate);
+                stmt.setInt(1, statusId);
+                stmt.setString(2, idPedido);
+                int linhasAfetadas = stmt.executeUpdate();
+
+                if (linhasAfetadas > 0) {
+                    System.out.println("Status do pedido atualizado com sucesso!");
+                } else {
+                    System.out.println("Nenhum pedido encontrado com o ID informado.");
+                }
+            } else {
+                System.out.println("Status não encontrado!");
+            }
+        } catch (SQLException ex) {
+            System.err.println("Erro ao atualizar valor: " + ex.getMessage());
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conn != null) {
+                    banco.fecharConexao();
+                }
+            } catch (SQLException e) {
+                System.err.println("Erro ao fechar recursos: " + e.getMessage());
+            }
+        }
+    }
+// Função utilitária para adicionar o endereço centralizado acima do tagEntregaParceira
+
+    private void adicionarEnderecoAcimaDeEntregaParceira(JPanel container, Component tagEntregaParceira, Pedidos pedido) {
+        JPanel enderecoPanel = new JPanel();
+        enderecoPanel.setLayout(new BoxLayout(enderecoPanel, BoxLayout.Y_AXIS));
+        enderecoPanel.setBackground(Color.WHITE);
+        enderecoPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(230, 230, 230, 180), 1),
+                new EmptyBorder(18, 36, 18, 36)
+        ));
+        enderecoPanel.setMaximumSize(new Dimension(400, 400));
+        enderecoPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel lblTituloEndereco = new JLabel("Endereço de Entrega");
+        lblTituloEndereco.setFont(new Font("Arial", Font.BOLD, 15));
+        lblTituloEndereco.setForeground(new Color(33, 37, 41));
+        lblTituloEndereco.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel lblEndereco = new JLabel("<html><div style='text-align: center;'>" + pedido.getEnderecoCompleto() + "</div></html>");
+        lblEndereco.setFont(new Font("Arial", Font.PLAIN, 13));
+        lblEndereco.setForeground(new Color(80, 80, 80));
+        lblEndereco.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblEndereco.setBorder(new EmptyBorder(8, 0, 0, 0));
+
+        enderecoPanel.add(lblTituloEndereco);
+        enderecoPanel.add(lblEndereco);
+
+        // Descobre o índice do tagEntregaParceira e insere o endereço antes dele
+        int idx = -1;
+        for (int i = 0; i < container.getComponentCount(); i++) {
+            if (container.getComponent(i) == tagEntregaParceira) {
+                idx = i;
+                break;
+            }
+        }
+        if (idx != -1) {
+            container.add(Box.createVerticalStrut(12), idx);
+            container.add(enderecoPanel, idx + 1);
+            container.add(Box.createVerticalStrut(10), idx + 2);
+        } else {
+            // Se não achou, adiciona ao final como fallback
+            container.add(Box.createVerticalStrut(12));
+            container.add(enderecoPanel);
+            container.add(Box.createVerticalStrut(10));
+        }
+    }
 
     class RoundedBorder extends AbstractBorder {
 

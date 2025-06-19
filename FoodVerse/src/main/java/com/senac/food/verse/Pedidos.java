@@ -103,4 +103,8 @@ public class Pedidos {
     public boolean isEntregaParceira() {
         return false;
     }
+
+    public void setStatusPedido(String statusPedido) {
+        this.statusPedido = statusPedido;
+    }
 }
