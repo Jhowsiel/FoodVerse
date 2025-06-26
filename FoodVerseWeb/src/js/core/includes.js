@@ -1,9 +1,8 @@
 import $ from 'jquery'
 
-
 function loadIncludes(parent) {
     if (!parent) parent = 'body'
-    console.log(parent)
+
     $(parent).find('[wm-include]').each(function(i, e) {
         const url = $(e).attr('wm-include')
 

@@ -4,6 +4,11 @@
     margin: 0;
 }
 
+header {
+    background-color: #303030;
+
+}
+
 img {
     width: 260px;
     height: auto;
@@ -15,4 +20,8 @@ img {
 
 .icon-nav-item {
     color: #d60000;
+}
+
+.navbar-toggler {
+    background-color: #fff;
 }
