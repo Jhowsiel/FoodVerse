@@ -1,0 +1,71 @@
+<!-- Banner -->
+<section class="banner text-white py-5">
+  <div class="container">
+    <h1 class="fw-bold display-5 mb-3">Você está morrendo de fome?</h1>
+    <p class="mb-4 fs-5">Em poucos cliques, encontre refeições que estão acessíveis perto de você.</p>
+
+    <div class="bg-dark p-4 rounded-4 shadow-lg">
+      <!-- Tabs -->
+      <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+          <a class="nav-link active bg-warning text-dark rounded-start fw-bold" href="#">
+            <i class="fas fa-motorcycle me-2"></i>Delivery
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white" href="#">
+            <i class="fas fa-store me-2"></i>Retirada
+          </a>
+        </li>
+      </ul>
+
+      <!-- Input + Botão -->
+      <div class="input-group mb-3">
+        <span class="input-group-text bg-white">
+          <i class="fas fa-map-marker-alt text-danger"></i>
+        </span>
+        <input type="text" class="form-control" placeholder="Digite seu endereço">
+        <button class="btn btn-danger fw-bold" type="button">
+          <i class="fas fa-search me-1"></i>Encontrar comida
+        </button>
+      </div>
+
+      <!-- Localização -->
+      <p class="text-white small mb-0">
+        <i class="fas fa-location-dot text-warning me-2"></i>
+        <strong>Entregar a:</strong> Localização Atual: <strong>Senac Taboão da Serra</strong>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Seção de categorias -->
+<section class="categorias container-fluid bg-dark py-4 px-3">
+  <!-- Cabeçalho da seção -->
+  <div class="header-categoria d-flex flex-column align-items-start justify-content-start mb-4">
+    <h2 class="titulo-header-menu text-danger text-uppercase small mb-2">Menu de Comidas</h2>
+    <div class="d-flex align-items-center justify-content-between w-100">
+      <h2 class="text-white fw-bold m-0">Categorias</h2>
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn-nav categoria-prev">
+          <span>&lt;</span>
+        </button>
+        <button type="button" class="btn-nav categoria-next active">
+          <span>&gt;</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de categorias com scroll horizontal -->
+  <div class="categorias-lista d-flex gap-3">
+    <button class="btn-categoria active"><img src="../imgs/logo.png" alt="">Brasileira</button>
+    <button class="btn-categoria"><img src="../imgs/logo.png" alt="">Saudável</button>
+    <button class="btn-categoria"><img src="../imgs/logo.png" alt="">Asiática</button>
+    <button class="btn-categoria"><img src="../imgs/logo.png" alt="">Fast Food</button>
+    <button class="btn-categoria"><img src="../imgs/logo.png" alt="">Árabe</button>
+    <button class="btn-categoria"><img src="../imgs/logo.png" alt="">Egipicia</button>
+    
+    <!-- Adicione mais categorias aqui -->
+  </div>
+</section>

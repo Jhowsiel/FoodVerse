@@ -25,3 +25,93 @@ img {
 .navbar-toggler {
     background-color: #fff;
 }
+
+main {
+  width: 100%;
+}
+
+.banner {
+  background: linear-gradient(90deg, #a60000, #cc0000);
+}
+
+.nav-tabs .nav-link {
+  border: none;
+  padding: 0.75rem 1.5rem;
+}
+
+.nav-tabs .nav-link.active {
+  background-color: #ffc107 !important;
+  color: #000 !important;
+}
+
+.input-group-text {
+  border-radius: 0.5rem 0 0 0.5rem;
+}
+
+.input-group input {
+  border-radius: 0 0 0 0;
+}
+
+.btn-danger {
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.bg-dark {
+  background-color: #2e2e2e !important;
+}
+
+.titulo-header-menu {
+  letter-spacing: 1px;
+}
+.btn-nav {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  background-color: #f0f0f0;
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+  margin-right: 10px;
+}
+
+.categoria-next.active {
+    background-color: #EB0029;
+    color: white;
+}
+
+.categorias-lista {
+    overflow-y: hidden;
+    overflow-x: hidden;
+}
+
+/* Botão de categoria */
+.btn-categoria {
+  background-color: #EB0029;
+  flex: 0 0 auto;  /* Permite encolher até 180px, crescer e ocupar o espaço */
+  min-width: 280px; /* Não passa de 260px */
+  height: 95px;
+  border-radius: 30px;
+  border: none;
+  padding: 0 20px;
+  color: white;
+  font-weight: bold;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  white-space: nowrap;
+  transition: background-color 0.3s;
+}
+
+.btn-categoria img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: white;
+  padding: 6px;
+  object-fit: cover;
+}
