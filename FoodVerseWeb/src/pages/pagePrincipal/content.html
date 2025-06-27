@@ -1,0 +1,394 @@
+<!-- Banner -->
+<section class="banner text-white py-5">
+  <div class="container">
+    <h1 class="fw-bold display-5 mb-3">Você está morrendo de fome?</h1>
+    <p class="mb-4 fs-5">Em poucos cliques, encontre refeições que estão acessíveis perto de você.</p>
+
+    <div class="bg-dark p-4 rounded-4 shadow-lg">
+      <!-- Tabs -->
+      <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+          <a class="nav-link active bg-warning text-dark rounded-start fw-bold" href="#">
+            <i class="fas fa-motorcycle me-2"></i>Delivery
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white" href="#">
+            <i class="fas fa-store me-2"></i>Retirada
+          </a>
+        </li>
+      </ul>
+
+      <!-- Input + Botão -->
+      <div class="input-group mb-3">
+        <span class="input-group-text bg-white">
+          <i class="fas fa-map-marker-alt text-danger"></i>
+        </span>
+        <input type="text" class="form-control" placeholder="Digite seu endereço">
+        <button class="btn text-white fw-bold btn-encontrar-comida" type="button">
+          <i class="fas fa-search me-1"></i>Encontrar comida
+        </button>
+      </div>
+
+      <!-- Localização -->
+      <p class="text-white small mb-0">
+        <i class="fas fa-location-dot text-warning me-2"></i>
+        <strong>Entregar a:</strong> Localização Atual: <strong>Senac Taboão da Serra</strong>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Seção de categorias -->
+<section class="categorias container-fluid bg-dark py-4 px-3">
+  <div class="header-categoria d-flex flex-column align-items-start justify-content-start mb-4">
+    <h2 class="titulo-header-menu text-danger text-uppercase small mb-2">Menu de Comidas</h2>
+    <div class="d-flex align-items-center justify-content-between w-100">
+      <h2 class="text-white fw-bold m-0">Categorias</h2>
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn-nav categoria-prev">
+          <span>&lt;</span>
+        </button>
+        <button type="button" class="btn-nav categoria-next active">
+          <span>&gt;</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="categorias-lista d-flex gap-3">
+    <button class="btn-categoria active"><img src="../imgs/logo.png" alt="">Brasileira</button>
+    <button class="btn-categoria"><img src="../imgs/logo.png" alt="">Saudável</button>
+    <button class="btn-categoria"><img src="../imgs/logo.png" alt="">Asiática</button>
+    <button class="btn-categoria"><img src="../imgs/logo.png" alt="">Fast Food</button>
+    <button class="btn-categoria"><img src="../imgs/logo.png" alt="">Árabe</button>
+    <button class="btn-categoria"><img src="../imgs/logo.png" alt="">Egipicia</button>
+    <button class="btn-categoria"><img src="../imgs/logo.png" alt="">Japonesa</button>
+  </div>
+</section>
+
+<!-- Cards de Menu/Cardápio -->
+<section class="menu-cardapios container-fluid bg-dark py-4 px-0">
+  <div class="row justify-content-center g-4">
+    <!-- Card 1 -->
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+      <div class="card menu-cardapios-card">
+        <img src="../imgs/cardapio/brasileira.avif" alt="menuu">
+        <div class="card-top-bar menu-cardapios-card-top">
+          <span class="badge-desconto">20% Off</span>
+          <span class="d-flex align-items-center gap-1 mx-auto">
+            <i class="fas fa-star text-warning"></i><span class="fw-bold">4.8/5</span>
+          </span>
+          <span><i class="fas fa-heart text-danger"></i></span>
+        </div>
+        <div class="card-footer-bar">
+          <h5 class="fw-bold mb-1" style="font-size: 1.2rem;">Profano Fogareiro</h5>
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <span><i class="fas fa-hand-holding-usd text-warning"></i></span>
+              <span class="fw-bold text-warning">R$ 7,49</span>
+              <span class="text-white small">25-40 Min</span>
+            </div>
+            <a href="#" class="btn btn-light rounded-circle p-2 d-flex align-items-center justify-content-center">
+              <i class="fas fa-arrow-right text-dark"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Card 2 -->
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+      <div class="card menu-cardapios-card">
+        <img src="../imgs/cardapio/japonesa.jpg" alt="menuu">
+        <div class="card-top-bar menu-cardapios-card-top">
+          <span class="badge-desconto">10% Off</span>
+          <span class="d-flex align-items-center gap-1 mx-auto">
+            <i class="fas fa-star text-warning"></i><span class="fw-bold">4.5/5</span>
+          </span>
+          <span><i class="fas fa-heart text-danger"></i></span>
+        </div>
+        <div class="card-footer-bar">
+          <h5 class="fw-bold mb-1" style="font-size: 1.2rem;">Fritello</h5>
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <span><i class="fas fa-hand-holding-usd text-success"></i></span>
+              <span class="fw-bold text-success">Grátis</span>
+              <span class="text-white small">25-50 Min</span>
+            </div>
+            <a href="#" class="btn btn-light rounded-circle p-2 d-flex align-items-center justify-content-center">
+              <i class="fas fa-arrow-right text-dark"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Card 3 -->
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+      <div class="card menu-cardapios-card">
+        <img src="../imgs/cardapio/asiatica.webp" alt="menuu">
+        <div class="card-top-bar menu-cardapios-card-top">
+          <span class="badge-desconto">15% Off</span>
+          <span class="d-flex align-items-center gap-1 mx-auto">
+            <i class="fas fa-star text-warning"></i><span class="fw-bold">4.7/5</span>
+          </span>
+          <span><i class="fas fa-heart text-white"></i></span>
+        </div>
+        <div class="card-footer-bar">
+          <h5 class="fw-bold mb-1" style="font-size: 1.2rem;">Arroz de Corda</h5>
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <span><i class="fas fa-hand-holding-usd text-warning"></i></span>
+              <span class="fw-bold text-warning">R$ 5,99</span>
+              <span class="text-white small">25-60 Min</span>
+            </div>
+            <a href="#" class="btn btn-light rounded-circle p-2 d-flex align-items-center justify-content-center">
+              <i class="fas fa-arrow-right text-dark"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Segunda Linha -->
+  <div class="row justify-content-center mt-2 g-4">
+    <!-- Card 1 -->
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+      <div class="card menu-cardapios-card">
+        <img src="../imgs/cardapio/fastfood.jpg" alt="menuu">
+        <div class="card-top-bar menu-cardapios-card-top">
+          <span class="badge-desconto">20% Off</span>
+          <span class="d-flex align-items-center gap-1 mx-auto">
+            <i class="fas fa-star text-warning"></i><span class="fw-bold">4.8/5</span>
+          </span>
+          <span><i class="fas fa-heart text-danger"></i></span>
+        </div>
+        <div class="card-footer-bar">
+          <h5 class="fw-bold mb-1" style="font-size: 1.2rem;">Profano Fogareiro</h5>
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <span><i class="fas fa-hand-holding-usd text-warning"></i></span>
+              <span class="fw-bold text-warning">R$ 7,49</span>
+              <span class="text-white small">25-40 Min</span>
+            </div>
+            <a href="#" class="btn btn-light rounded-circle p-2 d-flex align-items-center justify-content-center">
+              <i class="fas fa-arrow-right text-dark"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Card 2 -->
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+      <div class="card menu-cardapios-card">
+        <img src="../imgs/cardapio/arabe.jpg" alt="menuu">
+        <div class="card-top-bar menu-cardapios-card-top">
+          <span class="badge-desconto">10% Off</span>
+          <span class="d-flex align-items-center gap-1 mx-auto">
+            <i class="fas fa-star text-warning"></i><span class="fw-bold">4.5/5</span>
+          </span>
+          <span><i class="fas fa-heart text-danger"></i></span>
+        </div>
+        <div class="card-footer-bar">
+          <h5 class="fw-bold mb-1" style="font-size: 1.2rem;">Fritello</h5>
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <span><i class="fas fa-hand-holding-usd text-success"></i></span>
+              <span class="fw-bold text-success">Grátis</span>
+              <span class="text-white small">25-50 Min</span>
+            </div>
+            <a href="#" class="btn btn-light rounded-circle p-2 d-flex align-items-center justify-content-center">
+              <i class="fas fa-arrow-right text-dark"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Card 3 -->
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+      <div class="card menu-cardapios-card">
+        <img src="../imgs/cardapio/egipicia.jpg" alt="menuu">
+        <div class="card-top-bar menu-cardapios-card-top">
+          <span class="badge-desconto">15% Off</span>
+          <span class="d-flex align-items-center gap-1 mx-auto">
+            <i class="fas fa-star text-warning"></i><span class="fw-bold">4.7/5</span>
+          </span>
+          <span><i class="fas fa-heart text-white"></i></span>
+        </div>
+        <div class="card-footer-bar">
+          <h5 class="fw-bold mb-1" style="font-size: 1.2rem;">Arroz de Corda</h5>
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <span><i class="fas fa-hand-holding-usd text-warning"></i></span>
+              <span class="fw-bold text-warning">R$ 5,99</span>
+              <span class="text-white small">25-60 Min</span>
+            </div>
+            <a href="#" class="btn btn-light rounded-circle p-2 d-flex align-items-center justify-content-center">
+              <i class="fas fa-arrow-right text-dark"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Restaurante Destaque com Anel -->
+<section class="container-fluid d-flex flex-column align-items-center bg-dark py-4 px-3">
+  <div class="container-fluid flex-column align-items-start justify-center">
+    <p class="titulo-restaurante-destaque">Menu que sempre faz você se apaixonar</p>
+  <h2 class="text-white fw-bold mb-4">Restaurantes em Destaque</h2>
+  </div>
+
+  <div class="row justify-content-start m-5">
+    <div class="col-auto">
+      <div class="card card-destaque">
+        <div class="card-destaque-img-anel-externo">
+          <div class="card-destaque-img-anel-interno">
+            <img src="../imgs/cardapio/arabe.jpg" alt="Fritello">
+          </div>
+          <div class="card-destaque-img-borda-topo"></div>
+        </div>
+
+        <div class="card-body text-center mt-5 pt-4">
+          <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
+            <small style="color: #FFD700;">&#11088; 4.5/5</small>
+            <small style="color: #FFD700;">&#x1F49B;</small>
+          </div>
+          <h5 class="card-title fw-bold fs-4">Fritello</h5>
+          <div class="d-flex justify-content-center gap-2 mb-2">
+            <span>&#128757; <span class="text-success fw-bold">Grátis</span></span>
+            <span>25-30 Min</span>
+          </div>
+          <p class="card-text small text-capitalize">
+            Especializado em pratos da culinária brasileira e pizzas artesanais. Com um ambiente acolhedor e familiar.
+          </p>
+          <a href="#" class="btn btn-peca-agora shadow-sm">Peça Agora</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-auto">
+      <div class="card card-destaque">
+        <div class="card-destaque-img-anel-externo">
+          <div class="card-destaque-img-anel-interno">
+            <img src="../imgs/cardapio/arabe.jpg" alt="Fritello">
+          </div>
+          <div class="card-destaque-img-borda-topo"></div>
+        </div>
+
+        <div class="card-body text-center mt-5 pt-4">
+          <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
+            <small style="color: #FFD700;">&#11088; 4.5/5</small>
+            <small style="color: #FFD700;">&#x1F49B;</small>
+          </div>
+          <h5 class="card-title fw-bold fs-4">Fritello</h5>
+          <div class="d-flex justify-content-center gap-2 mb-2">
+            <span>&#128757; <span class="text-success fw-bold">Grátis</span></span>
+            <span>25-30 Min</span>
+          </div>
+          <p class="card-text small text-capitalize">
+            Especializado em pratos da culinária brasileira e pizzas artesanais. Com um ambiente acolhedor e familiar.
+          </p>
+          <a href="#" class="btn btn-peca-agora shadow-sm">Peça Agora</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-auto">
+      <div class="card card-destaque">
+        <div class="card-destaque-img-anel-externo">
+          <div class="card-destaque-img-anel-interno">
+            <img src="../imgs/cardapio/arabe.jpg" alt="Fritello">
+          </div>
+          <div class="card-destaque-img-borda-topo"></div>
+        </div>
+
+        <div class="card-body text-center mt-5 pt-4">
+          <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
+            <small style="color: #FFD700;">&#11088; 4.5/5</small>
+            <small style="color: #FFD700;">&#x1F49B;</small>
+          </div>
+          <h5 class="card-title fw-bold fs-4">Fritello</h5>
+          <div class="d-flex justify-content-center gap-2 mb-2">
+            <span>&#128757; <span class="text-success fw-bold">Grátis</span></span>
+            <span>25-30 Min</span>
+          </div>
+          <p class="card-text small text-capitalize">
+            Especializado em pratos da culinária brasileira e pizzas artesanais. Com um ambiente acolhedor e familiar.
+          </p>
+          <a href="#" class="btn btn-peca-agora shadow-sm">Peça Agora</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-auto">
+      <div class="card card-destaque">
+        <div class="card-destaque-img-anel-externo">
+          <div class="card-destaque-img-anel-interno">
+            <img src="../imgs/cardapio/arabe.jpg" alt="Fritello">
+          </div>
+          <div class="card-destaque-img-borda-topo"></div>
+        </div>
+
+        <div class="card-body text-center mt-5 pt-4">
+          <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
+            <small style="color: #FFD700;">&#11088; 4.5/5</small>
+            <small style="color: #FFD700;">&#x1F49B;</small>
+          </div>
+          <h5 class="card-title fw-bold fs-4">Fritello</h5>
+          <div class="d-flex justify-content-center gap-2 mb-2">
+            <span>&#128757; <span class="text-success fw-bold">Grátis</span></span>
+            <span>25-30 Min</span>
+          </div>
+          <p class="card-text small text-capitalize">
+            Especializado em pratos da culinária brasileira e pizzas artesanais. Com um ambiente acolhedor e familiar.
+          </p>
+          <a href="#" class="btn btn-peca-agora shadow-sm">Peça Agora</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-auto">
+      <div class="card card-destaque">
+        <div class="card-destaque-img-anel-externo">
+          <div class="card-destaque-img-anel-interno">
+            <img src="../imgs/cardapio/arabe.jpg" alt="Fritello">
+          </div>
+          <div class="card-destaque-img-borda-topo"></div>
+        </div>
+
+        <div class="card-body text-center mt-5 pt-4">
+          <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
+            <small style="color: #FFD700;">&#11088; 4.5/5</small>
+            <small style="color: #FFD700;">&#x1F49B;</small>
+          </div>
+          <h5 class="card-title fw-bold fs-4">Fritello</h5>
+          <div class="d-flex justify-content-center gap-2 mb-2">
+            <span>&#128757; <span class="text-success fw-bold">Grátis</span></span>
+            <span>25-30 Min</span>
+          </div>
+          <p class="card-text small text-capitalize">
+            Especializado em pratos da culinária brasileira e pizzas artesanais. Com um ambiente acolhedor e familiar.
+          </p>
+          <a href="#" class="btn btn-peca-agora shadow-sm">Peça Agora</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
