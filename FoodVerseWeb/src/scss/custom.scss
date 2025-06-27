@@ -100,7 +100,7 @@ main {
 
 /* Botão de categoria */
 .btn-categoria {
-  background-color: #EB0029;
+  background-color: #BC1015;
   flex: 0 0 auto;
   /* Permite encolher até 180px, crescer e ocupar o espaço */
   min-width: 280px;
@@ -126,6 +126,10 @@ main {
   background-color: white;
   padding: 6px;
   object-fit: cover;
+}
+
+.btn-categoria.active {
+  background-color: #EB0029;
 }
 
 
