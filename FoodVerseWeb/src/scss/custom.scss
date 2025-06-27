@@ -1,29 +1,35 @@
 * {
-    box-sizing: 0;
-    padding: 0;
-    margin: 0;
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
 }
 
+body {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+
 header {
-    background-color: #303030;
+  background-color: #303030;
 
 }
 
 img {
-    width: 260px;
-    height: auto;
+  width: 260px;
+  height: auto;
 }
 
 .nav-item a {
-    font-size: 1.1em;
+  font-size: 1.1em;
 }
 
 .icon-nav-item {
-    color: #d60000;
+  color: #d60000;
 }
 
 .navbar-toggler {
-    background-color: #fff;
+  background-color: #fff;
 }
 
 main {
@@ -63,6 +69,7 @@ main {
 .titulo-header-menu {
   letter-spacing: 1px;
 }
+
 .btn-nav {
   width: 60px;
   height: 60px;
@@ -79,20 +86,25 @@ main {
 }
 
 .categoria-next.active {
-    background-color: #EB0029;
-    color: white;
+  background-color: #EB0029;
+  color: white;
 }
-
 .categorias-lista {
-    overflow-y: hidden;
-    overflow-x: hidden;
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  padding-bottom: 8px;
+  scroll-behavior: smooth;
 }
 
 /* Botão de categoria */
 .btn-categoria {
   background-color: #EB0029;
-  flex: 0 0 auto;  /* Permite encolher até 180px, crescer e ocupar o espaço */
-  min-width: 280px; /* Não passa de 260px */
+  flex: 0 0 auto;
+  /* Permite encolher até 180px, crescer e ocupar o espaço */
+  min-width: 280px;
+  /* Não passa de 260px */
   height: 95px;
   border-radius: 30px;
   border: none;
@@ -114,4 +126,30 @@ main {
   background-color: white;
   padding: 6px;
   object-fit: cover;
+}
+
+
+.menu-cardapios .card {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 1.3rem !important;
+  overflow: hidden;
+}
+
+.menu-cardapios .card img {
+  border-radius: 1.3rem;
+}
+
+.menu-cardapios .d-flex.flex-wrap {
+  gap: 1rem;
+}
+
+.menu-cardapios .btn.rounded-circle {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
