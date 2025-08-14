@@ -131,20 +131,66 @@ public class PedidoDAO {
     }
 
     public Pedidos buscarPedidoPorId(String pedidoId) {
-        if (listaPedidos.isEmpty()) {
-            this.buscarTodosPedidos();
-        }
+        ConexaoBanco conexao = new ConexaoBanco();
+        Pedidos pedido = null;
 
         try {
-            for (Pedidos pedido : this.listaPedidos) {
-                if (pedido.getIdPedido().equals(pedidoId)) {
-                    return pedido;
-                }
+            conexao.abrirConexao();
+
+            String sql = "SELECT "
+                    + "p.ID_pedido, "
+                    + "c.name AS nome_cliente, "
+                    + "p.data_pedido AS hora_pedido, "
+                    + "p.hora_entrega, "
+                    + "p.codigo_localizador, "
+                    + "p.endereco_completo, "
+                    + "p.nome_entregador, "
+                    + "p.telefone_entregador, "
+                    + "p.modo_consumo, "
+                    + "p.observacoes, "
+                    + "s.status_nome, "
+                    + "t.tipo_nome "
+                    + "FROM tb_pedidos p "
+                    + "JOIN tb_clientes c ON p.ID_cliente = c.UserId "
+                    + "JOIN tb_status_pedido s ON p.status_id = s.status_id "
+                    + "JOIN tb_tipo_pedido t ON p.tipo_id = t.tipo_id "
+                    + "WHERE p.ID_pedido = ?";
+
+            PreparedStatement stmt = conexao.conn.prepareStatement(sql);
+            stmt.setString(1, pedidoId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                String idPedido = rs.getString("ID_pedido");
+                String nomeCliente = rs.getString("nome_cliente");
+                String horaPedido = rs.getString("hora_pedido");
+                String horaEntrega = rs.getString("hora_entrega");
+                String codigoLocalizador = rs.getString("codigo_localizador");
+                String enderecoCompleto = rs.getString("endereco_completo");
+                String nomeEntregador = rs.getString("nome_entregador");
+                String telefoneEntregador = rs.getString("telefone_entregador");
+                String modoConsumo = rs.getString("modo_consumo");
+                String observacoes = rs.getString("observacoes");
+                String statusPedido = rs.getString("status_nome");
+                String tipoPedido = rs.getString("tipo_nome");
+
+                List<ItemPedido> itens = buscarItensDoPedido(idPedido);
+
+                pedido = new Pedidos(idPedido, nomeCliente, horaPedido, horaEntrega,
+                        codigoLocalizador, enderecoCompleto, nomeEntregador,
+                        telefoneEntregador, modoConsumo, observacoes,
+                        itens, statusPedido, tipoPedido);
             }
-        } catch (Exception ex) {
-            System.out.println("Erro ao buscar pedidos pendentes: " + ex.getMessage());
+
+            rs.close();
+            stmt.close();
+            conexao.fecharConexao();
+
+        } catch (SQLException ex) {
+            System.out.println("Erro ao buscar pedido por ID: " + ex.getMessage());
         }
-        return null;
+
+        return pedido;
     }
 
     public Pedidos filtrarPedidos(String nomeFiltro) {
@@ -166,14 +212,14 @@ public class PedidoDAO {
     }
 
     // Método para buscar os itens de um pedido pelo id do pedido
-   private List<ItemPedido> buscarItensDoPedido(String idPedido) {
-    List<ItemPedido> itens = new ArrayList<>();
-    ConexaoBanco conexao = new ConexaoBanco();
+    private List<ItemPedido> buscarItensDoPedido(String idPedido) {
+        List<ItemPedido> itens = new ArrayList<>();
+        ConexaoBanco conexao = new ConexaoBanco();
 
-    try {
-        conexao.abrirConexao();
+        try {
+            conexao.abrirConexao();
 
-        String sql = """
+            String sql = """
             SELECT 
                 pp.ID_produto,
                 pr.nome_produto,
@@ -184,29 +230,29 @@ public class PedidoDAO {
             WHERE pp.ID_pedido = ?
         """;
 
-        try (PreparedStatement pstmt = conexao.conn.prepareStatement(sql)) {
-            pstmt.setString(1, idPedido);
-            ResultSet rs = pstmt.executeQuery();
+            try (PreparedStatement pstmt = conexao.conn.prepareStatement(sql)) {
+                pstmt.setString(1, idPedido);
+                ResultSet rs = pstmt.executeQuery();
 
-            while (rs.next()) {
-                String idProduto = rs.getString("ID_produto");
-                String nomeProduto = rs.getString("nome_produto");
-                int quantidade = rs.getInt("quantidade");
-                double precoUnitario = rs.getDouble("preco_produto");
-                double precoTotal = precoUnitario * quantidade;
+                while (rs.next()) {
+                    String idProduto = rs.getString("ID_produto");
+                    String nomeProduto = rs.getString("nome_produto");
+                    int quantidade = rs.getInt("quantidade");
+                    double precoUnitario = rs.getDouble("preco_produto");
+                    double precoTotal = precoUnitario * quantidade;
 
-                ItemPedido item = new ItemPedido(idProduto, nomeProduto, quantidade, precoTotal);
-                itens.add(item);
+                    ItemPedido item = new ItemPedido(idProduto, nomeProduto, quantidade, precoTotal);
+                    itens.add(item);
+                }
             }
+
+        } catch (SQLException ex) {
+            System.out.println("Erro ao buscar itens do pedido: " + ex.getMessage());
+        } finally {
+            conexao.fecharConexao();
         }
 
-    } catch (SQLException ex) {
-        System.out.println("Erro ao buscar itens do pedido: " + ex.getMessage());
-    } finally {
-        conexao.fecharConexao();
+        return itens;
     }
-
-    return itens;
-}
 
 }
