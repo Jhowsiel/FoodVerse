@@ -1,4 +1,4 @@
-F EXISTS (SELECT * FROM sys.databases WHERE name = 'FoodVerseDB')
+iF EXISTS (SELECT * FROM sys.databases WHERE name = 'FoodVerseDB')
 BEGIN
     DROP DATABASE FoodVerseDB;
 END
