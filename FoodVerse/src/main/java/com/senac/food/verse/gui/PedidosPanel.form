@@ -101,13 +101,12 @@
         <Component class="javax.swing.JComboBox" name="jComboBox1">
           <Properties>
             <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-              <StringArray count="6">
+              <StringArray count="5">
                 <StringItem index="0" value="Todos"/>
                 <StringItem index="1" value="Pendente"/>
                 <StringItem index="2" value="Pronto"/>
-                <StringItem index="3" value="Entregue"/>
-                <StringItem index="4" value="Cancelado"/>
-                <StringItem index="5" value="Finalizado"/>
+                <StringItem index="3" value="Cancelado"/>
+                <StringItem index="4" value="Finalizado"/>
               </StringArray>
             </Property>
             <Property name="toolTipText" type="java.lang.String" value=""/>

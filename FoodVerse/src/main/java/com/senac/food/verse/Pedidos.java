@@ -14,9 +14,12 @@ public class Pedidos {
     private String telefoneEntregador;
     private String modoEntrega;
     private String observacoes;
-    private String statusPedido;       // <- ADICIONADO
-    private String tipoPedido;         // <- ADICIONADO
+    private String statusPedido;
+    private String tipoPedido;
     private List<ItemPedido> itens;
+    private String formaPagamento;
+    private double subtotal;
+    private String mesa;
 
     public Pedidos(String idPedido, String statusPedido, String tipoPedido, String modoEntrega) {
         this.idPedido = idPedido;
@@ -28,7 +31,8 @@ public class Pedidos {
     public Pedidos(String idPedido, String nomeCliente, String horaPedido, String horaEntrega,
             String codigoLocalizador, String enderecoCompleto, String nomeEntregador,
             String telefoneEntregador, String modoEntrega, String observacoes,
-            List<ItemPedido> itens, String statusPedido, String tipoPedido) {
+            List<ItemPedido> itens, String statusPedido, String tipoPedido, 
+            String formaPagamento, double subtotal, String mesa) {
         this.idPedido = idPedido;
         this.nomeCliente = nomeCliente;
         this.horaPedido = horaPedido;
@@ -42,6 +46,9 @@ public class Pedidos {
         this.itens = itens;
         this.statusPedido = statusPedido;
         this.tipoPedido = tipoPedido;
+        this.formaPagamento = formaPagamento;
+        this.subtotal = subtotal;
+        this.mesa = mesa;
     }
 
     public String getIdPedido() {
@@ -65,7 +72,7 @@ public class Pedidos {
     }
 
     public String getHoraEntrega() {
-        return "50min";
+        return horaEntrega != null ? horaEntrega : "50min";
     }
 
     public String getCodigoLocalizador() {
@@ -97,7 +104,7 @@ public class Pedidos {
     }
 
     public Object getQtdPedidos() {
-       return null;
+        return null;
     }
 
     public boolean isEntregaParceira() {
@@ -106,5 +113,17 @@ public class Pedidos {
 
     public void setStatusPedido(String statusPedido) {
         this.statusPedido = statusPedido;
+    }
+
+    public Number getSubtotal() {
+        return subtotal;
+    }
+
+    public String getFormaPagamento() {
+        return formaPagamento != null ? formaPagamento : "N/A";
+    }
+
+    public String getMesa() {
+        return mesa != null ? mesa : "";
     }
 }

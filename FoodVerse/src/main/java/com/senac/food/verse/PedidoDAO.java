@@ -24,8 +24,7 @@ public class PedidoDAO {
             String sql = "SELECT "
                     + "p.ID_pedido, "
                     + "c.name AS nome_cliente, "
-                    + // pegar nome do cliente na tabela tb_clientes
-                    "p.data_pedido AS hora_pedido, "
+                    + "p.data_pedido AS hora_pedido, "
                     + "p.hora_entrega, "
                     + "p.codigo_localizador, "
                     + "p.endereco_completo, "
@@ -34,11 +33,16 @@ public class PedidoDAO {
                     + "p.modo_consumo, "
                     + "p.observacoes, "
                     + "s.status_nome, "
-                    + "t.tipo_nome "
+                    + "t.tipo_nome, "
+                    + "pg.metodo_pagamento AS forma_pagamento, "
+                    + "pg.valor_total AS subtotal, "
+                    + "r.mesa "
                     + "FROM tb_pedidos p "
                     + "JOIN tb_clientes c ON p.ID_cliente = c.UserId "
                     + "JOIN tb_status_pedido s ON p.status_id = s.status_id "
-                    + "JOIN tb_tipo_pedido t ON p.tipo_id = t.tipo_id";
+                    + "JOIN tb_tipo_pedido t ON p.tipo_id = t.tipo_id "
+                    + "LEFT JOIN tb_reservas r ON p.ID_reserva = r.ID_reserva "
+                    + "LEFT JOIN tb_pagamentos pg ON p.ID_pedido = pg.ID_pedido";
 
             ResultSet rs = conexao.stmt.executeQuery(sql);
 
@@ -55,13 +59,16 @@ public class PedidoDAO {
                 String observacoes = rs.getString("observacoes");
                 String statusPedido = rs.getString("status_nome");
                 String tipoPedido = rs.getString("tipo_nome");
+                String formaPagamento = rs.getString("forma_pagamento");
+                double subtotal = rs.getDouble("subtotal");
+                String mesa = rs.getString("mesa");
 
                 List<ItemPedido> itens = buscarItensDoPedido(idPedido);
 
                 Pedidos pedido = new Pedidos(idPedido, nomeCliente, horaPedido, horaEntrega,
                         codigoLocalizador, enderecoCompleto, nomeEntregador,
                         telefoneEntregador, modoConsumo, observacoes,
-                        itens, statusPedido, tipoPedido);
+                        itens, statusPedido, tipoPedido, formaPagamento, subtotal, mesa);
 
                 listaPedidos.add(pedido);
 
@@ -149,11 +156,16 @@ public class PedidoDAO {
                     + "p.modo_consumo, "
                     + "p.observacoes, "
                     + "s.status_nome, "
-                    + "t.tipo_nome "
+                    + "t.tipo_nome, "
+                    + "pg.metodo_pagamento AS forma_pagamento, "
+                    + "pg.valor_total AS subtotal, "
+                    + "r.mesa "
                     + "FROM tb_pedidos p "
                     + "JOIN tb_clientes c ON p.ID_cliente = c.UserId "
                     + "JOIN tb_status_pedido s ON p.status_id = s.status_id "
                     + "JOIN tb_tipo_pedido t ON p.tipo_id = t.tipo_id "
+                    + "LEFT JOIN tb_reservas r ON p.ID_reserva = r.ID_reserva "
+                    + "LEFT JOIN tb_pagamentos pg ON p.ID_pedido = pg.ID_pedido "
                     + "WHERE p.ID_pedido = ?";
 
             PreparedStatement stmt = conexao.conn.prepareStatement(sql);
@@ -173,13 +185,16 @@ public class PedidoDAO {
                 String observacoes = rs.getString("observacoes");
                 String statusPedido = rs.getString("status_nome");
                 String tipoPedido = rs.getString("tipo_nome");
+                String formaPagamento = rs.getString("forma_pagamento");
+                double subtotal = rs.getDouble("subtotal");
+                String mesa = rs.getString("mesa");
 
                 List<ItemPedido> itens = buscarItensDoPedido(idPedido);
 
                 pedido = new Pedidos(idPedido, nomeCliente, horaPedido, horaEntrega,
                         codigoLocalizador, enderecoCompleto, nomeEntregador,
                         telefoneEntregador, modoConsumo, observacoes,
-                        itens, statusPedido, tipoPedido);
+                        itens, statusPedido, tipoPedido, formaPagamento, subtotal, mesa);
             }
 
             rs.close();
