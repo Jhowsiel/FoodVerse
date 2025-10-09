@@ -963,11 +963,17 @@
                   <Properties>
                     <Property name="text" type="java.lang.String" value="Estoque"/>
                   </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnEstoqueActionPerformed"/>
+                  </Events>
                 </Component>
                 <Component class="javax.swing.JButton" name="jButton8">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="jButton5"/>
+                    <Property name="text" type="java.lang.String" value="Entregas"/>
                   </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton8ActionPerformed"/>
+                  </Events>
                 </Component>
               </SubComponents>
             </Container>

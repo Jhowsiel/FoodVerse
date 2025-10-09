@@ -40,9 +40,11 @@ public class TelaInicial extends javax.swing.JFrame {
         buttonGroup1.add(cargoEntregador); // Grupo de botoes
         centralizarPainel();  // Centralizar painel ao iniciar
         
+        EntregasPainel painelEntregas = new EntregasPainel();
         AprovacaoCadastrosPanel painelAprovacao = new AprovacaoCadastrosPanel();
         PedidosPanel pedidosPainel = new PedidosPanel();
         
+        PanelBody.add(painelEntregas, "Entregas");
         PanelBody.add(painelAprovacao, "AprovacaoCadastros");
         PanelBody.add(pedidosPainel, "Pedidos");
 
@@ -632,9 +634,19 @@ public class TelaInicial extends javax.swing.JFrame {
         PanelSubSidebar.add(btnCardapio);
 
         btnEstoque.setText("Estoque");
+        btnEstoque.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEstoqueActionPerformed(evt);
+            }
+        });
         PanelSubSidebar.add(btnEstoque);
 
-        jButton8.setText("jButton5");
+        jButton8.setText("Entregas");
+        jButton8.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton8ActionPerformed(evt);
+            }
+        });
         PanelSubSidebar.add(jButton8);
 
         javax.swing.GroupLayout PanelSideLayout = new javax.swing.GroupLayout(PanelSide);
@@ -888,6 +900,15 @@ public class TelaInicial extends javax.swing.JFrame {
         CardLayout cl = (CardLayout) PanelBody.getLayout();
         cl.show(PanelBody, "AprovacaoCadastros");
     }//GEN-LAST:event_btnAprovacaoCadastrosActionPerformed
+
+    private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
+        CardLayout cl = (CardLayout) PanelBody.getLayout();
+        cl.show(PanelBody, "Entregas");
+    }//GEN-LAST:event_jButton8ActionPerformed
+
+    private void btnEstoqueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEstoqueActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnEstoqueActionPerformed
 
     /**
      * @param args the command line arguments

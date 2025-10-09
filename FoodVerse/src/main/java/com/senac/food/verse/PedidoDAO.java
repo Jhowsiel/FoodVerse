@@ -270,4 +270,47 @@ public class PedidoDAO {
         return itens;
     }
 
+    public void atualizarStatusPedido(String idPedido, String novoStatus) {
+        ConexaoBanco conexao = new ConexaoBanco();
+
+        try {
+            conexao.abrirConexao();
+
+            // Busca o status_id correspondente ao nome do status
+            String sqlBuscaStatus = "SELECT status_id FROM tb_status_pedido WHERE status_nome = ?";
+            PreparedStatement stmtBusca = conexao.conn.prepareStatement(sqlBuscaStatus);
+            stmtBusca.setString(1, novoStatus);
+            ResultSet rs = stmtBusca.executeQuery();
+
+            if (rs.next()) {
+                int statusId = rs.getInt("status_id");
+
+                // Atualiza o status_id do pedido
+                String sqlUpdate = "UPDATE tb_pedidos SET status_id = ? WHERE ID_pedido = ?";
+                PreparedStatement stmtUpdate = conexao.conn.prepareStatement(sqlUpdate);
+                stmtUpdate.setInt(1, statusId);
+                stmtUpdate.setString(2, idPedido);
+
+                int rowsUpdated = stmtUpdate.executeUpdate();
+
+                if (rowsUpdated > 0) {
+                    System.out.println("Status do pedido " + idPedido + " atualizado para '" + novoStatus + "'.");
+                } else {
+                    System.out.println("Pedido com ID " + idPedido + " não encontrado.");
+                }
+
+                stmtUpdate.close();
+            } else {
+                System.out.println("Status '" + novoStatus + "' não encontrado.");
+            }
+
+            rs.close();
+            stmtBusca.close();
+            conexao.fecharConexao();
+
+        } catch (SQLException ex) {
+            System.out.println("Erro ao atualizar status do pedido: " + ex.getMessage());
+        }
+    }
+
 }
