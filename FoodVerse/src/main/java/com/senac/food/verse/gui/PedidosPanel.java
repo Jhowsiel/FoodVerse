@@ -79,14 +79,15 @@ public final class PedidosPanel extends javax.swing.JPanel {
         TelaPedido.setVisible(false);
 
         new javax.swing.Timer(10_000, e -> {
-            if (dao.haNovoPedido()) {
+            if (dao.haNovoPedido() || dao.houveAlteracoesPedidos()) {
                 dao.recarregarPedidos();
                 criarMenuPedido();
                 atualizarContadorPendentes();
-                System.out.println("Novos pedidos! Interface atualizada.");
+                System.out.println("Pedidos atualizados!");
+            } else {
+                System.out.println("Timer disparado, mas sem alterações!");
             }
         }).start();
-
         inputBuscar.addKeyListener(new java.awt.event.KeyAdapter() {
             @Override
             public void keyReleased(java.awt.event.KeyEvent evt) {
@@ -154,8 +155,8 @@ public final class PedidosPanel extends javax.swing.JPanel {
             mostrarPedidoPronto(pedido);
             return;
         }
-        if ("entregue".equalsIgnoreCase(pedido.getStatusPedido())) {
-            // mostrarPedidoEntregue(pedido);
+        if ("finalizado".equalsIgnoreCase(pedido.getStatusPedido())) {
+            mostrarPedidoFinalizado(pedido);
             return;
         }
     }
@@ -1062,6 +1063,170 @@ public final class PedidosPanel extends javax.swing.JPanel {
         }
     }
 
+    private void mostrarPedidoFinalizado(Pedidos pedido) {
+        TelaPedido.removeAll();
+
+        JPanel detalhes = new JPanel();
+        detalhes.setLayout(new BoxLayout(detalhes, BoxLayout.Y_AXIS));
+        detalhes.setBackground(Color.WHITE);
+        detalhes.setBorder(BorderFactory.createEmptyBorder(10, 16, 10, 16));
+
+        // Header do Pedido
+        JPanel header = new JPanel();
+        header.setOpaque(false);
+        header.setLayout(new BoxLayout(header, BoxLayout.X_AXIS));
+        JLabel lblPedido = new JLabel("Pedido FINALIZADO #" + pedido.getIdPedido());
+        lblPedido.setFont(new Font("Arial", Font.BOLD, 15));
+        lblPedido.setForeground(new Color(25, 135, 84));
+        JLabel lblFeito = new JLabel(" • Feito às ");
+        lblFeito.setFont(new Font("Arial", Font.PLAIN, 13));
+        lblFeito.setForeground(new Color(108, 117, 125));
+        JLabel lblHora = new JLabel(pedido.getHoraPedido() != null ? pedido.getHoraPedido() : "--:--");
+        lblHora.setFont(new Font("Arial", Font.BOLD, 13));
+        header.add(lblPedido);
+        header.add(lblFeito);
+        header.add(lblHora);
+        detalhes.add(header);
+
+        detalhes.add(Box.createVerticalStrut(8));
+
+        // Info de cliente/mesa/local
+        JLabel lblCliente = new JLabel("Cliente: " + (pedido.getNomeCliente() != null ? pedido.getNomeCliente() : "N/A"));
+        lblCliente.setFont(new Font("Arial", Font.PLAIN, 13));
+        lblCliente.setForeground(new Color(108, 117, 125));
+        lblCliente.setAlignmentX(Component.CENTER_ALIGNMENT);
+        detalhes.add(lblCliente);
+
+        detalhes.add(Box.createVerticalStrut(6));
+
+        JLabel lblMesa = new JLabel("Mesa/Balcão: " + (pedido.getMesa() != null ? pedido.getMesa() : "N/A"));
+        lblMesa.setFont(new Font("Arial", Font.PLAIN, 13));
+        lblMesa.setForeground(new Color(108, 117, 125));
+        lblMesa.setAlignmentX(Component.CENTER_ALIGNMENT);
+        detalhes.add(lblMesa);
+
+        detalhes.add(Box.createVerticalStrut(10));
+
+        // Painel de itens do pedido
+        JPanel painelPedido = new JPanel();
+        painelPedido.setLayout(new BoxLayout(painelPedido, BoxLayout.Y_AXIS));
+        painelPedido.setBackground(Color.WHITE);
+        painelPedido.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(230, 230, 230, 150)),
+                new EmptyBorder(4, 8, 4, 8)
+        ));
+        painelPedido.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+
+        JPanel statusBanner = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        statusBanner.setBackground(new Color(235, 245, 255));
+        statusBanner.setBorder(new EmptyBorder(14, 20, 14, 20));
+        statusBanner.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
+        JLabel lblStatus = new JLabel("Finalizado");
+        lblStatus.setFont(new Font("Arial", Font.BOLD, 15));
+        lblStatus.setForeground(new Color(25, 135, 84));
+        statusBanner.add(lblStatus);
+        painelPedido.add(statusBanner);
+
+        // Lista de Itens
+        JPanel itemsPanel = new JPanel();
+        itemsPanel.setLayout(new BoxLayout(itemsPanel, BoxLayout.Y_AXIS));
+        itemsPanel.setBackground(Color.WHITE);
+        itemsPanel.setBorder(new EmptyBorder(2, 8, 2, 8));
+
+        NumberFormat formatBR = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+        for (ItemPedido item : pedido.getItens()) {
+            JPanel linhaItem = new JPanel(new BorderLayout());
+            linhaItem.setBackground(Color.WHITE);
+            JLabel lblQtdItem = new JLabel(item.getQuantidade() + "x " + item.getNomeProduto());
+            lblQtdItem.setFont(new Font("Arial", Font.PLAIN, 15));
+            JLabel lblPrecoItem = new JLabel(formatBR.format(item.getPreco()));
+            lblPrecoItem.setFont(new Font("Arial", Font.PLAIN, 13));
+            linhaItem.add(lblQtdItem, BorderLayout.WEST);
+            linhaItem.add(lblPrecoItem, BorderLayout.EAST);
+            itemsPanel.add(linhaItem);
+            itemsPanel.add(Box.createVerticalStrut(2));
+        }
+
+        itemsPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
+        itemsPanel.add(Box.createVerticalStrut(4));
+
+        JPanel linhaSubtotal = new JPanel(new BorderLayout());
+        linhaSubtotal.setBackground(Color.WHITE);
+        linhaSubtotal.setBorder(new EmptyBorder(2, 0, 0, 0));
+        JLabel lblSubtotal = new JLabel("Subtotal");
+        lblSubtotal.setFont(new Font("Arial", Font.PLAIN, 15));
+        JLabel lblPrecoSubtotal = new JLabel(formatBR.format(pedido.getSubtotal()));
+        lblPrecoSubtotal.setFont(new Font("Arial", Font.BOLD, 13));
+        linhaSubtotal.add(lblSubtotal, BorderLayout.WEST);
+        linhaSubtotal.add(lblPrecoSubtotal, BorderLayout.EAST);
+        itemsPanel.add(linhaSubtotal);
+
+        painelPedido.add(itemsPanel);
+        painelPedido.add(new JSeparator());
+
+        // Pagamento
+        JPanel pagamentoBanner = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        pagamentoBanner.setBackground(new Color(245, 245, 245));
+        pagamentoBanner.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(230, 230, 230, 150)),
+                new EmptyBorder(20, 20, 20, 20)
+        ));
+        pagamentoBanner.setMaximumSize(new Dimension(Integer.MAX_VALUE, 64));
+        JLabel iconePagamento = new JLabel("\u0024");
+        iconePagamento.setFont(new Font("Arial", Font.BOLD, 18));
+        iconePagamento.setForeground(new Color(120, 120, 120));
+        pagamentoBanner.add(iconePagamento);
+        pagamentoBanner.add(Box.createHorizontalStrut(10));
+
+        JPanel textoPagamento = new JPanel();
+        textoPagamento.setOpaque(false);
+        textoPagamento.setLayout(new BoxLayout(textoPagamento, BoxLayout.Y_AXIS));
+        JLabel lblFormaPagamento = new JLabel("Forma de pagamento: " + pedido.getFormaPagamento());
+        lblFormaPagamento.setFont(new Font("Arial", Font.BOLD, 12));
+        lblFormaPagamento.setForeground(new Color(120, 120, 120));
+        JLabel lblObsPagamento = new JLabel("Confira todos os itens e valores para análise gerencial.");
+        lblObsPagamento.setFont(new Font("Arial", Font.PLAIN, 10));
+        lblObsPagamento.setForeground(new Color(120, 120, 120));
+        textoPagamento.add(lblFormaPagamento);
+        textoPagamento.add(lblObsPagamento);
+        pagamentoBanner.add(textoPagamento);
+        painelPedido.add(pagamentoBanner);
+
+        // Observações do pedido, se houver
+        if (pedido.getObservacoes() != null && !pedido.getObservacoes().trim().isEmpty()) {
+            JLabel lblObs = new JLabel("Observações: " + pedido.getObservacoes());
+            lblObs.setFont(new Font("Arial", Font.ITALIC, 12));
+            lblObs.setForeground(new Color(33, 37, 41));
+            detalhes.add(lblObs);
+            detalhes.add(Box.createVerticalStrut(6));
+        }
+
+        detalhes.add(painelPedido);
+        detalhes.add(Box.createVerticalStrut(12));
+
+        // Painel de Botões (rodapé)
+        JPanel panelBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        panelBotoes.setOpaque(false);
+
+        JButton btnFechar = new JButton("Fechar");
+        estilizarBotao(btnFechar, new Color(33, 37, 41), 13);
+        btnFechar.setPreferredSize(new Dimension(110, 30));
+        btnFechar.addActionListener(e -> TelaPedido.setVisible(false));
+        panelBotoes.add(btnFechar);
+
+        detalhes.add(panelBotoes);
+
+        JScrollPane scrollPane = new JScrollPane(detalhes);
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(14);
+
+        TelaPedido.setLayout(new BorderLayout());
+        TelaPedido.add(scrollPane, BorderLayout.CENTER);
+        TelaPedido.revalidate();
+        TelaPedido.repaint();
+        TelaPedido.setVisible(true);
+    }
+    
     private void buscarPedidos(String pesquisa) {
         ArrayList<Pedidos> pedidos = dao.buscarTodosPedidos();
 

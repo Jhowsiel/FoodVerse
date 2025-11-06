@@ -8,9 +8,87 @@ import java.util.List;
 
 public class PedidoDAO {
 
+    // Cache principal dos pedidos já carregados para exibir na interface
     private final ArrayList<Pedidos> listaPedidos = new ArrayList<>();
+    // Cache anterior para comparação e detecção de alteração de pedidos
+    private ArrayList<Pedidos> cachePedidos = new ArrayList<>();
     private String ultimoIdCarregado = null;
 
+    // Busca pedidos do banco para comparação (sempre consulta o banco!)
+    public ArrayList<Pedidos> buscarTodosPedidosFresh() {
+        ArrayList<Pedidos> pedidosFresh = new ArrayList<>();
+
+        ConexaoBanco conexao = new ConexaoBanco();
+
+        try {
+            conexao.abrirConexao();
+
+            String sql = "SELECT "
+                    + "p.ID_pedido, "
+                    + "c.name AS nome_cliente, "
+                    + "p.data_pedido AS hora_pedido, "
+                    + "p.hora_entrega, "
+                    + "p.codigo_localizador, "
+                    + "p.endereco_completo, "
+                    + "p.nome_entregador, "
+                    + "p.telefone_entregador, "
+                    + "p.modo_consumo, "
+                    + "p.observacoes, "
+                    + "s.status_nome, "
+                    + "t.tipo_nome, "
+                    + "pg.metodo_pagamento AS forma_pagamento, "
+                    + "pg.valor_total AS subtotal, "
+                    + "r.mesa "
+                    + "FROM tb_pedidos p "
+                    + "JOIN tb_clientes c ON p.ID_cliente = c.UserId "
+                    + "JOIN tb_status_pedido s ON p.status_id = s.status_id "
+                    + "JOIN tb_tipo_pedido t ON p.tipo_id = t.tipo_id "
+                    + "LEFT JOIN tb_reservas r ON p.ID_reserva = r.ID_reserva "
+                    + "LEFT JOIN tb_pagamentos pg ON p.ID_pedido = pg.ID_pedido";
+
+            ResultSet rs = conexao.stmt.executeQuery(sql);
+
+            while (rs.next()) {
+                String idPedido = rs.getString("ID_pedido");
+                String nomeCliente = rs.getString("nome_cliente");
+                String horaPedido = rs.getString("hora_pedido");
+                String horaEntrega = rs.getString("hora_entrega");
+                String codigoLocalizador = rs.getString("codigo_localizador");
+                String enderecoCompleto = rs.getString("endereco_completo");
+                String nomeEntregador = rs.getString("nome_entregador");
+                String telefoneEntregador = rs.getString("telefone_entregador");
+                String modoConsumo = rs.getString("modo_consumo");
+                String observacoes = rs.getString("observacoes");
+                String statusPedido = rs.getString("status_nome");
+                String tipoPedido = rs.getString("tipo_nome");
+                String formaPagamento = rs.getString("forma_pagamento");
+                double subtotal = rs.getDouble("subtotal");
+                String mesa = rs.getString("mesa");
+
+                List<ItemPedido> itens = buscarItensDoPedido(idPedido);
+
+                Pedidos pedido = new Pedidos(idPedido, nomeCliente, horaPedido, horaEntrega,
+                        codigoLocalizador, enderecoCompleto, nomeEntregador,
+                        telefoneEntregador, modoConsumo, observacoes,
+                        itens, statusPedido, tipoPedido, formaPagamento, subtotal, mesa);
+
+                pedidosFresh.add(pedido);
+
+                if (ultimoIdCarregado == null || idPedido.compareTo(ultimoIdCarregado) > 0) {
+                    ultimoIdCarregado = idPedido;
+                }
+            }
+
+            conexao.fecharConexao();
+
+        } catch (SQLException ex) {
+            System.out.println("Erro ao buscar pedidos: " + ex.getMessage());
+        }
+
+        return pedidosFresh;
+    }
+
+    // Consulta e cacheia todos pedidos do banco (para interface)
     public ArrayList<Pedidos> buscarTodosPedidos() {
         if (!listaPedidos.isEmpty()) {
             return listaPedidos; // retorna o cache se já estiver carregado
@@ -86,11 +164,32 @@ public class PedidoDAO {
         return listaPedidos;
     }
 
+    // Limpa o cache de pedidos e recarrega do banco para interface/atualização de cache
     public void recarregarPedidos() {
         listaPedidos.clear();
-        buscarTodosPedidos();
+        listaPedidos.addAll(buscarTodosPedidosFresh());
+        cachePedidos.clear();
+        cachePedidos.addAll(listaPedidos);
     }
 
+    // Detecta se houve mudanças (pedido novo ou alteração de status)
+    public boolean houveAlteracoesPedidos() {
+        ArrayList<Pedidos> pedidosAtuais = buscarTodosPedidosFresh();
+        if (cachePedidos.size() != pedidosAtuais.size()) {
+            return true;
+        }
+        for (int i = 0; i < pedidosAtuais.size(); i++) {
+            Pedidos atual = pedidosAtuais.get(i);
+            Pedidos cache = cachePedidos.get(i);
+            if (!atual.getIdPedido().equals(cache.getIdPedido())
+                    || !atual.getStatusPedido().equals(cache.getStatusPedido())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Detecta novo pedido pelo último ID
     public boolean haNovoPedido() {
         ConexaoBanco conexao = new ConexaoBanco();
         boolean temNovo = false;
@@ -226,7 +325,7 @@ public class PedidoDAO {
         return null;
     }
 
-    // Método para buscar os itens de um pedido pelo id do pedido
+    // Busca os itens de um pedido pelo id do pedido
     private List<ItemPedido> buscarItensDoPedido(String idPedido) {
         List<ItemPedido> itens = new ArrayList<>();
         ConexaoBanco conexao = new ConexaoBanco();
@@ -312,5 +411,4 @@ public class PedidoDAO {
             System.out.println("Erro ao atualizar status do pedido: " + ex.getMessage());
         }
     }
-
 }

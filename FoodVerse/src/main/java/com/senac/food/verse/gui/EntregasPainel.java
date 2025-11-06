@@ -8,8 +8,11 @@ import com.senac.food.verse.PedidoDAO;
 import com.senac.food.verse.Pedidos;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import javax.swing.BorderFactory;
@@ -21,6 +24,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 import javax.swing.JLabel;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 
 /**
  *
@@ -30,11 +35,18 @@ public class EntregasPainel extends javax.swing.JPanel {
 
     private final PedidoDAO dao = new PedidoDAO();
 
+    private PedidosPanel pedidosPanel;
+
+    public void setPedidosPanel(PedidosPanel pp) {
+        this.pedidosPanel = pp;
+    }
+
     private JPanel jPanelCards;
     private JScrollPane JScrollPanel;
     private JLabel quantidadeEntregas;
 
     public EntregasPainel() {
+        setBackground(new Color(238, 242, 250)); // Fundo mais claro e clean
         initCustomComponents();
         criarMenuEntregas();
         atualizarContadorEntregas();
@@ -47,49 +59,59 @@ public class EntregasPainel extends javax.swing.JPanel {
      */
     @SuppressWarnings("unchecked")
     private void initCustomComponents() {
-    setLayout(new BorderLayout());
+        setLayout(new BorderLayout());
+        JPanel headerPanel = new JPanel();
+        headerPanel.setBackground(new Color(255, 255, 255));
+        headerPanel.setLayout(new BorderLayout());
+        headerPanel.setBorder(new EmptyBorder(16, 24, 12, 24)); // MENOR espaço
 
-    // Título e contador
-    JPanel headerPanel = new JPanel();
-    headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.X_AXIS));
-    JLabel lblTitulo = new JLabel("Entregas Prontas");
-    lblTitulo.setFont(new Font("Arial", Font.BOLD, 16));
-    lblTitulo.setForeground(new Color(40, 40, 40));
-    quantidadeEntregas = new JLabel("0");
-    quantidadeEntregas.setFont(new Font("Arial", Font.PLAIN, 16));
-    quantidadeEntregas.setForeground(new Color(25, 135, 84));
-    headerPanel.add(lblTitulo);
-    headerPanel.add(Box.createHorizontalStrut(16));
-    headerPanel.add(quantidadeEntregas);
+        JLabel lblTitulo = new JLabel("📦 Entregas a fazer");
+        lblTitulo.setFont(new Font("Montserrat", Font.BOLD, 22));
+        lblTitulo.setForeground(new Color(40, 40, 40));
 
-    // Botão Recarregar
-    JButton btnRecarregar = new JButton("Recarregar");
-    btnRecarregar.setFont(new Font("Arial", Font.BOLD, 12));
-    btnRecarregar.setBackground(new Color(100, 149, 237)); // azul clarinho
-    btnRecarregar.setForeground(Color.WHITE);
-    btnRecarregar.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-    btnRecarregar.setFocusPainted(false);
-    btnRecarregar.addActionListener((ActionEvent e) -> {
-        criarMenuEntregas();
-        atualizarContadorEntregas();
-    });
+        quantidadeEntregas = new JLabel("0");
+        quantidadeEntregas.setFont(new Font("Montserrat", Font.BOLD, 16));
+        quantidadeEntregas.setForeground(new Color(25, 135, 84));
+        quantidadeEntregas.setOpaque(true);
+        quantidadeEntregas.setBackground(new Color(220, 255, 233));
+        quantidadeEntregas.setBorder(new LineBorder(new Color(25, 135, 84, 90), 2, true));
+        quantidadeEntregas.setHorizontalAlignment(SwingConstants.CENTER);
+        quantidadeEntregas.setPreferredSize(new Dimension(40, 24));
 
-    headerPanel.add(Box.createHorizontalStrut(20)); // espaçamento
-    headerPanel.add(btnRecarregar);
+        JButton btnRecarregar = new JButton("⟳ Recarregar");
+        btnRecarregar.setFont(new Font("Montserrat", Font.BOLD, 15));
+        btnRecarregar.setBackground(new Color(25, 135, 84));
+        btnRecarregar.setForeground(Color.WHITE);
+        btnRecarregar.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btnRecarregar.setFocusPainted(false);
+        btnRecarregar.setBorder(new RoundBorder(12));
+        btnRecarregar.addActionListener((ActionEvent e) -> {
+            dao.recarregarPedidos();
+            criarMenuEntregas();
+            atualizarContadorEntregas();
+        });
 
-    add(headerPanel, BorderLayout.NORTH);
+        JPanel infoPanel = new JPanel();
+        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.X_AXIS));
+        infoPanel.setBackground(headerPanel.getBackground());
+        infoPanel.add(lblTitulo);
+        infoPanel.add(Box.createHorizontalStrut(12));
+        infoPanel.add(quantidadeEntregas);
+        infoPanel.add(Box.createHorizontalGlue());
+        infoPanel.add(btnRecarregar);
 
-    // Cards
-    jPanelCards = new JPanel();
-    jPanelCards.setLayout(new BoxLayout(jPanelCards, BoxLayout.Y_AXIS));
-    JScrollPanel = new JScrollPane(jPanelCards);
-    JScrollPanel.setBorder(null);
-    JScrollPanel.getVerticalScrollBar().setUnitIncrement(14);
+        headerPanel.add(infoPanel, BorderLayout.CENTER);
+        add(headerPanel, BorderLayout.NORTH);
 
-    add(JScrollPanel, BorderLayout.CENTER);
-}
-
-
+        jPanelCards = new JPanel();
+        jPanelCards.setLayout(new BoxLayout(jPanelCards, BoxLayout.Y_AXIS));
+        jPanelCards.setBackground(new Color(238, 242, 250));
+        JScrollPanel = new JScrollPane(jPanelCards);
+        JScrollPanel.setBorder(null);
+        JScrollPanel.getVerticalScrollBar().setUnitIncrement(14);
+        JScrollPanel.getViewport().setBackground(new Color(238, 242, 250));
+        add(JScrollPanel, BorderLayout.CENTER);
+    }
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -115,7 +137,7 @@ public class EntregasPainel extends javax.swing.JPanel {
             if ("pronto".equalsIgnoreCase(pedido.getStatusPedido())
                     && "Delivery".equalsIgnoreCase(pedido.getModoEntrega())) {
                 JPanel entregaCard = criarEntregaCard(pedido);
-                jPanelCards.add(Box.createVerticalStrut(10));
+                jPanelCards.add(Box.createVerticalStrut(8)); // MENOR espaço entre cards!
                 jPanelCards.add(entregaCard);
                 contador++;
             }
@@ -127,84 +149,120 @@ public class EntregasPainel extends javax.swing.JPanel {
 
     private JPanel criarEntregaCard(Pedidos pedido) {
         JPanel card = new JPanel();
-        card.setLayout(new GroupLayout(card));
+        card.setLayout(new BorderLayout());
         card.setBackground(Color.WHITE);
-        card.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
-        card.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        card.setBorder(new RoundLineBorder(new Color(210, 215, 230, 120), 1, 13));
+        card.setMaximumSize(new Dimension(700, 62));
+        card.setPreferredSize(new Dimension(700, 62));
+        card.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        GroupLayout layout = (GroupLayout) card.getLayout();
-        layout.setAutoCreateGaps(true);
-        layout.setAutoCreateContainerGaps(true);
-
-        JLabel idLabel = new JLabel("#" + pedido.getIdPedido());
-        idLabel.setFont(new Font("Arial", Font.BOLD, 13));
-        idLabel.setForeground(new Color(60, 60, 60));
-
+        // Esquerda: Dados
+        JPanel leftPanel = new JPanel();
+        leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
+        leftPanel.setOpaque(false);
+        leftPanel.setBorder(new EmptyBorder(8, 18, 8, 2));
+        JLabel idLabel = new JLabel("Pedido #" + pedido.getIdPedido());
+        idLabel.setFont(new Font("Montserrat", Font.BOLD, 14));
+        idLabel.setForeground(new Color(42, 97, 208));
         JLabel clienteLabel = new JLabel(pedido.getNomeCliente());
-        clienteLabel.setFont(new Font("Arial", Font.PLAIN, 13));
-        clienteLabel.setForeground(new Color(100, 100, 100));
+        clienteLabel.setFont(new Font("Montserrat", Font.PLAIN, 13));
+        clienteLabel.setForeground(new Color(50, 50, 50));
+        leftPanel.add(idLabel);
+        leftPanel.add(clienteLabel);
 
-        JLabel enderecoLabel = new JLabel("<html><div style='width:180px'>"
-                + pedido.getEnderecoCompleto() + "</div></html>");
-        enderecoLabel.setFont(new Font("Arial", Font.PLAIN, 12));
-        enderecoLabel.setForeground(new Color(80, 80, 80));
+        // Centro: Endereço/momento
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+        centerPanel.setOpaque(false);
+        centerPanel.setBorder(new EmptyBorder(8, 6, 8, 6));
+        JLabel enderecoLabel = new JLabel(
+                "<html><span style='color:#646487;font-size:12px;'>📍 " + pedido.getEnderecoCompleto() + "</span></html>");
+        enderecoLabel.setFont(new Font("Montserrat", Font.PLAIN, 13));
+        centerPanel.add(enderecoLabel);
 
-        JLabel statusLabel = new JLabel(pedido.getStatusPedido());
-        statusLabel.setFont(new Font("Arial", Font.BOLD, 13));
+        // Direita: Status/botão
+        JPanel rightPanel = new JPanel();
+        rightPanel.setOpaque(false);
+        rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
+        rightPanel.setBorder(new EmptyBorder(6, 6, 6, 16));
+        JLabel statusLabel = new JLabel(pedido.getStatusPedido().toUpperCase());
+        statusLabel.setFont(new Font("Montserrat", Font.BOLD, 12));
         statusLabel.setForeground(new Color(25, 135, 84));
-        statusLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
-        statusLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        statusLabel.setAlignmentX(Component.RIGHT_ALIGNMENT);
 
-        JButton btnEntregar = new JButton("Marcar como Entregue");
-        btnEntregar.setFont(new Font("Arial", Font.BOLD, 12));
-        btnEntregar.setBackground(new Color(25, 135, 84));
+        JButton btnEntregar = new JButton("✔️ Entregue");
+        btnEntregar.setFont(new Font("Montserrat", Font.BOLD, 13));
+        btnEntregar.setBackground(new Color(37, 177, 123));
         btnEntregar.setForeground(Color.WHITE);
+        btnEntregar.setBorder(new RoundBorder(11));
+        btnEntregar.setFocusPainted(false);
         btnEntregar.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-
+        btnEntregar.setAlignmentX(Component.RIGHT_ALIGNMENT);
         btnEntregar.addActionListener((ActionEvent e) -> {
-            // Troca status do pedido para "finalizado"
-            dao.atualizarStatusPedido(pedido.getIdPedido(), "finalizado"); // Você precisa implementar esse método!
+            dao.atualizarStatusPedido(pedido.getIdPedido(), "finalizado");
+            dao.recarregarPedidos();
             criarMenuEntregas();
             atualizarContadorEntregas();
+
+            if (pedidosPanel != null) {
+                pedidosPanel.criarMenuPedido();
+                pedidosPanel.revalidate();
+                pedidosPanel.repaint();
+            }
         });
 
-        layout.setHorizontalGroup(
-                layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                        .addGroup(layout.createSequentialGroup()
-                                .addComponent(idLabel)
-                                .addGap(8)
-                                .addComponent(clienteLabel)
-                                .addGap(16)
-                                .addComponent(enderecoLabel)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 0, Short.MAX_VALUE)
-                                .addComponent(statusLabel)
-                                .addGap(16)
-                                .addComponent(btnEntregar, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                        )
-        );
-        layout.setVerticalGroup(
-                layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
-                                .addComponent(idLabel)
-                                .addComponent(clienteLabel)
-                                .addComponent(enderecoLabel)
-                                .addComponent(statusLabel)
-                                .addComponent(btnEntregar))
-        );
+        rightPanel.add(statusLabel);
+        rightPanel.add(Box.createVerticalStrut(3)); // MENOS espaço!
+        rightPanel.add(btnEntregar);
+
+        card.add(leftPanel, BorderLayout.WEST);
+        card.add(centerPanel, BorderLayout.CENTER);
+        card.add(rightPanel, BorderLayout.EAST);
 
         return card;
     }
 
     private void atualizarContadorEntregas() {
-        int qtd = 0;
         ArrayList<Pedidos> pedidos = dao.buscarTodosPedidos();
+        int qtd = 0;
         for (Pedidos pedido : pedidos) {
             if ("pronto".equalsIgnoreCase(pedido.getStatusPedido())
                     && "Delivery".equalsIgnoreCase(pedido.getModoEntrega())) {
-                qtd++;  
+                qtd++;
             }
         }
         quantidadeEntregas.setText(String.valueOf(qtd));
+    }
+
+    // Borda arredondada para os cards e botoes
+    static class RoundBorder extends LineBorder {
+
+        private final int arc;
+
+        public RoundBorder(int arc) {
+            super(new Color(220, 220, 220, 120), 1, true);
+            this.arc = arc;
+        }
+
+        @Override
+        public Insets getBorderInsets(Component c) {
+            return new Insets(arc / 2, arc / 2, arc / 2, arc / 2);
+        }
+    }
+
+    static class RoundLineBorder extends LineBorder {
+
+        private final int arc;
+
+        public RoundLineBorder(Color color, int thickness, int arc) {
+            super(color, thickness, true);
+            this.arc = arc;
+        }
+
+        @Override
+        public Insets getBorderInsets(Component c) {
+            return new Insets(arc / 2, arc / 2, arc / 2, arc / 2);
+        }
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables

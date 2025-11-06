@@ -10,6 +10,7 @@ public class RoundedLabel extends JLabel {
     private int arcHeight;
     private int padding;
 
+
     public RoundedLabel(String text, Icon icon,
                         Color backgroundColor,
                         Color borderColor,
