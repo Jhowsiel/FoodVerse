@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard - FoodVerse</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="dashboard.css">
+  <link rel="icon" href="foodverse/logo png.png">
+
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+      <div class="logo">
+        <img class="logo-img" src="logo.png" alt="FoodVerse Logo">
+        <div class="logo-text">
+          <span class="food">FOOD</span><span class="verse">VERSE</span>
+        </div>
+      </div>
+      <nav class="sidebar-menu">
+        <div class="menu-item">
+          <!-- Cadastro -->
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 14c-3.33 0-6 1.34-6 4v2h12v-2c0-2.66-2.67-4-6-4zM19 8h-2v2h2v2h2v-2h2V8h-2V6h-2v2z" fill="currentColor" /></svg>
+          <span>Cadastrar</span>
+        </div>
+        <div class="menu-item">
+          <!-- Pedidos -->
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M5 4h14a2 2 0 0 1 2 2v2H3V6a2 2 0 0 1 2-2zM3 8v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8H3z" fill="currentColor"/></svg>
+          <span>Pedidos</span>
+        </div>
+        <div class="menu-item">
+          <!-- Cardapio -->
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M6 4v16M18 4v16M9 4h6a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" stroke="currentColor" stroke-width="2"/></svg>
+          <span>Cardápio</span>
+        </div>
+        <div class="menu-item">
+          <!-- Estoque -->
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4 8h16M4 16h16M4 12h16M4 20h16M4 4h16" stroke="currentColor" stroke-width="2"/></svg>
+          <span>Estoque</span>
+        </div>
+        <div class="menu-item">
+          <!-- Entrega -->
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M19 16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h7l5 5v6z" fill="currentColor"/><circle cx="7" cy="20" r="2" fill="currentColor"/><circle cx="17" cy="20" r="2" fill="currentColor"/></svg>
+          <span>Entrega</span>
+        </div>
+        <div class="menu-item">
+          <!-- Reservas -->
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M6 8V6a6 6 0 0 1 12 0v2M20 10H4v8a4 4 0 0 0 4 4h8a4 4 0 0 0 4-4v-8z" stroke="currentColor" stroke-width="2"/></svg>
+          <span>Reservas</span>
+        </div>
+        <div class="menu-item">
+          <!-- Ajustes -->
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 18v-6M5.64 17.36l4.24-4.24M18 12l-6-6" stroke="currentColor" stroke-width="2"/></svg>
+          <span>Ajustes</span>
+        </div>
+      </nav>
+    </aside>
+    <main class="main">
+      <header class="dashboard-header">
+        <div class="dashboard-header-left">
+          <div class="logo-text">
+            <span class="food">FOOD</span><span class="verse">VERSE</span>
+          </div>
+        </div>
+        <div class="dashboard-header-actions">
+          <button class="header-btn">AJUDA <span>[?]</span></button>
+          <button class="header-btn">AJUSTE</button>
+          <span class="dashboard-user">Olá, Fabiane</span>
+          <span class="user-avatar">🙂</span>
+        </div>
+      </header>
+      <section class="dashboard-main-content">
+        <div class="dashboard-title">Dashboard - Início</div>
+        <div class="dashboard-section">
+          <div class="dashboard-subtitle">Últimos Pedidos</div>
+          <table>
+            <thead>
+              <tr>
+                <th>ID do pedido</th>
+                <th>Data</th>
+                <th>Endereço</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>#1455</td>
+                <td>12:59</td>
+                <td>Estr. do Campo Limpo, 4921</td>
+                <td><span class="status status-pendente">Não entregue</span></td>
+              </tr>
+              <tr>
+                <td>#1454</td>
+                <td>13:12</td>
+                <td>Estr. Kizimenko Tabezel, 310</td>
+                <td><span class="status status-cancelado">Cancelado</span></td>
+              </tr>
+              <tr>
+                <td>#1453</td>
+                <td>13:22</td>
+                <td>Rua Salvador Barroso de Almeida, 132</td>
+                <td><span class="status status-entregue">Entregue</span></td>
+              </tr>
+              <tr>
+                <td>#1452</td>
+                <td>12:48</td>
+                <td>Estr. Ten. José Maria da Cunha, 480</td>
+                <td><span class="status status-entregue">Entregue</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="dashboard-stats">
+          <div class="dashboard-stat-card">
+            <span class="dashboard-stat-title">
+              <span class="dashboard-stat-icon">🍽️</span>
+              Total de pedidos
+            </span>
+            <span class="dashboard-stat-value">1750</span>
+          </div>
+          <div class="dashboard-stat-card">
+            <span class="dashboard-stat-title">
+              <span class="dashboard-stat-icon">🚚</span>
+              Total entregue
+            </span>
+            <span class="dashboard-stat-value">567</span>
+          </div>
+          <div class="dashboard-stat-card">
+            <span class="dashboard-stat-title">
+              <span class="dashboard-stat-icon">❌</span>
+              Total cancelado
+            </span>
+            <span class="dashboard-stat-value">125</span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
