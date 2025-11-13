@@ -44,7 +44,9 @@ public class TelaInicial extends javax.swing.JFrame {
         AprovacaoCadastrosPanel painelAprovacao = new AprovacaoCadastrosPanel();
         PedidosPanel pedidosPainel = new PedidosPanel();
         
+        CardapioPainel cardapioPainel = new CardapioPainel();
         
+        PanelBody.add(cardapioPainel, "Cardapio");
         PanelBody.add(painelEntregas, "Entregas");
         PanelBody.add(painelAprovacao, "AprovacaoCadastros");
         PanelBody.add(pedidosPainel, "Pedidos");
@@ -632,6 +634,11 @@ public class TelaInicial extends javax.swing.JFrame {
         PanelSubSidebar.add(btnPedidos);
 
         btnCardapio.setText("Cardápio");
+        btnCardapio.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCardapioActionPerformed(evt);
+            }
+        });
         PanelSubSidebar.add(btnCardapio);
 
         btnEstoque.setText("Estoque");
@@ -911,6 +918,11 @@ public class TelaInicial extends javax.swing.JFrame {
     private void btnEstoqueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEstoqueActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_btnEstoqueActionPerformed
+
+    private void btnCardapioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCardapioActionPerformed
+        CardLayout cl = (CardLayout) PanelBody.getLayout();
+        cl.show(PanelBody, "Cardapio");
+    }//GEN-LAST:event_btnCardapioActionPerformed
 
     /**
      * @param args the command line arguments

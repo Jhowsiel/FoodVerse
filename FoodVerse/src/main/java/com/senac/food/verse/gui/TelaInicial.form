@@ -958,6 +958,9 @@
                   <Properties>
                     <Property name="text" type="java.lang.String" value="Card&#xe1;pio"/>
                   </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnCardapioActionPerformed"/>
+                  </Events>
                 </Component>
                 <Component class="javax.swing.JButton" name="btnEstoque">
                   <Properties>
