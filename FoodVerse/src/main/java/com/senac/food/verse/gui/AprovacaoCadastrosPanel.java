@@ -16,13 +16,6 @@ import java.util.regex.Pattern;
 
 /**
  * Painel de Gestão de Usuários (Admin/Gerente)
- * - CRUD completo de usuários/funcionários do restaurante
- * - Tema escuro (UIConstants) e visual moderno
- * - Lista com busca, filtro por status e cargo
- * - Seleção com ícone (sem "true/false")
- * - Ações em massa (aprovar, rejeitar, excluir)
- * - Diálogo de ações com informações organizadas (Nome:, E-mail:, Cargo:, etc)
- * - "Últimos aprovados" – COMPACTO usando JList (sem espaços verticais bugados)
  */
 public class AprovacaoCadastrosPanel extends JPanel {
 

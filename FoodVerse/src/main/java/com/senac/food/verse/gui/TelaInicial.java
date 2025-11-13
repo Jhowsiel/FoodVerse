@@ -1,4 +1,5 @@
 package com.senac.food.verse.gui;
+/**/
 
 import com.senac.food.verse.Formatador;
 import com.senac.food.verse.Funcionario;

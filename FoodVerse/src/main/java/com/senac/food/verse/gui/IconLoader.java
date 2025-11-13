@@ -1,5 +1,5 @@
 package com.senac.food.verse.gui;
-
+/**/
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
