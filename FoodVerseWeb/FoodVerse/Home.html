@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodVerse - Home</title>
+    <link rel="icon" href="foodverse/logo png.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', Arial, sans-serif;
+            background: #222;
+            color: #fff;
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: #2b2b2b;
+            border-bottom: 1px solid #444;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: #FFD700;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .logo-text {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-text .food {
+            color: #D11313;
+            font-weight: 700;
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+
+        .logo-text .verse {
+            color: #fff;
+            font-weight: 700;
+            font-size: 24px;
+            letter-spacing: 1px;
+            margin-left: 2px;
+        }
+
+        nav {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        nav a:hover {
+            color: #D11313;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #D11313;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #a30414;
+        }
+
+        .btn-secondary {
+            border: 2px solid #D11313;
+            color: #D11313;
+            background: transparent;
+        }
+
+        .btn-secondary:hover {
+            background: #D11313;
+            color: #fff;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(120deg, #a30414 60%, #D11313 100%);
+            padding: 60px 0;
+            margin-bottom: 40px;
+        }
+
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .hero-text h1 {
+            font-size: 48px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .hero-text p {
+            color: #fff;
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 20px;
+            font-size: 16px;
+            font-family: 'Montserrat', Arial, sans-serif;
+        }
+
+        .search-box button {
+            padding: 15px 30px;
+        }
+
+        .delivery-options {
+            display: flex;
+            gap: 20px;
+            color: #fff;
+        }
+
+        .delivery-options label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .delivery-options input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .hero-image {
+            text-align: center;
+        }
+
+        .hero-image img {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 10px;
+        }
+
+        /* Categorias */
+        .categorias {
+            padding: 40px 0;
+            border-bottom: 3px solid #D11313;
+            margin-bottom: 40px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+        }
+
+        .section-header h2 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .nav-btn-left {
+            background: #fff;
+            color: #222;
+        }
+
+        .nav-btn-left:hover {
+            background: #D11313;
+            color: #fff;
+        }
+
+        .nav-btn-right {
+            background: #D11313;
+            color: #fff;
+        }
+
+        .nav-btn-right:hover {
+            background: #a30414;
+        }
+
+        .categorias-list {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .categoria-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            background: #2b2b2b;
+            border: none;
+            border-radius: 20px;
+            color: #fff;
+            cursor: pointer;
+            font-weight: 700;
+            white-space: nowrap;
+            transition: all 0.2s;
+            font-family: 'Montserrat', Arial, sans-serif;
+        }
+
+        .categoria-btn:hover {
+            background: #D11313;
+        }
+
+        .categoria-icon {
+            font-size: 20px;
+        }
+
+        /* Pratos em Destaque */
+        .pratos {
+            padding: 40px 0;
+            margin-bottom: 40px;
+        }
+
+        .pratos h2 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 30px;
+        }
+
+        .pratos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .prato-card {
+            background: #2b2b2b;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .prato-card:hover {
+            box-shadow: 0 0 20px rgba(209, 19, 19, 0.5);
+        }
+
+        .prato-image {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+        }
+
+        .prato-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .prato-favorite {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 35px;
+            height: 35px;
+            background: #fff;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 18px;
+        }
+
+        .prato-favorite:hover {
+            background: #D11313;
+            color: #fff;
+        }
+
+        .prato-info {
+            padding: 20px;
+        }
+
+        .prato-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .prato-category {
+            color: #bdbdbd;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+
+        .prato-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .prato-price {
+            color: #D11313;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .prato-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #fff;
+            font-size: 13px;
+        }
+
+        .star {
+            color: #FFD700;
+        }
+
+        .prato-button {
+            width: 100%;
+            padding: 12px;
+            background: #D11313;
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: 'Montserrat', Arial, sans-serif;
+        }
+
+        .prato-button:hover {
+            background: #a30414;
+        }
+
+        /* Restaurantes em Destaque */
+        .restaurantes {
+            padding: 40px 0;
+            margin-bottom: 40px;
+        }
+
+        .restaurantes h2 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 30px;
+        }
+
+        .restaurantes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+        }
+
+        .restaurante-card {
+            background: #D11313;
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+            transform: scale(1);
+        }
+
+        .restaurante-card:hover {
+            box-shadow: 0 0 25px rgba(209, 19, 19, 0.6);
+            transform: scale(1.05);
+        }
+
+        .restaurante-image {
+            width: 100%;
+            height: 160px;
+            overflow: hidden;
+        }
+
+        .restaurante-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .restaurante-info {
+            padding: 20px;
+            color: #fff;
+        }
+
+        .restaurante-name {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .restaurante-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .restaurante-details {
+            font-size: 12px;
+            margin-bottom: 15px;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        .restaurante-button {
+            width: 100%;
+            padding: 10px;
+            background: #fff;
+            color: #D11313;
+            border: none;
+            border-radius: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 14px;
+        }
+
+        .restaurante-button:hover {
+            background: #FFD700;
+        }
+
+        /* Footer */
+        footer {
+            background: #2b2b2b;
+            border-top: 1px solid #444;
+            padding: 50px 0 30px;
+            margin-top: 40px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .footer-section h4 {
+            color: #fff;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .footer-section p {
+            color: #bdbdbd;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-section ul li a {
+            color: #bdbdbd;
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.2s;
+        }
+
+        .footer-section ul li a:hover {
+            color: #D11313;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #444;
+            padding-top: 30px;
+            text-align: center;
+            color: #bdbdbd;
+            font-size: 12px;
+        }
+
+        /* Responsivo */
+        @media (max-width: 1024px) {
+            nav {
+                display: none;
+            }
+
+            .hero-content {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-image {
+                display: none;
+            }
+
+            .hero-text h1 {
+                font-size: 36px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+
+            .logo-text .food,
+            .logo-text .verse {
+                font-size: 18px;
+            }
+
+            .logo-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+
+            .header-buttons {
+                width: 100%;
+                gap: 8px;
+            }
+
+            .btn {
+                flex: 1;
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+
+            .hero {
+                padding: 40px 0;
+            }
+
+            .hero-text h1 {
+                font-size: 28px;
+            }
+
+            .hero-text p {
+                font-size: 14px;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            .search-box input,
+            .search-box button {
+                width: 100%;
+            }
+
+            .section-header h2 {
+                font-size: 24px;
+            }
+
+            .pratos-grid,
+            .restaurantes-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 12px;
+            }
+
+            .logo {
+                gap: 8px;
+            }
+
+            .logo-icon {
+                width: 35px;
+                height: 35px;
+                font-size: 16px;
+            }
+
+            .logo-text .food,
+            .logo-text .verse {
+                font-size: 16px;
+            }
+
+            .btn {
+                padding: 8px 10px;
+                font-size: 11px;
+            }
+
+            .hero-text h1 {
+                font-size: 22px;
+            }
+
+            .section-header h2 {
+                font-size: 20px;
+            }
+
+            .pratos-grid,
+            .restaurantes-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .delivery-options {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #2b2b2b;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #D11313;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a30414;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">🍽️</div>
+                    <div class="logo-text">
+                        <span class="food">FOOD</span><span class="verse">VERSE</span>
+                    </div>
+                </div>
+
+                <nav>
+                    <a href="#categorias">Procurar comida</a>
+                    <a href="#restaurantes">Restaurantes</a>
+                    <a href="#pratos">Promoções</a>
+                    <a href="#footer">Contato</a>
+                </nav>
+
+                <div class="header-buttons">
+                    <button class="btn btn-primary">Criar conta</button>
+                    <button class="btn btn-secondary">Entrar</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>Você está morrendo de fome?</h1>
+                    <p>Os melhores pratos, bebidas, refeições para comer e beber tudo em um só lugar.</p>
+
+                    <div class="search-box">
+                        <input type="text" placeholder="Digite seu endereço">
+                        <button class="btn btn-primary">Buscar comida</button>
+                    </div>
+
+                    <div class="delivery-options">
+                        <label>
+                            <input type="radio" name="delivery" checked>
+                            Delivery
+                        </label>
+                        <label>
+                            <input type="radio" name="delivery">
+                            Retirada
+                        </label>
+                    </div>
+                </div>
+
+                <div class="hero-image">
+                    <img src="https://via.placeholder.com/400x300?text=Comida+Deliciosa" alt="Comida">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categorias -->
+    <section class="categorias" id="categorias">
+        <div class="container">
+            <div class="section-header">
+                <h2>Categorias</h2>
+                <div class="nav-buttons">
+                    <button class="nav-btn nav-btn-left">←</button>
+                    <button class="nav-btn nav-btn-right">→</button>
+                </div>
+            </div>
+
+            <div class="categorias-list">
+                <button class="categoria-btn">
+                    <span class="categoria-icon">🇧🇷</span> Brasileira
+                </button>
+                <button class="categoria-btn">
+                    <span class="categoria-icon">🥗</span> Saudável
+                </button>
+                <button class="categoria-btn">
+                    <span class="categoria-icon">🍜</span> Asiática
+                </button>
+                <button class="categoria-btn">
+                    <span class="categoria-icon">🍔</span> Fast Food
+                </button>
+                <button class="categoria-btn">
+                    <span class="categoria-icon">🍖</span> Árabe
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pratos em Destaque -->
+    <section class="pratos" id="pratos">
+        <div class="container">
+            <h2>Pratos em Destaque</h2>
+
+            <div class="pratos-grid">
+                <!-- Prato 1 -->
+                <div class="prato-card">
+                    <div class="prato-image">
+                        <img src="https://via.placeholder.com/250x200?text=Profano+Fogareiro" alt="Profano Fogareiro">
+                        <button class="prato-favorite">❤️</button>
+                    </div>
+                    <div class="prato-info">
+                        <div class="prato-name">Profano Fogareiro</div>
+                        <div class="prato-category">Gratis</div>
+                        <div class="prato-footer">
+                            <span class="prato-price">R$ 7,49</span>
+                            <div class="prato-rating">
+                                <span class="star">⭐</span>
+                                <span>4.1</span>
+                                <span>(1.2k)</span>
+                            </div>
+                        </div>
+                        <button class="prato-button">Adicionar</button>
+                    </div>
+                </div>
+
+                <!-- Prato 2 -->
+                <div class="prato-card">
+                    <div class="prato-image">
+                        <img src="https://via.placeholder.com/250x200?text=Fritello" alt="Fritello">
+                        <button class="prato-favorite">❤️</button>
+                    </div>
+                    <div class="prato-info">
+                        <div class="prato-name">Fritello</div>
+                        <div class="prato-category">Gratis</div>
+                        <div class="prato-footer">
+                            <span class="prato-price">R$ 8,99</span>
+                            <div class="prato-rating">
+                                <span class="star">⭐</span>
+                                <span>4.5</span>
+                                <span>(2.1k)</span>
+                            </div>
+                        </div>
+                        <button class="prato-button">Adicionar</button>
+                    </div>
+                </div>
+
+                <!-- Prato 3 -->
+                <div class="prato-card">
+                    <div class="prato-image">
+                        <img src="https://via.placeholder.com/250x200?text=Arroz+de+Corida" alt="Arroz de Corida">
+                        <button class="prato-favorite">❤️</button>
+                    </div>
+                    <div class="prato-info">
+                        <div class="prato-name">Arroz de Corida</div>
+                        <div class="prato-category">Gratis</div>
+                        <div class="prato-footer">
+                            <span class="prato-price">R$ 5,99</span>
+                            <div class="prato-rating">
+                                <span class="star">⭐</span>
+                                <span>4.3</span>
+                                <span>(1.8k)</span>
+                            </div>
+                        </div>
+                        <button class="prato-button">Adicionar</button>
+                    </div>
+                </div>
+
+                <!-- Prato 4 -->
+                <div class="prato-card">
+                    <div class="prato-image">
+                        <img src="https://via.placeholder.com/250x200?text=Gato+Magico" alt="Gato Mágico">
+                        <button class="prato-favorite">❤️</button>
+                    </div>
+                    <div class="prato-info">
+                        <div class="prato-name">Gato Mágico</div>
+                        <div class="prato-category">Gratis</div>
+                        <div class="prato-footer">
+                            <span class="prato-price">R$ 6,99</span>
+                            <div class="prato-rating">
+                                <span class="star">⭐</span>
+                                <span>4.2</span>
+                                <span>(1.5k)</span>
+                            </div>
+                        </div>
+                        <button class="prato-button">Adicionar</button>
+                    </div>
+                </div>
+
+                <!-- Prato 5 -->
+                <div class="prato-card">
+                    <div class="prato-image">
+                        <img src="https://via.placeholder.com/250x200?text=Odemis+Cenarense" alt="Odemis Cenarense">
+                        <button class="prato-favorite">❤️</button>
+                    </div>
+                    <div class="prato-info">
+                        <div class="prato-name">Odemis Cenarense</div>
+                        <div class="prato-category">Gratis</div>
+                        <div class="prato-footer">
+                            <span class="prato-price">R$ 7,99</span>
+                            <div class="prato-rating">
+                                <span class="star">⭐</span>
+                                <span>4.4</span>
+                                <span>(2.0k)</span>
+                            </div>
+                        </div>
+                        <button class="prato-button">Adicionar</button>
+                    </div>
+                </div>
+
+                <!-- Prato 6 -->
+                <div class="prato-card">
+                    <div class="prato-image">
+                        <img src="https://via.placeholder.com/250x200?text=Cantina+Paulista" alt="Cantina Paulista">
+                        <button class="prato-favorite">❤️</button>
+                    </div>
+                    <div class="prato-info">
+                        <div class="prato-name">Cantina Paulista</div>
+                        <div class="prato-category">Gratis</div>
+                        <div class="prato-footer">
+                            <span class="prato-price">R$ 8,99</span>
+                            <div class="prato-rating">
+                                <span class="star">⭐</span>
+                                <span>4.6</span>
+                                <span>(2.3k)</span>
+                            </div>
+                        </div>
+                        <button class="prato-button">Adicionar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Restaurantes em Destaque -->
+    <section class="restaurantes" id="restaurantes">
+        <div class="container">
+            <h2>Restaurantes em Destaque</h2>
+
+            <div class="restaurantes-grid">
+                <!-- Restaurante 1 -->
+                <div class="restaurante-card">
+                    <div class="restaurante-image">
+                        <img src="https://via.placeholder.com/200x200?text=Estacao" alt="Estação">
+                    </div>
+                    <div class="restaurante-info">
+                        <div class="restaurante-name">Estação</div>
+                        <div class="restaurante-rating">
+                            <span class="star">⭐</span>
+                            <span>4.8</span>
+                            <span>(1.2k avaliações)</span>
+                        </div>
+                        <div class="restaurante-details">
+                            Entrega em 30-45 minutos • R$ 45,00
+                        </div>
+                        <button class="restaurante-button">Abrir menu</button>
+                    </div>
+                </div>
+
+                <!-- Restaurante 2 -->
+                <div class="restaurante-card">
+                    <div class="restaurante-image">
+                        <img src="https://via.placeholder.com/200x200?text=Fogo+Vivo" alt="Fogo Vivo">
+                    </div>
+                    <div class="restaurante-info">
+                        <div class="restaurante-name">Fogo Vivo</div>
+                        <div class="restaurante-rating">
+                            <span class="star">⭐</span>
+                            <span>4.7</span>
+                            <span>(1.1k avaliações)</span>
+                        </div>
+                        <div class="restaurante-details">
+                            Entrega em 30-45 minutos • R$ 50,00
+                        </div>
+                        <button class="restaurante-button">Abrir menu</button>
+                    </div>
+                </div>
+
+                <!-- Restaurante 3 -->
+                <div class="restaurante-card">
+                    <div class="restaurante-image">
+                        <img src="https://via.placeholder.com/200x200?text=Sabor+Grill" alt="Sabor Grill">
+                    </div>
+                    <div class="restaurante-info">
+                        <div class="restaurante-name">Sabor Grill</div>
+                        <div class="restaurante-rating">
+                            <span class="star">⭐</span>
+                            <span>4.9</span>
+                            <span>(1.3k avaliações)</span>
+                        </div>
+                        <div class="restaurante-details">
+                            Entrega em 30-45 minutos • R$ 55,00
+                        </div>
+                        <button class="restaurante-button">Abrir menu</button>
+                    </div>
+                </div>
+
+                <!-- Restaurante 4 -->
+                <div class="restaurante-card">
+                    <div class="restaurante-image">
+                        <img src="https://via.placeholder.com/200x200?text=Churrascaria" alt="Churrascaria Premium">
+                    </div>
+                    <div class="restaurante-info">
+                        <div class="restaurante-name">Churrascaria Premium</div>
+                        <div class="restaurante-rating">
+                            <span class="star">⭐</span>
+                            <span>4.8</span>
+                            <span>(1.2k avaliações)</span>
+                        </div>
+                        <div class="restaurante-details">
+                            Entrega em 30-45 minutos • R$ 60,00
+                        </div>
+                        <button class="restaurante-button">Abrir menu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                        <div style="width: 40px; height: 40px; background: #FFD700; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px;">🍽️</div>
+                        <div>
+                            <span style="color: #D11313; font-weight: 700;">FOOD</span><span style="color: #fff; font-weight: 700;">VERSE</span>
+                        </div>
+                    </div>
+                    <p>O FoodVerse é uma plataforma de entrega de comida que conecta você aos melhores restaurantes da sua região.</p>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Sobre Nós</h4>
+                    <ul>
+                        <li><a href="#">Sobre a FoodVerse</a></li>
+                        <li><a href="#">Carreiras</a></li>
+                        <li><a href="#">Blog</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Suporte</h4>
+                    <ul>
+                        <li><a href="#">Central de Ajuda</a></li>
+                        <li><a href="#">Contato</a></li>
+                        <li><a href="#">Termos de Uso</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Redes Sociais</h4>
+                    <ul>
+                        <li><a href="#">Facebook</a></li>
+                        <li><a href="#">Instagram</a></li>
+                        <li><a href="#">Twitter</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>Copyright © 2024 - FoodVerse. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
