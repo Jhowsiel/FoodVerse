@@ -14,14 +14,47 @@ public class PedidoDAO {
     private ArrayList<Pedidos> cachePedidos = new ArrayList<>();
     private String ultimoIdCarregado = null;
 
+    // --- MÉTODOS AUXILIARES PARA MODO OFFLINE (SIMULAÇÃO) ---
+    private ArrayList<Pedidos> gerarPedidosSimulados() {
+        ArrayList<Pedidos> mocks = new ArrayList<>();
+
+        // Cria itens simulados
+        List<ItemPedido> itens1 = new ArrayList<>();
+        itens1.add(new ItemPedido("1", "X-Burger Especial", 2, 25.50));
+        itens1.add(new ItemPedido("2", "Coca-Cola Lata", 2, 6.00));
+
+        List<ItemPedido> itens2 = new ArrayList<>();
+        itens2.add(new ItemPedido("3", "Pizza Calabresa", 1, 45.00));
+
+        // Cria pedidos simulados
+        // Pedido 1
+        mocks.add(new Pedidos("1001", "Cliente Teste 01", "12:00", "12:45", 
+                "LOC-01", "Rua Exemplo, 123", "Entregador João", 
+                "(11) 99999-9999", "Delivery", "Sem cebola", 
+                itens1, "pendente", "Lanche", "Pix", 63.00, null));
+
+        // Pedido 2
+        mocks.add(new Pedidos("1002", "Cliente Teste 02", "12:10", "13:00", 
+                "LOC-02", "Av. Principal, 500", "Entregador Maria", 
+                "(11) 98888-8888", "Salão", "", 
+                itens2, "em preparo", "Jantar", "Cartão", 45.00, "Mesa 05"));
+
+        return mocks;
+    }
+    // --------------------------------------------------------
+
     // Busca pedidos do banco para comparação (sempre consulta o banco!)
     public ArrayList<Pedidos> buscarTodosPedidosFresh() {
         ArrayList<Pedidos> pedidosFresh = new ArrayList<>();
-
         ConexaoBanco conexao = new ConexaoBanco();
 
         try {
             conexao.abrirConexao();
+
+            // MODO OFFLINE: Se não conectar, retorna simulados
+            if (conexao.conn == null) {
+                return gerarPedidosSimulados();
+            }
 
             String sql = "SELECT "
                     + "p.ID_pedido, "
@@ -78,7 +111,6 @@ public class PedidoDAO {
                     ultimoIdCarregado = idPedido;
                 }
             }
-
             conexao.fecharConexao();
 
         } catch (SQLException ex) {
@@ -98,6 +130,13 @@ public class PedidoDAO {
 
         try {
             conexao.abrirConexao();
+
+            // MODO OFFLINE
+            if (conexao.conn == null) {
+                System.out.println(">> [PedidoDAO] Modo Offline: Carregando pedidos simulados.");
+                listaPedidos.addAll(gerarPedidosSimulados());
+                return listaPedidos;
+            }
 
             String sql = "SELECT "
                     + "p.ID_pedido, "
@@ -154,7 +193,6 @@ public class PedidoDAO {
                     ultimoIdCarregado = idPedido;
                 }
             }
-
             conexao.fecharConexao();
 
         } catch (SQLException ex) {
@@ -164,7 +202,7 @@ public class PedidoDAO {
         return listaPedidos;
     }
 
-    // Limpa o cache de pedidos e recarrega do banco para interface/atualização de cache
+    // Limpa o cache de pedidos e recarrega do banco
     public void recarregarPedidos() {
         listaPedidos.clear();
         listaPedidos.addAll(buscarTodosPedidosFresh());
@@ -172,7 +210,7 @@ public class PedidoDAO {
         cachePedidos.addAll(listaPedidos);
     }
 
-    // Detecta se houve mudanças (pedido novo ou alteração de status)
+    // Detecta se houve mudanças
     public boolean houveAlteracoesPedidos() {
         ArrayList<Pedidos> pedidosAtuais = buscarTodosPedidosFresh();
         if (cachePedidos.size() != pedidosAtuais.size()) {
@@ -196,6 +234,9 @@ public class PedidoDAO {
 
         try {
             conexao.abrirConexao();
+            
+            // MODO OFFLINE: Sem novidades
+            if (conexao.conn == null) return false;
 
             String sql = "SELECT MAX(ID_pedido) AS ultimo_id FROM tb_pedidos";
             ResultSet rs = conexao.stmt.executeQuery(sql);
@@ -208,7 +249,6 @@ public class PedidoDAO {
                     ultimoIdCarregado = novoUltimoId;
                 }
             }
-
             conexao.fecharConexao();
 
         } catch (SQLException ex) {
@@ -224,15 +264,12 @@ public class PedidoDAO {
         }
 
         int quantidade = 0;
-
         for (Pedidos pedido : listaPedidos) {
             String statusPedido = pedido.getStatusPedido().trim();
-
             if ("pendente".equalsIgnoreCase(statusPedido)) {
                 quantidade++;
             }
         }
-
         return quantidade;
     }
 
@@ -242,6 +279,15 @@ public class PedidoDAO {
 
         try {
             conexao.abrirConexao();
+            
+            // MODO OFFLINE
+            if (conexao.conn == null) {
+                // Tenta achar na lista simulada
+                for(Pedidos p : gerarPedidosSimulados()){
+                    if(p.getIdPedido().equals(pedidoId)) return p;
+                }
+                return null;
+            }
 
             String sql = "SELECT "
                     + "p.ID_pedido, "
@@ -332,6 +378,8 @@ public class PedidoDAO {
 
         try {
             conexao.abrirConexao();
+            // MODO OFFLINE: Retorna vazio se não houver conexão (os itens já vêm no mock do pedido)
+            if(conexao.conn == null) return itens;
 
             String sql = """
             SELECT 
@@ -374,6 +422,18 @@ public class PedidoDAO {
 
         try {
             conexao.abrirConexao();
+            
+            // MODO OFFLINE
+            if (conexao.conn == null) {
+                System.out.println(">> [Simulação] Status do pedido " + idPedido + " atualizado para: " + novoStatus);
+                // Atualiza na memória RAM para refletir na tela imediatamente
+                for(Pedidos p : listaPedidos) {
+                    if(p.getIdPedido().equals(idPedido)) {
+                        p.setStatusPedido(novoStatus);
+                    }
+                }
+                return;
+            }
 
             // Busca o status_id correspondente ao nome do status
             String sqlBuscaStatus = "SELECT status_id FROM tb_status_pedido WHERE status_nome = ?";

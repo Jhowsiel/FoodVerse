@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 
 /**
  * Painel de Gestão de Usuários (Admin/Gerente)
+ * VERSÃO CORRIGIDA: Modo Offline (Simulação)
  */
 public class AprovacaoCadastrosPanel extends JPanel {
 
@@ -46,7 +47,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
     private JLabel lblSelecionados;
     private JLabel lblStatusAcao;
 
-    // Lateral "Últimos aprovados" (agora com JList)
+    // Lateral "Últimos aprovados"
     private JPanel painelUltimos;
     private JList<UltimoAprovado> listUltimos;
     private DefaultListModel<UltimoAprovado> modelUltimos;
@@ -54,7 +55,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
     // Sorter para filtro/busca
     private TableRowSorter<DefaultTableModel> sorter;
 
-    // Ícones (use os existentes no projeto; se não existir algum, há fallback textual em seleções)
+    // Ícones (com fallback se a imagem falhar)
     private final Icon icAdd      = IconLoader.load("/icons/add.png", 16, 16);
     private final Icon icEdit     = IconLoader.load("/icons/edit.png", 16, 16);
     private final Icon icDelete   = IconLoader.load("/icons/delete.png", 16, 16);
@@ -65,11 +66,11 @@ public class AprovacaoCadastrosPanel extends JPanel {
     private final Icon icRefresh  = IconLoader.load("/icons/refresh.png", 16, 16);
     private final Icon icOptions  = IconLoader.load("/icons/options.png", 16, 16);
 
-    // Ícones de seleção (com fallback textual)
+    // Ícones de seleção
     private final Icon icCheckOn  = IconLoader.load("/icons/check_on.png", 16, 16);
     private final Icon icCheckOff = IconLoader.load("/icons/check_off.png", 16, 16);
 
-    // Status "chips" ícones (placeholders possíveis)
+    // Status "chips" ícones
     private final Icon icStatusOk = IconLoader.load("/icons/ok.png", 12, 12);
     private final Icon icStatusPen= IconLoader.load("/icons/pending.png", 12, 12);
     private final Icon icStatusRej= IconLoader.load("/icons/reject.png", 12, 12);
@@ -162,7 +163,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
         scrollPaneTabela.setBorder(null);
         scrollPaneTabela.getViewport().setBackground(UIConstants.BG_DARK);
 
-        // Painel "Últimos aprovados" – COMPACTO com JList (evita espaçamento bugado)
+        // Painel "Últimos aprovados"
         painelUltimos = new JPanel();
         painelUltimos.setBackground(UIConstants.CARD_DARK);
         painelUltimos.setBorder(BorderFactory.createCompoundBorder(
@@ -181,7 +182,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
         listUltimos = new JList<>(modelUltimos);
         listUltimos.setBackground(UIConstants.CARD_DARK);
         listUltimos.setForeground(UIConstants.FG_LIGHT);
-        listUltimos.setFixedCellHeight(46); // altura fixa p/ evitar variação e espaços
+        listUltimos.setFixedCellHeight(46);
         listUltimos.setCellRenderer(new UltimosRenderer());
         JScrollPane spUltimos = new JScrollPane(listUltimos);
         spUltimos.setBorder(null);
@@ -189,7 +190,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
         spUltimos.getViewport().setBackground(UIConstants.CARD_DARK);
         painelUltimos.add(spUltimos, BorderLayout.CENTER);
 
-        // Header superior com GridBag (alinha corretamente tudo na mesma linha)
+        // Header superior
         JPanel header = new JPanel(new GridBagLayout());
         header.setOpaque(false);
         GridBagConstraints gc = new GridBagConstraints();
@@ -218,7 +219,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
         gc.gridx = 8; header.add(lblSelecionados, gc);
         gc.gridx = 9; header.add(lblStatusAcao, gc);
 
-        // Painel central (header + tabela)
+        // Painel central
         JPanel esquerda = new JPanel();
         esquerda.setOpaque(false);
         GroupLayout gl = new GroupLayout(esquerda);
@@ -249,8 +250,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
         };
         tabelaCadastros.setModel(modelo);
 
-        // Tabela
-        tabelaCadastros.setRowHeight(36); // ligeiramente acima do conteúdo
+        tabelaCadastros.setRowHeight(36);
         tabelaCadastros.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
         tabelaCadastros.setSelectionBackground(UIConstants.SEL_BG);
         tabelaCadastros.setSelectionForeground(UIConstants.SEL_FG);
@@ -261,40 +261,29 @@ public class AprovacaoCadastrosPanel extends JPanel {
         tabelaCadastros.setForeground(UIConstants.FG_LIGHT);
         tabelaCadastros.setAutoCreateRowSorter(true);
 
-        // Cabeçalho estilizado e ALINHADO por coluna
         JTableHeader th = tabelaCadastros.getTableHeader();
         th.setDefaultRenderer(new HeaderRenderer(new int[]{
-                SwingConstants.CENTER, // ""
-                SwingConstants.CENTER, // ID
-                SwingConstants.LEFT,   // Nome
-                SwingConstants.LEFT,   // Username
-                SwingConstants.LEFT,   // E-mail
-                SwingConstants.CENTER, // Cargo
-                SwingConstants.CENTER, // Telefone
-                SwingConstants.CENTER, // Data
-                SwingConstants.CENTER, // Status
-                SwingConstants.CENTER  // Ações
+                SwingConstants.CENTER, SwingConstants.CENTER, SwingConstants.LEFT, SwingConstants.LEFT,
+                SwingConstants.LEFT, SwingConstants.CENTER, SwingConstants.CENTER, SwingConstants.CENTER,
+                SwingConstants.CENTER, SwingConstants.CENTER
         }));
         th.setPreferredSize(new Dimension(th.getPreferredSize().width, 34));
         th.setReorderingAllowed(false);
 
-        // Larguras
         TableColumnModel cm = tabelaCadastros.getColumnModel();
-        cm.getColumn(0).setPreferredWidth(44);  // seleção
-        cm.getColumn(1).setPreferredWidth(70);  // ID
-        cm.getColumn(2).setPreferredWidth(220); // Nome
-        cm.getColumn(3).setPreferredWidth(160); // Username
-        cm.getColumn(4).setPreferredWidth(240); // E-mail
-        cm.getColumn(5).setPreferredWidth(150); // Cargo
-        cm.getColumn(6).setPreferredWidth(140); // Telefone
-        cm.getColumn(7).setPreferredWidth(150); // Data
-        cm.getColumn(8).setPreferredWidth(120); // Status
-        cm.getColumn(9).setPreferredWidth(120); // Ações
+        cm.getColumn(0).setPreferredWidth(44);
+        cm.getColumn(1).setPreferredWidth(70);
+        cm.getColumn(2).setPreferredWidth(220);
+        cm.getColumn(3).setPreferredWidth(160);
+        cm.getColumn(4).setPreferredWidth(240);
+        cm.getColumn(5).setPreferredWidth(150);
+        cm.getColumn(6).setPreferredWidth(140);
+        cm.getColumn(7).setPreferredWidth(150);
+        cm.getColumn(8).setPreferredWidth(120);
+        cm.getColumn(9).setPreferredWidth(120);
 
-        // Renderers alinhados por coluna (evita desalinhamento)
         cm.getColumn(0).setCellRenderer(new SelectIconRenderer());
         cm.getColumn(0).setCellEditor(new SelectIconEditor(new JCheckBox()));
-
         cm.getColumn(1).setCellRenderer(new BodyCellRenderer(SwingConstants.CENTER));
         cm.getColumn(2).setCellRenderer(new BodyCellRenderer(SwingConstants.LEFT));
         cm.getColumn(3).setCellRenderer(new BodyCellRenderer(SwingConstants.LEFT));
@@ -303,15 +292,12 @@ public class AprovacaoCadastrosPanel extends JPanel {
         cm.getColumn(6).setCellRenderer(new BodyCellRenderer(SwingConstants.CENTER));
         cm.getColumn(7).setCellRenderer(new BodyCellRenderer(SwingConstants.CENTER));
         cm.getColumn(8).setCellRenderer(new StatusChipRenderer());
-
         cm.getColumn(9).setCellRenderer(new ActionButtonRenderer());
         cm.getColumn(9).setCellEditor(new ActionButtonEditor(new JCheckBox()));
 
-        // Sorter p/ busca
         sorter = new TableRowSorter<>(modelo);
         tabelaCadastros.setRowSorter(sorter);
 
-        // Duplo clique para editar
         tabelaCadastros.addMouseListener(new MouseAdapter() {
             @Override public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
@@ -323,23 +309,19 @@ public class AprovacaoCadastrosPanel extends JPanel {
     }
 
     private void configurarAcoes() {
-        // Buscar
         txtBuscar.addKeyListener(new KeyAdapter() {
             @Override public void keyReleased(KeyEvent e) { aplicarFiltroBusca(); }
         });
 
-        // Filtros
         cbFiltroStatus.addActionListener(e -> recarregarLista());
         cbFiltroCargo.addActionListener(e -> recarregarLista());
 
-        // Recarregar
         btnRecarregar.addActionListener(e -> {
             recarregarLista();
             carregarUltimosAprovados();
             feedback("Dados recarregados", UIConstants.FG_MUTED);
         });
 
-        // Seleção com feedback visual
         btnSelecionarTodos.addActionListener(e -> {
             selecionarTodas(true);
             feedback("Todos selecionados", new Color(25, 135, 84));
@@ -349,14 +331,12 @@ public class AprovacaoCadastrosPanel extends JPanel {
             feedback("Seleção limpa", new Color(255, 193, 7));
         });
 
-        // CRUD/Ações
         btnNovo.addActionListener(e -> abrirDialogoNovo());
         btnEditar.addActionListener(e -> editarSelecionado());
         btnAprovarSelecionados.addActionListener(e -> alterarStatusSelecionados("aprovado"));
         btnRejeitarSelecionados.addActionListener(e -> alterarStatusSelecionados("rejeitado"));
         btnExcluirSelecionados.addActionListener(e -> excluirSelecionados());
 
-        // Atalho focar busca
         InputMap im = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         ActionMap am = getActionMap();
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK), "focusSearch");
@@ -379,7 +359,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
         if (termo.isEmpty()) {
             sorter.setRowFilter(null);
         } else {
-            sorter.setRowFilter(RowFilter.regexFilter("(?i)" + Pattern.quote(termo), 2, 4)); // Nome e E-mail
+            sorter.setRowFilter(RowFilter.regexFilter("(?i)" + Pattern.quote(termo), 2, 4));
         }
     }
 
@@ -398,7 +378,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
         atualizarContadorSelecionados();
     }
 
-    /* ------------------------- Dados --------------------------------------- */
+    /* ------------------------- Dados (COM MOCK OFFLINE) -------------------- */
 
     private void limparTabela() {
         DefaultTableModel modelo = (DefaultTableModel) tabelaCadastros.getModel();
@@ -412,14 +392,28 @@ public class AprovacaoCadastrosPanel extends JPanel {
         cbFiltroCargo.addItem("Todos");
 
         ConexaoBanco banco = new ConexaoBanco();
-        try (Connection conn = banco.abrirConexao();
-             PreparedStatement ps = conn.prepareStatement("SELECT DISTINCT role FROM tb_funcionarios WHERE role IS NOT NULL AND role <> '' ORDER BY role");
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                cbFiltroCargo.addItem(rs.getString("role"));
+        Connection conn = null;
+        try {
+            conn = banco.abrirConexao();
+            // MODO OFFLINE: Carrega cargos fixos para teste
+            if (conn == null) {
+                cbFiltroCargo.addItem("Admin");
+                cbFiltroCargo.addItem("Gerente");
+                cbFiltroCargo.addItem("Cozinheiro");
+                cbFiltroCargo.addItem("Entregador");
+                return;
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement("SELECT DISTINCT role FROM tb_funcionarios WHERE role IS NOT NULL AND role <> '' ORDER BY role");
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    cbFiltroCargo.addItem(rs.getString("role"));
+                }
             }
         } catch (SQLException ex) {
-            // Mantém apenas "Todos" se falhar
+            // falha silenciosa
+        } finally {
+            banco.fecharConexao();
         }
     }
 
@@ -433,6 +427,22 @@ public class AprovacaoCadastrosPanel extends JPanel {
 
         try {
             conn = banco.abrirConexao();
+            DefaultTableModel m = (DefaultTableModel) tabelaCadastros.getModel();
+
+            // MODO OFFLINE (SIMULAÇÃO): Cria usuários de teste para a tabela não ficar vazia
+            if (conn == null) {
+                funcionariosIds.add(991);
+                m.addRow(new Object[]{false, "991", "Admin Local", "admin", "admin@teste.com", "Admin", "99999-9999", "01/01/2024", "Aprovado", "Opções"});
+                
+                funcionariosIds.add(992);
+                m.addRow(new Object[]{false, "992", "Funcionario Teste", "func1", "func1@teste.com", "Cozinheiro", "88888-8888", "25/01/2024", "Pendente", "Opções"});
+                
+                funcionariosIds.add(993);
+                m.addRow(new Object[]{false, "993", "Gerente Teste", "gerente", "gerente@teste.com", "Gerente", "77777-7777", "10/01/2024", "Aprovado", "Opções"});
+                
+                aplicarFiltroBusca();
+                return;
+            }
 
             StringBuilder sql = new StringBuilder(
                     "SELECT userID, name, userName, email, role, phone, registrationDate, status " +
@@ -458,7 +468,6 @@ public class AprovacaoCadastrosPanel extends JPanel {
             for (int i = 0; i < params.size(); i++) stmt.setObject(i + 1, params.get(i));
             rs = stmt.executeQuery();
 
-            DefaultTableModel m = (DefaultTableModel) tabelaCadastros.getModel();
             while (rs.next()) {
                 int id = rs.getInt("userID");
                 String nome = n(rs.getString("name"));
@@ -487,28 +496,33 @@ public class AprovacaoCadastrosPanel extends JPanel {
     }
 
     private void carregarUltimosAprovados() {
-        // Usa JList com modelo -> sem espaçamento vertical exagerado
         modelUltimos.clear();
-
         ConexaoBanco banco = new ConexaoBanco();
-        try (Connection conn = banco.abrirConexao();
-             PreparedStatement stmt = conn.prepareStatement(
-                     "SELECT TOP 5 name, role, registrationDate " +
-                     "FROM tb_funcionarios WHERE status = 'aprovado' ORDER BY registrationDate DESC");
-             ResultSet rs = stmt.executeQuery()) {
-
-            int count = 0;
-            while (rs.next()) {
-                count++;
-                String nome  = n(rs.getString("name"));
-                String role  = n(rs.getString("role"));
-                String data  = n(rs.getString("registrationDate"));
-                modelUltimos.addElement(new UltimoAprovado(nome, role, data));
+        try (Connection conn = banco.abrirConexao()) {
+            
+            // MODO OFFLINE
+            if (conn == null) {
+                modelUltimos.addElement(new UltimoAprovado("Admin Local", "Admin", "01/01/2024"));
+                modelUltimos.addElement(new UltimoAprovado("Gerente Teste", "Gerente", "10/01/2024"));
+                return;
             }
 
-            if (count == 0) {
-                // quando não há dados, mostra um aviso simples
-                modelUltimos.addElement(new UltimoAprovado("Nenhum aprovado recente.", "", ""));
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "SELECT TOP 5 name, role, registrationDate " +
+                    "FROM tb_funcionarios WHERE status = 'aprovado' ORDER BY registrationDate DESC");
+                 ResultSet rs = stmt.executeQuery()) {
+
+                int count = 0;
+                while (rs.next()) {
+                    count++;
+                    String nome  = n(rs.getString("name"));
+                    String role  = n(rs.getString("role"));
+                    String data  = n(rs.getString("registrationDate"));
+                    modelUltimos.addElement(new UltimoAprovado(nome, role, data));
+                }
+                if (count == 0) {
+                    modelUltimos.addElement(new UltimoAprovado("Nenhum aprovado recente.", "", ""));
+                }
             }
         } catch (SQLException ex) {
             Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Erro ao carregar últimos aprovados", ex);
@@ -579,6 +593,14 @@ public class AprovacaoCadastrosPanel extends JPanel {
         boolean sucesso = true;
         try {
             conn = banco.abrirConexao();
+            
+            // MODO OFFLINE
+            if (conn == null) {
+                JOptionPane.showMessageDialog(this, "Status atualizado! (Modo Offline)");
+                recarregarLista();
+                return;
+            }
+
             conn.setAutoCommit(false);
             stmt = conn.prepareStatement("UPDATE tb_funcionarios SET status = ? WHERE userID = ?");
             for (Integer id : ids) { stmt.setString(1, novoStatus); stmt.setInt(2, id); stmt.addBatch(); }
@@ -619,6 +641,14 @@ public class AprovacaoCadastrosPanel extends JPanel {
         boolean sucesso = true;
         try {
             conn = banco.abrirConexao();
+            
+            // MODO OFFLINE
+            if(conn == null) {
+                JOptionPane.showMessageDialog(this, "Cadastro(s) excluído(s)! (Modo Offline)");
+                recarregarLista();
+                return;
+            }
+
             conn.setAutoCommit(false);
             stmt = conn.prepareStatement("DELETE FROM tb_funcionarios WHERE userID = ?");
             for (Integer id : ids) { stmt.setInt(1, id); stmt.addBatch(); }
@@ -672,7 +702,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
             return this;
         }
     }
-
+    
     private static class BodyCellRenderer extends DefaultTableCellRenderer {
         private final int align;
         BodyCellRenderer(int align) { this.align = align; setOpaque(true); }
@@ -687,7 +717,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
             return this;
         }
     }
-
+    
     // Seleção com ícone (fallback textual se ícone não existir)
     private class SelectIconRenderer extends DefaultTableCellRenderer {
         @Override public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
@@ -745,8 +775,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
         }
         @Override public Object getCellEditorValue() { return null; }
     }
-
-    // Status "chip" (não preenche a linha toda)
+    
     private class StatusChipRenderer extends BodyCellRenderer {
         StatusChipRenderer() { super(SwingConstants.CENTER); }
         @Override public Component getTableCellRendererComponent(JTable table, Object value, boolean selected, boolean focus, int row, int col) {
@@ -772,7 +801,6 @@ public class AprovacaoCadastrosPanel extends JPanel {
         }
     }
 
-    // Botão "Opções"
     private class ActionButtonRenderer extends JButton implements TableCellRenderer {
         ActionButtonRenderer() { UIConstants.styleSecondary(this); setText("Opções"); setIcon(icOptions); }
         @Override public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -805,7 +833,6 @@ public class AprovacaoCadastrosPanel extends JPanel {
         }
     }
 
-    // Diálogo de ações centralizado e com informações organizadas
     private void abrirDialogoAcoes(int modelRow) {
         int id = funcionariosIds.get(modelRow);
         DefaultTableModel m = (DefaultTableModel) tabelaCadastros.getModel();
@@ -827,7 +854,6 @@ public class AprovacaoCadastrosPanel extends JPanel {
         c.setBackground(UIConstants.BG_DARK);
         c.setBorder(new EmptyBorder(16, 16, 16, 16));
 
-        // Form organizado Nome:, E-mail:, Cargo: ...
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
         GridBagConstraints gc = new GridBagConstraints();
@@ -925,24 +951,40 @@ public class AprovacaoCadastrosPanel extends JPanel {
 
     private boolean alterarStatusUnico(int id, String novo) {
         ConexaoBanco banco = new ConexaoBanco();
-        try (Connection conn = banco.abrirConexao();
-             PreparedStatement ps = conn.prepareStatement("UPDATE tb_funcionarios SET status = ? WHERE userID = ?")) {
-            ps.setString(1, novo);
-            ps.setInt(2, id);
-            return ps.executeUpdate() > 0;
+        Connection conn = null;
+        try {
+            conn = banco.abrirConexao();
+            // MODO OFFLINE
+            if(conn == null) return true;
+
+            try (PreparedStatement ps = conn.prepareStatement("UPDATE tb_funcionarios SET status = ? WHERE userID = ?")) {
+                ps.setString(1, novo);
+                ps.setInt(2, id);
+                return ps.executeUpdate() > 0;
+            }
         } catch (SQLException ex) {
             return false;
+        } finally {
+            banco.fecharConexao();
         }
     }
 
     private boolean excluirUnico(int id) {
         ConexaoBanco banco = new ConexaoBanco();
-        try (Connection conn = banco.abrirConexao();
-             PreparedStatement ps = conn.prepareStatement("DELETE FROM tb_funcionarios WHERE userID = ?")) {
-            ps.setInt(1, id);
-            return ps.executeUpdate() > 0;
+        Connection conn = null;
+        try {
+            conn = banco.abrirConexao();
+            // MODO OFFLINE
+            if(conn == null) return true;
+
+            try (PreparedStatement ps = conn.prepareStatement("DELETE FROM tb_funcionarios WHERE userID = ?")) {
+                ps.setInt(1, id);
+                return ps.executeUpdate() > 0;
+            }
         } catch (SQLException ex) {
             return false;
+        } finally {
+            banco.fecharConexao();
         }
     }
 
@@ -1046,15 +1088,29 @@ public class AprovacaoCadastrosPanel extends JPanel {
 
         private void carregarCargosCombo(JComboBox<String> combo, String selected) {
             combo.removeAllItems();
-            // Carrega cargos do banco
+            
             ConexaoBanco banco = new ConexaoBanco();
             List<String> cargos = new ArrayList<>();
-            try (Connection conn = banco.abrirConexao();
-                 PreparedStatement ps = conn.prepareStatement("SELECT DISTINCT role FROM tb_funcionarios WHERE role IS NOT NULL AND role <> '' ORDER BY role");
-                 ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) cargos.add(rs.getString("role"));
-            } catch (SQLException ignored) { }
-            // Defaults caso não haja
+            Connection conn = null;
+            try {
+                conn = banco.abrirConexao();
+                // MODO OFFLINE
+                if (conn == null) {
+                    cargos.add("Cozinheiro");
+                    cargos.add("Entregador");
+                    cargos.add("Gerente");
+                    cargos.add("Admin");
+                } else {
+                    try (PreparedStatement ps = conn.prepareStatement("SELECT DISTINCT role FROM tb_funcionarios WHERE role IS NOT NULL AND role <> '' ORDER BY role");
+                         ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) cargos.add(rs.getString("role"));
+                    }
+                }
+            } catch (SQLException ignored) { 
+            } finally {
+                banco.fecharConexao();
+            }
+
             if (cargos.isEmpty()) {
                 cargos.add("Cozinheiro");
                 cargos.add("Entregador");
@@ -1066,11 +1122,11 @@ public class AprovacaoCadastrosPanel extends JPanel {
         }
 
         private void salvarUsuario() {
-            String nome  = txtNome.getText().trim();
-            String uname = txtUserName.getText().trim();
-            String email = txtEmail.getText().trim();
-            String role  = (String) cbCargo.getSelectedItem();
-            String phone = txtTelefone.getText().trim();
+            String nome   = txtNome.getText().trim();
+            String uname  = txtUserName.getText().trim();
+            String email  = txtEmail.getText().trim();
+            String role   = (String) cbCargo.getSelectedItem();
+            String phone  = txtTelefone.getText().trim();
             String status = (String) cbStatus.getSelectedItem();
             String senha  = new String(txtSenha.getPassword());
 
@@ -1081,48 +1137,58 @@ public class AprovacaoCadastrosPanel extends JPanel {
 
             ConexaoBanco banco = new ConexaoBanco();
             boolean ok = false;
+            Connection conn = null;
 
-            if (id == null) {
-                // INSERT
-                try (Connection conn = banco.abrirConexao();
-                     PreparedStatement ps = conn.prepareStatement(
-                             "INSERT INTO tb_funcionarios (name, userName, email, role, phone, password, registrationDate, status) " +
-                                     "VALUES (?, ?, ?, ?, ?, ?, CONVERT(VARCHAR(10), GETDATE(), 103), ?)")) {
-                    ps.setString(1, nome);
-                    ps.setString(2, uname);
-                    ps.setString(3, email);
-                    ps.setString(4, role);
-                    ps.setString(5, phone);
-                    ps.setString(6, senha == null ? "" : senha);
-                    ps.setString(7, status.toLowerCase());
-                    ok = ps.executeUpdate() > 0;
-                } catch (SQLException ex) {
-                    Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Erro ao inserir usuário", ex);
+            try {
+                conn = banco.abrirConexao();
+                // MODO OFFLINE
+                if (conn == null) {
+                    JOptionPane.showMessageDialog(this, "Usuário salvo com sucesso! (Modo Offline)");
+                    salvou = true;
+                    dispose();
+                    return;
                 }
-            } else {
-                // UPDATE
-                StringBuilder sql = new StringBuilder(
-                        "UPDATE tb_funcionarios SET name=?, userName=?, email=?, role=?, phone=?, status=?"
-                );
-                boolean alterarSenha = senha != null && !senha.isBlank();
-                if (alterarSenha) sql.append(", password=?");
-                sql.append(" WHERE userID=?");
 
-                try (Connection conn = banco.abrirConexao();
-                     PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-                    int i = 1;
-                    ps.setString(i++, nome);
-                    ps.setString(i++, uname);
-                    ps.setString(i++, email);
-                    ps.setString(i++, role);
-                    ps.setString(i++, phone);
-                    ps.setString(i++, status.toLowerCase());
-                    if (alterarSenha) ps.setString(i++, senha);
-                    ps.setInt(i, id);
-                    ok = ps.executeUpdate() > 0;
-                } catch (SQLException ex) {
-                    Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Erro ao atualizar usuário", ex);
+                if (id == null) {
+                    // INSERT
+                    try (PreparedStatement ps = conn.prepareStatement(
+                            "INSERT INTO tb_funcionarios (name, userName, email, role, phone, password, registrationDate, status) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, CONVERT(VARCHAR(10), GETDATE(), 103), ?)")) {
+                        ps.setString(1, nome);
+                        ps.setString(2, uname);
+                        ps.setString(3, email);
+                        ps.setString(4, role);
+                        ps.setString(5, phone);
+                        ps.setString(6, senha == null ? "" : senha);
+                        ps.setString(7, status.toLowerCase());
+                        ok = ps.executeUpdate() > 0;
+                    }
+                } else {
+                    // UPDATE
+                    StringBuilder sql = new StringBuilder(
+                            "UPDATE tb_funcionarios SET name=?, userName=?, email=?, role=?, phone=?, status=?"
+                    );
+                    boolean alterarSenha = senha != null && !senha.isBlank();
+                    if (alterarSenha) sql.append(", password=?");
+                    sql.append(" WHERE userID=?");
+
+                    try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                        int i = 1;
+                        ps.setString(i++, nome);
+                        ps.setString(i++, uname);
+                        ps.setString(i++, email);
+                        ps.setString(i++, role);
+                        ps.setString(i++, phone);
+                        ps.setString(i++, status.toLowerCase());
+                        if (alterarSenha) ps.setString(i++, senha);
+                        ps.setInt(i, id);
+                        ok = ps.executeUpdate() > 0;
+                    }
                 }
+            } catch (SQLException ex) {
+                Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Erro ao salvar usuário", ex);
+            } finally {
+                banco.fecharConexao();
             }
 
             if (ok) {
@@ -1169,7 +1235,6 @@ public class AprovacaoCadastrosPanel extends JPanel {
     private static class UltimosRenderer extends JPanel implements ListCellRenderer<UltimoAprovado> {
         private final JLabel lblNome = new JLabel();
         private final JLabel lblSub  = new JLabel();
-
         UltimosRenderer(){
             setLayout(new BorderLayout(4,2));
             setOpaque(true);
@@ -1181,7 +1246,6 @@ public class AprovacaoCadastrosPanel extends JPanel {
             add(lblNome, BorderLayout.NORTH);
             add(lblSub, BorderLayout.CENTER);
         }
-
         @Override
         public Component getListCellRendererComponent(JList<? extends UltimoAprovado> list, UltimoAprovado value, int index, boolean isSelected, boolean cellHasFocus) {
             if (value == null) return this;
@@ -1189,7 +1253,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
             if (value.cargo == null || value.cargo.isBlank()) {
                 lblSub.setText(value.data == null ? "" : value.data);
             } else {
-                lblSub.setText(value.cargo + (value.data == null || value.data.isBlank() ? "" : "  •  " + value.data));
+                lblSub.setText(value.cargo + (value.data == null || value.data.isBlank() ? "" : " • " + value.data));
             }
             setBackground(isSelected ? UIConstants.HEADER_DARK : UIConstants.CARD_DARK);
             return this;

@@ -10,7 +10,7 @@ import javax.swing.JTextField;
 
 public class ValidarCadastro {
 
-    // Validação do Username (combina campo vazio e disponibilidade)
+    // Validação do Username
     public Boolean validarUsername(String username, JLabel label) {
         if (username.isEmpty()) {
             showError(label, "Este campo é obrigatório");
@@ -20,14 +20,14 @@ public class ValidarCadastro {
         return verificarDisponibilidade("userName", username, label);
     }
 
-    // Validação do Email (checa formato e disponibilidade)
+    // Validação do Email
     public Boolean validarEmail(String email, JLabel label) {
         if (email.isEmpty()) {
             showError(label, "Este campo é obrigatório");
             return false;
         }
 
-        // Expressão regular para validar e-mail
+        // Regex para validar e-mail
         String regex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(email);
@@ -41,7 +41,7 @@ public class ValidarCadastro {
         return verificarDisponibilidade("email", email, label);
     }
 
-    // Validação do Telefone (apenas checa disponibilidade no banco)
+    // Validação do Telefone
     public Boolean validarTelefone(String phone, JLabel label) {
         if (phone.isEmpty()) {
             showError(label, "Este campo é obrigatório");
@@ -51,7 +51,7 @@ public class ValidarCadastro {
         return verificarDisponibilidade("phone", phone, label);
     }
 
-    // Verifica disponibilidade no banco de dados
+    // Verifica disponibilidade no banco de dados (COM PROTEÇÃO OFFLINE)
     private Boolean verificarDisponibilidade(String coluna, String valor, JLabel label) {
         ConexaoBanco banco = new ConexaoBanco();
         Boolean disponivel = false;
@@ -60,6 +60,14 @@ public class ValidarCadastro {
 
         try {
             conn = banco.abrirConexao();
+            
+            // MODO OFFLINE: Se não houver banco, permite tudo para testes.
+            if (conn == null) {
+                // System.out.println(">> [Validação] Offline: " + coluna + " considerado disponível.");
+                clearError(label);
+                return true; 
+            }
+
             String query = "SELECT COUNT(*) FROM tb_funcionarios WHERE " + coluna + " = ?";
             pstmt = conn.prepareStatement(query);
             pstmt.setString(1, valor);
@@ -79,12 +87,8 @@ public class ValidarCadastro {
             System.out.println("Erro ao consultar " + coluna + ": " + ex.getMessage());
         } finally {
             try {
-                if (pstmt != null) {
-                    pstmt.close();
-                }
-                if (conn != null) {
-                    banco.fecharConexao();
-                }
+                if (pstmt != null) pstmt.close();
+                if (conn != null) banco.fecharConexao();
             } catch (Exception e) {
                 System.out.println("Erro ao fechar conexão: " + e.getMessage());
             }
@@ -92,7 +96,7 @@ public class ValidarCadastro {
         return disponivel;
     }
 
-    // Validação do Nome (somente verifica se está vazio)
+    // Validação do Nome
     public boolean validarNome(String name, JLabel label) {
         if (name.isEmpty()) {
             showError(label, "Este campo é obrigatório");
@@ -110,7 +114,7 @@ public class ValidarCadastro {
             showError(labelSenha, "Este campo é obrigatório");
             return false;
         } else if (!senha.matches(regex)) {
-            showError(labelSenha, "A senha deve conter pelo menos 8 caracteres, incluindo uma letra maiúscula, uma minúscula, um número e um caractere especial.");
+            showError(labelSenha, "A senha deve conter mín: 8 chars, 1 Maiús, 1 Minús, 1 Num, 1 Especial.");
             return false;
         } else if (!senha.equals(confirmationSenha)) {
             showError(labelConfirmation, "As senhas não coincidem");
