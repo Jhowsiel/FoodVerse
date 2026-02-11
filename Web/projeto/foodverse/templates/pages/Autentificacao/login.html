@@ -1,0 +1,20 @@
+<DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - FoodVerse</title>
+</head>
+<body
+ 
+    <h1>Faça login no FoodVerse</h1>
+    <form method="post" action="{% url 'login' %}">
+    {% csrf_token %}
+    <input type="text" name="username" placeholder="Usuario">
+    <br><br>
+    <input type="password" name="password" placeholder="Senha">
+    <br><br>
+    <button type="submit">Entrar</button>
+    </form>
+</body>
+</html>
