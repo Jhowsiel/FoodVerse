@@ -274,3 +274,65 @@ main {
   position: absolute;
   pointer-events: none;
 }
+
+/* --- Autenticação (Login e Cadastro) --- */
+.auth-bg {
+    background: linear-gradient(135deg, #a60000 0%, #EB0029 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-auth {
+    border: none;
+    border-radius: 1.5rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    background-color: #fff;
+    overflow: hidden;
+}
+
+.auth-header h3 {
+    color: #303030;
+    font-weight: 800;
+}
+
+.form-control-auth {
+    border-radius: 0.8rem;
+    border: 2px solid #eee;
+    padding: 0.8rem 1rem;
+    transition: all 0.3s;
+}
+
+.form-control-auth:focus {
+    border-color: #BC1015;
+    box-shadow: 0 0 0 0.2rem rgba(188, 16, 21, 0.25);
+}
+
+.btn-primary-auth {
+    background-color: #BC1015;
+    border: none;
+    border-radius: 0.8rem;
+    padding: 0.8rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: white;
+    width: 100%;
+    transition: background-color 0.3s;
+}
+
+.btn-primary-auth:hover {
+    background-color: #a60000;
+    color: white;
+}
+
+.auth-link {
+    color: #EB0029;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.auth-link:hover {
+    text-decoration: underline;
+    color: #a60000;
+}

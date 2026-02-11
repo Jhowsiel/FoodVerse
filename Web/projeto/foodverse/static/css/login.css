@@ -1,0 +1,31 @@
+/* --- Estilos da Página de Login --- */
+.login-section {
+  background: linear-gradient(90deg, #a60000, #cc0000); /* Mesmo gradiente do banner */
+}
+
+.card-login {
+  border-radius: 1.3rem;
+  border: none;
+}
+
+.btn-login {
+  background-color: #BC1015; /* Cor padrão dos botões do projeto */
+  color: #fff;
+  font-weight: bold;
+  border-radius: 0.8rem;
+  transition: background-color 0.3s ease;
+}
+
+.btn-login:hover {
+  background-color: #a60000;
+  color: #fff;
+}
+
+.link-cadastro {
+  color: #EB0029;
+  text-decoration: none;
+}
+
+.link-cadastro:hover {
+  text-decoration: underline;
+}
