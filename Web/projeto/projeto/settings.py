@@ -128,3 +128,10 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Não force a expiração em todas as sessões, deixe a View decidir
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True  
+
+# Garante que o cookie de sessão seja deletado ao fechar o browser
+SESSION_SAVE_EVERY_REQUEST = True
