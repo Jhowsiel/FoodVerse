@@ -597,7 +597,6 @@ input[type="checkbox"] { accent-color: #e61218; cursor: pointer; }
     box-shadow: -20px 0 50px rgba(188, 16, 21, 0.3); /* Brilho vermelho suave */
 }
 
-/* Adicionando um degradê por cima da imagem para fundir com a borda */
 .auth-image-side::before {
     content: "";
     position: absolute;
