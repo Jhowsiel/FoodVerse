@@ -448,66 +448,177 @@ body {
 }
 
 /* --- Autenticação (Login e Cadastro) --- */
-.auth-bg {
-    padding-top: var(--navbar-height);
-    background: linear-gradient(135deg, #8b0d0d 0%, #000000 100%);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.card-auth {
-    border: none;
-    border-radius: 1.5rem;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-    background-color: #fff;
+/* Corpo e fundo */
+/* Configurações Gerais */
+/* Layout Base */
+.auth-container {
+    height: 100vh;
+    width: 100vw;
     overflow: hidden;
 }
 
-.auth-header h3 {
-    color: #303030;
-    font-weight: 800;
+.auth-row {
+    display: flex;
+    height: 100%;
 }
 
-.form-control-auth {
-    border-radius: 0.8rem;
-    border: 2px solid #eee;
-    padding: 0.8rem 1rem;
-    transition: all 0.3s;
+/* Lado do Formulário */
+.auth-form-side {
+    flex: 1;
+    background-color: #1a1a1a; /* Cinza escuro premium */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    z-index: 2;
 }
 
-.form-control-auth:focus {
-    border-color: #BC1015;
-    box-shadow: 0 0 0 0.2rem rgba(188, 16, 21, 0.25);
-}
-
-.btn-primary-auth {
-    background-color: #BC1015;
-    border: none;
-    border-radius: 0.8rem;
-    padding: 0.8rem;
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: white;
+.form-wrapper {
     width: 100%;
-    transition: background-color 0.3s;
+    max-width: 360px;
 }
 
-.btn-primary-auth:hover {
-    background-color: #a60000;
+.auth-logo {
+    width: 180px;
+    margin-bottom: 40px;
+}
+
+.auth-header h1 {
+    color: #ffffff;
+    font-weight: 700;
+    margin-bottom: 5px;
+    font-size: 2rem;
+}
+
+.auth-header p {
+    color: #888;
+    margin-bottom: 30px;
+}
+
+/* Inputs Estilizados */
+.input-group-custom input {
+    width: 100%;
+    background: #2a2a2a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 14px 20px;
+    color: white;
+    margin-bottom: 15px;
+    outline: none;
+    transition: 0.3s;
+}
+
+.input-group-custom input:focus {
+    border-color: #e61218;
+    background: #333;
+}
+
+/* Opções e Botão */
+.auth-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    font-size: 0.85rem;
+}
+
+.remember-me  { color: #888;  }
+input[type="checkbox"] { accent-color: #e61218; cursor: pointer; }
+.forgot-password { color: #e61218; text-decoration: none; font-weight: 600; }
+
+.btn-login {
+    width: 100%;
+    background: #e61218;
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-login:hover { background: #ff1a22; transform: translateY(-2px); }
+
+/* Rodapé e Social */
+.divider {
+    text-align: center;
+    color: #555;
+    font-size: 0.8rem;
+    margin: 25px 0;
+    position: relative;
+}
+
+.social-login {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.social-btn {
+    background: #2a2a2a;
+    border: 1px solid #333;
+    color: white;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.social-btn:hover { background: #444; color: #e61218; }
+
+.signup-text { color: #888; text-align: center; font-size: 0.85rem; }
+.signup-text a { color: #e61218; text-decoration: none; font-weight: 600; }
+
+/* Lado da Imagem (Direito) */
+.auth-image-side {
+    flex: 1.2;
+    background-image: url('/static/img/cardapio/arabe.jpg'); /* Use uma imagem de comida bonita */
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    padding: 60px;
+}
+
+.auth-image-side .overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+}
+
+.auth-image-side {
+    position: relative;
+    border-left: 5px solid #bc1015; /* Uma linha sólida fina de destaque */
+    box-shadow: -20px 0 50px rgba(188, 16, 21, 0.3); /* Brilho vermelho suave */
+}
+
+/* Adicionando um degradê por cima da imagem para fundir com a borda */
+.auth-image-side::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(to right, #1a1a1a 0%, transparent 20%);
+    z-index: 1;
+}
+
+.image-content {
+    position: relative;
+    z-index: 2;
     color: white;
 }
 
-.auth-link {
-    color: #EB0029;
-    text-decoration: none;
-    font-weight: 600;
-}
+.image-content h2 { font-size: 2.5rem; font-weight: 700; max-width: 400px; }
+.image-content h2 span { color: #e61218; }
 
-.auth-link:hover {
-    text-decoration: underline;
-    color: #a60000;
+/* Responsividade */
+@media (max-width: 900px) {
+    .auth-image-side { display: none; }
 }
 
 /* --- Footer Moderno e Correções --- */
