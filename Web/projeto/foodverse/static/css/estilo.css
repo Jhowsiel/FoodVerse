@@ -90,7 +90,6 @@ main {
 }
 
 
-/* Correção CRÍTICA: Espaço para o header fixo */
 body {
     overflow-x: hidden;
     padding-top: 0;
@@ -99,7 +98,7 @@ body {
 /* Navbar Base */
 .custom-navbar {
     height: var(--navbar-height);
-    background-color: rgba(48, 48, 48, 0.95);
+    background-color: #1a1a1a !important;
     backdrop-filter: blur(12px);
     z-index: 1030;
 }
@@ -509,4 +508,69 @@ body {
 .auth-link:hover {
     text-decoration: underline;
     color: #a60000;
+}
+
+/* --- Footer Moderno e Correções --- */
+
+.footer-section {
+    background-color: #1a1a1a !important;
+    color: #b0b0b0;
+    padding: 60px 0 30px 0;
+    width: 100%;
+    position: relative;
+    z-index: 100;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Garante que os links e textos dentro do footer sejam legíveis */
+.footer-section h5 {
+    color: #fff !important;
+    font-weight: 700;
+}
+
+.footer-link {
+    color: #b0b0b0 !important;
+    text-decoration: none;
+    transition: 0.3s;
+    display: inline-block;
+}
+
+.footer-link:hover {
+    color: #BC1015 !important; /* Vermelho FoodVerse */
+    transform: translateX(5px);
+}
+
+.social-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff !important;
+    transition: 0.3s;
+}
+
+.social-btn:hover {
+    background: #BC1015;
+    transform: translateY(-3px);
+}
+
+/* Input Escuro */
+.form-control-dark {
+    background-color: rgba(255,255,255,0.05) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    color: #fff !important;
+}
+
+.form-control-dark:focus {
+    border-color: #BC1015 !important;
+    box-shadow: none !important;
+}
+
+.footer-bottom {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.05);
 }
