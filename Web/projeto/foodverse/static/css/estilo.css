@@ -36,6 +36,7 @@ main {
 
 .banner {
   background: linear-gradient(90deg, #a60000, #cc0000);
+  padding-top: calc(var(--navbar-height) + 20px) !important;
 }
 
 .bg-dark {
@@ -44,6 +45,10 @@ main {
 
 .titulo-header-menu {
   letter-spacing: 1px;
+}
+
+.page-offset {
+    margin-top: calc(var(--navbar-height) + 20px);
 }
 
 .btn-nav {
@@ -74,6 +79,174 @@ main {
   padding-bottom: 8px;
   scroll-behavior: smooth;
 }
+
+/* --- Header Profissional & UI System --- */
+
+:root {
+    --food-primary: #BC1015;
+    --food-primary-hover: #a60000;
+    --food-dark: #303030;
+    --navbar-height: 80px;
+}
+
+
+/* Correção CRÍTICA: Espaço para o header fixo */
+body {
+    overflow-x: hidden;
+    padding-top: 0;
+}
+
+/* Navbar Base */
+.custom-navbar {
+    height: var(--navbar-height);
+    background-color: rgba(48, 48, 48, 0.95);
+    backdrop-filter: blur(12px);
+    z-index: 1030;
+}
+
+.logo-img {
+    height: 42px;
+    width: auto;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.brand-text {
+    font-size: 1.3rem;
+    letter-spacing: 1px;
+}
+
+/* Links de Navegação */
+.nav-link-custom {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-weight: 500;
+    position: relative;
+    padding: 0.5rem 1rem !important;
+    transition: color 0.3s;
+    border-radius: 8px;
+}
+
+.nav-link-custom:hover, 
+.nav-link-custom.active {
+    color: #fff !important;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.nav-link-custom i {
+    color: var(--food-primary);
+    transition: transform 0.3s;
+}
+
+.nav-link-custom:hover i {
+    transform: translateY(-2px);
+}
+
+/* Avatar e Dropdown */
+.user-dropdown-toggle {
+    cursor: pointer;
+    transition: opacity 0.2s;
+    user-select: none;
+}
+
+.user-dropdown-toggle:hover {
+    opacity: 0.9;
+}
+
+.user-avatar {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, var(--food-primary), #ff4d4d);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.2rem;
+    border: 2px solid rgba(255,255,255,0.2);
+    box-shadow: 0 4px 10px rgba(188, 16, 21, 0.3);
+}
+
+.dropdown-menu {
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-top: 12px !important; /* Espaço entre avatar e menu */
+}
+
+.dropdown-item {
+    font-size: 0.95rem;
+    color: #555;
+    transition: all 0.2s;
+    padding: 0.7rem 1.2rem;
+}
+
+.dropdown-item:hover {
+    background-color: #fef2f2; /* Vermelho muito claro */
+    color: var(--food-primary);
+    transform: translateX(5px);
+}
+
+.text-primary-food {
+    color: var(--food-primary) !important;
+}
+
+/* Botões do Header */
+.btn-primary-food {
+    background-color: var(--food-primary) !important;
+    border: none !important;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary-food:hover {
+    background-color: var(--food-primary-hover) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(188, 16, 21, 0.4) !important;
+}
+
+/* Animação Suave */
+.animate-fade-in {
+    animation: fadeInMenu 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+    transform-origin: top right;
+}
+
+@keyframes fadeInMenu {
+    from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Mobile Adjustments (Correção de erros em telas pequenas) */
+@media (max-width: 991px) {
+    .navbar-collapse {
+        background-color: #2a2a2a;
+        padding: 1.5rem;
+        border-radius: 1.5rem;
+        margin-top: 15px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+    
+    .btn-sm-custom {
+        width: 100%;
+        margin-bottom: 0.5rem;
+        display: block;
+        text-align: center;
+        padding: 10px 0;
+    }
+
+    .dropdown-menu {
+        border: 1px solid rgba(255,255,255,0.1);
+        background-color: #383838;
+    }
+    
+    .dropdown-item {
+        color: #ddd;
+    }
+    
+    .dropdown-item:hover {
+        background-color: #444;
+        color: #fff;
+    }
+}
+
 
 /* Botão de categoria */
 .btn-categoria {
@@ -277,7 +450,8 @@ main {
 
 /* --- Autenticação (Login e Cadastro) --- */
 .auth-bg {
-    background: linear-gradient(135deg, #a60000 0%, #EB0029 100%);
+    padding-top: var(--navbar-height);
+    background: linear-gradient(135deg, #8b0d0d 0%, #000000 100%);
     min-height: 100vh;
     display: flex;
     align-items: center;
