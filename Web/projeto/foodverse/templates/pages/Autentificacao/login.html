@@ -14,10 +14,25 @@
                     <p>Faça login para continuar conectado.</p>
                 </div>
 
+                <!-- Mensagens Django Personalizadas -->
+                {% if messages %}
+                    <div class="messages-container">
+                        {% for message in messages %}
+                            <div class="custom-alert
+                                {% if message.tags == 'success' %}alert-success-custom{% endif %}
+                                {% if message.tags == 'error' %}alert-error-custom{% endif %}
+                            ">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
                 <form method="POST" action="{% url 'login' %}">
                     {% csrf_token %}
                     <div class="input-group-custom">
-                        <input type="text" name="username" placeholder="Email ou usuário" required>
+                        <input type="text" name="username" placeholder="Email ou usuário" required
+                               value="{{ request.POST.username }}">
                     </div>
                     <div class="input-group-custom">
                         <input type="password" name="password" placeholder="Senha" required>
@@ -56,4 +71,25 @@
 
     </div>
 </section>
+
+<!-- JS para desaparecer as mensagens após 4s -->
+<script>
+    const successMessage = document.querySelectorAll('.alert-success-custom');
+    console.log(successMessage)
+
+    if (successMessage.length > 0) {
+        setTimeout(() => {
+            window.location.href = "{% url 'home' %}";
+        }, 2000);
+    }
+    
+    setTimeout(() => {
+        document.querySelectorAll('.custom-alert').forEach(alert => {
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateX(40px)';
+            setTimeout(() => alert.remove(), 400);
+        });
+    }, 4000);
+</script>
+
 {% endblock %}

@@ -7,6 +7,7 @@
 <section class="auth-container">
     <div class="auth-row">
         
+        <!-- Lado do Formulário -->
         <div class="auth-form-side">
             <div class="form-wrapper">
                 <img src="{% static 'img/logo.png' %}" alt="FoodVerse" class="auth-logo">
@@ -16,21 +17,32 @@
                     <p>Preencha os dados abaixo para começar.</p>
                 </div>
 
+                <!-- Mensagens Django Personalizadas -->
                 {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }} small py-2">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
+                    <div class="messages-container">
+                        {% for message in messages %}
+                            <div class="custom-alert
+                                {% if message.tags == 'success' %}alert-success-custom{% endif %}
+                                {% if message.tags == 'error' %}alert-error-custom{% endif %}
+                                {% if message.tags == 'warning' %}alert-warning-custom{% endif %}
+                                {% if message.tags == 'info' %}alert-info-custom{% endif %}
+                            ">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
                 {% endif %}
 
+                <!-- Formulário de Cadastro -->
                 <form method="POST" action="{% url 'cadastro' %}">
                     {% csrf_token %}
                     <div class="input-group-custom">
-                        <input type="text" name="username" placeholder="Nome de usuário" required>
+                        <input type="text" name="username" placeholder="Nome de usuário" required
+                               value="{{ request.POST.username }}">
                     </div>
                     <div class="input-group-custom">
-                        <input type="email" name="email" placeholder="E-mail" required>
+                        <input type="email" name="email" placeholder="E-mail" required
+                               value="{{ request.POST.email }}">
                     </div>
                     <div class="input-group-custom">
                         <input type="password" name="password" placeholder="Senha" required>
@@ -42,6 +54,7 @@
                     <button type="submit" class="btn-login mt-2">CRIAR CONTA</button>
                 </form>
 
+                <!-- Rodapé do Formulário -->
                 <div class="auth-footer">
                     <p class="signup-text mt-4">
                         Já possui uma conta? <a href="{% url 'login' %}">Faça Login</a>
@@ -50,6 +63,7 @@
             </div>
         </div>
 
+        <!-- Lado da Imagem -->
         <div class="auth-image-side">
             <div class="overlay"></div>
             <div class="image-content">
@@ -59,4 +73,25 @@
 
     </div>
 </section>
+
+<!-- JS para desaparecer as mensagens após 4s -->
+<script>
+    const successMessage = document.querySelectorAll('.alert-success-custom');
+    console.log(successMessage)
+
+    if (successMessage.length > 0) {
+        setTimeout(() => {
+            window.location.href = "{% url 'login' %}";
+        }, 2000);
+    }
+    
+    setTimeout(() => {
+        document.querySelectorAll('.custom-alert').forEach(alert => {
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateX(40px)';
+            setTimeout(() => alert.remove(), 400);
+        });
+    }, 4000);
+</script>
+
 {% endblock %}
