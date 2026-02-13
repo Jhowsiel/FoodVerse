@@ -10,7 +10,7 @@
         <!-- Lado do Formulário -->
         <div class="auth-form-side">
             <div class="form-wrapper">
-                <img src="{% static 'img/logo.png' %}" alt="FoodVerse" class="auth-logo">
+                <img src="{% static 'img/logobc.svg' %}" alt="FoodVerse" class="auth-logo">
                 
                 <div class="auth-header">
                     <h1>Crie sua conta</h1>
@@ -36,9 +36,21 @@
                 <!-- Formulário de Cadastro -->
                 <form method="POST" action="{% url 'cadastro' %}">
                     {% csrf_token %}
+                      <div class="input-group-custom">
+                        <input type="text" name="name" placeholder="Nome completo" required
+                               value="{{ request.POST.username }}">
+                    </div>
                     <div class="input-group-custom">
                         <input type="text" name="username" placeholder="Nome de usuário" required
                                value="{{ request.POST.username }}">
+                    </div>
+                    <div class="input-group-custom">
+                        <input type="text" name="cpf" id="cpf" placeholder="CPF" required
+                               value="{{ request.POST.cpf }}">
+                    </div>
+                    <div class="input-group-custom">
+                        <input type="text" name="telefone" id="telefone" placeholder="Telefone" required
+                               value="{{ request.POST.telefone }}">
                     </div>
                     <div class="input-group-custom">
                         <input type="email" name="email" placeholder="E-mail" required
@@ -46,7 +58,7 @@
                     </div>
                     <div class="input-group-custom">
                         <input type="password" name="password" placeholder="Senha" required>
-                    </div>
+                    </div>  
                     <div class="input-group-custom">
                         <input type="password" name="confirm_password" placeholder="Confirmar Senha" required>
                     </div>
@@ -73,6 +85,48 @@
 
     </div>
 </section>
+
+{% comment %} Formatar  {% endcomment %}
+
+<script>
+document.getElementById('cpf').addEventListener('input', function (e) {
+    let value = e.target.value.replace(/\D/g, ''); // remove tudo que não é número
+
+    if (value.length > 11) value = value.slice(0, 11);
+
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+
+    e.target.value = value;
+});
+</script>
+
+{% comment %} formatar {% endcomment %}
+
+<script>
+const telefoneInput = document.getElementById('telefone');
+
+if (telefoneInput) {
+    telefoneInput.addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\D/g, '');
+
+        if (value.length > 11) value = value.slice(0, 11);
+
+        if (value.length > 10) {
+            // Celular: (00) 00000-0000
+            value = value.replace(/(\d{2})(\d)/, '($1) $2');
+            value = value.replace(/(\d{5})(\d)/, '$1-$2');
+        } else {
+            // Fixo: (00) 0000-0000
+            value = value.replace(/(\d{2})(\d)/, '($1) $2');
+            value = value.replace(/(\d{4})(\d)/, '$1-$2');
+        }
+
+        e.target.value = value;
+    });
+}
+</script>
 
 <!-- JS para desaparecer as mensagens após 4s -->
 <script>

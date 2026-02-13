@@ -4,6 +4,8 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 import requests
+from .models import Perfil
+from django.contrib.auth.models import User
 
 def home(request):
     endereco = None
@@ -68,16 +70,33 @@ def cadastro_view(request):
         return redirect('home')
 
     if request.method == 'POST':
+        nome = request.POST.get('name')
         username = request.POST.get('username')
+        cpf = request.POST.get('cpf')
+        telefone = request.POST.get('telefone')
         email = request.POST.get('email')
         password = request.POST.get('password')
         confirm_password = request.POST.get('confirm_password')
 
         erros = []
 
-        if not username or not email or not password or not confirm_password:
+        if not nome or not username or not cpf or not telefone or not email or not password or not confirm_password:
             erros.append("• Todos os campos são obrigatórios.")
 
+        if nome and len(nome) < 2:
+            erros.append("• O nome completo deve ter pelo menos 2 caracteres.")     
+        
+        if username and len(username) < 4:
+            erros.append("• O nome de usuário deve ter pelo menos 4 caracteres.")
+
+        if email and not re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email):
+            erros.append("• E-mail inválido.")
+
+        if cpf and not re.match(r'^\d{3}\.\d{3}\.\d{3}-\d{2}$', cpf):
+            erros.append("• CPF deve estar no formato XXX.XXX.XXX-XX.")
+        
+        if telefone and not re.match(r'^\(\d{2}\) \d{4,5}-\d{4}$', telefone):
+            erros.append("• Telefone deve estar no formato (XX) XXXXX-XXXX ou (XX) XXXX-XXXX.")
 
         if password != confirm_password:
             erros.append("• As senhas não conferem.")
@@ -107,6 +126,12 @@ def cadastro_view(request):
         if User.objects.filter(username=username).exists():
             erros.append("• Este nome de usuário já está em uso.")
 
+        if Perfil.objects.filter(cpf=cpf).exists():
+            erros.append("• Este CPF já está cadastrado.")
+
+        if Perfil.objects.filter(telefone=telefone).exists():
+            erros.append("• Este telefone já está cadastrado.")
+
         if User.objects.filter(email=email).exists():
             erros.append("• Este e-mail já está cadastrado.")
 
@@ -122,6 +147,7 @@ def cadastro_view(request):
                 email=email,
                 password=password
             )
+            Perfil.objects.create(user=user, cpf=cpf, telefone=telefone)
             user.save()
 
             messages.success(request, 'Cadastro realizado com sucesso! Faça login.')
