@@ -1,25 +1,15 @@
-  {% load static %}
+{% load static %}
 
-<<<<<<< HEAD
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top custom-navbar" id="mainNavbar">
   <div class="container">
     <a href="{% url 'home' %}" class="navbar-brand d-flex align-items-center">
       <img src="{% static 'img/logobc.svg' %}" alt="FoodVerse" class="logo-img" onerror="this.style.display='none'">
     </a>
-=======
- <nav class="navbar navbar-expand-lg navbar-light fixed-top custom-navbar" id="mainNavbar">
-    <div class="container">
 
-      <a href="{% url 'home' %}" class="navbar-brand d-flex align-items-center">
-        <img src="{% static 'img/logobc.svg' %}" alt="FoodVerse" class="logo-img me-2" onerror="this.style.display='none'">
-      </a>
->>>>>>> 24caaa897f80eb4fa754a5eb650ceac43df693ae
+    <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#menuNav" aria-controls="menuNav" aria-expanded="false" aria-label="Alternar navegação">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-      <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#menuNav" aria-controls="menuNav" aria-expanded="false" aria-label="Alternar navegação">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-
-<<<<<<< HEAD
     <div class="collapse navbar-collapse" id="menuNav">
       <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-3">
         <li class="nav-item">
@@ -80,81 +70,7 @@
                 <a href="{% url 'login' %}" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm btn-sm-custom btn-primary-food">Entrar</a>
             </div>
         {% endif %}
-=======
-      <div class="collapse navbar-collapse" id="menuNav">
-        
-        <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-3">
-          <li class="nav-item">
-            <a class="nav-link nav-link-custom" href="{% url 'home' %}">
-              <i class="fa-solid fa-house me-1"></i> Início
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link nav-link-custom" href="#">
-              <i class="fa-solid fa-magnifying-glass me-1"></i> Buscar
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link nav-link-custom" href="#">
-              <i class="fa-solid fa-utensils me-1"></i> Restaurantes
-            </a>
-          </li>
-        </ul>
-
-        <div class="d-flex align-items-center gap-3 mt-3 mt-lg-0">
-          
-          {% if user.is_authenticated %}
-              <a href="#" class="btn-icon position-relative me-2 text-white" title="Meu Carrinho">
-                  <i class="fa-solid fa-cart-shopping fs-5"></i>
-                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light">
-                      0
-                      <span class="visually-hidden">itens no carrinho</span>
-                  </span>
-              </a>
-
-              <div class="dropdown">
-                  <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle user-dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
-                      <div class="user-avatar shadow-sm">
-                          {{ user.username|slice:":1"|upper|default:"U" }}
-                      </div>
-                      <span class="d-none d-lg-block ms-2 fw-semibold text-truncate" style="max-width: 150px;">
-                          {{ user.username|default:"Usuário" }}
-                      </span>
-                  </a>
-                  
-                  <ul class="dropdown-menu dropdown-menu-end shadow-lg animate-fade-in mt-2 border-0" aria-labelledby="dropdownUser1">
-                      <li>
-                          <div class="px-4 py-3 bg-light border-bottom rounded-top">
-                              <span class="d-block small text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">Conectado como</span>
-                              <span class="fw-bold text-dark fs-6">{{ user.username }}</span>
-                      
-                          </div>
-                      </li>
-                      <li><a class="dropdown-item py-2 mt-1" href="#"><i class="fa-solid fa-user-gear me-2 text-primary-food"></i> Meu Perfil</a></li>
-                      <li><a class="dropdown-item py-2" href="#"><i class="fa-solid fa-receipt me-2 text-primary-food"></i> Meus Pedidos</a></li>
-                      <li><a class="dropdown-item py-2" href="#"><i class="fa-solid fa-sliders me-2 text-primary-food"></i> Configurações</a></li>
-                      <li><hr class="dropdown-divider my-1"></li>
-                      <li>
-                          <a class="dropdown-item py-2 text-danger fw-bold" href="{% url 'logout' %}">
-                              <i class="fa-solid fa-right-from-bracket me-2"></i> Sair
-                          </a>
-                      </li>
-                  </ul>
-              </div>
-
-          {% else %}
-              <div class="d-flex gap-2 w-100 justify-content-lg-end">
-                  <a href="{% url 'cadastro' %}" class="btn btn-outline-light rounded-pill px-4 fw-bold btn-sm-custom">
-                      Criar conta
-                  </a>
-                  <a href="{% url 'login' %}" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm btn-sm-custom btn-primary-food">
-                      Entrar
-                  </a>
-              </div>
-          {% endif %}
-
-        </div>
->>>>>>> 24caaa897f80eb4fa754a5eb650ceac43df693ae
       </div>
     </div>
-  </nav>
+  </div>
+</nav>
