@@ -80,138 +80,137 @@ main {
   scroll-behavior: smooth;
 }
 
-/* --- Header Profissional & UI System --- */
-
+/* --- Header Profissional Corrigido --- */
 :root {
     --food-primary: #BC1015;
     --food-primary-hover: #a60000;
-    --food-dark: #303030;
+    --food-dark: #1a1a1a;
     --navbar-height: 80px;
 }
 
-
-body {
-    overflow-x: hidden;
-    padding-top: 0;
-}
-
-/* Navbar Base */
 .custom-navbar {
-    height: var(--navbar-height);
-    background-color: #1a1a1a !important;
+    min-height: var(--navbar-height);
+    background-color: var(--food-dark) !important;
     backdrop-filter: blur(12px);
-    z-index: 1030;
+    z-index: 1050;
+    transition: all 0.3s ease;
 }
 
 .logo-img {
-    height: 42px;
+    height: 40px;
     width: auto;
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.brand-text {
-    font-size: 1.3rem;
-    letter-spacing: 1px;
-}
-
-/* Links de Navegação */
 .nav-link-custom {
     color: rgba(255, 255, 255, 0.85) !important;
     font-weight: 500;
-    position: relative;
     padding: 0.5rem 1rem !important;
-    transition: color 0.3s;
     border-radius: 8px;
+    transition: 0.3s;
 }
 
-.nav-link-custom:hover, 
-.nav-link-custom.active {
+.nav-link-custom:hover {
+    background-color: rgba(255, 255, 255, 0.1);
     color: #fff !important;
-    background-color: rgba(255, 255, 255, 0.05);
 }
 
-.nav-link-custom i {
-    color: var(--food-primary);
-    transition: transform 0.3s;
-}
-
-.nav-link-custom:hover i {
-    transform: translateY(-2px);
-}
-
-/* Avatar e Dropdown */
-.user-dropdown-toggle {
-    cursor: pointer;
-    transition: opacity 0.2s;
-    user-select: none;
-}
-
-.user-dropdown-toggle:hover {
-    opacity: 0.9;
-}
-
+/* User Avatar */
 .user-avatar {
-    width: 42px;
-    height: 42px;
+    width: 38px;
+    height: 38px;
     background: linear-gradient(135deg, var(--food-primary), #ff4d4d);
     color: white;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 800;
-    font-size: 1.2rem;
+    font-weight: 700;
     border: 2px solid rgba(255,255,255,0.2);
-    box-shadow: 0 4px 10px rgba(188, 16, 21, 0.3);
 }
 
-.dropdown-menu {
-    border: none;
-    border-radius: 16px;
-    overflow: hidden;
-    margin-top: 12px !important; /* Espaço entre avatar e menu */
+/* Ajustes Mobile (Abaixo de 991px) */
+@media (max-width: 991px) {
+    .custom-navbar {
+        height: auto; /* Permite que o menu cresça verticalmente */
+        padding: 0.5rem 0;
+    }
+
+    .navbar-collapse {
+        background-color: #252525;
+        margin-top: 10px;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        max-height: 80vh; /* Evita que o menu suma para baixo da tela */
+        overflow-y: auto;
+    }
+
+    .nav-item {
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .nav-link-custom {
+        padding: 12px 0 !important;
+    }
+
+    .dropdown-menu {
+        background-color: #333;
+        border: 1px solid #444;
+        position: static !important; /* Faz o dropdown empurrar os itens no mobile */
+        float: none;
+        width: 100%;
+        margin-top: 10px !important;
+    }
+
+    .dropdown-item {
+        color: #eee !important;
+    }
+
+    .btn-sm-custom {
+        width: 100%;
+        text-align: center;
+        padding: 12px;
+    }
 }
 
-.dropdown-item {
-    font-size: 0.95rem;
-    color: #555;
-    transition: all 0.2s;
-    padding: 0.7rem 1.2rem;
+
+.btn-header-icon {
+    width: 42px;
+    height: 42px;
+    display: flex;          
+    align-items: center;    
+    justify-content: center;
+    border-radius: 50%;
+    color: #ffffff !important; 
+    text-decoration: none;
+    transition: background-color 0.2s;
+    position: relative;   
 }
 
-.dropdown-item:hover {
-    background-color: #fef2f2; /* Vermelho muito claro */
-    color: var(--food-primary);
-    transform: translateX(5px);
+.btn-header-icon:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #EB0029 !important; /* Fica vermelho ao passar o mouse (opcional) */
 }
 
-.text-primary-food {
-    color: var(--food-primary) !important;
+/* Garante que o ícone tenha tamanho visível */
+.btn-header-icon i {
+    font-size: 1.25rem; /* Aprox 20px */
+    display: block;     /* Garante que o ícone ocupe espaço */
 }
 
-/* Botões do Header */
-.btn-primary-food {
-    background-color: var(--food-primary) !important;
-    border: none !important;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.btn-primary-food:hover {
-    background-color: var(--food-primary-hover) !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(188, 16, 21, 0.4) !important;
-}
-
-/* Animação Suave */
-.animate-fade-in {
-    animation: fadeInMenu 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
-    transform-origin: top right;
+/* Animação do Dropdown */
+@media (min-width: 992px) {
+    .animate-fade-in {
+        animation: fadeInMenu 0.2s ease-out forwards;
+    }
 }
 
 @keyframes fadeInMenu {
-    from { opacity: 0; transform: scale(0.95) translateY(-10px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
+
+
 
 /* Mobile Adjustments (Correção de erros em telas pequenas) */
 @media (max-width: 991px) {
