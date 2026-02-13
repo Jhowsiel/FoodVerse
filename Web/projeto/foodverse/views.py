@@ -3,9 +3,29 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+import requests
 
 def home(request):
-    return render(request, 'index.html')
+    endereco = None
+    cep = None
+
+    if request.method == 'POST':
+        cep = request.POST.get('cep', '').strip()  # pega o valor do input e tira espaços
+        if cep:
+            url = f"https://viacep.com.br/ws/{cep}/json/"
+            try:
+                response = requests.get(url)
+                data = response.json()
+
+                if "erro" not in data:
+                    endereco = f"{data.get('logradouro', '')}, {data.get('bairro', '')}, {data.get('localidade', '')} - {data.get('uf', '')}"
+                else:
+                    endereco = None
+            except requests.RequestException:
+                endereco = None
+
+    return render(request, 'index.html', {'endereco': endereco, 'cep': cep})
+
 
 def login_view(request):
     # Se o usuário já estiver logado, redireciona para a home
