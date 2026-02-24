@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% include "pages/pagePrincipal/header.html" %}
+<section class="container page-offset py-4">
+  <h1 class="fw-bold mb-4">Meu pedido</h1>
+
+  <div class="row g-4">
+    <div class="col-12 col-lg-8">
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="mb-1">Frango grelhado com legumes</h5>
+            <p class="small text-muted mb-0">Porção média · sem lactose</p>
+          </div>
+          <div class="text-end">
+            <strong>R$ 34,90</strong>
+            <p class="small text-muted mb-0">Qtd: 1</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h5 class="fw-bold">Status do pedido</h5>
+          <p class="mb-1">Em andamento: <strong>Aguardando confirmação do restaurante</strong></p>
+          <p class="text-muted small mb-0">Você pode alterar os itens antes do início do preparo.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h5 class="fw-bold">Resumo financeiro</h5>
+          <p class="mb-1">Subtotal: R$ 34,90</p>
+          <p class="mb-1">Entrega: R$ 6,90</p>
+          <p class="mb-3">Desconto cupom: -R$ 3,49</p>
+          <h5>Total: R$ 38,31</h5>
+          <a href="{% url 'finalizacao' %}" class="btn btn-danger w-100 mt-2">Ir para finalização</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
