@@ -19,7 +19,15 @@
               <option>Pix</option>
               <option>Cartão de crédito</option>
               <option>Cartão de débito</option>
+              <option>Carteira digital</option>
             </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Cupom</label>
+            <div class="input-group">
+              <input type="text" class="form-control" value="FOOD10" readonly>
+              <button class="btn btn-outline-danger" type="button">Trocar</button>
+            </div>
           </div>
           <div class="alert alert-info mb-0">Após confirmar, você receberá notificações de status do pedido.</div>
         </div>
@@ -30,15 +38,16 @@
       <div class="card border-0 shadow-sm">
         <div class="card-body">
           <h5 class="fw-bold">Resumo final</h5>
-          <p class="mb-1">Subtotal: R$ 34,90</p>
-          <p class="mb-1">Entrega: R$ 6,90</p>
-          <p class="mb-1">Cupom FOOD10: -R$ 3,49</p>
+          <p class="mb-1">Subtotal: {{ subtotal }}</p>
+          <p class="mb-1">Entrega: {{ entrega }}</p>
+          <p class="mb-1">Cupom FOOD10: {{ desconto }}</p>
           <hr>
-          <h4 class="fw-bold">Total: R$ 38,31</h4>
+          <h4 class="fw-bold">Total: {{ total }}</h4>
           <button class="btn btn-danger w-100 mt-2">Confirmar pedido</button>
         </div>
       </div>
     </div>
   </div>
 </section>
+{% include "pages/pagePrincipal/footer.html" %}
 {% endblock %}

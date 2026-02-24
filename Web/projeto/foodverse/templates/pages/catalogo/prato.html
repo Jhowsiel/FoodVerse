@@ -7,19 +7,13 @@
     <div class="col-12 col-lg-8">
       <div class="card border-0 shadow-sm">
         <div class="card-body">
-          <h1 class="fw-bold">Frango grelhado com legumes</h1>
-          <p class="text-muted">Personalize seu prato de acordo com sua dieta e preferências.</p>
-          <p class="mb-2"><strong>Informação nutricional (porção padrão):</strong></p>
-          <ul>
-            <li>430 kcal</li>
-            <li>38g proteína</li>
-            <li>25g carboidratos</li>
-            <li>16g gorduras</li>
-          </ul>
+          <p class="text-danger fw-semibold mb-1">{{ restaurante.nome }}</p>
+          <h1 class="fw-bold">{{ prato.nome }}</h1>
+          <p class="text-muted">{{ prato.descricao }}</p>
 
-          <h5 class="fw-bold mt-4">Customização</h5>
-          <form>
-            <div class="mb-3">
+          <h5 class="fw-bold mt-4">Customização de prato</h5>
+          <form class="row g-3">
+            <div class="col-md-6">
               <label class="form-label">Tamanho da porção</label>
               <select class="form-select">
                 <option>Pequena</option>
@@ -27,15 +21,20 @@
                 <option>Grande</option>
               </select>
             </div>
-            <div class="mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Proteína extra</label>
+              <select class="form-select">
+                <option>Sem adicional</option>
+                <option>Frango (+R$ 6,00)</option>
+                <option>Carne (+R$ 8,00)</option>
+              </select>
+            </div>
+            <div class="col-12">
               <label class="form-label">Remover alergênicos</label>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="lactose">
-                <label class="form-check-label" for="lactose">Sem lactose</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="gluten">
-                <label class="form-check-label" for="gluten">Sem glúten</label>
+              <div class="d-flex gap-3 flex-wrap">
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="lactose"><label class="form-check-label" for="lactose">Sem lactose</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="gluten"><label class="form-check-label" for="gluten">Sem glúten</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="oleaginosas"><label class="form-check-label" for="oleaginosas">Sem oleaginosas</label></div>
               </div>
             </div>
           </form>
@@ -44,15 +43,28 @@
     </div>
 
     <div class="col-12 col-lg-4">
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+          <h5 class="fw-bold">Feedback nutricional</h5>
+          <ul class="list-unstyled mb-2">
+            <li>🔥 {{ prato.nutri.kcal }} kcal</li>
+            <li>💪 {{ prato.nutri.proteina }} proteína</li>
+            <li>🍚 {{ prato.nutri.carbo }} carboidratos</li>
+            <li>🥑 {{ prato.nutri.gordura }} gorduras</li>
+          </ul>
+          <p class="small text-muted mb-0">Sugestão: ótimo para dieta equilibrada e ganho de massa magra.</p>
+        </div>
+      </div>
+
       <div class="card border-0 shadow-sm">
         <div class="card-body">
           <h5 class="fw-bold">Resumo</h5>
-          <p class="mb-1">Preço base: <strong>R$ 34,90</strong></p>
-          <p class="small text-muted">Sugestão de objetivo: dieta equilibrada.</p>
+          <p class="mb-1">Preço base: <strong>{{ prato.preco }}</strong></p>
           <a href="{% url 'pedido' %}" class="btn btn-danger w-100">Adicionar ao pedido</a>
         </div>
       </div>
     </div>
   </div>
 </section>
+{% include "pages/pagePrincipal/footer.html" %}
 {% endblock %}
