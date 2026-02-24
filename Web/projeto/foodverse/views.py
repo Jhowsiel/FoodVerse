@@ -267,6 +267,31 @@ def finalizacao_view(request):
         'total': 'R$ 38,31',
     })
 
+def filtrar_restaurantes(query):
+    resultados = []
+
+    for r in RESTAURANTES:
+        if query in r["nome"].lower():
+            resultados.append(r)
+            continue
+
+        for prato in r.get("pratos", []):
+            if query in prato["nome"].lower():
+                resultados.append(r)
+                break
+
+    return resultados
+
+def buscar_prato_restaurante(request):
+    query = request.GET.get('q', '').strip().lower()
+
+    resultados = filtrar_restaurantes(query)
+
+    return render(request, 'pages/catalogo/restaurante.html', {
+        'restaurantes': resultados,
+        'categorias': sorted({r['categoria'] for r in RESTAURANTES}),
+        'categoria_ativa': None,
+    })
 
 def logout_view(request):
     logout(request)
