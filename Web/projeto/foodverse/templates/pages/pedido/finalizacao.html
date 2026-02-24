@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% include "pages/pagePrincipal/header.html" %}
+<section class="container page-offset py-4">
+  <h1 class="fw-bold mb-4">Finalização do pedido</h1>
+  <div class="row g-4">
+    <div class="col-12 col-lg-7">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h5 class="fw-bold">Entrega e pagamento</h5>
+          <div class="mb-3">
+            <label class="form-label">Endereço</label>
+            <input type="text" class="form-control" value="Rua Exemplo, 123 - Taboão da Serra" readonly>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Forma de pagamento</label>
+            <select class="form-select">
+              <option>Pix</option>
+              <option>Cartão de crédito</option>
+              <option>Cartão de débito</option>
+            </select>
+          </div>
+          <div class="alert alert-info mb-0">Após confirmar, você receberá notificações de status do pedido.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-5">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h5 class="fw-bold">Resumo final</h5>
+          <p class="mb-1">Subtotal: R$ 34,90</p>
+          <p class="mb-1">Entrega: R$ 6,90</p>
+          <p class="mb-1">Cupom FOOD10: -R$ 3,49</p>
+          <hr>
+          <h4 class="fw-bold">Total: R$ 38,31</h4>
+          <button class="btn btn-danger w-100 mt-2">Confirmar pedido</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

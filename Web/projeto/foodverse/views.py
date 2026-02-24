@@ -2,17 +2,17 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 import requests
 from .models import Perfil
-from django.contrib.auth.models import User
+import re
+
 
 def home(request):
     endereco = None
     cep = None
 
     if request.method == 'POST':
-        cep = request.POST.get('cep', '').strip()  # pega o valor do input e tira espaços
+        cep = request.POST.get('cep', '').strip()
         if cep:
             url = f"https://viacep.com.br/ws/{cep}/json/"
             try:
@@ -30,18 +30,16 @@ def home(request):
 
 
 def login_view(request):
-    # Se o usuário já estiver logado, redireciona para a home
     if request.user.is_authenticated:
         return redirect('home')
 
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        remember_me = request.POST.get('remember_me')  #
-        
-        # Tenta autenticar
+        remember_me = request.POST.get('remember_me')
+
         user = authenticate(request, username=username, password=password)
-        
+
         if user is not None:
             login(request, user)
 
@@ -54,18 +52,11 @@ def login_view(request):
             return render(request, 'pages/Autentificacao/login.html')
         else:
             messages.error(request, 'Usuário ou senha incorretos.')
-            
+
     return render(request, 'pages/Autentificacao/login.html')
 
-import re
-
-import re
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth.models import User
 
 def cadastro_view(request):
-    # Se o usuário já estiver logado, redireciona para a home
     if request.user.is_authenticated:
         return redirect('home')
 
@@ -84,8 +75,8 @@ def cadastro_view(request):
             erros.append("• Todos os campos são obrigatórios.")
 
         if nome and len(nome) < 2:
-            erros.append("• O nome completo deve ter pelo menos 2 caracteres.")     
-        
+            erros.append("• O nome completo deve ter pelo menos 2 caracteres.")
+
         if username and len(username) < 4:
             erros.append("• O nome de usuário deve ter pelo menos 4 caracteres.")
 
@@ -94,17 +85,15 @@ def cadastro_view(request):
 
         if cpf and not re.match(r'^\d{3}\.\d{3}\.\d{3}-\d{2}$', cpf):
             erros.append("• CPF deve estar no formato XXX.XXX.XXX-XX.")
-        
+
         if telefone and not re.match(r'^\(\d{2}\) \d{4,5}-\d{4}$', telefone):
             erros.append("• Telefone deve estar no formato (XX) XXXXX-XXXX ou (XX) XXXX-XXXX.")
 
         if password != confirm_password:
             erros.append("• As senhas não conferem.")
 
-
         if password and len(password) < 8:
             erros.append("• Deve ter pelo menos 8 caracteres.")
-
 
         if password:
             if not re.search(r"[a-z]", password):
@@ -121,7 +110,6 @@ def cadastro_view(request):
 
             if password.isdigit():
                 erros.append("• A senha não pode ser totalmente numérica.")
-
 
         if User.objects.filter(username=username).exists():
             erros.append("• Este nome de usuário já está em uso.")
@@ -140,7 +128,6 @@ def cadastro_view(request):
                 messages.error(request, erro)
             return render(request, 'pages/Autentificacao/cadastro.html')
 
-
         try:
             user = User.objects.create_user(
                 username=username,
@@ -158,6 +145,22 @@ def cadastro_view(request):
             return render(request, 'pages/Autentificacao/cadastro.html')
 
     return render(request, 'pages/Autentificacao/cadastro.html')
+
+
+def restaurante_view(request):
+    return render(request, 'pages/catalogo/restaurante.html')
+
+
+def prato_view(request):
+    return render(request, 'pages/catalogo/prato.html')
+
+
+def pedido_view(request):
+    return render(request, 'pages/pedido/pedido.html')
+
+
+def finalizacao_view(request):
+    return render(request, 'pages/pedido/finalizacao.html')
 
 
 def logout_view(request):
