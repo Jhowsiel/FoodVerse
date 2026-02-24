@@ -18,12 +18,12 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link nav-link-custom" href="#">
+          <a class="nav-link nav-link-custom" href="{% url 'restaurantes' %}">
             <i class="fa-solid fa-magnifying-glass me-1"></i> Buscar
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link nav-link-custom" href="#">
+          <a class="nav-link nav-link-custom" href="{% url 'restaurantes' %}">
             <i class="fa-solid fa-utensils me-1"></i> Restaurantes
           </a>
         </li>
@@ -32,7 +32,7 @@
       <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-3">
         {% if user.is_authenticated %}
             <div class="d-flex align-items-center gap-3">
-                <a href="#" class="btn-header-icon text-white text-decoration-none me-2" title="Meu Carrinho">
+                <a href="{% url 'pedido' %}" class="btn-header-icon text-white text-decoration-none me-2" title="Meu Carrinho">
                     <i class="fa-solid fa-cart-shopping"></i>
                     
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light">
@@ -58,7 +58,7 @@
                             </div>
                         </li>
                         <li><a class="dropdown-item py-2 mt-1" href="#"><i class="fa-solid fa-user-gear me-2 text-primary-food"></i> Perfil</a></li>
-                        <li><a class="dropdown-item py-2" href="#"><i class="fa-solid fa-receipt me-2 text-primary-food"></i> Pedidos</a></li>
+                        <li><a class="dropdown-item py-2" href="{% url 'pedido' %}"><i class="fa-solid fa-receipt me-2 text-primary-food"></i> Pedidos</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item py-2 text-danger fw-bold" href="{% url 'logout' %}"><i class="fa-solid fa-right-from-bracket me-2"></i> Sair</a></li>
                     </ul>

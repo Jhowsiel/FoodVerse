@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include "pages/pagePrincipal/header.html" %}
+
+<section class="container page-offset py-4">
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+    <div>
+      <h1 class="fw-bold mb-1">Restaurantes</h1>
+      <p class="text-muted mb-0">Escolha seu restaurante e siga para o prato.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-sm {% if not categoria_ativa %}btn-danger{% else %}btn-outline-danger{% endif %} rounded-pill" href="{% url 'restaurantes' %}">Todos</a>
+      {% for categoria in categorias %}
+      <a class="btn btn-sm {% if categoria_ativa == categoria %}btn-danger{% else %}btn-outline-danger{% endif %} rounded-pill" href="{% url 'restaurantes' %}?categoria={{ categoria }}">{{ categoria }}</a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-12 col-lg-8">
+      <div class="row g-3">
+        {% for restaurante in restaurantes %}
+        <div class="col-12">
+          <div class="card border-0 shadow-sm restaurante-list-item">
+            <div class="card-body d-flex flex-column flex-md-row gap-3 align-items-md-center">
+              <img src="{% static restaurante.imagem %}" class="restaurante-thumb" alt="{{ restaurante.nome }}">
+              <div class="flex-grow-1">
+                <h5 class="fw-bold mb-1">{{ restaurante.nome }}</h5>
+                <p class="small text-muted mb-1">{{ restaurante.descricao }}</p>
+                <p class="small mb-0"><strong>{{ restaurante.avaliacao }}/5</strong> · {{ restaurante.tempo }} · {{ restaurante.taxa }}</p>
+              </div>
+              <a href="{% url 'restaurantes' %}?id={{ restaurante.id }}" class="btn btn-outline-danger rounded-pill">Ver detalhes</a>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+          <div class="alert alert-warning mb-0">Nenhum restaurante encontrado para essa categoria.</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h5 class="fw-bold mb-1">{{ restaurante_destaque.nome }}</h5>
+          <p class="small text-muted">{{ restaurante_destaque.descricao }}</p>
+          <p class="mb-1"><strong>Avaliação:</strong> {{ restaurante_destaque.avaliacao }}/5</p>
+          <p class="mb-1"><strong>Entrega:</strong> {{ restaurante_destaque.tempo }}</p>
+          <p class="mb-3"><strong>Cupom:</strong> {{ restaurante_destaque.cupom }}</p>
+
+          <h6 class="fw-bold">Pratos do restaurante</h6>
+          <ul class="list-group list-group-flush mb-3">
+            {% for prato in restaurante_destaque.pratos %}
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <span>{{ prato.nome }}</span>
+              <a href="{% url 'prato' %}?restaurante={{ restaurante_destaque.id }}&id={{ prato.id }}" class="btn btn-sm btn-danger">Abrir</a>
+            </li>
+            {% endfor %}
+          </ul>
+
+          <a href="{% url 'prato' %}?restaurante={{ restaurante_destaque.id }}" class="btn btn-danger w-100">Montar pedido agora</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% include "pages/pagePrincipal/footer.html" %}
+{% endblock %}

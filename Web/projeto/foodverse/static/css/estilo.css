@@ -736,3 +736,21 @@ input[type="checkbox"] { accent-color: #e61218; cursor: pointer; }
     padding-top: 20px;
     border-top: 1px solid rgba(255,255,255,0.05);
 }
+/* --- Ajustes novas telas catálogo/pedido --- */
+.restaurante-list-item {
+    border-radius: 16px;
+}
+
+.restaurante-thumb {
+    width: 120px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+@media (max-width: 767px) {
+    .restaurante-thumb {
+        width: 100%;
+        height: 180px;
+    }
+}
