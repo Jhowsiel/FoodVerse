@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% include "pages/pagePrincipal/header.html" %}
+<section class="container page-offset py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="fw-bold mb-1">Restaurante: Sabor da Casa</h1>
+      <p class="text-muted mb-0">4.8 ★ · 25-35 min · Taxa de entrega R$ 6,90</p>
+    </div>
+    <a href="{% url 'pedido' %}" class="btn btn-danger rounded-pill px-4">Ver pedido</a>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-12 col-lg-8">
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+          <h5 class="fw-bold">Sobre o restaurante</h5>
+          <p class="text-secondary mb-0">Culinária brasileira com foco em pratos executivos e opções saudáveis para almoço e jantar.</p>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="fw-bold mb-3">Pratos em destaque</h5>
+          <div class="list-group list-group-flush">
+            <a href="{% url 'prato' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+              <div>
+                <strong>Frango grelhado com legumes</strong>
+                <p class="small text-muted mb-0">Alta proteína · sem fritura</p>
+              </div>
+              <span class="fw-bold text-danger">R$ 34,90</span>
+            </a>
+            <a href="{% url 'prato' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+              <div>
+                <strong>Risoto de cogumelos</strong>
+                <p class="small text-muted mb-0">Vegetariano · cremoso</p>
+              </div>
+              <span class="fw-bold text-danger">R$ 37,90</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="fw-bold">Cupom ativo</h5>
+          <p class="small text-muted">Use <strong>FOOD10</strong> e ganhe 10% no primeiro pedido.</p>
+          <a href="{% url 'prato' %}" class="btn btn-outline-danger w-100">Montar prato</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
