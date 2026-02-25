@@ -219,23 +219,29 @@ def cadastro_view(request):
 
     return render(request, 'pages/Autentificacao/cadastro.html')
 
-
 def restaurante_view(request):
-    restaurante_id = _int_param(request.GET.get('id'), 1)
     categoria = request.GET.get('categoria')
-
     restaurantes_filtrados = RESTAURANTES
     if categoria:
         restaurantes_filtrados = [r for r in RESTAURANTES if r['categoria'] == categoria]
 
-    restaurante = _restaurante_por_id(restaurante_id)
     return render(request, 'pages/catalogo/restaurante.html', {
         'restaurantes': restaurantes_filtrados,
-        'restaurante_destaque': restaurante,
         'categorias': sorted({r['categoria'] for r in RESTAURANTES}),
         'categoria_ativa': categoria,
+        'restaurante_destaque': restaurantes_filtrados[0] if restaurantes_filtrados else None,
     })
 
+from django.http import Http404
+
+def restaurante_detalhe_view(request, id):
+    restaurante = _restaurante_por_id(id)  # função que retorna restaurante por id
+    if not restaurante:
+        raise Http404("Restaurante não encontrado")
+
+    return render(request, 'pages/catalogo/restaurante_detalhe.html', {
+        'restaurante': restaurante
+    })
 
 def prato_view(request):
     restaurante = _restaurante_por_id(_int_param(request.GET.get('restaurante'), 1))

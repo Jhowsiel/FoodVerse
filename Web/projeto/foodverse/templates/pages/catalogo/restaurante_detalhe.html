@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include "pages/pagePrincipal/header.html" %}
+
+<!-- Ajuste para header fixo -->
+<style>
+/* Espaçamento para compensar header fixo (ajuste a altura se necessário) */
+body {
+  padding-top: 70px; /* Altura do header fixo */
+}
+
+/* Hover effect nos cards */
+.hover-shadow:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
+}
+
+/* Ajuste para âncoras internas caso existam */
+:target::before {
+  content: "";
+  display: block;
+  height: 70px; /* mesma altura do header */
+  margin-top: -70px;
+}
+</style>
+
+<section class="container py-4 mt-3">
+
+  <!-- Cabeçalho com botão de voltar -->
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h2 class="mb-0">{{ restaurante.nome }}</h2>
+    <a href="{% url 'restaurantes' %}" class="btn btn-outline-danger">
+      <i class="bi bi-arrow-left"></i> Voltar
+    </a>
+  </div>
+  <p class="text-muted">{{ restaurante.descricao }}</p>
+
+  <!-- Informações do restaurante -->
+  <p class="mb-4">
+    <strong>Avaliação:</strong> 
+    <span class="badge bg-warning text-dark">{{ restaurante.avaliacao }}/5</span>
+    <strong>Entrega:</strong> 
+    <span class="badge bg-info text-dark">{{ restaurante.tempo }}</span>
+    {% if restaurante.cupom %}
+      <strong>Cupom:</strong> <span class="badge bg-success">{{ restaurante.cupom }}</span>
+    {% endif %}
+  </p>
+
+  <!-- Seção de pratos -->
+  <h3 class="mb-3">Pratos</h3>
+  <div class="row g-4">
+    {% for prato in restaurante.pratos %}
+    <div class="col-12 col-md-6 col-lg-4 mb-4">
+      <div class="card h-100 shadow-sm border-0 hover-shadow">
+        {% if prato.imagem %}
+        <img src="{% static prato.imagem %}" class="card-img-top" alt="{{ prato.nome }}" style="height: 200px; object-fit: cover;" loading="lazy">
+        {% endif %}
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">{{ prato.nome }}</h5>
+          <p class="text-muted small flex-grow-1">{{ prato.descricao }}</p>
+          <p class="fw-bold">{{ prato.preco }}</p>
+          <a href="{% url 'prato' %}?restaurante={{ restaurante.id }}&id={{ prato.id }}" class="btn btn-danger mt-auto">Abrir</a>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="alert alert-warning">
+        Não há pratos disponíveis neste restaurante.
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+</section>
+
+{% include "pages/pagePrincipal/footer.html" %}
+{% endblock %}
