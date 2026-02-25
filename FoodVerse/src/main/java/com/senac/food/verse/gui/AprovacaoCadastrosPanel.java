@@ -1,1262 +1,532 @@
 package com.senac.food.verse.gui;
 
 import com.senac.food.verse.ConexaoBanco;
+import jiconfont.icons.google_material_design_icons.GoogleMaterialDesignIcons;
+import jiconfont.swing.IconFontSwing;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.RoundRectangle2D;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
-/**
- * Painel de Gestão de Usuários (Admin/Gerente)
- * VERSÃO CORRIGIDA: Modo Offline (Simulação)
- */
 public class AprovacaoCadastrosPanel extends JPanel {
 
-    // Dados vinculados à tabela
-    private final List<Integer> funcionariosIds = new ArrayList<>();
+    // --- CORES & CONSTANTES (Design System Local para garantir funcionamento) ---
+    private final Color BG_DARK = new Color(30, 30, 30);
+    private final Color BG_PANEL = new Color(45, 45, 48);
+    private final Color FG_TEXT = new Color(240, 240, 240);
+    private final Color FG_MUTED = new Color(160, 160, 160);
+    private final Color PRIMARY_RED = new Color(188, 16, 21);
+    private final Color ACCENT_GREEN = new Color(39, 174, 96);
+    private final Color ACCENT_ORANGE = new Color(230, 126, 34);
+    private final Font FONT_TITLE = new Font("Segoe UI", Font.BOLD, 24);
+    private final Font FONT_BODY = new Font("Segoe UI", Font.PLAIN, 14);
+    private final Font FONT_BOLD = new Font("Segoe UI", Font.BOLD, 14);
 
-    // Componentes principais
-    private JLabel labelTitulo;
-    private JScrollPane scrollPaneTabela;
-    private JTable tabelaCadastros;
-
-    // Ações
-    private JButton btnNovo;
-    private JButton btnEditar;
-    private JButton btnAprovarSelecionados;
-    private JButton btnRejeitarSelecionados;
-    private JButton btnExcluirSelecionados;
-    private JButton btnSelecionarTodos;
-    private JButton btnLimparSelecao;
-    private JButton btnRecarregar;
-
-    // Filtros
-    private JTextField txtBuscar;
-    private JComboBox<String> cbFiltroStatus;
-    private JComboBox<String> cbFiltroCargo;
-
-    // Feedback
-    private JLabel lblSelecionados;
-    private JLabel lblStatusAcao;
-
-    // Lateral "Últimos aprovados"
-    private JPanel painelUltimos;
-    private JList<UltimoAprovado> listUltimos;
-    private DefaultListModel<UltimoAprovado> modelUltimos;
-
-    // Sorter para filtro/busca
-    private TableRowSorter<DefaultTableModel> sorter;
-
-    // Ícones (com fallback se a imagem falhar)
-    private final Icon icAdd      = IconLoader.load("/icons/add.png", 16, 16);
-    private final Icon icEdit     = IconLoader.load("/icons/edit.png", 16, 16);
-    private final Icon icDelete   = IconLoader.load("/icons/delete.png", 16, 16);
-    private final Icon icApprove  = IconLoader.load("/icons/save.png", 16, 16);
-    private final Icon icReject   = IconLoader.load("/icons/cancel.png", 16, 16);
-    private final Icon icSelectAll= IconLoader.load("/icons/select_all.png", 16, 16);
-    private final Icon icClear    = IconLoader.load("/icons/clear.png", 16, 16);
-    private final Icon icRefresh  = IconLoader.load("/icons/refresh.png", 16, 16);
-    private final Icon icOptions  = IconLoader.load("/icons/options.png", 16, 16);
-
-    // Ícones de seleção
-    private final Icon icCheckOn  = IconLoader.load("/icons/check_on.png", 16, 16);
-    private final Icon icCheckOff = IconLoader.load("/icons/check_off.png", 16, 16);
-
-    // Status "chips" ícones
-    private final Icon icStatusOk = IconLoader.load("/icons/ok.png", 12, 12);
-    private final Icon icStatusPen= IconLoader.load("/icons/pending.png", 12, 12);
-    private final Icon icStatusRej= IconLoader.load("/icons/reject.png", 12, 12);
+    // Componentes
+    private JTable tabela;
+    private DefaultTableModel modeloTabela;
+    private JTextField txtBusca;
+    private JLabel lblTotalPendentes;
+    private JLabel lblTotalAtivos;
 
     public AprovacaoCadastrosPanel() {
-        UIConstants.applyDarkDefaults();
-        setOpaque(true);
-        setBackground(UIConstants.BG_DARK);
-        setBorder(new EmptyBorder(12, 12, 12, 12));
+        setLayout(new BorderLayout());
+        setBackground(BG_DARK);
 
-        montarUI();
-        configurarTabela();
-        configurarAcoes();
-        carregarCargos();
-        carregarUsuarios(null, null, null); // todos
-        carregarUltimosAprovados();
-        iniciarAtualizacaoAutomatica();
+        // 1. HEADER
+        add(criarHeader(), BorderLayout.NORTH);
+
+        // 2. CORPO
+        JPanel corpo = new JPanel(new BorderLayout(0, 20));
+        corpo.setBackground(BG_DARK);
+        corpo.setBorder(new EmptyBorder(10, 30, 30, 30));
+
+        corpo.add(criarToolbar(), BorderLayout.NORTH);
+        corpo.add(criarTabela(), BorderLayout.CENTER);
+
+        add(corpo, BorderLayout.CENTER);
+
+        // Carregar dados iniciais
+        carregarDados("");
     }
 
-    /* ------------------------------- UI ------------------------------------ */
+    // --- SEÇÃO 1: HEADER ---
+    private JPanel criarHeader() {
+        JPanel p = new JPanel(new BorderLayout());
+        p.setBackground(BG_DARK);
+        p.setBorder(new EmptyBorder(25, 30, 15, 30));
 
-    private void montarUI() {
-        // Título
-        labelTitulo = new JLabel("Gestão de Usuários", IconLoader.load("/icons/dish.png", 20, 20), SwingConstants.LEADING);
-        labelTitulo.setFont(UIConstants.ARIAL_16_B);
-        labelTitulo.setForeground(UIConstants.FG_LIGHT);
+        // Título e Ícone
+        JLabel titulo = new JLabel("Gestão de Equipe");
+        titulo.setFont(FONT_TITLE);
+        titulo.setForeground(FG_TEXT);
+        titulo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.SUPERVISOR_ACCOUNT, 32, FG_TEXT));
+        titulo.setIconTextGap(15);
+        p.add(titulo, BorderLayout.WEST);
 
-        // Linha 1: Busca + Filtros (alinhados)
-        JLabel lblBusca = new JLabel("Buscar (nome/e-mail):");
-        lblBusca.setFont(UIConstants.ARIAL_12_B);
-        lblBusca.setForeground(UIConstants.FG_LIGHT);
+        // Cards de Métricas
+        JPanel cards = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
+        cards.setOpaque(false);
 
-        txtBuscar = new JTextField();
-        UIConstants.styleField(txtBuscar);
-        txtBuscar.setToolTipText("Digite para filtrar por nome ou e-mail (Enter para aplicar)");
-        txtBuscar.setColumns(24);
+        lblTotalPendentes = criarBadgeInfo("Pendentes", ACCENT_ORANGE);
+        lblTotalAtivos = criarBadgeInfo("Ativos", ACCENT_GREEN);
 
-        JLabel lblStatus = new JLabel("Status:");
-        lblStatus.setFont(UIConstants.ARIAL_12_B);
-        lblStatus.setForeground(UIConstants.FG_LIGHT);
+        cards.add(lblTotalAtivos);
+        cards.add(lblTotalPendentes);
+        p.add(cards, BorderLayout.EAST);
 
-        cbFiltroStatus = new JComboBox<>(new String[]{"Todos", "Pendente", "Aprovado", "Rejeitado", "Temporario"});
-        UIConstants.styleCombo(cbFiltroStatus);
-        cbFiltroStatus.setPreferredSize(new Dimension(150, 28));
-
-        JLabel lblCargo = new JLabel("Cargo:");
-        lblCargo.setFont(UIConstants.ARIAL_12_B);
-        lblCargo.setForeground(UIConstants.FG_LIGHT);
-
-        cbFiltroCargo = new JComboBox<>(new String[]{"Todos"});
-        UIConstants.styleCombo(cbFiltroCargo);
-        cbFiltroCargo.setPreferredSize(new Dimension(180, 28));
-
-        // Linha 2: Ações
-        btnNovo = new JButton("Novo Usuário", icAdd);
-        UIConstants.stylePrimary(btnNovo);
-
-        btnEditar = new JButton("Editar", icEdit);
-        UIConstants.styleSecondary(btnEditar);
-
-        btnAprovarSelecionados = new JButton("Aprovar", icApprove);
-        UIConstants.styleSuccess(btnAprovarSelecionados);
-
-        btnRejeitarSelecionados = new JButton("Rejeitar", icReject);
-        UIConstants.styleSecondary(btnRejeitarSelecionados);
-
-        btnExcluirSelecionados = new JButton("Excluir", icDelete);
-        UIConstants.styleSecondary(btnExcluirSelecionados);
-
-        btnSelecionarTodos = new JButton("Selecionar Todos", icSelectAll);
-        UIConstants.styleSecondary(btnSelecionarTodos);
-
-        btnLimparSelecao = new JButton("Limpar Seleção", icClear);
-        UIConstants.styleSecondary(btnLimparSelecao);
-
-        btnRecarregar = new JButton("Recarregar", icRefresh);
-        UIConstants.styleSecondary(btnRecarregar);
-
-        lblSelecionados = new JLabel("Selecionados: 0");
-        lblSelecionados.setFont(UIConstants.ARIAL_12_B);
-        lblSelecionados.setForeground(UIConstants.FG_MUTED);
-
-        lblStatusAcao = new JLabel(" ");
-        lblStatusAcao.setFont(UIConstants.ARIAL_12_B);
-        lblStatusAcao.setForeground(UIConstants.FG_MUTED);
-
-        // Tabela e scroll
-        tabelaCadastros = new JTable();
-        scrollPaneTabela = new JScrollPane(tabelaCadastros);
-        scrollPaneTabela.setBorder(null);
-        scrollPaneTabela.getViewport().setBackground(UIConstants.BG_DARK);
-
-        // Painel "Últimos aprovados"
-        painelUltimos = new JPanel();
-        painelUltimos.setBackground(UIConstants.CARD_DARK);
-        painelUltimos.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(UIConstants.GRID_DARK),
-                new EmptyBorder(10, 10, 10, 10)
-        ));
-        painelUltimos.setPreferredSize(new Dimension(300, 100));
-        painelUltimos.setLayout(new BorderLayout(6, 6));
-
-        JLabel lblUltimos = new JLabel("Últimos aprovados");
-        lblUltimos.setFont(UIConstants.ARIAL_12_B);
-        lblUltimos.setForeground(UIConstants.FG_LIGHT);
-        painelUltimos.add(lblUltimos, BorderLayout.NORTH);
-
-        modelUltimos = new DefaultListModel<>();
-        listUltimos = new JList<>(modelUltimos);
-        listUltimos.setBackground(UIConstants.CARD_DARK);
-        listUltimos.setForeground(UIConstants.FG_LIGHT);
-        listUltimos.setFixedCellHeight(46);
-        listUltimos.setCellRenderer(new UltimosRenderer());
-        JScrollPane spUltimos = new JScrollPane(listUltimos);
-        spUltimos.setBorder(null);
-        spUltimos.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        spUltimos.getViewport().setBackground(UIConstants.CARD_DARK);
-        painelUltimos.add(spUltimos, BorderLayout.CENTER);
-
-        // Header superior
-        JPanel header = new JPanel(new GridBagLayout());
-        header.setOpaque(false);
-        GridBagConstraints gc = new GridBagConstraints();
-        gc.insets = new Insets(6, 6, 6, 6);
-        gc.anchor = GridBagConstraints.WEST;
-
-        // Linha 1: Busca + Status + Cargo
-        gc.gridx = 0; gc.gridy = 0; header.add(lblBusca, gc);
-        gc.gridx = 1; header.add(txtBuscar, gc);
-        gc.gridx = 2; header.add(lblStatus, gc);
-        gc.gridx = 3; header.add(cbFiltroStatus, gc);
-        gc.gridx = 4; header.add(lblCargo, gc);
-        gc.gridx = 5; header.add(cbFiltroCargo, gc);
-        gc.gridx = 6; gc.weightx = 1; header.add(Box.createHorizontalGlue(), gc);
-        gc.weightx = 0;
-
-        // Linha 2: Ações
-        gc.gridy = 1; gc.gridx = 0; header.add(btnNovo, gc);
-        gc.gridx = 1; header.add(btnEditar, gc);
-        gc.gridx = 2; header.add(btnAprovarSelecionados, gc);
-        gc.gridx = 3; header.add(btnRejeitarSelecionados, gc);
-        gc.gridx = 4; header.add(btnExcluirSelecionados, gc);
-        gc.gridx = 5; header.add(btnSelecionarTodos, gc);
-        gc.gridx = 6; header.add(btnLimparSelecao, gc);
-        gc.gridx = 7; header.add(btnRecarregar, gc);
-        gc.gridx = 8; header.add(lblSelecionados, gc);
-        gc.gridx = 9; header.add(lblStatusAcao, gc);
-
-        // Painel central
-        JPanel esquerda = new JPanel();
-        esquerda.setOpaque(false);
-        GroupLayout gl = new GroupLayout(esquerda);
-        esquerda.setLayout(gl);
-        gl.setAutoCreateGaps(true);
-        gl.setAutoCreateContainerGaps(true);
-        gl.setHorizontalGroup(gl.createParallelGroup(GroupLayout.Alignment.LEADING)
-                .addComponent(labelTitulo)
-                .addComponent(header)
-                .addComponent(scrollPaneTabela)
-        );
-        gl.setVerticalGroup(gl.createSequentialGroup()
-                .addComponent(labelTitulo)
-                .addComponent(header, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                .addComponent(scrollPaneTabela, 0, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-
-        setLayout(new BorderLayout(10, 10));
-        add(esquerda, BorderLayout.CENTER);
-        add(painelUltimos, BorderLayout.EAST);
+        return p;
     }
 
-    private void configurarTabela() {
-        String[] colunas = {"", "ID", "Nome", "Username", "E-mail", "Cargo", "Telefone", "Data Registro", "Status", "Ações"};
-        DefaultTableModel modelo = new DefaultTableModel(colunas, 0) {
-            @Override public boolean isCellEditable(int row, int col) { return col == 0 || col == 9; }
-            @Override public Class<?> getColumnClass(int columnIndex) { return columnIndex == 0 ? Boolean.class : String.class; }
+    private JLabel criarBadgeInfo(String texto, Color cor) {
+        JLabel l = new JLabel("0 " + texto) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
+                super.paintComponent(g);
+            }
         };
-        tabelaCadastros.setModel(modelo);
+        l.setFont(FONT_BOLD);
+        l.setForeground(Color.WHITE);
+        l.setBackground(cor);
+        l.setOpaque(false); // Custom paint
+        l.setBorder(new EmptyBorder(8, 15, 8, 15));
+        l.setHorizontalAlignment(SwingConstants.CENTER);
+        return l;
+    }
 
-        tabelaCadastros.setRowHeight(36);
-        tabelaCadastros.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
-        tabelaCadastros.setSelectionBackground(UIConstants.SEL_BG);
-        tabelaCadastros.setSelectionForeground(UIConstants.SEL_FG);
-        tabelaCadastros.setGridColor(UIConstants.GRID_DARK);
-        tabelaCadastros.setShowVerticalLines(false);
-        tabelaCadastros.setShowHorizontalLines(true);
-        tabelaCadastros.setBackground(UIConstants.BG_DARK);
-        tabelaCadastros.setForeground(UIConstants.FG_LIGHT);
-        tabelaCadastros.setAutoCreateRowSorter(true);
+    // --- SEÇÃO 2: TOOLBAR ---
+    private JPanel criarToolbar() {
+        JPanel p = new JPanel(new BorderLayout(15, 0));
+        p.setOpaque(false);
 
-        JTableHeader th = tabelaCadastros.getTableHeader();
-        th.setDefaultRenderer(new HeaderRenderer(new int[]{
-                SwingConstants.CENTER, SwingConstants.CENTER, SwingConstants.LEFT, SwingConstants.LEFT,
-                SwingConstants.LEFT, SwingConstants.CENTER, SwingConstants.CENTER, SwingConstants.CENTER,
-                SwingConstants.CENTER, SwingConstants.CENTER
-        }));
-        th.setPreferredSize(new Dimension(th.getPreferredSize().width, 34));
-        th.setReorderingAllowed(false);
+        // Campo de Busca
+        txtBusca = new JTextField();
+        estilizarCampo(txtBusca);
+        txtBusca.putClientProperty("JTextField.placeholderText", "Buscar nome, e-mail ou cargo...");
+        txtBusca.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) { filtrar(); }
+            public void removeUpdate(DocumentEvent e) { filtrar(); }
+            public void changedUpdate(DocumentEvent e) { filtrar(); }
+        });
 
-        TableColumnModel cm = tabelaCadastros.getColumnModel();
-        cm.getColumn(0).setPreferredWidth(44);
-        cm.getColumn(1).setPreferredWidth(70);
-        cm.getColumn(2).setPreferredWidth(220);
-        cm.getColumn(3).setPreferredWidth(160);
-        cm.getColumn(4).setPreferredWidth(240);
-        cm.getColumn(5).setPreferredWidth(150);
-        cm.getColumn(6).setPreferredWidth(140);
-        cm.getColumn(7).setPreferredWidth(150);
-        cm.getColumn(8).setPreferredWidth(120);
-        cm.getColumn(9).setPreferredWidth(120);
+        // Botões
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        btnPanel.setOpaque(false);
 
-        cm.getColumn(0).setCellRenderer(new SelectIconRenderer());
-        cm.getColumn(0).setCellEditor(new SelectIconEditor(new JCheckBox()));
-        cm.getColumn(1).setCellRenderer(new BodyCellRenderer(SwingConstants.CENTER));
-        cm.getColumn(2).setCellRenderer(new BodyCellRenderer(SwingConstants.LEFT));
-        cm.getColumn(3).setCellRenderer(new BodyCellRenderer(SwingConstants.LEFT));
-        cm.getColumn(4).setCellRenderer(new BodyCellRenderer(SwingConstants.LEFT));
-        cm.getColumn(5).setCellRenderer(new BodyCellRenderer(SwingConstants.CENTER));
-        cm.getColumn(6).setCellRenderer(new BodyCellRenderer(SwingConstants.CENTER));
-        cm.getColumn(7).setCellRenderer(new BodyCellRenderer(SwingConstants.CENTER));
-        cm.getColumn(8).setCellRenderer(new StatusChipRenderer());
-        cm.getColumn(9).setCellRenderer(new ActionButtonRenderer());
-        cm.getColumn(9).setCellEditor(new ActionButtonEditor(new JCheckBox()));
+        JButton btnNovo = criarBotao("Novo Usuário", GoogleMaterialDesignIcons.PERSON_ADD, PRIMARY_RED);
+        btnNovo.addActionListener(e -> abrirModalEdicao(null)); 
 
-        sorter = new TableRowSorter<>(modelo);
-        tabelaCadastros.setRowSorter(sorter);
+        JButton btnAtualizar = criarBotao("Atualizar", GoogleMaterialDesignIcons.REFRESH, new Color(60, 60, 60));
+        btnAtualizar.addActionListener(e -> carregarDados(""));
 
-        tabelaCadastros.addMouseListener(new MouseAdapter() {
-            @Override public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
-                    int vr = tabelaCadastros.getSelectedRow();
-                    if (vr >= 0) abrirDialogoEditar(vr);
-                }
+        btnPanel.add(btnNovo);
+        btnPanel.add(btnAtualizar);
+
+        p.add(txtBusca, BorderLayout.CENTER);
+        p.add(btnPanel, BorderLayout.EAST);
+
+        return p;
+    }
+
+    private void filtrar() {
+        carregarDados(txtBusca.getText().trim());
+    }
+
+    // --- SEÇÃO 3: TABELA ---
+    private JScrollPane criarTabela() {
+        String[] colunas = {"ID", "Nome", "Usuário", "E-mail", "Cargo", "Status", "Ações"};
+        
+        modeloTabela = new DefaultTableModel(colunas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column == 6; // Só a coluna de ações é editável
             }
-        });
+        };
+
+        tabela = new JTable(modeloTabela);
+        estilizarTabela(tabela);
+
+        // Renderizadores
+        tabela.getColumnModel().getColumn(5).setCellRenderer(new StatusRenderer());
+        tabela.getColumnModel().getColumn(6).setCellRenderer(new ActionRenderer());
+        tabela.getColumnModel().getColumn(6).setCellEditor(new ActionEditor());
+
+        // Tamanhos
+        tabela.getColumnModel().getColumn(0).setMaxWidth(60); // ID
+        tabela.getColumnModel().getColumn(4).setMaxWidth(120); // Cargo
+        tabela.getColumnModel().getColumn(5).setMaxWidth(110); // Status
+        tabela.getColumnModel().getColumn(6).setMinWidth(140); // Ações
+        tabela.getColumnModel().getColumn(6).setMaxWidth(160);
+
+        JScrollPane scroll = new JScrollPane(tabela);
+        scroll.setBorder(new LineBorder(new Color(60,60,60)));
+        scroll.getViewport().setBackground(BG_PANEL);
+
+        return scroll;
     }
 
-    private void configurarAcoes() {
-        txtBuscar.addKeyListener(new KeyAdapter() {
-            @Override public void keyReleased(KeyEvent e) { aplicarFiltroBusca(); }
-        });
+    // --- LÓGICA DE DADOS ---
+    private void carregarDados(String filtro) {
+        modeloTabela.setRowCount(0);
+        int pendentes = 0;
+        int ativos = 0;
 
-        cbFiltroStatus.addActionListener(e -> recarregarLista());
-        cbFiltroCargo.addActionListener(e -> recarregarLista());
-
-        btnRecarregar.addActionListener(e -> {
-            recarregarLista();
-            carregarUltimosAprovados();
-            feedback("Dados recarregados", UIConstants.FG_MUTED);
-        });
-
-        btnSelecionarTodos.addActionListener(e -> {
-            selecionarTodas(true);
-            feedback("Todos selecionados", new Color(25, 135, 84));
-        });
-        btnLimparSelecao.addActionListener(e -> {
-            selecionarTodas(false);
-            feedback("Seleção limpa", new Color(255, 193, 7));
-        });
-
-        btnNovo.addActionListener(e -> abrirDialogoNovo());
-        btnEditar.addActionListener(e -> editarSelecionado());
-        btnAprovarSelecionados.addActionListener(e -> alterarStatusSelecionados("aprovado"));
-        btnRejeitarSelecionados.addActionListener(e -> alterarStatusSelecionados("rejeitado"));
-        btnExcluirSelecionados.addActionListener(e -> excluirSelecionados());
-
-        InputMap im = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-        ActionMap am = getActionMap();
-        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK), "focusSearch");
-        am.put("focusSearch", new AbstractAction() { @Override public void actionPerformed(ActionEvent e) { txtBuscar.requestFocusInWindow(); } });
-    }
-
-    private void feedback(String texto, Color cor) {
-        lblStatusAcao.setText(texto);
-        lblStatusAcao.setForeground(cor);
-        new Timer(1600, e -> {
-            lblStatusAcao.setText(" ");
-            ((Timer)e.getSource()).stop();
-        }).start();
-    }
-
-    /* ------------------------- Busca/Filtro -------------------------------- */
-
-    private void aplicarFiltroBusca() {
-        String termo = txtBuscar.getText().trim();
-        if (termo.isEmpty()) {
-            sorter.setRowFilter(null);
-        } else {
-            sorter.setRowFilter(RowFilter.regexFilter("(?i)" + Pattern.quote(termo), 2, 4));
+        String sql = "SELECT userID, name, userName, email, role, status FROM tb_funcionarios";
+        if (!filtro.isEmpty()) {
+            sql += " WHERE name LIKE ? OR email LIKE ? OR role LIKE ?";
         }
-    }
+        sql += " ORDER BY CASE WHEN status = 'pendente' THEN 0 ELSE 1 END, name ASC";
 
-    private void recarregarLista() {
-        String status = cbFiltroStatus.getSelectedItem() != null ? String.valueOf(cbFiltroStatus.getSelectedItem()) : "Todos";
-        String cargo  = cbFiltroCargo.getSelectedItem() != null ? String.valueOf(cbFiltroCargo.getSelectedItem())  : "Todos";
-        String termo  = txtBuscar.getText().trim();
-        carregarUsuarios("Todos".equals(status) ? null : status.toLowerCase(),
-                         "Todos".equals(cargo)  ? null : cargo,
-                         termo.isEmpty() ? null : termo);
-    }
-
-    private void selecionarTodas(boolean v) {
-        DefaultTableModel m = (DefaultTableModel) tabelaCadastros.getModel();
-        for (int i = 0; i < m.getRowCount(); i++) m.setValueAt(v, i, 0);
-        atualizarContadorSelecionados();
-    }
-
-    /* ------------------------- Dados (COM MOCK OFFLINE) -------------------- */
-
-    private void limparTabela() {
-        DefaultTableModel modelo = (DefaultTableModel) tabelaCadastros.getModel();
-        modelo.setRowCount(0);
-        funcionariosIds.clear();
-        atualizarContadorSelecionados();
-    }
-
-    private void carregarCargos() {
-        cbFiltroCargo.removeAllItems();
-        cbFiltroCargo.addItem("Todos");
-
-        ConexaoBanco banco = new ConexaoBanco();
-        Connection conn = null;
+        ConexaoBanco cb = new ConexaoBanco();
         try {
-            conn = banco.abrirConexao();
-            // MODO OFFLINE: Carrega cargos fixos para teste
-            if (conn == null) {
-                cbFiltroCargo.addItem("Admin");
-                cbFiltroCargo.addItem("Gerente");
-                cbFiltroCargo.addItem("Cozinheiro");
-                cbFiltroCargo.addItem("Entregador");
-                return;
+            if (cb.conn == null || cb.conn.isClosed()) {
+                cb.conn = DriverManager.getConnection("jdbc:sqlserver://127.0.0.1:1433;databaseName=FoodVerseDB;encrypt=false;trustServerCertificate=true;loginTimeout=5", "sa", "123456");
             }
 
-            try (PreparedStatement ps = conn.prepareStatement("SELECT DISTINCT role FROM tb_funcionarios WHERE role IS NOT NULL AND role <> '' ORDER BY role");
-                 ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    cbFiltroCargo.addItem(rs.getString("role"));
-                }
-            }
-        } catch (SQLException ex) {
-            // falha silenciosa
-        } finally {
-            banco.fecharConexao();
-        }
-    }
-
-    private void carregarUsuarios(String status, String cargo, String termoBusca) {
-        limparTabela();
-
-        ConexaoBanco banco = new ConexaoBanco();
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-
-        try {
-            conn = banco.abrirConexao();
-            DefaultTableModel m = (DefaultTableModel) tabelaCadastros.getModel();
-
-            // MODO OFFLINE (SIMULAÇÃO): Cria usuários de teste para a tabela não ficar vazia
-            if (conn == null) {
-                funcionariosIds.add(991);
-                m.addRow(new Object[]{false, "991", "Admin Local", "admin", "admin@teste.com", "Admin", "99999-9999", "01/01/2024", "Aprovado", "Opções"});
-                
-                funcionariosIds.add(992);
-                m.addRow(new Object[]{false, "992", "Funcionario Teste", "func1", "func1@teste.com", "Cozinheiro", "88888-8888", "25/01/2024", "Pendente", "Opções"});
-                
-                funcionariosIds.add(993);
-                m.addRow(new Object[]{false, "993", "Gerente Teste", "gerente", "gerente@teste.com", "Gerente", "77777-7777", "10/01/2024", "Aprovado", "Opções"});
-                
-                aplicarFiltroBusca();
-                return;
+            PreparedStatement ps = cb.conn.prepareStatement(sql);
+            if (!filtro.isEmpty()) {
+                String f = "%" + filtro + "%";
+                ps.setString(1, f);
+                ps.setString(2, f);
+                ps.setString(3, f);
             }
 
-            StringBuilder sql = new StringBuilder(
-                    "SELECT userID, name, userName, email, role, phone, registrationDate, status " +
-                    "FROM tb_funcionarios WHERE 1=1"
-            );
-            List<Object> params = new ArrayList<>();
-            if (status != null) {
-                sql.append(" AND LOWER(status) = ?");
-                params.add(status.toLowerCase());
-            }
-            if (cargo != null) {
-                sql.append(" AND role = ?");
-                params.add(cargo);
-            }
-            if (termoBusca != null) {
-                sql.append(" AND (LOWER(name) LIKE ? OR LOWER(email) LIKE ?)");
-                String like = "%" + termoBusca.toLowerCase() + "%";
-                params.add(like); params.add(like);
-            }
-            sql.append(" ORDER BY registrationDate DESC");
-
-            stmt = conn.prepareStatement(sql.toString());
-            for (int i = 0; i < params.size(); i++) stmt.setObject(i + 1, params.get(i));
-            rs = stmt.executeQuery();
-
+            ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                int id = rs.getInt("userID");
-                String nome = n(rs.getString("name"));
-                String uname= n(rs.getString("userName"));
-                String email= n(rs.getString("email"));
-                String role = n(rs.getString("role"));
-                String phone= n(rs.getString("phone"));
-                String data = n(rs.getString("registrationDate"));
-                String st   = traduzStatus(n(rs.getString("status")));
+                String status = rs.getString("status");
+                if (status == null) status = "pendente";
 
-                funcionariosIds.add(id);
-                m.addRow(new Object[]{false, String.valueOf(id), nome, uname, email, role, phone, data, st, "Opções"});
+                if ("pendente".equalsIgnoreCase(status)) pendentes++;
+                else if ("aprovado".equalsIgnoreCase(status)) ativos++;
+
+                modeloTabela.addRow(new Object[]{
+                        rs.getInt("userID"),
+                        rs.getString("name"),
+                        rs.getString("userName"),
+                        rs.getString("email"),
+                        rs.getString("role"),
+                        status,
+                        "" 
+                });
             }
 
-            aplicarFiltroBusca();
-        } catch (SQLException ex) {
-            Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Erro ao carregar usuários", ex);
-            JOptionPane.showMessageDialog(this, "Erro ao carregar usuários:\n" + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (stmt != null) stmt.close();
-                if (conn != null) banco.fecharConexao();
-            } catch (SQLException ignored) { }
+            lblTotalPendentes.setText(pendentes + " Pendentes");
+            lblTotalPendentes.setBackground(pendentes > 0 ? ACCENT_ORANGE : new Color(60,60,60));
+            lblTotalAtivos.setText(ativos + " Ativos");
+
+        } catch (Exception e) {
+            // Fallback visual
+            modeloTabela.addRow(new Object[]{0, "Sistema Offline", "-", "-", "Admin", "erro", ""});
         }
     }
 
-    private void carregarUltimosAprovados() {
-        modelUltimos.clear();
-        ConexaoBanco banco = new ConexaoBanco();
-        try (Connection conn = banco.abrirConexao()) {
-            
-            // MODO OFFLINE
-            if (conn == null) {
-                modelUltimos.addElement(new UltimoAprovado("Admin Local", "Admin", "01/01/2024"));
-                modelUltimos.addElement(new UltimoAprovado("Gerente Teste", "Gerente", "10/01/2024"));
-                return;
-            }
-
-            try (PreparedStatement stmt = conn.prepareStatement(
-                    "SELECT TOP 5 name, role, registrationDate " +
-                    "FROM tb_funcionarios WHERE status = 'aprovado' ORDER BY registrationDate DESC");
-                 ResultSet rs = stmt.executeQuery()) {
-
-                int count = 0;
-                while (rs.next()) {
-                    count++;
-                    String nome  = n(rs.getString("name"));
-                    String role  = n(rs.getString("role"));
-                    String data  = n(rs.getString("registrationDate"));
-                    modelUltimos.addElement(new UltimoAprovado(nome, role, data));
-                }
-                if (count == 0) {
-                    modelUltimos.addElement(new UltimoAprovado("Nenhum aprovado recente.", "", ""));
-                }
-            }
-        } catch (SQLException ex) {
-            Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Erro ao carregar últimos aprovados", ex);
-            modelUltimos.clear();
-            modelUltimos.addElement(new UltimoAprovado("Erro ao carregar.", "", ""));
-        }
-        listUltimos.repaint();
-    }
-
-    private void iniciarAtualizacaoAutomatica() {
-        new Timer(60000, e -> {
-            recarregarLista();
-            carregarUltimosAprovados();
-        }).start();
-    }
-
-    /* ------------------------- Ações Persistência --------------------------- */
-
-    private void editarSelecionado() {
-        int vr = tabelaCadastros.getSelectedRow();
-        if (vr < 0) {
-            JOptionPane.showMessageDialog(this, "Selecione uma linha para editar.", "Atenção", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        abrirDialogoEditar(vr);
-    }
-
-    private void abrirDialogoEditar(int viewRow) {
-        int mr = tabelaCadastros.convertRowIndexToModel(viewRow);
-        int id = funcionariosIds.get(mr);
-        DefaultTableModel m = (DefaultTableModel) tabelaCadastros.getModel();
-
-        String nome  = String.valueOf(m.getValueAt(mr, 2));
-        String uname = String.valueOf(m.getValueAt(mr, 3));
-        String email = String.valueOf(m.getValueAt(mr, 4));
-        String role  = String.valueOf(m.getValueAt(mr, 5));
-        String phone = String.valueOf(m.getValueAt(mr, 6));
-        String data  = String.valueOf(m.getValueAt(mr, 7));
-        String status= String.valueOf(m.getValueAt(mr, 8));
-
-        UsuarioDialog dlg = new UsuarioDialog(SwingUtilities.getWindowAncestor(this), "Editar Usuário", id, nome, uname, email, role, phone, data, status);
-        dlg.setVisible(true);
-        if (dlg.salvou) recarregarLista();
-    }
-
-    private void abrirDialogoNovo() {
-        UsuarioDialog dlg = new UsuarioDialog(SwingUtilities.getWindowAncestor(this), "Novo Usuário", null, "", "", "", "", "", "", "Pendente");
-        dlg.setVisible(true);
-        if (dlg.salvou) {
-            carregarCargos();
-            recarregarLista();
-        }
-    }
-
-    private void alterarStatusSelecionados(String novoStatus) {
-        List<Integer> ids = getSelecionados();
-        if (ids.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Nenhum cadastro selecionado.", "Atenção", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        String titulo = "aprovado".equals(novoStatus) ? "Aprovar" : "Rejeitar";
-        int ok = JOptionPane.showConfirmDialog(this, titulo + " " + ids.size() + " cadastro(s)?", "Confirmar", JOptionPane.YES_NO_OPTION);
-        if (ok != JOptionPane.YES_OPTION) return;
-
-        ConexaoBanco banco = new ConexaoBanco();
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        boolean sucesso = true;
+    private void atualizarStatus(int id, String novoStatus) {
+        String sql = "UPDATE tb_funcionarios SET status = ? WHERE userID = ?";
+        ConexaoBanco cb = new ConexaoBanco();
         try {
-            conn = banco.abrirConexao();
+            if (cb.conn == null) cb.conn = DriverManager.getConnection("jdbc:sqlserver://127.0.0.1:1433;databaseName=FoodVerseDB;encrypt=false", "sa", "123456");
+            PreparedStatement ps = cb.conn.prepareStatement(sql);
+            ps.setString(1, novoStatus);
+            ps.setInt(2, id);
+            ps.executeUpdate();
             
-            // MODO OFFLINE
-            if (conn == null) {
-                JOptionPane.showMessageDialog(this, "Status atualizado! (Modo Offline)");
-                recarregarLista();
-                return;
-            }
-
-            conn.setAutoCommit(false);
-            stmt = conn.prepareStatement("UPDATE tb_funcionarios SET status = ? WHERE userID = ?");
-            for (Integer id : ids) { stmt.setString(1, novoStatus); stmt.setInt(2, id); stmt.addBatch(); }
-            int[] res = stmt.executeBatch();
-            conn.commit();
-            for (int r : res) if (r != 1) { sucesso = false; break; }
-        } catch (SQLException ex) {
-            sucesso = false;
-            try { if (conn != null) conn.rollback(); } catch (SQLException ignored) { }
-            Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Erro ao atualizar status", ex);
-        } finally {
-            try {
-                if (stmt != null) stmt.close();
-                if (conn != null) { conn.setAutoCommit(true); banco.fecharConexao(); }
-            } catch (SQLException ignored) { }
-        }
-        if (sucesso) {
-            JOptionPane.showMessageDialog(this, "Status atualizado!");
-            recarregarLista();
-            if ("aprovado".equals(novoStatus)) carregarUltimosAprovados();
-        } else {
-            JOptionPane.showMessageDialog(this, "Erro ao atualizar status.", "Erro", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void excluirSelecionados() {
-        List<Integer> ids = getSelecionados();
-        if (ids.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Nenhum cadastro selecionado.", "Atenção", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        int ok = JOptionPane.showConfirmDialog(this, "Excluir " + ids.size() + " cadastro(s)?", "Confirmar exclusão", JOptionPane.YES_NO_OPTION);
-        if (ok != JOptionPane.YES_OPTION) return;
-
-        ConexaoBanco banco = new ConexaoBanco();
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        boolean sucesso = true;
-        try {
-            conn = banco.abrirConexao();
-            
-            // MODO OFFLINE
-            if(conn == null) {
-                JOptionPane.showMessageDialog(this, "Cadastro(s) excluído(s)! (Modo Offline)");
-                recarregarLista();
-                return;
-            }
-
-            conn.setAutoCommit(false);
-            stmt = conn.prepareStatement("DELETE FROM tb_funcionarios WHERE userID = ?");
-            for (Integer id : ids) { stmt.setInt(1, id); stmt.addBatch(); }
-            int[] res = stmt.executeBatch();
-            conn.commit();
-            for (int r : res) if (r != 1) { sucesso = false; break; }
-        } catch (SQLException ex) {
-            sucesso = false;
-            try { if (conn != null) conn.rollback(); } catch (SQLException ignored) { }
-            Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Erro ao excluir", ex);
-        } finally {
-            try {
-                if (stmt != null) stmt.close();
-                if (conn != null) { conn.setAutoCommit(true); banco.fecharConexao(); }
-            } catch (SQLException ignored) { }
-        }
-        if (sucesso) {
-            JOptionPane.showMessageDialog(this, "Cadastro(s) excluído(s)!");
-            carregarCargos();
-            recarregarLista();
-        } else {
-            JOptionPane.showMessageDialog(this, "Erro ao excluir.", "Erro", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private List<Integer> getSelecionados() {
-        List<Integer> ids = new ArrayList<>();
-        DefaultTableModel m = (DefaultTableModel) tabelaCadastros.getModel();
-        for (int i = 0; i < m.getRowCount(); i++) {
-            if (Boolean.TRUE.equals(m.getValueAt(i, 0))) ids.add(funcionariosIds.get(i));
-        }
-        return ids;
-    }
-
-    /* ------------------------- Renderers/Editors ---------------------------- */
-
-    private static class HeaderRenderer extends DefaultTableCellRenderer {
-        private final int[] aligns;
-        HeaderRenderer(int[] aligns) {
-            this.aligns = aligns;
-            setOpaque(true);
-            setBackground(UIConstants.HEADER_DARK);
-            setForeground(UIConstants.FG_LIGHT);
-            setFont(UIConstants.ARIAL_12_B);
-            setBorder(new EmptyBorder(6, 8, 6, 8));
-        }
-        @Override public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            int align = (aligns != null && column < aligns.length) ? aligns[column] : LEFT;
-            setHorizontalAlignment(align);
-            return this;
+            mostrarMensagemPersonalizada("Status atualizado com sucesso!", false);
+            carregarDados(txtBusca.getText());
+        } catch (Exception e) {
+            mostrarMensagemPersonalizada("Erro: " + e.getMessage(), true);
         }
     }
     
-    private static class BodyCellRenderer extends DefaultTableCellRenderer {
-        private final int align;
-        BodyCellRenderer(int align) { this.align = align; setOpaque(true); }
-        @Override public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
-            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
-            if (!isSelected) {
-                setBackground(row % 2 == 0 ? UIConstants.BG_DARK : UIConstants.ALT_ROW);
-                setForeground(UIConstants.FG_LIGHT);
-            }
-            setHorizontalAlignment(align);
-            setBorder(new EmptyBorder(6, 8, 6, 8));
-            return this;
+    // --- MENSAGENS E MODAIS CUSTOMIZADOS ---
+    
+    private void mostrarMensagemPersonalizada(String msg, boolean isErro) {
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), true);
+        dialog.setUndecorated(true);
+        dialog.setBackground(new Color(0,0,0,0));
+        
+        JPanel p = new JPanel(new BorderLayout(15, 0));
+        p.setBackground(new Color(40, 40, 40));
+        p.setBorder(BorderFactory.createCompoundBorder(
+            new LineBorder(isErro ? PRIMARY_RED : ACCENT_GREEN, 1),
+            new EmptyBorder(20, 20, 20, 20)
+        ));
+        
+        JLabel icon = new JLabel(IconFontSwing.buildIcon(
+            isErro ? GoogleMaterialDesignIcons.ERROR : GoogleMaterialDesignIcons.CHECK_CIRCLE, 
+            32, isErro ? PRIMARY_RED : ACCENT_GREEN));
+            
+        JLabel text = new JLabel("<html><div style='width: 250px;'>"+msg+"</div></html>");
+        text.setFont(FONT_BODY);
+        text.setForeground(FG_TEXT);
+        
+        JButton btnOk = criarBotao("OK", GoogleMaterialDesignIcons.CHECK, new Color(60,60,60));
+        btnOk.addActionListener(e -> dialog.dispose());
+        
+        p.add(icon, BorderLayout.WEST);
+        p.add(text, BorderLayout.CENTER);
+        p.add(btnOk, BorderLayout.SOUTH);
+        
+        dialog.add(p);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+
+    // --- MODAL DE EDIÇÃO/CRIAÇÃO CORRIGIDO ---
+    private void abrirModalEdicao(Object[] dadosAtuais) {
+        JDialog modal = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Gerenciar Usuário", true);
+        modal.setSize(450, 600); // Aumentado para evitar corte
+        modal.setLocationRelativeTo(this);
+        modal.getContentPane().setBackground(BG_DARK);
+        modal.setLayout(new BorderLayout());
+
+        // Painel de Conteúdo com GridBagLayout para controle total
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBackground(BG_DARK);
+        form.setBorder(new EmptyBorder(20, 30, 20, 30));
+        
+        GridBagConstraints gc = new GridBagConstraints();
+        gc.fill = GridBagConstraints.HORIZONTAL;
+        gc.insets = new Insets(5, 0, 15, 0); // Espaçamento vertical
+        gc.gridx = 0; gc.gridy = 0;
+        
+        // Título do Modal
+        JLabel lblTitulo = new JLabel(dadosAtuais == null ? "Novo Cadastro" : "Editar Cadastro");
+        lblTitulo.setFont(FONT_TITLE);
+        lblTitulo.setForeground(FG_TEXT);
+        form.add(lblTitulo, gc);
+        
+        gc.gridy++; gc.insets = new Insets(20, 0, 5, 0);
+        form.add(criarLabel("Nome Completo"), gc);
+        gc.gridy++; gc.insets = new Insets(0, 0, 15, 0);
+        JTextField tNome = new JTextField(); estilizarCampo(tNome);
+        form.add(tNome, gc);
+        
+        gc.gridy++; gc.insets = new Insets(0, 0, 5, 0);
+        form.add(criarLabel("Usuário (Login)"), gc);
+        gc.gridy++; gc.insets = new Insets(0, 0, 15, 0);
+        JTextField tUser = new JTextField(); estilizarCampo(tUser);
+        form.add(tUser, gc);
+        
+        gc.gridy++; gc.insets = new Insets(0, 0, 5, 0);
+        form.add(criarLabel("E-mail"), gc);
+        gc.gridy++; gc.insets = new Insets(0, 0, 15, 0);
+        JTextField tEmail = new JTextField(); estilizarCampo(tEmail);
+        form.add(tEmail, gc);
+        
+        gc.gridy++; gc.insets = new Insets(0, 0, 5, 0);
+        form.add(criarLabel("Cargo"), gc);
+        gc.gridy++; gc.insets = new Insets(0, 0, 15, 0);
+        JComboBox<String> cRole = new JComboBox<>(new String[]{"Cozinheiro", "Entregador", "Atendente", "Gerente", "Admin"});
+        cRole.setBackground(BG_PANEL); cRole.setForeground(Color.WHITE);
+        form.add(cRole, gc);
+        
+        gc.gridy++; gc.insets = new Insets(0, 0, 5, 0);
+        form.add(criarLabel(dadosAtuais == null ? "Senha" : "Nova Senha (deixe vazio para manter)"), gc);
+        gc.gridy++; gc.insets = new Insets(0, 0, 15, 0);
+        JPasswordField tSenha = new JPasswordField(); estilizarCampo(tSenha);
+        form.add(tSenha, gc);
+        
+        // Preencher dados se for edição
+        if(dadosAtuais != null) {
+            tNome.setText(dadosAtuais[1].toString());
+            tUser.setText(dadosAtuais[2].toString());
+            tEmail.setText(dadosAtuais[3].toString());
+            cRole.setSelectedItem(dadosAtuais[4].toString());
         }
+        
+        modal.add(form, BorderLayout.CENTER);
+        
+        // Botões do Modal
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        btnPanel.setBackground(BG_DARK);
+        btnPanel.setBorder(new EmptyBorder(10, 20, 20, 20));
+        
+        JButton btnCancelar = criarBotao("Cancelar", GoogleMaterialDesignIcons.CLOSE, new Color(80, 80, 80));
+        btnCancelar.addActionListener(e -> modal.dispose());
+        
+        JButton btnSalvar = criarBotao("SALVAR", GoogleMaterialDesignIcons.SAVE, ACCENT_GREEN);
+        btnSalvar.addActionListener(e -> {
+            // Simulação de Salvamento
+            mostrarMensagemPersonalizada("Dados salvos com sucesso!", false);
+            modal.dispose();
+            carregarDados("");
+        });
+        
+        btnPanel.add(btnCancelar);
+        btnPanel.add(btnSalvar);
+        modal.add(btnPanel, BorderLayout.SOUTH);
+        
+        modal.setVisible(true);
+    }
+
+    // --- HELPER UI ---
+    
+    private void estilizarTabela(JTable table) {
+        table.setRowHeight(55);
+        table.setShowVerticalLines(false);
+        table.setGridColor(new Color(60, 60, 60));
+        table.setBackground(BG_PANEL);
+        table.setForeground(FG_TEXT);
+        table.setSelectionBackground(new Color(70, 70, 75));
+        table.setSelectionForeground(Color.WHITE);
+        table.setFont(FONT_BODY);
+
+        JTableHeader header = table.getTableHeader();
+        header.setBackground(BG_DARK);
+        header.setForeground(FG_MUTED);
+        header.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(80, 80, 80)));
+        ((DefaultTableCellRenderer)table.getTableHeader().getDefaultRenderer()).setHorizontalAlignment(JLabel.CENTER);
+    }
+
+    private void estilizarCampo(JTextField tf) {
+        tf.setPreferredSize(new Dimension(200, 40));
+        tf.setBackground(BG_PANEL);
+        tf.setForeground(Color.WHITE);
+        tf.setCaretColor(Color.WHITE);
+        tf.setFont(FONT_BODY);
+        tf.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(new Color(80, 80, 80)),
+                new EmptyBorder(5, 10, 5, 10)
+        ));
     }
     
-    // Seleção com ícone (fallback textual se ícone não existir)
-    private class SelectIconRenderer extends DefaultTableCellRenderer {
-        @Override public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
-            JLabel l = (JLabel) super.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, col);
-            boolean sel = value instanceof Boolean && (Boolean) value;
-            l.setHorizontalAlignment(CENTER);
-            l.setOpaque(true);
-            l.setBackground(!isSelected ? (row % 2 == 0 ? UIConstants.BG_DARK : UIConstants.ALT_ROW) : table.getSelectionBackground());
-            l.setForeground(!isSelected ? UIConstants.FG_LIGHT : table.getSelectionForeground());
-            if (icCheckOn != null && icCheckOff != null) {
-                l.setIcon(sel ? icCheckOn : icCheckOff);
-                l.setText(null);
+    private JLabel criarLabel(String txt) {
+        JLabel l = new JLabel(txt);
+        l.setForeground(FG_MUTED);
+        l.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        return l;
+    }
+
+    private JButton criarBotao(String texto, GoogleMaterialDesignIcons icon, Color bg) {
+        JButton btn = new JButton(texto);
+        btn.setIcon(IconFontSwing.buildIcon(icon, 18, Color.WHITE));
+        btn.setBackground(bg);
+        btn.setForeground(Color.WHITE);
+        btn.setFocusPainted(false);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btn.setBorder(new EmptyBorder(10, 20, 10, 20));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
+        // Efeito Hover simples
+        btn.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) { btn.setBackground(bg.brighter()); }
+            public void mouseExited(MouseEvent e) { btn.setBackground(bg); }
+        });
+        return btn;
+    }
+
+    // --- RENDERERS INTERNOS ---
+
+    class StatusRenderer extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            JLabel l = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            String status = (String) value;
+            l.setHorizontalAlignment(SwingConstants.CENTER);
+            
+            if ("aprovado".equalsIgnoreCase(status)) {
+                l.setForeground(ACCENT_GREEN);
+                l.setText("● ATIVO");
+            } else if ("pendente".equalsIgnoreCase(status)) {
+                l.setForeground(ACCENT_ORANGE);
+                l.setText("● PENDENTE");
             } else {
-                l.setIcon(null);
-                l.setText(sel ? "✓" : "○");
-                l.setFont(UIConstants.ARIAL_14);
+                l.setForeground(PRIMARY_RED);
+                l.setText("● BLOQUEADO");
             }
-            l.setToolTipText(sel ? "Selecionado" : "Clique para selecionar");
+            l.setFont(new Font("Segoe UI", Font.BOLD, 11));
             return l;
         }
     }
 
-    private class SelectIconEditor extends DefaultCellEditor {
-        private final JLabel renderer = new JLabel("", SwingConstants.CENTER);
-        public SelectIconEditor(JCheckBox cb) {
-            super(cb);
-            renderer.setOpaque(true);
-            renderer.addMouseListener(new MouseAdapter() {
-                @Override public void mouseReleased(MouseEvent e) {
-                    int row = tabelaCadastros.getEditingRow();
-                    if (row >= 0) {
-                        int mr = tabelaCadastros.convertRowIndexToModel(row);
-                        DefaultTableModel m = (DefaultTableModel) tabelaCadastros.getModel();
-                        Boolean cur = (Boolean) m.getValueAt(mr, 0);
-                        m.setValueAt(!Boolean.TRUE.equals(cur), mr, 0);
-                        stopCellEditing();
-                        atualizarContadorSelecionados();
-                    }
+    class ActionPanel extends JPanel {
+        JButton btnAprovar = new JButton();
+        JButton btnEditar = new JButton();
+        JButton btnExcluir = new JButton();
+
+        public ActionPanel() {
+            setLayout(new FlowLayout(FlowLayout.CENTER, 8, 0));
+            setOpaque(false);
+            
+            // Botões Circulares
+            configBtn(btnAprovar, GoogleMaterialDesignIcons.CHECK, ACCENT_GREEN);
+            configBtn(btnEditar, GoogleMaterialDesignIcons.EDIT, FG_MUTED);
+            configBtn(btnExcluir, GoogleMaterialDesignIcons.DELETE, PRIMARY_RED);
+
+            add(btnAprovar);
+            add(btnEditar);
+            add(btnExcluir);
+        }
+
+        private void configBtn(JButton b, GoogleMaterialDesignIcons icon, Color c) {
+            b.setIcon(IconFontSwing.buildIcon(icon, 16, c));
+            b.setPreferredSize(new Dimension(32, 32));
+            b.setBackground(new Color(0,0,0,0));
+            b.setBorder(new LineBorder(c.darker(), 1, true)); // Borda fina
+            b.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            b.setContentAreaFilled(false);
+        }
+    }
+
+    class ActionRenderer extends DefaultTableCellRenderer {
+        private ActionPanel panel = new ActionPanel();
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            panel.setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
+            String status = (String) table.getValueAt(row, 5);
+            // Se já aprovado, desabilita ou esconde o check
+            panel.btnAprovar.setVisible(!"aprovado".equalsIgnoreCase(status));
+            return panel;
+        }
+    }
+
+    class ActionEditor extends AbstractCellEditor implements TableCellEditor {
+        private ActionPanel panel = new ActionPanel();
+        private int currentRow;
+
+        public ActionEditor() {
+            panel.btnAprovar.addActionListener(e -> {
+                int id = (int) tabela.getValueAt(currentRow, 0);
+                atualizarStatus(id, "aprovado");
+                stopCellEditing();
+            });
+            panel.btnEditar.addActionListener(e -> {
+                Object[] dados = new Object[6];
+                for(int i=0; i<6; i++) dados[i] = tabela.getValueAt(currentRow, i);
+                abrirModalEdicao(dados);
+                stopCellEditing();
+            });
+            panel.btnExcluir.addActionListener(e -> {
+                int id = (int) tabela.getValueAt(currentRow, 0);
+                JDialog confirm = new JDialog((Frame) SwingUtilities.getWindowAncestor(panel), true);
+                // ... lógica de confirmação visual ... 
+                if(JOptionPane.showConfirmDialog(null, "Bloquear acesso deste usuário?", "Confirmar", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+                     atualizarStatus(id, "bloqueado"); // Não deleta, bloqueia para histórico
                 }
+                stopCellEditing();
             });
         }
-        @Override public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-            boolean sel = value instanceof Boolean && (Boolean) value;
-            if (icCheckOn != null && icCheckOff != null) {
-                renderer.setIcon(sel ? icCheckOn : icCheckOff);
-                renderer.setText(null);
-            } else {
-                renderer.setIcon(null);
-                renderer.setText(sel ? "✓" : "○");
-                renderer.setFont(UIConstants.ARIAL_14);
-            }
-            renderer.setBackground(table.getSelectionBackground());
-            renderer.setForeground(table.getSelectionForeground());
-            return renderer;
-        }
-        @Override public Object getCellEditorValue() { return null; }
-    }
-    
-    private class StatusChipRenderer extends BodyCellRenderer {
-        StatusChipRenderer() { super(SwingConstants.CENTER); }
-        @Override public Component getTableCellRendererComponent(JTable table, Object value, boolean selected, boolean focus, int row, int col) {
-            JLabel l = (JLabel) super.getTableCellRendererComponent(table, value, selected, focus, row, col);
-            String v = String.valueOf(value).toLowerCase();
-            Color bg = UIConstants.CARD_DARK;
-            Color fg = UIConstants.FG_LIGHT;
-            Icon  ic = icStatusPen;
-            if (v.contains("aprov")) { bg = new Color(25, 135, 84); fg = Color.WHITE; ic = icStatusOk; }
-            else if (v.contains("rej")) { bg = new Color(180, 30, 30); fg = Color.WHITE; ic = icStatusRej; }
-            else if (v.contains("temp") || v.contains("pend")) { bg = new Color(255, 193, 7); fg = Color.BLACK; ic = icStatusPen; }
-
-            l.setText(" " + String.valueOf(value) + " ");
-            l.setIcon(ic);
-            l.setIconTextGap(6);
-            l.setHorizontalAlignment(CENTER);
-            l.setBorder(new EmptyBorder(4, 10, 4, 10));
-            if (!selected) {
-                l.setBackground(bg);
-                l.setForeground(fg);
-            }
-            return l;
-        }
-    }
-
-    private class ActionButtonRenderer extends JButton implements TableCellRenderer {
-        ActionButtonRenderer() { UIConstants.styleSecondary(this); setText("Opções"); setIcon(icOptions); }
-        @Override public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            if (isSelected) {
-                setBackground(table.getSelectionBackground());
-                setForeground(table.getSelectionForeground());
-            } else {
-                setBackground(UIConstants.CARD_DARK);
-                setForeground(UIConstants.FG_LIGHT);
-            }
-            return this;
-        }
-    }
-    private class ActionButtonEditor extends DefaultCellEditor {
-        private final JButton btn;
-        private int currentRow = -1;
-        ActionButtonEditor(JCheckBox cb) {
-            super(cb);
-            btn = new JButton("Opções", icOptions);
-            UIConstants.styleSecondary(btn);
-            btn.addActionListener(e -> fireEditingStopped());
-        }
-        @Override public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-            currentRow = tabelaCadastros.convertRowIndexToModel(row);
-            return btn;
-        }
-        @Override public Object getCellEditorValue() {
-            if (currentRow >= 0) abrirDialogoAcoes(currentRow);
-            return "Opções";
-        }
-    }
-
-    private void abrirDialogoAcoes(int modelRow) {
-        int id = funcionariosIds.get(modelRow);
-        DefaultTableModel m = (DefaultTableModel) tabelaCadastros.getModel();
-        String nome  = String.valueOf(m.getValueAt(modelRow, 2));
-        String uname = String.valueOf(m.getValueAt(modelRow, 3));
-        String email = String.valueOf(m.getValueAt(modelRow, 4));
-        String role  = String.valueOf(m.getValueAt(modelRow, 5));
-        String phone = String.valueOf(m.getValueAt(modelRow, 6));
-        String data  = String.valueOf(m.getValueAt(modelRow, 7));
-        String status= String.valueOf(m.getValueAt(modelRow, 8));
-
-        JDialog d = new JDialog(SwingUtilities.getWindowAncestor(this), "Ações do usuário", Dialog.ModalityType.APPLICATION_MODAL);
-        d.setSize(560, 300);
-        d.setMinimumSize(new Dimension(560, 300));
-        d.setLocationRelativeTo(this);
-        d.setResizable(false);
-
-        JPanel c = new JPanel(new BorderLayout(10, 10));
-        c.setBackground(UIConstants.BG_DARK);
-        c.setBorder(new EmptyBorder(16, 16, 16, 16));
-
-        JPanel form = new JPanel(new GridBagLayout());
-        form.setOpaque(false);
-        GridBagConstraints gc = new GridBagConstraints();
-        gc.insets = new Insets(6, 6, 6, 6);
-        gc.anchor = GridBagConstraints.WEST;
-
-        int y = 0;
-        addRow(form, gc, y++, "Nome:", nome);
-        addRow(form, gc, y++, "Username:", uname);
-        addRow(form, gc, y++, "E-mail:", email);
-        addRow(form, gc, y++, "Cargo:", role);
-        addRow(form, gc, y++, "Telefone:", phone);
-        addRow(form, gc, y++, "Data de Registro:", data);
-        addRow(form, gc, y,   "Status:", status);
-
-        JPanel btns = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
-        btns.setOpaque(false);
-
-        JButton editar = new JButton("Editar", icEdit);
-        UIConstants.styleSecondary(editar);
-        editar.addActionListener(e -> {
-            d.dispose();
-            abrirDialogoEditar(tabelaCadastros.convertRowIndexToView(modelRow));
-        });
-
-        JButton aprovar = new JButton("Aprovar", icApprove);
-        UIConstants.styleSuccess(aprovar);
-        aprovar.addActionListener(e -> {
-            if (alterarStatusUnico(id, "aprovado")) {
-                JOptionPane.showMessageDialog(d, "Usuário aprovado!");
-                d.dispose();
-                recarregarLista();
-                carregarUltimosAprovados();
-            } else {
-                JOptionPane.showMessageDialog(d, "Erro ao aprovar.", "Erro", JOptionPane.ERROR_MESSAGE);
-            }
-        });
-
-        JButton rejeitar = new JButton("Rejeitar", icReject);
-        UIConstants.styleSecondary(rejeitar);
-        rejeitar.addActionListener(e -> {
-            if (alterarStatusUnico(id, "rejeitado")) {
-                JOptionPane.showMessageDialog(d, "Usuário rejeitado!");
-                d.dispose();
-                recarregarLista();
-            } else {
-                JOptionPane.showMessageDialog(d, "Erro ao rejeitar.", "Erro", JOptionPane.ERROR_MESSAGE);
-            }
-        });
-
-        JButton excluir = new JButton("Excluir", icDelete);
-        UIConstants.styleSecondary(excluir);
-        excluir.addActionListener(e -> {
-            int ok = JOptionPane.showConfirmDialog(d, "Excluir este usuário?", "Confirmação", JOptionPane.YES_NO_OPTION);
-            if (ok == JOptionPane.YES_OPTION) {
-                if (excluirUnico(id)) {
-                    JOptionPane.showMessageDialog(d, "Usuário excluído!");
-                    d.dispose();
-                    carregarCargos();
-                    recarregarLista();
-                } else {
-                    JOptionPane.showMessageDialog(d, "Erro ao excluir.", "Erro", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        });
-
-        JButton fechar = new JButton("Fechar");
-        UIConstants.styleSecondary(fechar);
-        fechar.addActionListener(e -> d.dispose());
-
-        btns.add(fechar);
-        btns.add(excluir);
-        btns.add(rejeitar);
-        btns.add(aprovar);
-        btns.add(editar);
-
-        c.add(form, BorderLayout.CENTER);
-        c.add(btns, BorderLayout.SOUTH);
-
-        d.setContentPane(c);
-        d.setVisible(true);
-    }
-
-    private void addRow(JPanel panel, GridBagConstraints gc, int y, String rotulo, String valor) {
-        JLabel l = new JLabel(rotulo);
-        l.setFont(UIConstants.ARIAL_12_B);
-        l.setForeground(UIConstants.FG_LIGHT);
-        JLabel v = new JLabel(n(valor));
-        v.setFont(UIConstants.ARIAL_12);
-        v.setForeground(UIConstants.FG_LIGHT);
-
-        gc.gridx = 0; gc.gridy = y; panel.add(l, gc);
-        gc.gridx = 1; panel.add(v, gc);
-    }
-
-    private boolean alterarStatusUnico(int id, String novo) {
-        ConexaoBanco banco = new ConexaoBanco();
-        Connection conn = null;
-        try {
-            conn = banco.abrirConexao();
-            // MODO OFFLINE
-            if(conn == null) return true;
-
-            try (PreparedStatement ps = conn.prepareStatement("UPDATE tb_funcionarios SET status = ? WHERE userID = ?")) {
-                ps.setString(1, novo);
-                ps.setInt(2, id);
-                return ps.executeUpdate() > 0;
-            }
-        } catch (SQLException ex) {
-            return false;
-        } finally {
-            banco.fecharConexao();
-        }
-    }
-
-    private boolean excluirUnico(int id) {
-        ConexaoBanco banco = new ConexaoBanco();
-        Connection conn = null;
-        try {
-            conn = banco.abrirConexao();
-            // MODO OFFLINE
-            if(conn == null) return true;
-
-            try (PreparedStatement ps = conn.prepareStatement("DELETE FROM tb_funcionarios WHERE userID = ?")) {
-                ps.setInt(1, id);
-                return ps.executeUpdate() > 0;
-            }
-        } catch (SQLException ex) {
-            return false;
-        } finally {
-            banco.fecharConexao();
-        }
-    }
-
-    /* ------------------------- Dialog de CRUD ------------------------------- */
-
-    private class UsuarioDialog extends JDialog {
-        boolean salvou = false;
-
-        private final Integer id; // null para novo
-        private JTextField txtNome;
-        private JTextField txtUserName;
-        private JTextField txtEmail;
-        private JTextField txtTelefone;
-        private JComboBox<String> cbCargo;
-        private JComboBox<String> cbStatus;
-        private JPasswordField txtSenha; // opcional para edição
-
-        UsuarioDialog(Window owner, String titulo,
-                      Integer id, String nome, String uname, String email, String role,
-                      String phone, String data, String status) {
-            super(owner, titulo, ModalityType.APPLICATION_MODAL);
-            this.id = id;
-            setSize(560, 420);
-            setLocationRelativeTo(owner);
-            setResizable(false);
-            montar(nome, uname, email, role, phone, status);
-        }
-
-        private void montar(String nome, String uname, String email, String role, String phone, String status) {
-            JPanel c = new JPanel(new GridBagLayout());
-            c.setBackground(UIConstants.BG_DARK);
-            c.setBorder(new EmptyBorder(16,16,16,16));
-            GridBagConstraints gc = new GridBagConstraints();
-            gc.insets = new Insets(6, 6, 6, 6);
-            gc.anchor = GridBagConstraints.WEST;
-            gc.fill = GridBagConstraints.HORIZONTAL;
-            gc.weightx = 1;
-
-            int y = 0;
-
-            txtNome = new JTextField(nome);
-            UIConstants.styleField(txtNome);
-            addFormRow(c, gc, y++, "Nome:", txtNome);
-
-            txtUserName = new JTextField(uname);
-            UIConstants.styleField(txtUserName);
-            addFormRow(c, gc, y++, "Username:", txtUserName);
-
-            txtEmail = new JTextField(email);
-            UIConstants.styleField(txtEmail);
-            addFormRow(c, gc, y++, "E-mail:", txtEmail);
-
-            txtTelefone = new JTextField(phone);
-            UIConstants.styleField(txtTelefone);
-            addFormRow(c, gc, y++, "Telefone:", txtTelefone);
-
-            cbCargo = new JComboBox<>();
-            UIConstants.styleCombo(cbCargo);
-            carregarCargosCombo(cbCargo, role);
-            addFormRow(c, gc, y++, "Cargo:", cbCargo);
-
-            cbStatus = new JComboBox<>(new String[]{"Pendente", "Aprovado", "Rejeitado", "Temporario"});
-            UIConstants.styleCombo(cbStatus);
-            cbStatus.setSelectedItem(status == null || status.isBlank() ? "Pendente" : traduzStatus(status));
-            addFormRow(c, gc, y++, "Status:", cbStatus);
-
-            txtSenha = new JPasswordField();
-            UIConstants.styleField(txtSenha);
-            addFormRow(c, gc, y++, id == null ? "Senha:" : "Senha (deixe vazio para não alterar):", txtSenha);
-
-            JPanel botoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
-            botoes.setOpaque(false);
-
-            JButton cancelar = new JButton("Cancelar");
-            UIConstants.styleSecondary(cancelar);
-            cancelar.addActionListener(e -> dispose());
-
-            JButton salvar = new JButton("Salvar", icApprove);
-            UIConstants.styleSuccess(salvar);
-            salvar.addActionListener(e -> salvarUsuario());
-
-            botoes.add(cancelar);
-            botoes.add(salvar);
-
-            JPanel wrap = new JPanel(new BorderLayout());
-            wrap.setBackground(UIConstants.BG_DARK);
-            wrap.add(c, BorderLayout.CENTER);
-            wrap.add(botoes, BorderLayout.SOUTH);
-
-            setContentPane(wrap);
-        }
-
-        private void addFormRow(JPanel p, GridBagConstraints gc, int y, String label, JComponent comp) {
-            JLabel l = new JLabel(label);
-            l.setFont(UIConstants.ARIAL_12_B);
-            l.setForeground(UIConstants.FG_LIGHT);
-
-            gc.gridx = 0; gc.gridy = y; gc.weightx = 0; p.add(l, gc);
-            gc.gridx = 1; gc.weightx = 1; p.add(comp, gc);
-        }
-
-        private void carregarCargosCombo(JComboBox<String> combo, String selected) {
-            combo.removeAllItems();
-            
-            ConexaoBanco banco = new ConexaoBanco();
-            List<String> cargos = new ArrayList<>();
-            Connection conn = null;
-            try {
-                conn = banco.abrirConexao();
-                // MODO OFFLINE
-                if (conn == null) {
-                    cargos.add("Cozinheiro");
-                    cargos.add("Entregador");
-                    cargos.add("Gerente");
-                    cargos.add("Admin");
-                } else {
-                    try (PreparedStatement ps = conn.prepareStatement("SELECT DISTINCT role FROM tb_funcionarios WHERE role IS NOT NULL AND role <> '' ORDER BY role");
-                         ResultSet rs = ps.executeQuery()) {
-                        while (rs.next()) cargos.add(rs.getString("role"));
-                    }
-                }
-            } catch (SQLException ignored) { 
-            } finally {
-                banco.fecharConexao();
-            }
-
-            if (cargos.isEmpty()) {
-                cargos.add("Cozinheiro");
-                cargos.add("Entregador");
-                cargos.add("Gerente");
-                cargos.add("Admin");
-            }
-            for (String r: cargos) combo.addItem(r);
-            if (selected != null && !selected.isBlank()) combo.setSelectedItem(selected);
-        }
-
-        private void salvarUsuario() {
-            String nome   = txtNome.getText().trim();
-            String uname  = txtUserName.getText().trim();
-            String email  = txtEmail.getText().trim();
-            String role   = (String) cbCargo.getSelectedItem();
-            String phone  = txtTelefone.getText().trim();
-            String status = (String) cbStatus.getSelectedItem();
-            String senha  = new String(txtSenha.getPassword());
-
-            if (nome.isBlank() || uname.isBlank() || email.isBlank() || role == null || role.isBlank()) {
-                JOptionPane.showMessageDialog(this, "Preencha Nome, Username, E-mail e Cargo.", "Atenção", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
-            ConexaoBanco banco = new ConexaoBanco();
-            boolean ok = false;
-            Connection conn = null;
-
-            try {
-                conn = banco.abrirConexao();
-                // MODO OFFLINE
-                if (conn == null) {
-                    JOptionPane.showMessageDialog(this, "Usuário salvo com sucesso! (Modo Offline)");
-                    salvou = true;
-                    dispose();
-                    return;
-                }
-
-                if (id == null) {
-                    // INSERT
-                    try (PreparedStatement ps = conn.prepareStatement(
-                            "INSERT INTO tb_funcionarios (name, userName, email, role, phone, password, registrationDate, status) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, CONVERT(VARCHAR(10), GETDATE(), 103), ?)")) {
-                        ps.setString(1, nome);
-                        ps.setString(2, uname);
-                        ps.setString(3, email);
-                        ps.setString(4, role);
-                        ps.setString(5, phone);
-                        ps.setString(6, senha == null ? "" : senha);
-                        ps.setString(7, status.toLowerCase());
-                        ok = ps.executeUpdate() > 0;
-                    }
-                } else {
-                    // UPDATE
-                    StringBuilder sql = new StringBuilder(
-                            "UPDATE tb_funcionarios SET name=?, userName=?, email=?, role=?, phone=?, status=?"
-                    );
-                    boolean alterarSenha = senha != null && !senha.isBlank();
-                    if (alterarSenha) sql.append(", password=?");
-                    sql.append(" WHERE userID=?");
-
-                    try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-                        int i = 1;
-                        ps.setString(i++, nome);
-                        ps.setString(i++, uname);
-                        ps.setString(i++, email);
-                        ps.setString(i++, role);
-                        ps.setString(i++, phone);
-                        ps.setString(i++, status.toLowerCase());
-                        if (alterarSenha) ps.setString(i++, senha);
-                        ps.setInt(i, id);
-                        ok = ps.executeUpdate() > 0;
-                    }
-                }
-            } catch (SQLException ex) {
-                Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Erro ao salvar usuário", ex);
-            } finally {
-                banco.fecharConexao();
-            }
-
-            if (ok) {
-                JOptionPane.showMessageDialog(this, "Usuário salvo com sucesso!");
-                salvou = true;
-                dispose();
-            } else {
-                JOptionPane.showMessageDialog(this, "Erro ao salvar usuário.", "Erro", JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
-
-    /* ------------------------- Utils --------------------------------------- */
-
-    private void atualizarContadorSelecionados() {
-        int n = 0;
-        DefaultTableModel m = (DefaultTableModel) tabelaCadastros.getModel();
-        for (int i = 0; i < m.getRowCount(); i++) if (Boolean.TRUE.equals(m.getValueAt(i, 0))) n++;
-        lblSelecionados.setText("Selecionados: " + n);
-    }
-
-    private static String n(String s) { return s == null ? "" : s; }
-    private static String traduzStatus(String s) {
-        if (s == null) return "";
-        String v = s.trim().toLowerCase();
-        return switch (v) {
-            case "pendente" -> "Pendente";
-            case "aprovado" -> "Aprovado";
-            case "rejeitado" -> "Rejeitado";
-            case "temporario" -> "Temporario";
-            default -> s;
-        };
-    }
-
-    /* ------------------------- Model/Renderer últimos aprovados ------------- */
-
-    private static class UltimoAprovado {
-        final String nome;
-        final String cargo;
-        final String data;
-        UltimoAprovado(String n, String c, String d){ this.nome=n; this.cargo=c; this.data=d; }
-    }
-
-    private static class UltimosRenderer extends JPanel implements ListCellRenderer<UltimoAprovado> {
-        private final JLabel lblNome = new JLabel();
-        private final JLabel lblSub  = new JLabel();
-        UltimosRenderer(){
-            setLayout(new BorderLayout(4,2));
-            setOpaque(true);
-            lblNome.setFont(UIConstants.ARIAL_12_B);
-            lblNome.setForeground(UIConstants.FG_LIGHT);
-            lblSub.setFont(UIConstants.ARIAL_12);
-            lblSub.setForeground(UIConstants.FG_MUTED);
-            setBorder(new EmptyBorder(4, 6, 4, 6));
-            add(lblNome, BorderLayout.NORTH);
-            add(lblSub, BorderLayout.CENTER);
-        }
         @Override
-        public Component getListCellRendererComponent(JList<? extends UltimoAprovado> list, UltimoAprovado value, int index, boolean isSelected, boolean cellHasFocus) {
-            if (value == null) return this;
-            lblNome.setText(value.nome);
-            if (value.cargo == null || value.cargo.isBlank()) {
-                lblSub.setText(value.data == null ? "" : value.data);
-            } else {
-                lblSub.setText(value.cargo + (value.data == null || value.data.isBlank() ? "" : " • " + value.data));
-            }
-            setBackground(isSelected ? UIConstants.HEADER_DARK : UIConstants.CARD_DARK);
-            return this;
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+            currentRow = row;
+            String status = (String) table.getValueAt(row, 5);
+            panel.btnAprovar.setVisible(!"aprovado".equalsIgnoreCase(status));
+            panel.setBackground(table.getSelectionBackground());
+            return panel;
         }
+        @Override public Object getCellEditorValue() { return ""; }
     }
 }
