@@ -6,28 +6,14 @@ import jiconfont.swing.IconFontSwing;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.geom.RoundRectangle2D;
 import java.sql.*;
 
 public class AprovacaoCadastrosPanel extends JPanel {
-
-    // --- CORES & CONSTANTES (Design System Local para garantir funcionamento) ---
-    private final Color BG_DARK = new Color(30, 30, 30);
-    private final Color BG_PANEL = new Color(45, 45, 48);
-    private final Color FG_TEXT = new Color(240, 240, 240);
-    private final Color FG_MUTED = new Color(160, 160, 160);
-    private final Color PRIMARY_RED = new Color(188, 16, 21);
-    private final Color ACCENT_GREEN = new Color(39, 174, 96);
-    private final Color ACCENT_ORANGE = new Color(230, 126, 34);
-    private final Font FONT_TITLE = new Font("Segoe UI", Font.BOLD, 24);
-    private final Font FONT_BODY = new Font("Segoe UI", Font.PLAIN, 14);
-    private final Font FONT_BOLD = new Font("Segoe UI", Font.BOLD, 14);
 
     // Componentes
     private JTable tabela;
@@ -35,18 +21,21 @@ public class AprovacaoCadastrosPanel extends JPanel {
     private JTextField txtBusca;
     private JLabel lblTotalPendentes;
     private JLabel lblTotalAtivos;
+    
+    // Cor específica para status "Pendente" (pode ser movida para UIConstants futuramente se usada em outros lugares)
+    private final Color STATUS_PENDING = new Color(230, 126, 34);
 
     public AprovacaoCadastrosPanel() {
         setLayout(new BorderLayout());
-        setBackground(BG_DARK);
+        UIConstants.stylePanel(this); // Aplica fundo e borda padrão
 
         // 1. HEADER
         add(criarHeader(), BorderLayout.NORTH);
 
         // 2. CORPO
         JPanel corpo = new JPanel(new BorderLayout(0, 20));
-        corpo.setBackground(BG_DARK);
-        corpo.setBorder(new EmptyBorder(10, 30, 30, 30));
+        corpo.setBackground(UIConstants.BG_DARK);
+        corpo.setBorder(new EmptyBorder(10, 20, 10, 20));
 
         corpo.add(criarToolbar(), BorderLayout.NORTH);
         corpo.add(criarTabela(), BorderLayout.CENTER);
@@ -60,14 +49,14 @@ public class AprovacaoCadastrosPanel extends JPanel {
     // --- SEÇÃO 1: HEADER ---
     private JPanel criarHeader() {
         JPanel p = new JPanel(new BorderLayout());
-        p.setBackground(BG_DARK);
-        p.setBorder(new EmptyBorder(25, 30, 15, 30));
+        p.setBackground(UIConstants.BG_DARK);
+        p.setBorder(new EmptyBorder(15, 10, 15, 10));
 
         // Título e Ícone
         JLabel titulo = new JLabel("Gestão de Equipe");
-        titulo.setFont(FONT_TITLE);
-        titulo.setForeground(FG_TEXT);
-        titulo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.SUPERVISOR_ACCOUNT, 32, FG_TEXT));
+        titulo.setFont(UIConstants.FONT_TITLE); // Usa fonte do UIConstants
+        titulo.setForeground(UIConstants.FG_LIGHT);
+        titulo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.SUPERVISOR_ACCOUNT, 32, UIConstants.FG_LIGHT));
         titulo.setIconTextGap(15);
         p.add(titulo, BorderLayout.WEST);
 
@@ -75,8 +64,8 @@ public class AprovacaoCadastrosPanel extends JPanel {
         JPanel cards = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
         cards.setOpaque(false);
 
-        lblTotalPendentes = criarBadgeInfo("Pendentes", ACCENT_ORANGE);
-        lblTotalAtivos = criarBadgeInfo("Ativos", ACCENT_GREEN);
+        lblTotalPendentes = criarBadgeInfo("Pendentes", STATUS_PENDING);
+        lblTotalAtivos = criarBadgeInfo("Ativos", UIConstants.SUCCESS_GREEN);
 
         cards.add(lblTotalAtivos);
         cards.add(lblTotalPendentes);
@@ -92,15 +81,15 @@ public class AprovacaoCadastrosPanel extends JPanel {
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(getBackground());
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12); // Arredondamento padrão
                 super.paintComponent(g);
             }
         };
-        l.setFont(FONT_BOLD);
+        l.setFont(UIConstants.FONT_BOLD);
         l.setForeground(Color.WHITE);
         l.setBackground(cor);
-        l.setOpaque(false); // Custom paint
-        l.setBorder(new EmptyBorder(8, 15, 8, 15));
+        l.setOpaque(false); 
+        l.setBorder(new EmptyBorder(5, 12, 5, 12));
         l.setHorizontalAlignment(SwingConstants.CENTER);
         return l;
     }
@@ -112,7 +101,8 @@ public class AprovacaoCadastrosPanel extends JPanel {
 
         // Campo de Busca
         txtBusca = new JTextField();
-        estilizarCampo(txtBusca);
+        UIConstants.styleField(txtBusca); // ESTILIZAÇÃO CENTRALIZADA
+        txtBusca.setPreferredSize(new Dimension(300, 40));
         txtBusca.putClientProperty("JTextField.placeholderText", "Buscar nome, e-mail ou cargo...");
         txtBusca.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(DocumentEvent e) { filtrar(); }
@@ -124,10 +114,16 @@ public class AprovacaoCadastrosPanel extends JPanel {
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         btnPanel.setOpaque(false);
 
-        JButton btnNovo = criarBotao("Novo Usuário", GoogleMaterialDesignIcons.PERSON_ADD, PRIMARY_RED);
+        JButton btnNovo = new JButton("Novo Usuário");
+        btnNovo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.PERSON_ADD, 18, Color.WHITE));
+        UIConstants.stylePrimary(btnNovo); // ESTILIZAÇÃO CENTRALIZADA
+        btnNovo.setPreferredSize(new Dimension(160, 40));
         btnNovo.addActionListener(e -> abrirModalEdicao(null)); 
 
-        JButton btnAtualizar = criarBotao("Atualizar", GoogleMaterialDesignIcons.REFRESH, new Color(60, 60, 60));
+        JButton btnAtualizar = new JButton("Atualizar");
+        btnAtualizar.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.REFRESH, 18, UIConstants.FG_LIGHT));
+        UIConstants.styleSecondary(btnAtualizar); // ESTILIZAÇÃO CENTRALIZADA
+        btnAtualizar.setPreferredSize(new Dimension(130, 40));
         btnAtualizar.addActionListener(e -> carregarDados(""));
 
         btnPanel.add(btnNovo);
@@ -155,7 +151,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
         };
 
         tabela = new JTable(modeloTabela);
-        estilizarTabela(tabela);
+        UIConstants.styleTable(tabela); // ESTILIZAÇÃO CENTRALIZADA
 
         // Renderizadores
         tabela.getColumnModel().getColumn(5).setCellRenderer(new StatusRenderer());
@@ -170,8 +166,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
         tabela.getColumnModel().getColumn(6).setMaxWidth(160);
 
         JScrollPane scroll = new JScrollPane(tabela);
-        scroll.setBorder(new LineBorder(new Color(60,60,60)));
-        scroll.getViewport().setBackground(BG_PANEL);
+        UIConstants.styleScrollPane(scroll); // ESTILIZAÇÃO CENTRALIZADA
 
         return scroll;
     }
@@ -189,12 +184,12 @@ public class AprovacaoCadastrosPanel extends JPanel {
         sql += " ORDER BY CASE WHEN status = 'pendente' THEN 0 ELSE 1 END, name ASC";
 
         ConexaoBanco cb = new ConexaoBanco();
+        Connection conn = null;
         try {
-            if (cb.conn == null || cb.conn.isClosed()) {
-                cb.conn = DriverManager.getConnection("jdbc:sqlserver://127.0.0.1:1433;databaseName=FoodVerseDB;encrypt=false;trustServerCertificate=true;loginTimeout=5", "sa", "123456");
-            }
+            conn = cb.abrirConexao();
+            if (conn == null) throw new SQLException("Modo Offline");
 
-            PreparedStatement ps = cb.conn.prepareStatement(sql);
+            PreparedStatement ps = conn.prepareStatement(sql);
             if (!filtro.isEmpty()) {
                 String f = "%" + filtro + "%";
                 ps.setString(1, f);
@@ -222,12 +217,14 @@ public class AprovacaoCadastrosPanel extends JPanel {
             }
 
             lblTotalPendentes.setText(pendentes + " Pendentes");
-            lblTotalPendentes.setBackground(pendentes > 0 ? ACCENT_ORANGE : new Color(60,60,60));
+            lblTotalPendentes.setBackground(pendentes > 0 ? STATUS_PENDING : UIConstants.CARD_DARK);
             lblTotalAtivos.setText(ativos + " Ativos");
 
         } catch (Exception e) {
             // Fallback visual
             modeloTabela.addRow(new Object[]{0, "Sistema Offline", "-", "-", "Admin", "erro", ""});
+        } finally {
+            cb.fecharConexao();
         }
     }
 
@@ -235,107 +232,81 @@ public class AprovacaoCadastrosPanel extends JPanel {
         String sql = "UPDATE tb_funcionarios SET status = ? WHERE userID = ?";
         ConexaoBanco cb = new ConexaoBanco();
         try {
-            if (cb.conn == null) cb.conn = DriverManager.getConnection("jdbc:sqlserver://127.0.0.1:1433;databaseName=FoodVerseDB;encrypt=false", "sa", "123456");
-            PreparedStatement ps = cb.conn.prepareStatement(sql);
-            ps.setString(1, novoStatus);
-            ps.setInt(2, id);
-            ps.executeUpdate();
-            
-            mostrarMensagemPersonalizada("Status atualizado com sucesso!", false);
-            carregarDados(txtBusca.getText());
+            Connection conn = cb.abrirConexao();
+            if (conn != null) {
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ps.setString(1, novoStatus);
+                ps.setInt(2, id);
+                ps.executeUpdate();
+                
+                // MENSAGEM PADRONIZADA
+                UIConstants.showSuccess(this, "Status atualizado para: " + novoStatus);
+                carregarDados(txtBusca.getText());
+                cb.fecharConexao();
+            }
         } catch (Exception e) {
-            mostrarMensagemPersonalizada("Erro: " + e.getMessage(), true);
+            UIConstants.showError(this, "Erro: " + e.getMessage());
         }
-    }
-    
-    // --- MENSAGENS E MODAIS CUSTOMIZADOS ---
-    
-    private void mostrarMensagemPersonalizada(String msg, boolean isErro) {
-        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), true);
-        dialog.setUndecorated(true);
-        dialog.setBackground(new Color(0,0,0,0));
-        
-        JPanel p = new JPanel(new BorderLayout(15, 0));
-        p.setBackground(new Color(40, 40, 40));
-        p.setBorder(BorderFactory.createCompoundBorder(
-            new LineBorder(isErro ? PRIMARY_RED : ACCENT_GREEN, 1),
-            new EmptyBorder(20, 20, 20, 20)
-        ));
-        
-        JLabel icon = new JLabel(IconFontSwing.buildIcon(
-            isErro ? GoogleMaterialDesignIcons.ERROR : GoogleMaterialDesignIcons.CHECK_CIRCLE, 
-            32, isErro ? PRIMARY_RED : ACCENT_GREEN));
-            
-        JLabel text = new JLabel("<html><div style='width: 250px;'>"+msg+"</div></html>");
-        text.setFont(FONT_BODY);
-        text.setForeground(FG_TEXT);
-        
-        JButton btnOk = criarBotao("OK", GoogleMaterialDesignIcons.CHECK, new Color(60,60,60));
-        btnOk.addActionListener(e -> dialog.dispose());
-        
-        p.add(icon, BorderLayout.WEST);
-        p.add(text, BorderLayout.CENTER);
-        p.add(btnOk, BorderLayout.SOUTH);
-        
-        dialog.add(p);
-        dialog.pack();
-        dialog.setLocationRelativeTo(this);
-        dialog.setVisible(true);
     }
 
     // --- MODAL DE EDIÇÃO/CRIAÇÃO CORRIGIDO ---
     private void abrirModalEdicao(Object[] dadosAtuais) {
         JDialog modal = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Gerenciar Usuário", true);
-        modal.setSize(450, 600); // Aumentado para evitar corte
+        modal.setSize(450, 550);
         modal.setLocationRelativeTo(this);
-        modal.getContentPane().setBackground(BG_DARK);
+        modal.getContentPane().setBackground(UIConstants.BG_DARK);
         modal.setLayout(new BorderLayout());
 
-        // Painel de Conteúdo com GridBagLayout para controle total
+        // Painel de Conteúdo
         JPanel form = new JPanel(new GridBagLayout());
-        form.setBackground(BG_DARK);
+        form.setBackground(UIConstants.BG_DARK);
         form.setBorder(new EmptyBorder(20, 30, 20, 30));
         
         GridBagConstraints gc = new GridBagConstraints();
         gc.fill = GridBagConstraints.HORIZONTAL;
-        gc.insets = new Insets(5, 0, 15, 0); // Espaçamento vertical
+        gc.insets = new Insets(5, 0, 15, 0); 
         gc.gridx = 0; gc.gridy = 0;
         
-        // Título do Modal
+        // Título
         JLabel lblTitulo = new JLabel(dadosAtuais == null ? "Novo Cadastro" : "Editar Cadastro");
-        lblTitulo.setFont(FONT_TITLE);
-        lblTitulo.setForeground(FG_TEXT);
+        lblTitulo.setFont(UIConstants.FONT_TITLE);
+        lblTitulo.setForeground(UIConstants.FG_LIGHT);
         form.add(lblTitulo, gc);
         
+        // Campos
         gc.gridy++; gc.insets = new Insets(20, 0, 5, 0);
         form.add(criarLabel("Nome Completo"), gc);
         gc.gridy++; gc.insets = new Insets(0, 0, 15, 0);
-        JTextField tNome = new JTextField(); estilizarCampo(tNome);
+        JTextField tNome = new JTextField(); 
+        UIConstants.styleField(tNome); // Padronizado
         form.add(tNome, gc);
         
         gc.gridy++; gc.insets = new Insets(0, 0, 5, 0);
         form.add(criarLabel("Usuário (Login)"), gc);
         gc.gridy++; gc.insets = new Insets(0, 0, 15, 0);
-        JTextField tUser = new JTextField(); estilizarCampo(tUser);
+        JTextField tUser = new JTextField(); 
+        UIConstants.styleField(tUser); // Padronizado
         form.add(tUser, gc);
         
         gc.gridy++; gc.insets = new Insets(0, 0, 5, 0);
         form.add(criarLabel("E-mail"), gc);
         gc.gridy++; gc.insets = new Insets(0, 0, 15, 0);
-        JTextField tEmail = new JTextField(); estilizarCampo(tEmail);
+        JTextField tEmail = new JTextField(); 
+        UIConstants.styleField(tEmail); // Padronizado
         form.add(tEmail, gc);
         
         gc.gridy++; gc.insets = new Insets(0, 0, 5, 0);
         form.add(criarLabel("Cargo"), gc);
         gc.gridy++; gc.insets = new Insets(0, 0, 15, 0);
         JComboBox<String> cRole = new JComboBox<>(new String[]{"Cozinheiro", "Entregador", "Atendente", "Gerente", "Admin"});
-        cRole.setBackground(BG_PANEL); cRole.setForeground(Color.WHITE);
+        UIConstants.styleCombo(cRole); // Padronizado
         form.add(cRole, gc);
         
         gc.gridy++; gc.insets = new Insets(0, 0, 5, 0);
         form.add(criarLabel(dadosAtuais == null ? "Senha" : "Nova Senha (deixe vazio para manter)"), gc);
         gc.gridy++; gc.insets = new Insets(0, 0, 15, 0);
-        JPasswordField tSenha = new JPasswordField(); estilizarCampo(tSenha);
+        JPasswordField tSenha = new JPasswordField(); 
+        UIConstants.styleField(tSenha); // Padronizado
         form.add(tSenha, gc);
         
         // Preencher dados se for edição
@@ -348,18 +319,20 @@ public class AprovacaoCadastrosPanel extends JPanel {
         
         modal.add(form, BorderLayout.CENTER);
         
-        // Botões do Modal
+        // Botões
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        btnPanel.setBackground(BG_DARK);
+        btnPanel.setBackground(UIConstants.BG_DARK);
         btnPanel.setBorder(new EmptyBorder(10, 20, 20, 20));
         
-        JButton btnCancelar = criarBotao("Cancelar", GoogleMaterialDesignIcons.CLOSE, new Color(80, 80, 80));
+        JButton btnCancelar = new JButton("Cancelar");
+        UIConstants.styleSecondary(btnCancelar); // Padronizado
         btnCancelar.addActionListener(e -> modal.dispose());
         
-        JButton btnSalvar = criarBotao("SALVAR", GoogleMaterialDesignIcons.SAVE, ACCENT_GREEN);
+        JButton btnSalvar = new JButton("SALVAR");
+        UIConstants.styleSuccess(btnSalvar); // Padronizado
         btnSalvar.addActionListener(e -> {
-            // Simulação de Salvamento
-            mostrarMensagemPersonalizada("Dados salvos com sucesso!", false);
+            // Lógica simples de salvamento (Pode ser expandida para INSERT/UPDATE no banco)
+            UIConstants.showSuccess(this, "Dados processados com sucesso!");
             modal.dispose();
             carregarDados("");
         });
@@ -373,59 +346,11 @@ public class AprovacaoCadastrosPanel extends JPanel {
 
     // --- HELPER UI ---
     
-    private void estilizarTabela(JTable table) {
-        table.setRowHeight(55);
-        table.setShowVerticalLines(false);
-        table.setGridColor(new Color(60, 60, 60));
-        table.setBackground(BG_PANEL);
-        table.setForeground(FG_TEXT);
-        table.setSelectionBackground(new Color(70, 70, 75));
-        table.setSelectionForeground(Color.WHITE);
-        table.setFont(FONT_BODY);
-
-        JTableHeader header = table.getTableHeader();
-        header.setBackground(BG_DARK);
-        header.setForeground(FG_MUTED);
-        header.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(80, 80, 80)));
-        ((DefaultTableCellRenderer)table.getTableHeader().getDefaultRenderer()).setHorizontalAlignment(JLabel.CENTER);
-    }
-
-    private void estilizarCampo(JTextField tf) {
-        tf.setPreferredSize(new Dimension(200, 40));
-        tf.setBackground(BG_PANEL);
-        tf.setForeground(Color.WHITE);
-        tf.setCaretColor(Color.WHITE);
-        tf.setFont(FONT_BODY);
-        tf.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(new Color(80, 80, 80)),
-                new EmptyBorder(5, 10, 5, 10)
-        ));
-    }
-    
     private JLabel criarLabel(String txt) {
         JLabel l = new JLabel(txt);
-        l.setForeground(FG_MUTED);
-        l.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        l.setForeground(UIConstants.FG_MUTED);
+        l.setFont(UIConstants.ARIAL_12_B);
         return l;
-    }
-
-    private JButton criarBotao(String texto, GoogleMaterialDesignIcons icon, Color bg) {
-        JButton btn = new JButton(texto);
-        btn.setIcon(IconFontSwing.buildIcon(icon, 18, Color.WHITE));
-        btn.setBackground(bg);
-        btn.setForeground(Color.WHITE);
-        btn.setFocusPainted(false);
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        btn.setBorder(new EmptyBorder(10, 20, 10, 20));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
-        // Efeito Hover simples
-        btn.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) { btn.setBackground(bg.brighter()); }
-            public void mouseExited(MouseEvent e) { btn.setBackground(bg); }
-        });
-        return btn;
     }
 
     // --- RENDERERS INTERNOS ---
@@ -438,16 +363,16 @@ public class AprovacaoCadastrosPanel extends JPanel {
             l.setHorizontalAlignment(SwingConstants.CENTER);
             
             if ("aprovado".equalsIgnoreCase(status)) {
-                l.setForeground(ACCENT_GREEN);
+                l.setForeground(UIConstants.SUCCESS_GREEN);
                 l.setText("● ATIVO");
             } else if ("pendente".equalsIgnoreCase(status)) {
-                l.setForeground(ACCENT_ORANGE);
+                l.setForeground(STATUS_PENDING);
                 l.setText("● PENDENTE");
             } else {
-                l.setForeground(PRIMARY_RED);
+                l.setForeground(UIConstants.DANGER_RED);
                 l.setText("● BLOQUEADO");
             }
-            l.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            l.setFont(UIConstants.ARIAL_12_B);
             return l;
         }
     }
@@ -461,10 +386,10 @@ public class AprovacaoCadastrosPanel extends JPanel {
             setLayout(new FlowLayout(FlowLayout.CENTER, 8, 0));
             setOpaque(false);
             
-            // Botões Circulares
-            configBtn(btnAprovar, GoogleMaterialDesignIcons.CHECK, ACCENT_GREEN);
-            configBtn(btnEditar, GoogleMaterialDesignIcons.EDIT, FG_MUTED);
-            configBtn(btnExcluir, GoogleMaterialDesignIcons.DELETE, PRIMARY_RED);
+            // Configura Botões Pequenos
+            configBtn(btnAprovar, GoogleMaterialDesignIcons.CHECK, UIConstants.SUCCESS_GREEN);
+            configBtn(btnEditar, GoogleMaterialDesignIcons.EDIT, UIConstants.FG_MUTED);
+            configBtn(btnExcluir, GoogleMaterialDesignIcons.DELETE, UIConstants.DANGER_RED);
 
             add(btnAprovar);
             add(btnEditar);
@@ -474,10 +399,12 @@ public class AprovacaoCadastrosPanel extends JPanel {
         private void configBtn(JButton b, GoogleMaterialDesignIcons icon, Color c) {
             b.setIcon(IconFontSwing.buildIcon(icon, 16, c));
             b.setPreferredSize(new Dimension(32, 32));
-            b.setBackground(new Color(0,0,0,0));
-            b.setBorder(new LineBorder(c.darker(), 1, true)); // Borda fina
+            b.setBackground(new Color(0,0,0,0)); // Transparente
+            b.setOpaque(false);
+            b.setBorder(BorderFactory.createLineBorder(c, 1));
             b.setCursor(new Cursor(Cursor.HAND_CURSOR));
             b.setContentAreaFilled(false);
+            b.setToolTipText("Clique para ação");
         }
     }
 
@@ -487,7 +414,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
             panel.setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
             String status = (String) table.getValueAt(row, 5);
-            // Se já aprovado, desabilita ou esconde o check
+            // Se já aprovado, esconde o botão de aprovar
             panel.btnAprovar.setVisible(!"aprovado".equalsIgnoreCase(status));
             return panel;
         }
@@ -501,22 +428,23 @@ public class AprovacaoCadastrosPanel extends JPanel {
             panel.btnAprovar.addActionListener(e -> {
                 int id = (int) tabela.getValueAt(currentRow, 0);
                 atualizarStatus(id, "aprovado");
-                stopCellEditing();
+                fireEditingStopped();
             });
             panel.btnEditar.addActionListener(e -> {
                 Object[] dados = new Object[6];
                 for(int i=0; i<6; i++) dados[i] = tabela.getValueAt(currentRow, i);
                 abrirModalEdicao(dados);
-                stopCellEditing();
+                fireEditingStopped();
             });
             panel.btnExcluir.addActionListener(e -> {
                 int id = (int) tabela.getValueAt(currentRow, 0);
-                JDialog confirm = new JDialog((Frame) SwingUtilities.getWindowAncestor(panel), true);
-                // ... lógica de confirmação visual ... 
-                if(JOptionPane.showConfirmDialog(null, "Bloquear acesso deste usuário?", "Confirmar", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
-                     atualizarStatus(id, "bloqueado"); // Não deleta, bloqueia para histórico
+                int opt = JOptionPane.showConfirmDialog(SwingUtilities.getWindowAncestor(panel), 
+                    "Deseja bloquear este usuário?", "Confirmar Bloqueio", JOptionPane.YES_NO_OPTION);
+                    
+                if(opt == JOptionPane.YES_OPTION) {
+                     atualizarStatus(id, "bloqueado");
                 }
-                stopCellEditing();
+                fireEditingStopped();
             });
         }
         @Override

@@ -8,6 +8,9 @@ import com.senac.food.verse.EstoqueDAO;
 import com.senac.food.verse.EstoqueDAO.ItemEstoque;
 import com.senac.food.verse.EstoqueDAO.Unidade;
 
+import jiconfont.icons.google_material_design_icons.GoogleMaterialDesignIcons;
+import jiconfont.swing.IconFontSwing;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.*;
@@ -18,1091 +21,653 @@ import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.Locale;
-
 
 public class CardapioPainel extends JPanel {
 
     private final CardapioDAO dao = new CardapioDAO();
     private final EstoqueDAO estoqueDAO = new EstoqueDAO();
+    private static final NumberFormat CURRENCY = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
 
-    private static final Locale LOCALE_BR = new Locale("pt", "BR");
-    private static final NumberFormat CURRENCY = NumberFormat.getCurrencyInstance(LOCALE_BR);
-
+    // Componentes Globais
     private JTabbedPane tabs;
-
-    // PRATOS
+    
+    // ABA PRATOS
     private JTextField txtBuscaPratos;
     private JComboBox<String> cbCategoriaPratos;
     private JComboBox<String> cbStatusPratos;
     private JTable tblPratos;
     private DefaultTableModel pratosModel;
-    private TableRowSorter<DefaultTableModel> pratosSorter;
 
-    // PRODUTOS
+    // ABA PRODUTOS
     private JTextField txtBuscaProdutos;
     private JComboBox<String> cbCategoriaProdutos;
     private JComboBox<String> cbStatusProdutos;
     private JTable tblProdutos;
     private DefaultTableModel produtosModel;
-    private TableRowSorter<DefaultTableModel> produtosSorter;
 
-    // Categorias padrão
+    // Listas Padrão
     private static final String[] CATEGORIAS_PRATOS_PADRAO = {
-            "Lanches","Pratos","Bebidas","Sobremesas","Entradas",
-            "Acompanhamentos","Combos","Kids","Veganos",
-            "Vegetarianos","Sem Glúten","Sem Lactose"
+        "Lanches","Pratos","Bebidas","Sobremesas","Entradas","Acompanhamentos","Combos","Kids"
     };
     private static final String[] CATEGORIAS_PRODUTOS_PADRAO = {
-            "Bebidas","Sobremesas","Outros","Mercearia","Descartáveis","Higiene"
+        "Bebidas","Sobremesas","Outros","Mercearia","Descartáveis"
     };
 
     public CardapioPainel() {
-        UIConstants.applyDarkDefaults();
-        setOpaque(true);
-        setBackground(UIConstants.BG_DARK);
-        UIManager.put("Component.arc",16);
-        UIManager.put("Button.arc",18);
-        UIManager.put("TextComponent.arc",16);
-        UIManager.put("ScrollBar.showButtons", true);
-        initComponents();
+        setLayout(new BorderLayout());
+        UIConstants.stylePanel(this);
+
+        // 1. Header
+        add(criarHeader(), BorderLayout.NORTH);
+
+        // 2. Tabs
+        tabs = new JTabbedPane();
+        tabs.setFont(UIConstants.FONT_BOLD);
+        tabs.setForeground(UIConstants.FG_LIGHT);
+        tabs.setBackground(UIConstants.BG_DARK);
+        
+        tabs.addTab("Pratos & Refeições", criarAbaPratos());
+        tabs.addTab("Produtos de Venda", criarAbaProdutos());
+        
+        add(tabs, BorderLayout.CENTER);
+
         carregarCombos();
-        configurarAtalhosGlobais();
         atualizarTabelas();
     }
 
-    private void initComponents(){
-        JLabel lblTitulo = new JLabel("Cardápio", IconLoader.load("/icons/dish.png",24,24), SwingConstants.LEADING);
-        lblTitulo.setFont(UIConstants.ARIAL_16_B);
-        lblTitulo.setForeground(UIConstants.FG_LIGHT);
-
-        tabs = new JTabbedPane();
-        tabs.setFont(UIConstants.ARIAL_12_B);
-        styleTabbedPane(tabs);
-
-        JPanel abaPratos   = criarAbaPratos();
-        JPanel abaProdutos = criarAbaProdutos();
-
-        tabs.addTab("Pratos", abaPratos);
-        tabs.addTab("Produtos", abaProdutos);
-
-        GroupLayout gl = new GroupLayout(this);
-        setLayout(gl);
-        gl.setAutoCreateGaps(true);
-        gl.setAutoCreateContainerGaps(true);
-
-        gl.setHorizontalGroup(gl.createParallelGroup(GroupLayout.Alignment.LEADING)
-                .addComponent(lblTitulo)
-                .addComponent(tabs)
-        );
-        gl.setVerticalGroup(gl.createSequentialGroup()
-                .addComponent(lblTitulo)
-                .addComponent(tabs)
-        );
+    private JPanel criarHeader() {
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        p.setBackground(UIConstants.BG_DARK);
+        p.setBorder(new EmptyBorder(0, 10, 10, 10));
+        
+        JLabel lbl = new JLabel("Gestão de Cardápio");
+        lbl.setFont(UIConstants.FONT_TITLE);
+        lbl.setForeground(UIConstants.FG_LIGHT);
+        lbl.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.RESTAURANT_MENU, 32, UIConstants.FG_LIGHT));
+        lbl.setIconTextGap(15);
+        p.add(lbl);
+        return p;
     }
 
-    /* ----------------------------- ABA PRATOS -------------------------------- */
-
-    private JPanel criarAbaPratos(){
-        JPanel p = new JPanel();
+    // =================================================================================
+    // ABA 1: PRATOS
+    // =================================================================================
+    private JPanel criarAbaPratos() {
+        JPanel p = new JPanel(new BorderLayout(0, 15));
         p.setBackground(UIConstants.BG_DARK);
+        p.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        JLabel lBusca = label("Buscar:", true);
-        txtBuscaPratos = new JTextField();
+        // Toolbar
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        toolbar.setOpaque(false);
+
+        txtBuscaPratos = new JTextField(20);
         UIConstants.styleField(txtBuscaPratos);
+        txtBuscaPratos.putClientProperty("JTextField.placeholderText", "Buscar prato...");
         txtBuscaPratos.addActionListener(e -> atualizarTabelaPratos());
 
-        JLabel lCat = label("Categoria:", true);
         cbCategoriaPratos = new JComboBox<>();
         UIConstants.styleCombo(cbCategoriaPratos);
 
-        JLabel lStatus = label("Status:", true);
-        cbStatusPratos = new JComboBox<>(new String[]{"Todos","Ativos","Inativos"});
+        cbStatusPratos = new JComboBox<>(new String[]{"Todos", "Ativos", "Inativos"});
         UIConstants.styleCombo(cbStatusPratos);
 
-        JButton btnBuscar = buttonPrimary("Buscar","/icons/search.png", e -> atualizarTabelaPratos());
-        JButton btnNovo   = buttonPrimary("+ Novo Prato","/icons/add.png", e -> novoPrato());
-        JButton btnEditar = buttonSecondary("Editar","/icons/edit.png", e -> editarPrato());
-        JButton btnDel    = buttonSecondary("Excluir","/icons/delete.png", e -> excluirPrato());
+        JButton btnBuscar = criarBotaoIcone(GoogleMaterialDesignIcons.SEARCH, UIConstants.BG_DARK_ALT, "Filtrar Resultados");
+        btnBuscar.addActionListener(e -> atualizarTabelaPratos());
 
-        pratosModel = new DefaultTableModel(new Object[]{"ID","Nome","Categoria","Preço","Status","Ingredientes"},0){
-            @Override public boolean isCellEditable(int r,int c){ return false; }
-            @Override public Class<?> getColumnClass(int c){ return c==0?Long.class:String.class; }
+        toolbar.add(txtBuscaPratos);
+        toolbar.add(cbCategoriaPratos);
+        toolbar.add(cbStatusPratos);
+        toolbar.add(btnBuscar);
+
+        // Botões de Ação
+        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        actionPanel.setOpaque(false);
+
+        JButton btnNovo = new JButton("Novo Prato");
+        btnNovo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ADD, 18, Color.WHITE));
+        UIConstants.stylePrimary(btnNovo);
+        btnNovo.setToolTipText("Cadastrar nova refeição");
+        btnNovo.addActionListener(e -> novoPrato());
+
+        JButton btnEditar = new JButton("Editar");
+        UIConstants.styleSecondary(btnEditar);
+        btnEditar.addActionListener(e -> editarPrato());
+        
+        JButton btnExcluir = new JButton("Excluir");
+        UIConstants.styleDanger(btnExcluir);
+        btnExcluir.addActionListener(e -> excluirPrato());
+
+        actionPanel.add(btnNovo);
+        actionPanel.add(btnEditar);
+        actionPanel.add(btnExcluir);
+
+        JPanel topContainer = new JPanel(new BorderLayout());
+        topContainer.setOpaque(false);
+        topContainer.add(toolbar, BorderLayout.WEST);
+        topContainer.add(actionPanel, BorderLayout.EAST);
+
+        // Tabela
+        String[] cols = {"ID", "Nome", "Categoria", "Preço", "Status", "Ingredientes"};
+        pratosModel = new DefaultTableModel(cols, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+            @Override public Class<?> getColumnClass(int c) { return c == 0 ? Long.class : String.class; }
         };
-        tblPratos = criarTabelaBase(pratosModel);
-        aplicarRenderersPratos();
-        configurarSorterPratos();
-        configurarPopupPratos();
-        adicionarDuploClique(tblPratos,this::editarPrato);
-        configurarAtalhosTabela(tblPratos,this::editarPrato,this::excluirPrato);
+        tblPratos = new JTable(pratosModel);
+        UIConstants.styleTable(tblPratos);
+        configurarRenderers(tblPratos);
+        
+        // UX: Clique duplo edita, Clique simples na coluna Status troca o status
+        tblPratos.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                int row = tblPratos.rowAtPoint(e.getPoint());
+                int col = tblPratos.columnAtPoint(e.getPoint());
+                if (row >= 0) {
+                    if (col == 4) { // Coluna STATUS
+                        toggleStatusPrato(row);
+                    } else if(e.getClickCount() == 2) {
+                        editarPrato();
+                    }
+                }
+            }
+        });
 
-        JScrollPane sp = new JScrollPane(tblPratos);
-        styleScroll(sp);
+        p.add(topContainer, BorderLayout.NORTH);
+        JScrollPane scroll = new JScrollPane(tblPratos);
+        UIConstants.styleScrollPane(scroll);
+        p.add(scroll, BorderLayout.CENTER);
 
-        JSeparator sep = separator();
-
-        GroupLayout gl = new GroupLayout(p);
-        p.setLayout(gl);
-        gl.setAutoCreateGaps(true);
-        gl.setAutoCreateContainerGaps(true);
-
-        gl.setHorizontalGroup(gl.createParallelGroup(GroupLayout.Alignment.LEADING)
-            .addGroup(gl.createSequentialGroup()
-                .addComponent(lBusca).addComponent(txtBuscaPratos)
-                .addComponent(lCat).addComponent(cbCategoriaPratos, GroupLayout.PREFERRED_SIZE,160,GroupLayout.PREFERRED_SIZE)
-                .addComponent(lStatus).addComponent(cbStatusPratos, GroupLayout.PREFERRED_SIZE,130,GroupLayout.PREFERRED_SIZE)
-                .addComponent(btnBuscar))
-            .addGroup(gl.createSequentialGroup()
-                .addComponent(btnNovo)
-                .addComponent(btnEditar)
-                .addComponent(btnDel))
-            .addComponent(sep)
-            .addComponent(sp)
-        );
-
-        gl.setVerticalGroup(gl.createSequentialGroup()
-            .addGroup(gl.createParallelGroup(GroupLayout.Alignment.CENTER)
-                .addComponent(lBusca)
-                .addComponent(txtBuscaPratos,GroupLayout.PREFERRED_SIZE,32,GroupLayout.PREFERRED_SIZE)
-                .addComponent(lCat)
-                .addComponent(cbCategoriaPratos,GroupLayout.PREFERRED_SIZE,30,GroupLayout.PREFERRED_SIZE)
-                .addComponent(lStatus)
-                .addComponent(cbStatusPratos,GroupLayout.PREFERRED_SIZE,30,GroupLayout.PREFERRED_SIZE)
-                .addComponent(btnBuscar))
-            .addGroup(gl.createParallelGroup(GroupLayout.Alignment.CENTER)
-                .addComponent(btnNovo)
-                .addComponent(btnEditar)
-                .addComponent(btnDel))
-            .addComponent(sep)
-            .addComponent(sp)
-        );
-
-        ajustarLarguras(tblPratos, new int[]{60,260,200,120,90,130});
         return p;
     }
 
-    /* ----------------------------- ABA PRODUTOS ------------------------------ */
-
-    private JPanel criarAbaProdutos(){
-        JPanel p = new JPanel();
+    // =================================================================================
+    // ABA 2: PRODUTOS
+    // =================================================================================
+    private JPanel criarAbaProdutos() {
+        JPanel p = new JPanel(new BorderLayout(0, 15));
         p.setBackground(UIConstants.BG_DARK);
+        p.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        JLabel lBusca = label("Buscar:", true);
-        txtBuscaProdutos = new JTextField();
+        // Toolbar
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        toolbar.setOpaque(false);
+
+        txtBuscaProdutos = new JTextField(20);
         UIConstants.styleField(txtBuscaProdutos);
+        txtBuscaProdutos.putClientProperty("JTextField.placeholderText", "Buscar produto...");
         txtBuscaProdutos.addActionListener(e -> atualizarTabelaProdutos());
 
-        JLabel lCat = label("Categoria:", true);
         cbCategoriaProdutos = new JComboBox<>();
         UIConstants.styleCombo(cbCategoriaProdutos);
 
-        JLabel lStatus = label("Status:", true);
-        cbStatusProdutos = new JComboBox<>(new String[]{"Todos","Ativos","Inativos"});
+        cbStatusProdutos = new JComboBox<>(new String[]{"Todos", "Ativos", "Inativos"});
         UIConstants.styleCombo(cbStatusProdutos);
 
-        JButton btnBuscar = buttonPrimary("Buscar","/icons/search.png", e -> atualizarTabelaProdutos());
-        JButton btnNovo   = buttonPrimary("+ Novo Produto","/icons/add.png", e -> novoProduto());
-        JButton btnEditar = buttonSecondary("Editar","/icons/edit.png", e -> editarProduto());
-        JButton btnDel    = buttonSecondary("Excluir","/icons/delete.png", e -> excluirProduto());
+        JButton btnBuscar = criarBotaoIcone(GoogleMaterialDesignIcons.SEARCH, UIConstants.BG_DARK_ALT, "Filtrar");
+        btnBuscar.addActionListener(e -> atualizarTabelaProdutos());
 
-        produtosModel = new DefaultTableModel(new Object[]{"ID","Nome","Categoria","Preço","Status"},0){
-            @Override public boolean isCellEditable(int r,int c){ return false; }
-            @Override public Class<?> getColumnClass(int c){ return c==0?Long.class:String.class; }
+        toolbar.add(txtBuscaProdutos);
+        toolbar.add(cbCategoriaProdutos);
+        toolbar.add(cbStatusProdutos);
+        toolbar.add(btnBuscar);
+
+        // Ações
+        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        actionPanel.setOpaque(false);
+
+        JButton btnNovo = new JButton("Novo Produto");
+        btnNovo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ADD, 18, Color.WHITE));
+        UIConstants.stylePrimary(btnNovo);
+        btnNovo.addActionListener(e -> novoProduto());
+
+        JButton btnEditar = new JButton("Editar");
+        UIConstants.styleSecondary(btnEditar);
+        btnEditar.addActionListener(e -> editarProduto());
+
+        JButton btnExcluir = new JButton("Excluir");
+        UIConstants.styleDanger(btnExcluir);
+        btnExcluir.addActionListener(e -> excluirProduto());
+
+        actionPanel.add(btnNovo);
+        actionPanel.add(btnEditar);
+        actionPanel.add(btnExcluir);
+
+        JPanel topContainer = new JPanel(new BorderLayout());
+        topContainer.setOpaque(false);
+        topContainer.add(toolbar, BorderLayout.WEST);
+        topContainer.add(actionPanel, BorderLayout.EAST);
+
+        // Tabela
+        String[] cols = {"ID", "Nome", "Categoria", "Preço", "Status"};
+        produtosModel = new DefaultTableModel(cols, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+            @Override public Class<?> getColumnClass(int c) { return c == 0 ? Long.class : String.class; }
         };
-        tblProdutos = criarTabelaBase(produtosModel);
-        aplicarRenderersProdutos();
-        configurarSorterProdutos();
-        configurarPopupProdutos();
-        adicionarDuploClique(tblProdutos,this::editarProduto);
-        configurarAtalhosTabela(tblProdutos,this::editarProduto,this::excluirProduto);
+        tblProdutos = new JTable(produtosModel);
+        UIConstants.styleTable(tblProdutos);
+        configurarRenderers(tblProdutos);
 
-        JScrollPane sp = new JScrollPane(tblProdutos);
-        styleScroll(sp);
+        // UX: Quick Toggle
+        tblProdutos.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                int row = tblProdutos.rowAtPoint(e.getPoint());
+                int col = tblProdutos.columnAtPoint(e.getPoint());
+                if (row >= 0) {
+                    if (col == 4) { // Coluna Status
+                        toggleStatusProduto(row);
+                    } else if(e.getClickCount() == 2) {
+                        editarProduto();
+                    }
+                }
+            }
+        });
 
-        JSeparator sep = separator();
+        p.add(topContainer, BorderLayout.NORTH);
+        JScrollPane scroll = new JScrollPane(tblProdutos);
+        UIConstants.styleScrollPane(scroll);
+        p.add(scroll, BorderLayout.CENTER);
 
-        GroupLayout gl = new GroupLayout(p);
-        p.setLayout(gl);
-        gl.setAutoCreateGaps(true);
-        gl.setAutoCreateContainerGaps(true);
-
-        gl.setHorizontalGroup(gl.createParallelGroup(GroupLayout.Alignment.LEADING)
-            .addGroup(gl.createSequentialGroup()
-                .addComponent(lBusca).addComponent(txtBuscaProdutos)
-                .addComponent(lCat).addComponent(cbCategoriaProdutos, GroupLayout.PREFERRED_SIZE,160,GroupLayout.PREFERRED_SIZE)
-                .addComponent(lStatus).addComponent(cbStatusProdutos, GroupLayout.PREFERRED_SIZE,130,GroupLayout.PREFERRED_SIZE)
-                .addComponent(btnBuscar))
-            .addGroup(gl.createSequentialGroup()
-                .addComponent(btnNovo)
-                .addComponent(btnEditar)
-                .addComponent(btnDel))
-            .addComponent(sep)
-            .addComponent(sp)
-        );
-        gl.setVerticalGroup(gl.createSequentialGroup()
-            .addGroup(gl.createParallelGroup(GroupLayout.Alignment.CENTER)
-                .addComponent(lBusca)
-                .addComponent(txtBuscaProdutos,GroupLayout.PREFERRED_SIZE,32,GroupLayout.PREFERRED_SIZE)
-                .addComponent(lCat)
-                .addComponent(cbCategoriaProdutos,GroupLayout.PREFERRED_SIZE,30,GroupLayout.PREFERRED_SIZE)
-                .addComponent(lStatus)
-                .addComponent(cbStatusProdutos,GroupLayout.PREFERRED_SIZE,30,GroupLayout.PREFERRED_SIZE)
-                .addComponent(btnBuscar))
-            .addGroup(gl.createParallelGroup(GroupLayout.Alignment.CENTER)
-                .addComponent(btnNovo)
-                .addComponent(btnEditar)
-                .addComponent(btnDel))
-            .addComponent(sep)
-            .addComponent(sp)
-        );
-
-        ajustarLarguras(tblProdutos, new int[]{60,280,220,120,90});
         return p;
     }
 
-    /* ----------------------------- UTIL VISUAIS ------------------------------ */
+    // =================================================================================
+    // LOGICA E DADOS
+    // =================================================================================
 
-    private JLabel label(String txt, boolean bold){
-        JLabel l = new JLabel(txt);
-        l.setFont(bold?UIConstants.ARIAL_12_B:UIConstants.ARIAL_12);
-        l.setForeground(UIConstants.FG_LIGHT);
-        return l;
-    }
-    private JButton buttonPrimary(String text, String icon, ActionListener al){
-        JButton b = new JButton(text, IconLoader.load(icon,16,16));
-        UIConstants.stylePrimary(b);
-        b.addActionListener(al);
-        return b;
-    }
-    private JButton buttonSecondary(String text, String icon, ActionListener al){
-        JButton b = new JButton(text, IconLoader.load(icon,16,16));
-        UIConstants.styleSecondary(b);
-        b.addActionListener(al);
-        return b;
-    }
-    private void styleScroll(JScrollPane sp){
-        sp.setBorder(null);
-        sp.getViewport().setBackground(UIConstants.BG_DARK);
-    }
-    private JSeparator separator(){
-        JSeparator s = new JSeparator(SwingConstants.HORIZONTAL);
-        s.setForeground(UIConstants.GRID_DARK);
-        return s;
-    }
-    private void styleTabbedPane(JTabbedPane tp){
-        tp.setBackground(UIConstants.BG_DARK);
-        tp.setForeground(UIConstants.FG_LIGHT);
-        tp.setOpaque(true);
-        tp.setBorder(null);
-    }
-
-    private JTable criarTabelaBase(DefaultTableModel model){
-        JTable t = new JTable(model){
-            @Override public Component prepareRenderer(TableCellRenderer r,int row,int col){
-                Component c = super.prepareRenderer(r,row,col);
-                if(!isRowSelected(row)){
-                    c.setBackground(row%2==0?UIConstants.BG_DARK:UIConstants.ALT_ROW);
-                    c.setForeground(UIConstants.FG_LIGHT);
-                }
-                return c;
-            }
-        };
-        t.setRowHeight(28);
-        t.setSelectionBackground(UIConstants.SEL_BG);
-        t.setSelectionForeground(UIConstants.SEL_FG);
-        t.setGridColor(UIConstants.GRID_DARK);
-        t.setShowVerticalLines(false);
-        t.setShowHorizontalLines(true);
-        JTableHeader h = t.getTableHeader();
-        h.setReorderingAllowed(false);
-        h.setDefaultRenderer(new HeaderRenderer());
-        return t;
-    }
-
-    private void ajustarLarguras(JTable table, int[] widths){
-        for(int i=0;i<widths.length;i++){
-            table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
-        }
-    }
-
-    /* ----------------------------- SORTERS / POPUPS / ATALHOS ---------------- */
-
-    private void configurarSorterPratos(){
-        pratosSorter = new TableRowSorter<>(pratosModel);
-        pratosSorter.setComparator(0, Comparator.comparingLong(v -> (Long)v));
-        pratosSorter.setComparator(3, Comparator.comparingDouble(this::parseValorMoeda));
-        tblPratos.setRowSorter(pratosSorter);
-        pratosSorter.setSortKeys(List.of(new RowSorter.SortKey(1, SortOrder.ASCENDING)));
-    }
-    private void configurarSorterProdutos(){
-        produtosSorter = new TableRowSorter<>(produtosModel);
-        produtosSorter.setComparator(0, Comparator.comparingLong(v -> (Long)v));
-        produtosSorter.setComparator(3, Comparator.comparingDouble(this::parseValorMoeda));
-        tblProdutos.setRowSorter(produtosSorter);
-        produtosSorter.setSortKeys(List.of(new RowSorter.SortKey(1, SortOrder.ASCENDING)));
-    }
-
-    private void configurarPopupPratos(){
-        JPopupMenu m = criarPopup(
-                e -> editarPrato(),
-                e -> duplicarPrato(),
-                e -> toggleStatusPrato(),
-                e -> excluirPrato()
-        );
-        tblPratos.setComponentPopupMenu(m);
-    }
-    private void configurarPopupProdutos(){
-        JPopupMenu m = criarPopup(
-                e -> editarProduto(),
-                e -> duplicarProduto(),
-                e -> toggleStatusProduto(),
-                e -> excluirProduto()
-        );
-        tblProdutos.setComponentPopupMenu(m);
-    }
-
-    private JPopupMenu criarPopup(ActionListener editar,
-                                  ActionListener duplicar,
-                                  ActionListener toggle,
-                                  ActionListener excluir){
-        JPopupMenu menu = new JPopupMenu();
-        stylePopupMenu(menu);
-        JMenuItem miEditar   = popupItem("Editar","/icons/edit.png", editar);
-        JMenuItem miDuplicar = popupItem("Duplicar","/icons/add.png", duplicar);
-        JMenuItem miToggle   = popupItem("Ativar/Inativar","/icons/save.png", toggle);
-        JMenuItem miExcluir  = popupItem("Excluir","/icons/delete.png", excluir);
-        menu.add(miEditar); menu.add(miDuplicar); menu.add(miToggle);
-        menu.addSeparator(); menu.add(miExcluir);
-        return menu;
-    }
-
-    private JMenuItem popupItem(String text,String icon, ActionListener al){
-        JMenuItem mi = new JMenuItem(text, IconLoader.load(icon,16,16));
-        mi.addActionListener(al);
-        mi.setBackground(UIConstants.CARD_DARK);
-        mi.setForeground(UIConstants.FG_LIGHT);
-        return mi;
-    }
-
-    private void stylePopupMenu(JPopupMenu m){
-        m.setBorder(new EmptyBorder(4,4,4,4));
-        m.setBackground(UIConstants.CARD_DARK);
-        m.setForeground(UIConstants.FG_LIGHT);
-    }
-
-    private void configurarAtalhosTabela(JTable t, Runnable edit, Runnable delete){
-        InputMap im = t.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-        ActionMap am = t.getActionMap();
-        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0),"edit");
-        am.put("edit", new AbstractAction(){ @Override public void actionPerformed(ActionEvent e){ edit.run(); }});
-        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE,0),"del");
-        am.put("del", new AbstractAction(){ @Override public void actionPerformed(ActionEvent e){ delete.run(); }});
-    }
-
-    private void configurarAtalhosGlobais(){
-        InputMap im = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-        ActionMap am = getActionMap();
-        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK), "focus");
-        am.put("focus", new AbstractAction(){
-            @Override public void actionPerformed(ActionEvent e){
-                if(tabs.getSelectedIndex()==0) txtBuscaPratos.requestFocusInWindow();
-                else txtBuscaProdutos.requestFocusInWindow();
-            }
-        });
-        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK), "new");
-        am.put("new", new AbstractAction(){
-            @Override public void actionPerformed(ActionEvent e){
-                if(tabs.getSelectedIndex()==0) novoPrato(); else novoProduto();
-            }
-        });
-    }
-
-    private void adicionarDuploClique(JTable t, Runnable action){
-        t.addMouseListener(new MouseAdapter(){
-            @Override public void mouseClicked(MouseEvent e){
-                if(e.getClickCount()==2 && SwingUtilities.isLeftMouseButton(e)) action.run();
-            }
-        });
-    }
-
-    /* ----------------------------- RENDERERS --------------------------------- */
-
-    private void aplicarRenderersPratos(){
-        tblPratos.setDefaultRenderer(Object.class, new BodyCellRenderer(tblPratos));
-        tblPratos.getColumnModel().getColumn(3).setCellRenderer(new CurrencyRenderer(tblPratos));
-        tblPratos.getColumnModel().getColumn(4).setCellRenderer(new StatusRenderer(tblPratos));
-    }
-    private void aplicarRenderersProdutos(){
-        tblProdutos.setDefaultRenderer(Object.class, new BodyCellRenderer(tblProdutos));
-        tblProdutos.getColumnModel().getColumn(3).setCellRenderer(new CurrencyRenderer(tblProdutos));
-        tblProdutos.getColumnModel().getColumn(4).setCellRenderer(new StatusRenderer(tblProdutos));
-    }
-
-    private static class HeaderRenderer extends DefaultTableCellRenderer {
-        HeaderRenderer(){
-            setOpaque(true);
-            setBackground(UIConstants.HEADER_DARK);
-            setForeground(UIConstants.FG_LIGHT);
-            setFont(UIConstants.ARIAL_12_B);
-            setBorder(new EmptyBorder(6,8,6,8));
-        }
-        @Override public Component getTableCellRendererComponent(JTable table,Object value,boolean isSelected,boolean hasFocus,int row,int column){
-            super.getTableCellRendererComponent(table,value,isSelected,hasFocus,row,column);
-            String name = table.getColumnName(column);
-            setHorizontalAlignment(switch(name){
-                case "ID","Status","Ingredientes" -> CENTER;
-                case "Preço" -> RIGHT;
-                default -> LEFT;
-            });
-            return this;
-        }
-    }
-    private static class BodyCellRenderer extends DefaultTableCellRenderer {
-        private final JTable table;
-        BodyCellRenderer(JTable t){ this.table=t; setOpaque(true); }
-        @Override public Component getTableCellRendererComponent(JTable tbl,Object val,boolean selected,boolean focus,int row,int col){
-            super.getTableCellRendererComponent(tbl,val,selected,focus,row,col);
-            if(!selected){
-                setBackground(row%2==0?UIConstants.BG_DARK:UIConstants.ALT_ROW);
-                setForeground(UIConstants.FG_LIGHT);
-            }
-            setBorder(new EmptyBorder(4,8,4,8));
-            String name = table.getColumnName(col);
-            setHorizontalAlignment(switch(name){
-                case "ID","Status","Ingredientes" -> CENTER;
-                case "Preço" -> RIGHT;
-                default -> LEFT;
-            });
-            return this;
-        }
-    }
-    private static class CurrencyRenderer extends BodyCellRenderer {
-        CurrencyRenderer(JTable t){ super(t); }
-    }
-    private static class StatusRenderer extends BodyCellRenderer {
-        StatusRenderer(JTable t){ super(t); }
-        @Override public Component getTableCellRendererComponent(JTable tbl,Object val,boolean selected,boolean focus,int row,int col){
-            JLabel l = (JLabel)super.getTableCellRendererComponent(tbl,val,selected,focus,row,col);
-            if(!selected){
-                if("Ativo".equalsIgnoreCase(String.valueOf(val))){
-                    l.setBackground(UIConstants.SUCCESS_GREEN);
-                    l.setForeground(Color.WHITE);
-                }else{
-                    l.setBackground(UIConstants.STATUS_INACTIVE_BG);
-                    l.setForeground(UIConstants.FG_LIGHT);
-                }
-            }
-            l.setHorizontalAlignment(CENTER);
-            l.setBorder(new EmptyBorder(4,8,4,8));
-            return l;
-        }
-    }
-
-    /* ----------------------------- CARREGAMENTO / ATUALIZAÇÃO ---------------- */
-
-    private void carregarCombos(){
+    private void carregarCombos() {
         // Pratos
-        List<String> catsPratos = Stream.concat(
-                Arrays.stream(CATEGORIAS_PRATOS_PADRAO),
-                dao.categoriasPratos().stream()
-        ).filter(s -> s!=null && !s.isBlank())
-         .distinct()
-         .sorted(String.CASE_INSENSITIVE_ORDER)
-         .collect(Collectors.toList());
-        cbCategoriaPratos.removeAllItems(); cbCategoriaPratos.addItem("Todas");
+        List<String> catsPratos = Stream.concat(Arrays.stream(CATEGORIAS_PRATOS_PADRAO), dao.categoriasPratos().stream())
+                .filter(s -> s != null && !s.isBlank()).distinct().sorted().collect(Collectors.toList());
+        cbCategoriaPratos.removeAllItems();
+        cbCategoriaPratos.addItem("Todas");
         catsPratos.forEach(cbCategoriaPratos::addItem);
 
         // Produtos
-        List<String> catsProdutos = Stream.concat(
-                Arrays.stream(CATEGORIAS_PRODUTOS_PADRAO),
-                dao.categoriasProdutos().stream()
-        ).filter(s -> s!=null && !s.isBlank())
-         .distinct()
-         .sorted(String.CASE_INSENSITIVE_ORDER)
-         .collect(Collectors.toList());
-        cbCategoriaProdutos.removeAllItems(); cbCategoriaProdutos.addItem("Todas");
-        catsProdutos.forEach(cbCategoriaProdutos::addItem);
+        List<String> catsProds = Stream.concat(Arrays.stream(CATEGORIAS_PRODUTOS_PADRAO), dao.categoriasProdutos().stream())
+                .filter(s -> s != null && !s.isBlank()).distinct().sorted().collect(Collectors.toList());
+        cbCategoriaProdutos.removeAllItems();
+        cbCategoriaProdutos.addItem("Todas");
+        catsProds.forEach(cbCategoriaProdutos::addItem);
     }
 
-    private void atualizarTabelas(){
+    private void atualizarTabelas() {
         atualizarTabelaPratos();
         atualizarTabelaProdutos();
     }
 
-    private void atualizarTabelaPratos(){
+    private void atualizarTabelaPratos() {
         String termo = txtBuscaPratos.getText();
-        String categoria = (String) cbCategoriaPratos.getSelectedItem();
-        String status = (String) cbStatusPratos.getSelectedItem();
-
-        List<Prato> lista = dao.listarPratos(termo,categoria,status);
+        String cat = (String) cbCategoriaPratos.getSelectedItem();
+        String st = (String) cbStatusPratos.getSelectedItem();
+        
+        List<Prato> lista = dao.listarPratos(termo, cat, st);
         pratosModel.setRowCount(0);
-        for(Prato p : lista){
+        for(Prato p : lista) {
             pratosModel.addRow(new Object[]{
-                p.getId(),
-                p.getNome(),
-                p.getCategoria(),
-                CURRENCY.format(p.getPreco()),
-                p.isAtivo()?"Ativo":"Inativo",
-                p.getIngredientes().size()+" itens"
+                p.getId(), p.getNome(), p.getCategoria(), 
+                CURRENCY.format(p.getPreco()), 
+                p.isAtivo() ? "Ativo" : "Inativo",
+                p.getIngredientes().size() + " itens"
             });
         }
     }
 
-    private void atualizarTabelaProdutos(){
+    private void atualizarTabelaProdutos() {
         String termo = txtBuscaProdutos.getText();
-        String categoria = (String) cbCategoriaProdutos.getSelectedItem();
-        String status = (String) cbStatusProdutos.getSelectedItem();
-
-        List<ProdutoVenda> lista = dao.listarProdutos(termo,categoria,status);
+        String cat = (String) cbCategoriaProdutos.getSelectedItem();
+        String st = (String) cbStatusProdutos.getSelectedItem();
+        
+        List<ProdutoVenda> lista = dao.listarProdutos(termo, cat, st);
         produtosModel.setRowCount(0);
-        for(ProdutoVenda p : lista){
+        for(ProdutoVenda p : lista) {
             produtosModel.addRow(new Object[]{
-                p.getId(),
-                p.getNome(),
-                p.getCategoria(),
-                CURRENCY.format(p.getPreco()),
-                p.isAtivo()?"Ativo":"Inativo"
+                p.getId(), p.getNome(), p.getCategoria(), 
+                CURRENCY.format(p.getPreco()), 
+                p.isAtivo() ? "Ativo" : "Inativo"
             });
         }
     }
 
-    /* ----------------------------- AÇÕES PRATOS ------------------------------ */
+    // --- UX: QUICK TOGGLE LOGIC ---
+    
+    private void toggleStatusPrato(int row) {
+        Long id = (Long) tblPratos.getValueAt(row, 0);
+        Prato p = dao.buscarPratoPorId(id);
+        if(p != null) {
+            p.setAtivo(!p.isAtivo());
+            dao.atualizarPrato(p);
+            atualizarTabelaPratos();
+            // Feedback sutil
+            String status = p.isAtivo() ? "Ativado" : "Desativado";
+            Toast.show(this, p.getNome() + " " + status, Toast.Type.INFO);
+        }
+    }
 
-    private void novoPrato(){
+    private void toggleStatusProduto(int row) {
+        Long id = (Long) tblProdutos.getValueAt(row, 0);
+        // Simulação de busca pois DAO de produtos pode não ter o metodo publico ainda
+        // Idealmente: ProdutoVenda pv = dao.buscarProdutoPorId(id);
+        // Vou fazer a busca manual na lista do DAO (assumindo que o DAO é aquele em memória)
+        
+        // CORREÇÃO: Implementando lógica rápida baseada nas linhas da tabela para simular
+        // Em produção, implemente dao.buscarProdutoPorId(id)
+        String nome = (String) tblProdutos.getValueAt(row, 1);
+        String cat = (String) tblProdutos.getValueAt(row, 2);
+        boolean ativoAtual = "Ativo".equals(tblProdutos.getValueAt(row, 4));
+        // Recriar para atualizar
+        // Obs: Isso é um workaround pois o DAO original não expôs busca por ID de produtos
+        // Se puder, adicione `buscarProdutoPorId` no DAO.
+        // Vou usar o método de atualizar existente:
+        double preco = 0;
+        try { preco = NumberFormat.getCurrencyInstance(new Locale("pt","BR")).parse(tblProdutos.getValueAt(row, 3).toString()).doubleValue(); } catch(Exception e){}
+        
+        ProdutoVenda pv = new ProdutoVenda(id, nome, cat, !ativoAtual, preco);
+        dao.atualizarProduto(pv);
+        atualizarTabelaProdutos();
+        Toast.show(this, nome + (!ativoAtual ? " Ativado" : " Desativado"), Toast.Type.INFO);
+    }
+
+    // AÇÕES CONVENCIONAIS
+    private void novoPrato() {
         PratoDialog d = new PratoDialog(SwingUtilities.getWindowAncestor(this), null);
         d.setVisible(true);
-        Prato r = d.getResultado();
-        if(r!=null){
-            dao.salvarPrato(r);
+        if(d.getResultado() != null) {
+            dao.salvarPrato(d.getResultado());
             carregarCombos();
             atualizarTabelaPratos();
-            info("Prato cadastrado com sucesso!");
+            Toast.show(this, "Prato cadastrado!", Toast.Type.SUCCESS);
         }
     }
-    private void editarPrato(){
-        int vr = tblPratos.getSelectedRow();
-        if(vr<0){ warn("Selecione um prato."); return; }
-        long id = (Long) tblPratos.getValueAt(vr,0);
-        Prato existente = dao.buscarPratoPorId(id);
-        if(existente==null) return;
-        PratoDialog d = new PratoDialog(SwingUtilities.getWindowAncestor(this), existente);
+
+    private void editarPrato() {
+        int row = tblPratos.getSelectedRow();
+        if(row < 0) {
+            Toast.show(this, "Selecione um prato para editar", Toast.Type.WARNING);
+            return;
+        }
+        Long id = (Long) tblPratos.getValueAt(row, 0);
+        Prato p = dao.buscarPratoPorId(id);
+        
+        PratoDialog d = new PratoDialog(SwingUtilities.getWindowAncestor(this), p);
         d.setVisible(true);
-        Prato edit = d.getResultado();
-        if(edit!=null){
-            edit.setId(existente.getId());
-            dao.atualizarPrato(edit);
+        if(d.getResultado() != null) {
+            d.getResultado().setId(id);
+            dao.atualizarPrato(d.getResultado());
             carregarCombos();
             atualizarTabelaPratos();
-            info("Prato atualizado com sucesso!");
+            Toast.show(this, "Alterações salvas!", Toast.Type.SUCCESS);
         }
     }
-    private void excluirPrato(){
-        int vr = tblPratos.getSelectedRow();
-        if(vr<0){ warn("Selecione um prato."); return; }
-        long id = (Long) tblPratos.getValueAt(vr,0);
-        if(confirmar("Confirma exclusão do prato?")){
+
+    private void excluirPrato() {
+        int row = tblPratos.getSelectedRow();
+        if(row < 0) { Toast.show(this, "Selecione um prato.", Toast.Type.WARNING); return; }
+        Long id = (Long) tblPratos.getValueAt(row, 0);
+        
+        if(JOptionPane.showConfirmDialog(this, "Excluir este prato permanentemente?", "Confirmar", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
             dao.excluirPrato(id);
             atualizarTabelaPratos();
-            info("Prato excluído.");
+            Toast.show(this, "Prato removido.", Toast.Type.ERROR);
         }
     }
-    private void duplicarPrato(){
-        int vr = tblPratos.getSelectedRow();
-        if(vr<0) return;
-        long id = (Long) tblPratos.getValueAt(vr,0);
-        Prato base = dao.buscarPratoPorId(id);
-        if(base==null) return;
-        Prato n = new Prato();
-        n.setNome(base.getNome()+" (cópia)");
-        n.setCategoria(base.getCategoria());
-        n.setPreco(base.getPreco());
-        n.setAtivo(base.isAtivo());
-        for(ReceitaItem ri: base.getIngredientes()){
-            n.getIngredientes().add(new ReceitaItem(ri.getItemEstoqueId(), ri.getItemNome(), ri.getUnidade(), ri.getQuantidade()));
-        }
-        dao.salvarPrato(n);
-        atualizarTabelaPratos();
-    }
-    private void toggleStatusPrato(){
-        int vr = tblPratos.getSelectedRow();
-        if(vr<0) return;
-        long id = (Long) tblPratos.getValueAt(vr,0);
-        Prato p = dao.buscarPratoPorId(id);
-        if(p==null) return;
-        p.setAtivo(!p.isAtivo());
-        dao.atualizarPrato(p);
-        atualizarTabelaPratos();
-    }
 
-    /* ----------------------------- AÇÕES PRODUTOS --------------------------- */
-
-    private void novoProduto(){
+    private void novoProduto() {
         ProdutoDialog d = new ProdutoDialog(SwingUtilities.getWindowAncestor(this), null);
         d.setVisible(true);
-        ProdutoVenda r = d.getResultado();
-        if(r!=null){
-            dao.salvarProduto(r);
+        if(d.getResultado() != null) {
+            dao.salvarProduto(d.getResultado());
             carregarCombos();
             atualizarTabelaProdutos();
-            info("Produto cadastrado com sucesso!");
+            Toast.show(this, "Produto cadastrado!", Toast.Type.SUCCESS);
         }
     }
-    private void editarProduto(){
-        int vr = tblProdutos.getSelectedRow();
-        if(vr<0){ warn("Selecione um produto."); return; }
-        long id = (Long) tblProdutos.getValueAt(vr,0);
-        String nome    = (String) tblProdutos.getValueAt(vr,1);
-        String cat     = (String) tblProdutos.getValueAt(vr,2);
-        double preco   = parseValorMoeda(tblProdutos.getValueAt(vr,3));
-        boolean ativo  = "Ativo".equals(tblProdutos.getValueAt(vr,4));
 
-        ProdutoDialog d = new ProdutoDialog(SwingUtilities.getWindowAncestor(this),
-                new ProdutoVenda(id,nome,cat,ativo,preco));
+    private void editarProduto() {
+        int row = tblProdutos.getSelectedRow();
+        if(row < 0) {
+            Toast.show(this, "Selecione um produto.", Toast.Type.WARNING);
+            return;
+        }
+        Long id = (Long) tblProdutos.getValueAt(row, 0);
+        String nome = (String) tblProdutos.getValueAt(row, 1);
+        String cat = (String) tblProdutos.getValueAt(row, 2);
+        boolean ativo = "Ativo".equals(tblProdutos.getValueAt(row, 4));
+        
+        double preco = 0;
+        try { preco = NumberFormat.getCurrencyInstance(new Locale("pt","BR")).parse(tblProdutos.getValueAt(row, 3).toString()).doubleValue(); } catch(Exception e){}
+
+        ProdutoVenda p = new ProdutoVenda(id, nome, cat, ativo, preco);
+        
+        ProdutoDialog d = new ProdutoDialog(SwingUtilities.getWindowAncestor(this), p);
         d.setVisible(true);
-        ProdutoVenda edit = d.getResultado();
-        if(edit!=null){
-            edit.setId(id);
-            dao.atualizarProduto(edit);
+        if(d.getResultado() != null) {
+            d.getResultado().setId(id);
+            dao.atualizarProduto(d.getResultado());
             carregarCombos();
             atualizarTabelaProdutos();
-            info("Produto atualizado com sucesso!");
+            Toast.show(this, "Produto atualizado!", Toast.Type.SUCCESS);
         }
     }
-    private void excluirProduto(){
-        int vr = tblProdutos.getSelectedRow();
-        if(vr<0){ warn("Selecione um produto."); return; }
-        long id = (Long) tblProdutos.getValueAt(vr,0);
-        if(confirmar("Confirma exclusão do produto?")){
+
+    private void excluirProduto() {
+        int row = tblProdutos.getSelectedRow();
+        if(row < 0) { Toast.show(this, "Selecione um produto.", Toast.Type.WARNING); return; }
+        Long id = (Long) tblProdutos.getValueAt(row, 0);
+        
+        if(JOptionPane.showConfirmDialog(this, "Excluir este produto?", "Confirmar", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
             dao.excluirProduto(id);
             atualizarTabelaProdutos();
-            info("Produto excluído.");
+            Toast.show(this, "Produto removido.", Toast.Type.ERROR);
         }
     }
-    private void duplicarProduto(){
-        int vr = tblProdutos.getSelectedRow();
-        if(vr<0) return;
-        long id = (Long) tblProdutos.getValueAt(vr,0);
-        String nome    = (String) tblProdutos.getValueAt(vr,1);
-        String cat     = (String) tblProdutos.getValueAt(vr,2);
-        double preco   = parseValorMoeda(tblProdutos.getValueAt(vr,3));
-        boolean ativo  = "Ativo".equals(tblProdutos.getValueAt(vr,4));
-        ProdutoVenda n = new ProdutoVenda(null, nome+" (cópia)", cat, ativo, preco);
-        dao.salvarProduto(n);
-        atualizarTabelaProdutos();
-    }
-    private void toggleStatusProduto(){
-        int vr = tblProdutos.getSelectedRow();
-        if(vr<0) return;
-        long id = (Long) tblProdutos.getValueAt(vr,0);
-        String nome    = (String) tblProdutos.getValueAt(vr,1);
-        String cat     = (String) tblProdutos.getValueAt(vr,2);
-        double preco   = parseValorMoeda(tblProdutos.getValueAt(vr,3));
-        boolean ativo  = "Ativo".equals(tblProdutos.getValueAt(vr,4));
-        ProdutoVenda edit = new ProdutoVenda(id,nome,cat,!ativo,preco);
-        dao.atualizarProduto(edit);
-        atualizarTabelaProdutos();
-    }
 
-    /* ----------------------------- UTILS ------------------------------------- */
-    private double parseValorMoeda(Object o){
-        if(o==null) return 0;
-        try{
-            String s = String.valueOf(o).replace("R$","").replace(".","").trim().replace(",",".");
-            return Double.parseDouble(s);
-        }catch(Exception e){ return 0; }
-    }
-    private void info(String msg){ JOptionPane.showMessageDialog(this,msg,"Info",JOptionPane.INFORMATION_MESSAGE); }
-    private void warn(String msg){ JOptionPane.showMessageDialog(this,msg,"Atenção",JOptionPane.WARNING_MESSAGE); }
-    private boolean confirmar(String msg){ return JOptionPane.showConfirmDialog(this,msg,"Confirmar",JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION; }
+    // =================================================================================
+    // MODAIS (DIALOGS)
+    // =================================================================================
 
-    /* -------------------- DIALOG PRATO (inclui seletor ingredientes) -------- */
-
+    // --- DIALOG PRATO ---
     private class PratoDialog extends JDialog {
         private JTextField txtNome;
         private JComboBox<String> cbCategoria;
         private JSpinner spPreco;
         private JCheckBox chkAtivo;
-        private JTable tblIng;
         private DefaultTableModel ingModel;
+        private JTable tblIng;
         private Prato resultado;
 
-        PratoDialog(Window owner, Prato base){
-            super(owner,"Cadastro de Prato", ModalityType.APPLICATION_MODAL);
-            setSize(860,660);
+        public PratoDialog(Window owner, Prato base) {
+            super(owner, base == null ? "Novo Prato" : "Editar Prato", ModalityType.APPLICATION_MODAL);
+            setSize(700, 600);
             setLocationRelativeTo(owner);
-            setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-            montarUI();
-            if(base!=null) carregar(base);
-        }
-        private void montarUI(){
-            JLabel titulo = new JLabel("Cadastro de Prato", IconLoader.load("/icons/dish.png",22,22),SwingConstants.LEADING);
-            titulo.setFont(UIConstants.ARIAL_16_B); titulo.setForeground(UIConstants.FG_LIGHT);
+            getContentPane().setBackground(UIConstants.BG_DARK);
+            setLayout(new BorderLayout());
 
-            JLabel lNome = label("Nome:", true);
+            JPanel form = new JPanel(new GridBagLayout());
+            form.setBackground(UIConstants.BG_DARK);
+            form.setBorder(new EmptyBorder(20, 20, 20, 20));
+            GridBagConstraints gc = new GridBagConstraints();
+            gc.fill = GridBagConstraints.HORIZONTAL;
+            gc.insets = new Insets(5, 5, 5, 5);
+
+            // Linha 1
+            gc.gridx=0; gc.gridy=0; form.add(criarLabel("Nome do Prato:"), gc);
+            gc.gridx=1; gc.weightx=1.0; 
             txtNome = new JTextField(); UIConstants.styleField(txtNome);
+            form.add(txtNome, gc);
 
-            JLabel lCat = label("Categoria:", true);
-            cbCategoria = new JComboBox<>(categoriasPratoCombo());
-            UIConstants.styleCombo(cbCategoria);
+            // Linha 2
+            gc.gridx=0; gc.gridy=1; gc.weightx=0; form.add(criarLabel("Categoria:"), gc);
+            gc.gridx=1; 
+            cbCategoria = new JComboBox<>(); UIConstants.styleCombo(cbCategoria);
+            for(String s : CATEGORIAS_PRATOS_PADRAO) cbCategoria.addItem(s);
+            for(String s : dao.categoriasPratos()) if(((DefaultComboBoxModel)cbCategoria.getModel()).getIndexOf(s) == -1) cbCategoria.addItem(s);
+            form.add(cbCategoria, gc);
 
-            JLabel lPreco = label("Preço:", true);
-            spPreco = new JSpinner(new SpinnerNumberModel(0.0,0.0,99999.99,0.5));
+            // Linha 3
+            gc.gridx=0; gc.gridy=2; form.add(criarLabel("Preço (R$):"), gc);
+            gc.gridx=1; 
+            JPanel pPreco = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0)); pPreco.setOpaque(false);
+            spPreco = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 10000.0, 0.5));
             UIConstants.styleSpinner(spPreco);
+            spPreco.setPreferredSize(new Dimension(120, 35));
+            pPreco.add(spPreco);
+            
+            chkAtivo = new JCheckBox("Disponível para venda");
+            chkAtivo.setForeground(UIConstants.FG_LIGHT);
+            chkAtivo.setOpaque(false);
+            chkAtivo.setSelected(true);
+            pPreco.add(Box.createHorizontalStrut(20));
+            pPreco.add(chkAtivo);
+            
+            form.add(pPreco, gc);
 
-            chkAtivo = new JCheckBox("Ativo",true);
-            chkAtivo.setOpaque(false); chkAtivo.setForeground(UIConstants.FG_LIGHT);
+            // Tabela Ingredientes
+            gc.gridx=0; gc.gridy=3; gc.gridwidth=2; gc.insets = new Insets(20, 5, 5, 5);
+            JLabel lblIng = new JLabel("Ficha Técnica (Ingredientes)");
+            lblIng.setFont(UIConstants.FONT_BOLD);
+            lblIng.setForeground(UIConstants.FG_LIGHT);
+            form.add(lblIng, gc);
 
-            JLabel lIng = label("Ingredientes", true);
-            lIng.setIcon(IconLoader.load("/icons/ingredients.png",18,18));
-
-            ingModel = new DefaultTableModel(new Object[]{"ID","Item","Unidade","Quantidade"},0){
-                @Override public boolean isCellEditable(int r,int c){ return false; }
-                @Override public Class<?> getColumnClass(int c){ return switch(c){case 0->Long.class; case 3->Double.class; default->String.class;}; }
+            gc.gridy=4; gc.weighty=1.0; gc.fill = GridBagConstraints.BOTH;
+            String[] iCols = {"ID Estoque", "Item", "Un.", "Qtd"};
+            ingModel = new DefaultTableModel(iCols, 0) {
+                @Override public boolean isCellEditable(int r, int c) { return false; }
             };
-            tblIng = criarTabelaBase(ingModel);
-            ajustarLarguras(tblIng,new int[]{60,340,120,120});
-            JScrollPane sp = new JScrollPane(tblIng);
-            styleScroll(sp);
+            tblIng = new JTable(ingModel);
+            UIConstants.styleTable(tblIng);
+            
+            JScrollPane scrollIng = new JScrollPane(tblIng);
+            UIConstants.styleScrollPane(scrollIng);
+            form.add(scrollIng, gc);
 
-            JButton btnAdd = buttonPrimary("+ Ingrediente","/icons/add.png", e -> abrirSeletorIngrediente());
-            JButton btnRem = buttonSecondary("Remover","/icons/delete.png", e -> removerIngrediente());
-            JButton btnSalvar = new JButton("Salvar", IconLoader.load("/icons/save.png",16,16));
-            UIConstants.styleSuccess(btnSalvar);
-            btnSalvar.addActionListener(e -> salvar());
-            JButton btnCancelar = buttonSecondary("Cancelar","/icons/cancel.png", e -> { resultado=null; dispose(); });
+            // Botões Ingredientes
+            gc.gridy=5; gc.weighty=0; gc.fill = GridBagConstraints.HORIZONTAL;
+            JPanel pIngBtns = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            pIngBtns.setOpaque(false);
+            
+            JButton btnAddIng = new JButton("Adicionar Ingrediente");
+            btnAddIng.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ADD_SHOPPING_CART, 16, UIConstants.FG_LIGHT));
+            UIConstants.styleSecondary(btnAddIng);
+            btnAddIng.addActionListener(e -> abrirSeletorIngredientes());
 
-            getRootPane().setDefaultButton(btnSalvar);
-            getRootPane().registerKeyboardAction(e -> { resultado=null; dispose(); },
-                    KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0), JComponent.WHEN_IN_FOCUSED_WINDOW);
+            JButton btnRemIng = new JButton("Remover");
+            btnRemIng.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.DELETE, 16, UIConstants.DANGER_RED));
+            UIConstants.styleSecondary(btnRemIng); 
+            btnRemIng.addActionListener(e -> {
+                int r = tblIng.getSelectedRow();
+                if(r >= 0) ingModel.removeRow(r);
+            });
 
-            JPanel c = new JPanel();
-            c.setBackground(UIConstants.BG_DARK);
-            GroupLayout gl = new GroupLayout(c);
-            c.setLayout(gl);
-            gl.setAutoCreateGaps(true);
-            gl.setAutoCreateContainerGaps(true);
+            pIngBtns.add(btnAddIng);
+            pIngBtns.add(btnRemIng);
+            form.add(pIngBtns, gc);
 
-            gl.setHorizontalGroup(gl.createParallelGroup(GroupLayout.Alignment.LEADING)
-                .addComponent(titulo)
-                .addGroup(gl.createSequentialGroup()
-                    .addGroup(gl.createParallelGroup(GroupLayout.Alignment.LEADING)
-                        .addComponent(lNome)
-                        .addComponent(lCat)
-                        .addComponent(lPreco))
-                    .addGroup(gl.createParallelGroup(GroupLayout.Alignment.LEADING)
-                        .addComponent(txtNome)
-                        .addComponent(cbCategoria,0,GroupLayout.DEFAULT_SIZE,Short.MAX_VALUE)
-                        .addGroup(gl.createSequentialGroup()
-                            .addComponent(spPreco,GroupLayout.PREFERRED_SIZE,120,GroupLayout.PREFERRED_SIZE)
-                            .addGap(16)
-                            .addComponent(chkAtivo))))
-                .addComponent(lIng)
-                .addComponent(sp)
-                .addGroup(GroupLayout.Alignment.TRAILING, gl.createSequentialGroup()
-                    .addComponent(btnAdd)
-                    .addComponent(btnRem)
-                    .addGap(0,0,Short.MAX_VALUE)
-                    .addComponent(btnCancelar)
-                    .addComponent(btnSalvar))
-            );
-            gl.setVerticalGroup(gl.createSequentialGroup()
-                .addComponent(titulo)
-                .addGap(8)
-                .addGroup(gl.createParallelGroup(GroupLayout.Alignment.CENTER)
-                    .addComponent(lNome)
-                    .addComponent(txtNome,GroupLayout.PREFERRED_SIZE,30,GroupLayout.PREFERRED_SIZE))
-                .addGroup(gl.createParallelGroup(GroupLayout.Alignment.CENTER)
-                    .addComponent(lCat)
-                    .addComponent(cbCategoria,GroupLayout.PREFERRED_SIZE,30,GroupLayout.PREFERRED_SIZE))
-                .addGroup(gl.createParallelGroup(GroupLayout.Alignment.CENTER)
-                    .addComponent(lPreco)
-                    .addComponent(spPreco,GroupLayout.PREFERRED_SIZE,30,GroupLayout.PREFERRED_SIZE)
-                    .addComponent(chkAtivo))
-                .addGap(10)
-                .addComponent(lIng)
-                .addComponent(sp,GroupLayout.DEFAULT_SIZE,340,Short.MAX_VALUE)
-                .addGroup(gl.createParallelGroup(GroupLayout.Alignment.CENTER)
-                    .addComponent(btnAdd)
-                    .addComponent(btnRem)
-                    .addComponent(btnCancelar)
-                    .addComponent(btnSalvar))
-            );
+            add(form, BorderLayout.CENTER);
 
-            setContentPane(c);
+            // Footer (Salvar/Cancelar)
+            JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            footer.setBackground(UIConstants.BG_DARK);
+            footer.setBorder(new EmptyBorder(10, 20, 20, 20));
+
+            JButton btnCancel = new JButton("Cancelar");
+            UIConstants.styleSecondary(btnCancel);
+            btnCancel.addActionListener(e -> dispose());
+
+            JButton btnSave = new JButton("Salvar Prato");
+            UIConstants.styleSuccess(btnSave);
+            btnSave.addActionListener(e -> salvar());
+
+            footer.add(btnCancel);
+            footer.add(btnSave);
+            add(footer, BorderLayout.SOUTH);
+
+            if(base != null) carregarDados(base);
         }
-        private String[] categoriasPratoCombo(){
-            return Stream.concat(Arrays.stream(CATEGORIAS_PRATOS_PADRAO), dao.categoriasPratos().stream())
-                    .filter(s->s!=null && !s.isBlank())
-                    .distinct()
-                    .sorted(String.CASE_INSENSITIVE_ORDER)
-                    .toArray(String[]::new);
-        }
-        private void abrirSeletorIngrediente(){
-            IngredientPickerDialog d = new IngredientPickerDialog(SwingUtilities.getWindowAncestor(this));
+
+        private void abrirSeletorIngredientes() {
+            // Modal simples para buscar no estoque
+            JDialog d = new JDialog(this, "Selecionar do Estoque", true);
+            d.setSize(500, 400);
+            d.setLocationRelativeTo(this);
+            d.getContentPane().setBackground(UIConstants.BG_DARK);
+            d.setLayout(new BorderLayout());
+
+            DefaultTableModel tm = new DefaultTableModel(new String[]{"ID", "Item", "Un.", "Estoque"}, 0);
+            JTable t = new JTable(tm);
+            UIConstants.styleTable(t);
+            
+            // Popula com dados do EstoqueDAO
+            for(ItemEstoque ie : estoqueDAO.listarItens("", "Todas", "Ativos")) {
+                tm.addRow(new Object[]{ie.getId(), ie.getNome(), ie.getUnidadePadrao(), ie.getEstoqueAtual()});
+            }
+
+            d.add(new JScrollPane(t), BorderLayout.CENTER);
+
+            JPanel pBottom = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            pBottom.setBackground(UIConstants.BG_DARK);
+            
+            JLabel lQtd = new JLabel("Qtd:");
+            lQtd.setForeground(Color.WHITE);
+            JSpinner sQtd = new JSpinner(new SpinnerNumberModel(1.0, 0.01, 1000.0, 1.0));
+            UIConstants.styleSpinner(sQtd);
+            
+            JButton bAdd = new JButton("Adicionar");
+            UIConstants.styleSuccess(bAdd);
+            bAdd.addActionListener(e -> {
+                int r = t.getSelectedRow();
+                if(r >= 0) {
+                    ingModel.addRow(new Object[]{
+                        t.getValueAt(r, 0),
+                        t.getValueAt(r, 1),
+                        t.getValueAt(r, 2),
+                        sQtd.getValue()
+                    });
+                    d.dispose();
+                } else {
+                     Toast.show(d, "Selecione um item", Toast.Type.WARNING);
+                }
+            });
+            
+            pBottom.add(lQtd);
+            pBottom.add(sQtd);
+            pBottom.add(bAdd);
+            d.add(pBottom, BorderLayout.SOUTH);
             d.setVisible(true);
-            IngredientSelection sel = d.getResultado();
-            if(sel!=null){
-                ingModel.addRow(new Object[]{sel.itemId, sel.itemNome, sel.unidade, sel.quantidade});
+        }
+
+        private void carregarDados(Prato p) {
+            txtNome.setText(p.getNome());
+            cbCategoria.setSelectedItem(p.getCategoria());
+            spPreco.setValue(p.getPreco());
+            chkAtivo.setSelected(p.isAtivo());
+            for(ReceitaItem ri : p.getIngredientes()) {
+                ingModel.addRow(new Object[]{ri.getItemEstoqueId(), ri.getItemNome(), ri.getUnidade(), ri.getQuantidade()});
             }
         }
-        private void removerIngrediente(){
-            int r = tblIng.getSelectedRow();
-            if(r<0){ warn("Selecione um ingrediente."); return; }
-            ingModel.removeRow(r);
-        }
-        private void salvar(){
-            String nome = txtNome.getText().trim();
-            if(nome.isBlank()){ warn("Nome é obrigatório."); return; }
-            Prato p = new Prato();
-            p.setNome(nome);
-            p.setCategoria((String) cbCategoria.getSelectedItem());
-            p.setPreco(((Number)spPreco.getValue()).doubleValue());
-            p.setAtivo(chkAtivo.isSelected());
-            for(int i=0;i<ingModel.getRowCount();i++){
-                Long id = (Long) ingModel.getValueAt(i,0);
-                String item = String.valueOf(ingModel.getValueAt(i,1));
-                String un   = String.valueOf(ingModel.getValueAt(i,2));
-                double qtd  = ((Number)ingModel.getValueAt(i,3)).doubleValue();
-                p.getIngredientes().add(new ReceitaItem(id,item,un,qtd));
+
+        private void salvar() {
+            if(txtNome.getText().isEmpty()) { Toast.show(this, "Nome obrigatório", Toast.Type.WARNING); return; }
+            
+            resultado = new Prato();
+            resultado.setNome(txtNome.getText());
+            resultado.setCategoria(cbCategoria.getSelectedItem().toString());
+            resultado.setPreco((Double)spPreco.getValue());
+            resultado.setAtivo(chkAtivo.isSelected());
+            
+            for(int i=0; i<ingModel.getRowCount(); i++) {
+                Long id = (Long) ingModel.getValueAt(i, 0);
+                String nome = (String) ingModel.getValueAt(i, 1);
+                String un = (String) ingModel.getValueAt(i, 2);
+                Double qtd = (Double) ingModel.getValueAt(i, 3);
+                resultado.getIngredientes().add(new ReceitaItem(id, nome, un, qtd));
             }
-            resultado = p;
             dispose();
         }
-        private void carregar(Prato base){
-            txtNome.setText(base.getNome());
-            cbCategoria.setSelectedItem(base.getCategoria());
-            spPreco.setValue(base.getPreco());
-            chkAtivo.setSelected(base.isAtivo());
-            for(ReceitaItem ri: base.getIngredientes()){
-                ingModel.addRow(new Object[]{ri.getItemEstoqueId(),ri.getItemNome(),ri.getUnidade(),ri.getQuantidade()});
-            }
-            resultado = base;
-        }
-        Prato getResultado(){ return resultado; }
 
-        /* ---------- Seletor de Ingredientes ---------- */
-        private class IngredientPickerDialog extends JDialog {
-            private JTextField txtBusca;
-            private JComboBox<String> cbCat;
-            private JTable tbl;
-            private DefaultTableModel model;
-            private JSpinner spQtd;
-            private JComboBox<String> cbUn;
-            private JLabel lblConv;
-            private IngredientSelection resultado;
-
-            IngredientPickerDialog(Window owner){
-                super(owner,"Selecionar Ingrediente", ModalityType.APPLICATION_MODAL);
-                setSize(860,600);
-                setLocationRelativeTo(owner);
-                montar();
-                carregarCategorias();
-                atualizar();
-            }
-            private void montar(){
-                JLabel titulo = new JLabel("Buscar Item de Estoque", IconLoader.load("/icons/ingredients.png",18,18),SwingConstants.LEADING);
-                titulo.setFont(UIConstants.ARIAL_14_B);
-                titulo.setForeground(UIConstants.FG_LIGHT);
-
-                txtBusca = new JTextField(); UIConstants.styleField(txtBusca);
-                txtBusca.addActionListener(e -> atualizar());
-
-                cbCat = new JComboBox<>(); UIConstants.styleCombo(cbCat);
-
-                JButton btnBuscar = buttonPrimary("Buscar","/icons/search.png", e -> atualizar());
-
-                model = new DefaultTableModel(new Object[]{"ID","Nome","Categoria","Unidade","Estoque","Custo Médio"},0){
-                    @Override public boolean isCellEditable(int r,int c){ return false; }
-                    @Override public Class<?> getColumnClass(int c){ return c==0?Long.class:(c==4?Double.class:String.class); }
-                };
-                tbl = criarTabelaBase(model);
-                ajustarLarguras(tbl,new int[]{60,320,160,80,100,120});
-                tbl.addMouseListener(new MouseAdapter(){
-                    @Override public void mouseClicked(MouseEvent e){
-                        if(e.getClickCount()==2 && SwingUtilities.isLeftMouseButton(e)){
-                            prepararUnidades();
-                            confirmar();
-                        }
-                    }
-                });
-                JScrollPane sp = new JScrollPane(tbl);
-                styleScroll(sp);
-
-                JLabel lQtd = label("Quantidade:", true);
-                spQtd = new JSpinner(new SpinnerNumberModel(1.0,0.001,999999.0,0.5));
-                UIConstants.styleSpinner(spQtd);
-
-                JLabel lUn = label("Unidade:", true);
-                cbUn = new JComboBox<>();
-                UIConstants.styleCombo(cbUn);
-
-                lblConv = new JLabel("Conversão:");
-                lblConv.setFont(UIConstants.ARIAL_12);
-                lblConv.setForeground(UIConstants.FG_MUTED);
-
-                JButton btnAdd = UIbuttonSuccess("Adicionar","/icons/save.png", e -> { prepararUnidades(); confirmar(); });
-                JButton btnCancel = buttonSecondary("Cancelar","/icons/cancel.png", e -> { resultado=null; dispose(); });
-
-                getRootPane().setDefaultButton(btnAdd);
-                getRootPane().registerKeyboardAction(e -> { resultado=null; dispose(); },
-                        KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0), JComponent.WHEN_IN_FOCUSED_WINDOW);
-
-                JSeparator sep = separator();
-
-                JPanel c = new JPanel();
-                c.setBackground(UIConstants.BG_DARK);
-                GroupLayout gl = new GroupLayout(c);
-                c.setLayout(gl);
-                gl.setAutoCreateGaps(true);
-                gl.setAutoCreateContainerGaps(true);
-
-                gl.setHorizontalGroup(gl.createParallelGroup(GroupLayout.Alignment.LEADING)
-                    .addComponent(titulo)
-                    .addGroup(gl.createSequentialGroup()
-                        .addComponent(label("Buscar:", false))
-                        .addComponent(txtBusca)
-                        .addComponent(label("Categoria:", false))
-                        .addComponent(cbCat,GroupLayout.PREFERRED_SIZE,220,GroupLayout.PREFERRED_SIZE)
-                        .addComponent(btnBuscar))
-                    .addComponent(sep)
-                    .addComponent(sp)
-                    .addGroup(gl.createSequentialGroup()
-                        .addComponent(lQtd).addComponent(spQtd,GroupLayout.PREFERRED_SIZE,160,GroupLayout.PREFERRED_SIZE)
-                        .addGap(16)
-                        .addComponent(lUn).addComponent(cbUn,GroupLayout.PREFERRED_SIZE,160,GroupLayout.PREFERRED_SIZE)
-                        .addGap(16)
-                        .addComponent(lblConv,GroupLayout.DEFAULT_SIZE,GroupLayout.DEFAULT_SIZE,Short.MAX_VALUE))
-                    .addGroup(GroupLayout.Alignment.TRAILING, gl.createSequentialGroup()
-                        .addComponent(btnCancel)
-                        .addComponent(btnAdd))
-                );
-                gl.setVerticalGroup(gl.createSequentialGroup()
-                    .addComponent(titulo)
-                    .addGroup(gl.createParallelGroup(GroupLayout.Alignment.CENTER)
-                        .addComponent(label("Buscar:", false))
-                        .addComponent(txtBusca,GroupLayout.PREFERRED_SIZE,30,GroupLayout.PREFERRED_SIZE)
-                        .addComponent(label("Categoria:", false))
-                        .addComponent(cbCat,GroupLayout.PREFERRED_SIZE,30,GroupLayout.PREFERRED_SIZE)
-                        .addComponent(btnBuscar))
-                    .addComponent(sep)
-                    .addComponent(sp,GroupLayout.DEFAULT_SIZE,340,Short.MAX_VALUE)
-                    .addGroup(gl.createParallelGroup(GroupLayout.Alignment.CENTER)
-                        .addComponent(lQtd)
-                        .addComponent(spQtd,GroupLayout.PREFERRED_SIZE,30,GroupLayout.PREFERRED_SIZE)
-                        .addComponent(lUn)
-                        .addComponent(cbUn,GroupLayout.PREFERRED_SIZE,30,GroupLayout.PREFERRED_SIZE)
-                        .addComponent(lblConv))
-                    .addGroup(gl.createParallelGroup(GroupLayout.Alignment.CENTER)
-                        .addComponent(btnCancel)
-                        .addComponent(btnAdd))
-                );
-
-                setContentPane(c);
-            }
-
-            private JButton UIbuttonSuccess(String text,String icon,ActionListener al){
-                JButton b = new JButton(text, IconLoader.load(icon,16,16));
-                UIConstants.styleSuccess(b);
-                b.addActionListener(al);
-                return b;
-            }
-
-            private void carregarCategorias(){
-                cbCat.removeAllItems();
-                cbCat.addItem("Todas");
-                estoqueDAO.categoriasNomes().forEach(cbCat::addItem);
-            }
-            private void atualizar(){
-                String termo = txtBusca.getText();
-                String cat = (String) cbCat.getSelectedItem();
-                List<ItemEstoque> itens = estoqueDAO.listarItens(termo,cat,"Ativos");
-                model.setRowCount(0);
-                for(ItemEstoque it: itens){
-                    model.addRow(new Object[]{
-                            it.getId(),
-                            it.getNome(),
-                            it.getCategoria(),
-                            it.getUnidadePadrao(),
-                            it.getEstoqueAtual(),
-                            CURRENCY.format(it.getCustoMedio())
-                    });
-                }
-                if(model.getRowCount()>0) tbl.setRowSelectionInterval(0,0);
-                prepararUnidades();
-            }
-            private void prepararUnidades(){
-                cbUn.removeAllItems();
-                lblConv.setText("Conversão:");
-                int vr = tbl.getSelectedRow();
-                if(vr<0) return;
-                int mr = tbl.convertRowIndexToModel(vr);
-                Long id = (Long) model.getValueAt(mr,0);
-                ItemEstoque item = estoqueDAO.buscarItemPorId(id);
-                if(item==null) return;
-
-                Unidade unidadePadrao = estoqueDAO.listarUnidades().stream()
-                        .filter(u->u.getCodigo().equals(item.getUnidadePadrao()))
-                        .findFirst().orElse(null);
-
-                List<String> possiveis = new ArrayList<>();
-                if(unidadePadrao!=null){
-                    for(Unidade u : estoqueDAO.listarUnidades()){
-                        if(Objects.equals(u.getBase(), unidadePadrao.getBase()) && u.getFatorBase()>0){
-                            possiveis.add(u.getCodigo());
-                        }
-                    }
-                }
-                if(item.getFatorCxParaUn()!=null){
-                    if(!possiveis.contains("un")) possiveis.add("un");
-                    if(!possiveis.contains("cx")) possiveis.add("cx");
-                    if(!possiveis.contains("pct")) possiveis.add("pct");
-                }
-                possiveis.remove(item.getUnidadePadrao());
-                possiveis.add(0,item.getUnidadePadrao());
-                for(String u: possiveis) cbUn.addItem(u);
-                cbUn.addActionListener(e -> atualizarInfoConversao(item));
-                cbUn.setSelectedIndex(0);
-                spQtd.setValue(1.0);
-                atualizarInfoConversao(item);
-            }
-            private void atualizarInfoConversao(ItemEstoque item){
-                String unSel = (String) cbUn.getSelectedItem();
-                if(unSel==null){ lblConv.setText("Conversão:"); return; }
-                String baseGrupo = estoqueDAO.listarUnidades().stream()
-                        .filter(u->u.getCodigo().equals(unSel))
-                        .map(Unidade::getBase)
-                        .findFirst().orElse("-");
-                StringBuilder sb = new StringBuilder("Grupo ").append(baseGrupo);
-                if("g".equals(baseGrupo)) sb.append(" (1 kg = 1000 g)");
-                if("ml".equals(baseGrupo)) sb.append(" (1 L = 1000 ml)");
-                if(item.getFatorCxParaUn()!=null) sb.append(" | 1 cx/pct = ").append(String.format("%.0f",item.getFatorCxParaUn())).append(" un");
-                lblConv.setText(sb.toString());
-            }
-            private void confirmar(){
-                int vr = tbl.getSelectedRow();
-                if(vr<0){ warn("Selecione um item."); return; }
-                int mr = tbl.convertRowIndexToModel(vr);
-                Long id = (Long) model.getValueAt(mr,0);
-                String nome = String.valueOf(model.getValueAt(mr,1));
-                String un = (String) cbUn.getSelectedItem();
-                double qtd = ((Number)spQtd.getValue()).doubleValue();
-                if(qtd<=0){ warn("Quantidade deve ser > 0."); return; }
-                resultado = new IngredientSelection(id,nome,un,qtd);
-                dispose();
-            }
-            IngredientSelection getResultado(){ return resultado; }
-        }
-
-        private class IngredientSelection {
-            final Long itemId; final String itemNome; final String unidade; final double quantidade;
-            IngredientSelection(Long itemId,String itemNome,String unidade,double quantidade){
-                this.itemId=itemId; this.itemNome=itemNome; this.unidade=unidade; this.quantidade=quantidade;
-            }
-        }
+        public Prato getResultado() { return resultado; }
     }
 
-    /* ----------------------------- DIALOG PRODUTO ---------------------------- */
-
+    // --- DIALOG PRODUTO ---
     private class ProdutoDialog extends JDialog {
         private JTextField txtNome;
         private JComboBox<String> cbCategoria;
@@ -1110,121 +675,129 @@ public class CardapioPainel extends JPanel {
         private JCheckBox chkAtivo;
         private ProdutoVenda resultado;
 
-        ProdutoDialog(Window owner, ProdutoVenda base){
-            super(owner,"Cadastro de Produto", ModalityType.APPLICATION_MODAL);
-            setSize(580,420);
+        public ProdutoDialog(Window owner, ProdutoVenda base) {
+            super(owner, base == null ? "Novo Produto" : "Editar Produto", ModalityType.APPLICATION_MODAL);
+            setSize(450, 400);
             setLocationRelativeTo(owner);
-            setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-            montar();
-            if(base!=null) carregar(base);
-        }
-        private void montar(){
-            JLabel titulo = new JLabel("Cadastro de Produto", IconLoader.load("/icons/drink.png",22,22),SwingConstants.LEADING);
-            titulo.setFont(UIConstants.ARIAL_16_B); titulo.setForeground(UIConstants.FG_LIGHT);
+            getContentPane().setBackground(UIConstants.BG_DARK);
+            setLayout(new BorderLayout());
 
-            JLabel lNome = label("Nome:", true);
+            JPanel form = new JPanel(new GridBagLayout());
+            form.setBackground(UIConstants.BG_DARK);
+            form.setBorder(new EmptyBorder(20, 20, 20, 20));
+            GridBagConstraints gc = new GridBagConstraints();
+            gc.fill = GridBagConstraints.HORIZONTAL;
+            gc.insets = new Insets(10, 0, 10, 0);
+            gc.gridx = 0; gc.gridy = 0;
+
+            form.add(criarLabel("Nome do Produto:"), gc);
+            gc.gridy++; 
             txtNome = new JTextField(); UIConstants.styleField(txtNome);
+            form.add(txtNome, gc);
 
-            JLabel lCat = label("Categoria:", true);
-            cbCategoria = new JComboBox<>(categoriasProdutosCombo());
+            gc.gridy++; 
+            form.add(criarLabel("Categoria:"), gc);
+            gc.gridy++; 
+            cbCategoria = new JComboBox<>(CATEGORIAS_PRODUTOS_PADRAO);
             UIConstants.styleCombo(cbCategoria);
+            cbCategoria.setEditable(true); // Permite nova categoria
+            form.add(cbCategoria, gc);
 
-            JLabel lPreco = label("Preço:", true);
-            spPreco = new JSpinner(new SpinnerNumberModel(0.0,0.0,9999.99,0.5));
+            gc.gridy++; 
+            form.add(criarLabel("Preço de Venda:"), gc);
+            gc.gridy++; 
+            spPreco = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 10000.0, 0.5));
             UIConstants.styleSpinner(spPreco);
+            form.add(spPreco, gc);
 
-            chkAtivo = new JCheckBox("Ativo", true);
-            chkAtivo.setOpaque(false); chkAtivo.setForeground(UIConstants.FG_LIGHT);
+            gc.gridy++; 
+            chkAtivo = new JCheckBox("Produto Ativo");
+            chkAtivo.setForeground(UIConstants.FG_LIGHT);
+            chkAtivo.setOpaque(false);
+            chkAtivo.setSelected(true);
+            form.add(chkAtivo, gc);
 
-            JButton btnSalvar = new JButton("Salvar", IconLoader.load("/icons/save.png",16,16));
-            UIConstants.styleSuccess(btnSalvar);
-            btnSalvar.addActionListener(e -> salvar());
+            add(form, BorderLayout.CENTER);
 
-            JButton btnCancelar = buttonSecondary("Cancelar","/icons/cancel.png", e -> { resultado=null; dispose(); });
+            JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            footer.setBackground(UIConstants.BG_DARK);
+            
+            JButton btnCancel = new JButton("Cancelar");
+            UIConstants.styleSecondary(btnCancel);
+            btnCancel.addActionListener(e -> dispose());
+            
+            JButton btnSave = new JButton("Salvar");
+            UIConstants.styleSuccess(btnSave);
+            btnSave.addActionListener(e -> {
+                if(txtNome.getText().isEmpty()) { Toast.show(this, "Nome é obrigatório", Toast.Type.WARNING); return; }
+                resultado = new ProdutoVenda(null, txtNome.getText(), 
+                        cbCategoria.getSelectedItem().toString(), 
+                        chkAtivo.isSelected(), (Double)spPreco.getValue());
+                dispose();
+            });
 
-            getRootPane().setDefaultButton(btnSalvar);
-            getRootPane().registerKeyboardAction(e -> { resultado=null; dispose(); },
-                    KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0), JComponent.WHEN_IN_FOCUSED_WINDOW);
+            footer.add(btnCancel);
+            footer.add(btnSave);
+            add(footer, BorderLayout.SOUTH);
 
-            JPanel c = new JPanel();
-            c.setBackground(UIConstants.BG_DARK);
-            GroupLayout gl = new GroupLayout(c);
-            c.setLayout(gl);
-            gl.setAutoCreateGaps(true);
-            gl.setAutoCreateContainerGaps(true);
-
-            gl.setHorizontalGroup(gl.createParallelGroup(GroupLayout.Alignment.LEADING)
-                .addComponent(titulo)
-                .addGroup(gl.createSequentialGroup()
-                    .addGroup(gl.createParallelGroup(GroupLayout.Alignment.LEADING)
-                        .addComponent(lNome)
-                        .addComponent(lCat)
-                        .addComponent(lPreco))
-                    .addGroup(gl.createParallelGroup(GroupLayout.Alignment.LEADING)
-                        .addComponent(txtNome)
-                        .addComponent(cbCategoria,0,GroupLayout.DEFAULT_SIZE,Short.MAX_VALUE)
-                        .addGroup(gl.createSequentialGroup()
-                            .addComponent(spPreco,GroupLayout.PREFERRED_SIZE,140,GroupLayout.PREFERRED_SIZE)
-                            .addGap(16)
-                            .addComponent(chkAtivo))))
-                .addGroup(GroupLayout.Alignment.TRAILING, gl.createSequentialGroup()
-                    .addComponent(btnCancelar)
-                    .addComponent(btnSalvar))
-            );
-            gl.setVerticalGroup(gl.createSequentialGroup()
-                .addComponent(titulo)
-                .addGap(8)
-                .addGroup(gl.createParallelGroup(GroupLayout.Alignment.CENTER)
-                    .addComponent(lNome)
-                    .addComponent(txtNome,GroupLayout.PREFERRED_SIZE,30,GroupLayout.PREFERRED_SIZE))
-                .addGroup(gl.createParallelGroup(GroupLayout.Alignment.CENTER)
-                    .addComponent(lCat)
-                    .addComponent(cbCategoria,GroupLayout.PREFERRED_SIZE,30,GroupLayout.PREFERRED_SIZE))
-                .addGroup(gl.createParallelGroup(GroupLayout.Alignment.CENTER)
-                    .addComponent(lPreco)
-                    .addComponent(spPreco,GroupLayout.PREFERRED_SIZE,30,GroupLayout.PREFERRED_SIZE)
-                    .addComponent(chkAtivo))
-                .addGap(24)
-                .addGroup(gl.createParallelGroup(GroupLayout.Alignment.CENTER)
-                    .addComponent(btnCancelar)
-                    .addComponent(btnSalvar))
-            );
-
-            setContentPane(c);
+            if(base != null) {
+                txtNome.setText(base.getNome());
+                cbCategoria.setSelectedItem(base.getCategoria());
+                spPreco.setValue(base.getPreco());
+                chkAtivo.setSelected(base.isAtivo());
+            }
         }
-        private String[] categoriasProdutosCombo(){
-            return Stream.concat(Arrays.stream(CATEGORIAS_PRODUTOS_PADRAO), dao.categoriasProdutos().stream())
-                    .filter(s->s!=null && !s.isBlank())
-                    .distinct()
-                    .sorted(String.CASE_INSENSITIVE_ORDER)
-                    .toArray(String[]::new);
-        }
-        private void salvar(){
-            String nome = txtNome.getText().trim();
-            if(nome.isBlank()){ warn("Nome é obrigatório."); return; }
-            ProdutoVenda p = new ProdutoVenda(null,
-                    nome,
-                    (String)cbCategoria.getSelectedItem(),
-                    chkAtivo.isSelected(),
-                    ((Number)spPreco.getValue()).doubleValue());
-            resultado = p;
-            dispose();
-        }
-        private void carregar(ProdutoVenda base){
-            txtNome.setText(base.getNome());
-            cbCategoria.setSelectedItem(base.getCategoria());
-            spPreco.setValue(base.getPreco());
-            chkAtivo.setSelected(base.isAtivo());
-            resultado = base;
-        }
-        ProdutoVenda getResultado(){ return resultado; }
+        public ProdutoVenda getResultado() { return resultado; }
     }
 
-    /* ----------------------------- Buttons util internos --------------------- */
-    private JButton UIbuttonSuccess(String text,String icon,ActionListener al){
-        JButton b = new JButton(text, IconLoader.load(icon,16,16));
-        UIConstants.styleSuccess(b);
-        b.addActionListener(al);
+    // UTILS
+    private JLabel criarLabel(String texto) {
+        JLabel l = new JLabel(texto);
+        l.setForeground(UIConstants.FG_MUTED);
+        l.setFont(UIConstants.FONT_BOLD);
+        return l;
+    }
+
+    private JButton criarBotaoIcone(GoogleMaterialDesignIcons icone, Color bg, String tooltip) {
+        JButton b = new JButton(IconFontSwing.buildIcon(icone, 18, UIConstants.FG_LIGHT));
+        b.setBackground(bg);
+        b.setBorder(BorderFactory.createLineBorder(UIConstants.GRID_DARK));
+        b.setFocusPainted(false);
+        b.setPreferredSize(new Dimension(40, 35));
+        b.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        b.setToolTipText(tooltip);
         return b;
+    }
+
+    private void configurarRenderers(JTable table) {
+        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (!isSelected) {
+                    c.setBackground(row % 2 == 0 ? UIConstants.BG_DARK : UIConstants.ALT_ROW);
+                }
+                setHorizontalAlignment(column == 0 ? CENTER : LEFT);
+                
+                if (column == 4) { // Coluna Status
+                    JLabel l = (JLabel) c;
+                    l.setHorizontalAlignment(CENTER);
+                    l.setFont(UIConstants.FONT_BOLD);
+                    if ("Ativo".equals(value)) {
+                        l.setForeground(UIConstants.SUCCESS_GREEN);
+                        l.setText("● Ativo");
+                    } else {
+                        l.setForeground(UIConstants.FG_MUTED);
+                        l.setText("● Inativo");
+                    }
+                    l.setToolTipText("Clique para alterar o status");
+                    l.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                } else if (column == 3) { // Preço
+                    setHorizontalAlignment(RIGHT);
+                }
+                
+                return c;
+            }
+        });
     }
 }

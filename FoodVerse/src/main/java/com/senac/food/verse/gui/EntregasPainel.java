@@ -1,8 +1,6 @@
 package com.senac.food.verse.gui;
 
 import com.senac.food.verse.ConexaoBanco;
-import com.senac.food.verse.PedidoDAO;
-import com.senac.food.verse.Pedidos; // Certifique-se que esta classe existe ou use o DTO interno
 import jiconfont.icons.google_material_design_icons.GoogleMaterialDesignIcons;
 import jiconfont.swing.IconFontSwing;
 
@@ -11,55 +9,53 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Line2D;
-import java.awt.geom.Path2D;
-import java.awt.geom.RoundRectangle2D;
-import java.sql.Connection;
+import java.awt.geom.*;
+import java.net.URI;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class EntregasPainel extends JPanel {
 
-    // Cores e Estilos
+    // --- CORES & ESTILO (Dark Mode Moderno) ---
     private final Color BG_DARK = new Color(30, 30, 30);
+    private final Color BG_CARD = new Color(45, 45, 48);
     private final Color COLOR_PRONTO = new Color(241, 196, 15); // Amarelo
-    private final Color COLOR_ROTA = new Color(52, 152, 219);   // Azul
-    private final Color COLOR_FINALIZADO = new Color(46, 204, 113); // Verde
-    
-    // Componentes
-    private JPanel colunaProntos;
-    private JPanel colunaEmRota;
+    private final Color COLOR_EM_ROTA = new Color(52, 152, 219); // Azul
+    private final Color COLOR_FINALIZADO = new Color(39, 174, 96); // Verde
+    private final Font FONT_TITLE = new Font("Segoe UI", Font.BOLD, 22);
+    private final Font FONT_BOLD = new Font("Segoe UI", Font.BOLD, 14);
+    private final Font FONT_SMALL = new Font("Segoe UI", Font.PLAIN, 12);
+
+    // Paineis das Colunas
+    private JPanel containerProntos;
+    private JPanel containerEmRota;
     private JLabel lblStatusConexao;
 
     public EntregasPainel() {
         setLayout(new BorderLayout());
         setBackground(BG_DARK);
 
-        // Header
+        // 1. Header
         add(criarHeader(), BorderLayout.NORTH);
 
-        // Corpo (Kanban com 2 colunas)
+        // 2. Kanban Board (Colunas)
         JPanel board = new JPanel(new GridLayout(1, 2, 20, 0));
         board.setBackground(BG_DARK);
         board.setBorder(new EmptyBorder(10, 20, 20, 20));
 
-        colunaProntos = criarColuna("Aguardando Entregador", COLOR_PRONTO, GoogleMaterialDesignIcons.STORE);
-        colunaEmRota = criarColuna("Em Rota de Entrega", COLOR_ROTA, GoogleMaterialDesignIcons.STORE);
+        containerProntos = criarColuna("Aguardando Motoboy", COLOR_PRONTO, GoogleMaterialDesignIcons.STORE_MALL_DIRECTORY);
+        containerEmRota = criarColuna("Em Trânsito", COLOR_EM_ROTA, GoogleMaterialDesignIcons.DIRECTIONS_BIKE);
 
-        board.add(colunaProntos);
-        board.add(colunaEmRota);
+        board.add(containerProntos);
+        board.add(containerEmRota);
         add(board, BorderLayout.CENTER);
 
-        // Timer para auto-atualização (Simula tempo real)
+        // Timer de Atualização Automática (5s)
         new Timer(5000, e -> carregarDados()).start();
         
-        // Carga inicial
+        // Carga Inicial
         carregarDados();
     }
 
@@ -68,86 +64,85 @@ public class EntregasPainel extends JPanel {
         p.setBackground(BG_DARK);
         p.setBorder(new EmptyBorder(20, 25, 20, 25));
 
-        JLabel title = new JLabel("Central de Logística");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        JLabel title = new JLabel("Logística & Entregas");
+        title.setFont(FONT_TITLE);
         title.setForeground(Color.WHITE);
-        title.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.MAP, 32, Color.WHITE));
+        title.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.MAP, 28, Color.WHITE));
+        title.setIconTextGap(15);
         p.add(title, BorderLayout.WEST);
 
-        lblStatusConexao = new JLabel("Verificando conexão...");
-        lblStatusConexao.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblStatusConexao.setForeground(Color.GRAY);
+        lblStatusConexao = new JLabel("Verificando...");
+        lblStatusConexao.setFont(FONT_SMALL);
         p.add(lblStatusConexao, BorderLayout.EAST);
 
         return p;
     }
 
-    private JPanel criarColuna(String titulo, Color corTopo, GoogleMaterialDesignIcons icone) {
-        JPanel p = new JPanel(new BorderLayout());
-        p.setOpaque(false);
-        p.setBorder(new LineBorder(new Color(50,50,50), 1, true));
-
+    private JPanel criarColuna(String titulo, Color cor, GoogleMaterialDesignIcons icone) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setOpaque(false);
+        
         // Cabeçalho da Coluna
         JPanel head = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        head.setBackground(new Color(40,40,40));
-        head.setBorder(BorderFactory.createMatteBorder(4, 0, 0, 0, corTopo));
+        head.setBackground(BG_DARK);
+        head.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, cor));
         
         JLabel l = new JLabel(titulo);
-        l.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        l.setForeground(Color.WHITE);
-        l.setIcon(IconFontSwing.buildIcon(icone, 18, corTopo));
+        l.setFont(FONT_BOLD);
+        l.setForeground(cor);
+        l.setIcon(IconFontSwing.buildIcon(icone, 18, cor));
         head.add(l);
-        p.add(head, BorderLayout.NORTH);
+        panel.add(head, BorderLayout.NORTH);
 
-        // Área de Cards (Scroll)
+        // Conteúdo Scrollável
         JPanel content = new JPanel();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
-        content.setBackground(new Color(35,35,35));
+        content.setBackground(BG_DARK);
         
         JScrollPane scroll = new JScrollPane(content);
         scroll.setBorder(null);
-        scroll.getViewport().setBackground(new Color(35,35,35));
+        scroll.getViewport().setBackground(BG_DARK);
         scroll.getVerticalScrollBar().setUnitIncrement(16);
         
-        p.add(scroll, BorderLayout.CENTER);
+        panel.add(scroll, BorderLayout.CENTER);
         
-        // Guardar referência do painel de conteúdo no JScrollPane para acesso posterior
-        scroll.putClientProperty("contentPanel", content);
+        // Hack para acessar o painel interno depois
+        scroll.putClientProperty("content", content);
         
-        return p;
+        return panel;
     }
 
-    // --- CARREGAMENTO DE DADOS (COM FALLBACK OFFLINE) ---
+    // --- CARREGAMENTO DE DADOS ---
     private void carregarDados() {
-        JPanel panelProntos = (JPanel) ((JScrollPane) colunaProntos.getComponent(1)).getClientProperty("contentPanel");
-        JPanel panelRota = (JPanel) ((JScrollPane) colunaEmRota.getComponent(1)).getClientProperty("contentPanel");
+        JPanel panelProntos = (JPanel) ((JScrollPane) containerProntos.getComponent(1)).getClientProperty("content");
+        JPanel panelRota = (JPanel) ((JScrollPane) containerEmRota.getComponent(1)).getClientProperty("content");
 
         panelProntos.removeAll();
         panelRota.removeAll();
 
-        List<PedidoDeliveryDTO> pedidos = buscarPedidosDoBanco();
+        List<PedidoDeliveryDTO> pedidos = buscarPedidos();
 
-        // Se banco falhar ou estiver vazio, carrega MOCK DATA (Modo Offline)
+        // Modo Offline / Fallback se lista vazia
         if (pedidos.isEmpty()) {
             lblStatusConexao.setText("● Modo Offline (Simulação)");
-            lblStatusConexao.setForeground(new Color(230, 126, 34)); // Laranja
+            lblStatusConexao.setForeground(new Color(230, 126, 34));
             
-            // Gerar dados falsos para teste de UI
-            pedidos.add(new PedidoDeliveryDTO(101, "Ana Silva", "Rua das Flores, 123", "Pizza G", "pronto"));
-            pedidos.add(new PedidoDeliveryDTO(102, "Carlos Souza", "Av. Paulista, 900", "Hambúrguer", "pronto"));
-            pedidos.add(new PedidoDeliveryDTO(103, "Marcos Dev", "Rua Java, 8", "Sushi Combo", "em rota"));
+            // Dados Mockados Profissionais
+            pedidos.add(new PedidoDeliveryDTO(1045, "Fernanda Costa", "Av. Paulista, 1000 - Bela Vista", "Pizza Gigante", "pronto", "João (Moto 01)"));
+            pedidos.add(new PedidoDeliveryDTO(1046, "Roberto Almeida", "Rua Augusta, 500 - Consolação", "Burguer Duplo", "em rota", "Carlos (Moto 03)"));
+            pedidos.add(new PedidoDeliveryDTO(1047, "Empresa Tech", "Rua Funchal, 200 - Vila Olímpia", "Combo Sushi", "em rota", "Ana (Moto 02)"));
         } else {
-            lblStatusConexao.setText("● Conectado");
-            lblStatusConexao.setForeground(new Color(46, 204, 113)); // Verde
+            lblStatusConexao.setText("● Online");
+            lblStatusConexao.setForeground(COLOR_FINALIZADO);
         }
 
         for (PedidoDeliveryDTO p : pedidos) {
-            if ("pronto".equalsIgnoreCase(p.status) || "pendente".equalsIgnoreCase(p.status)) {
+            if ("em rota".equalsIgnoreCase(p.status)) {
+                panelRota.add(criarCard(p, COLOR_EM_ROTA));
+                panelRota.add(Box.createVerticalStrut(15));
+            } else {
                 panelProntos.add(criarCard(p, COLOR_PRONTO));
-                panelProntos.add(Box.createVerticalStrut(10));
-            } else if ("em rota".equalsIgnoreCase(p.status)) {
-                panelRota.add(criarCard(p, COLOR_ROTA));
-                panelRota.add(Box.createVerticalStrut(10));
+                panelProntos.add(Box.createVerticalStrut(15));
             }
         }
 
@@ -155,167 +150,227 @@ public class EntregasPainel extends JPanel {
         panelRota.revalidate(); panelRota.repaint();
     }
 
-    private List<PedidoDeliveryDTO> buscarPedidosDoBanco() {
+    private List<PedidoDeliveryDTO> buscarPedidos() {
         List<PedidoDeliveryDTO> lista = new ArrayList<>();
-        // SQL Adaptado para sua estrutura
-        String sql = "SELECT p.ID_pedido, c.name, p.status_pedido " +
-                     "FROM tb_pedidos p " +
-                     "LEFT JOIN tb_clientes c ON p.ID_cliente = c.UserId " +
+        String sql = "SELECT p.ID_pedido, c.name, p.status_pedido, p.tipo_pedido " + // Ajustar campos conforme seu banco real
+                     "FROM tb_pedidos p LEFT JOIN tb_clientes c ON p.ID_cliente = c.UserId " +
                      "WHERE p.tipo_pedido = 'Delivery' AND p.status_pedido IN ('pronto', 'em rota')";
         
         ConexaoBanco cb = new ConexaoBanco();
         try {
-             if (cb.conn == null) cb.conn = java.sql.DriverManager.getConnection("jdbc:sqlserver://127.0.0.1:1433;databaseName=FoodVerseDB;encrypt=false", "sa", "123456");
-             PreparedStatement ps = cb.conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery();
-             while(rs.next()){
-                 // Endereço mockado pois não temos na tabela pedidos ainda, ajuste conforme necessidade
-                 lista.add(new PedidoDeliveryDTO(
-                     rs.getInt("ID_pedido"),
-                     rs.getString("name"),
-                     "Endereço Cadastrado", 
-                     "Ver Detalhes",
-                     rs.getString("status_pedido")
-                 ));
-             }
-        } catch (Exception e) {
-            // Silencioso para ativar o modo offline no método carregarDados
-        }
+            if (cb.conn == null) cb.conn = java.sql.DriverManager.getConnection("jdbc:sqlserver://127.0.0.1:1433;databaseName=FoodVerseDB;encrypt=false", "sa", "123456");
+            PreparedStatement ps = cb.conn.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            while(rs.next()){
+                lista.add(new PedidoDeliveryDTO(
+                    rs.getInt("ID_pedido"),
+                    rs.getString("name"),
+                    "Endereço do Cliente (BD)", // Substituir por coluna real de endereço se tiver
+                    "Ver Detalhes",
+                    rs.getString("status_pedido"),
+                    "Entregador Padrão"
+                ));
+            }
+        } catch (Exception e) { /* Ignora para usar fallback */ }
         return lista;
     }
 
-    // --- CRIAÇÃO DOS CARDS ---
-    private JPanel criarCard(PedidoDeliveryDTO p, Color accentColor) {
-        JPanel card = new RoundedPanel(15, new Color(50, 50, 55));
+    // --- CRIAÇÃO DOS CARDS (UI) ---
+    private JPanel criarCard(PedidoDeliveryDTO p, Color accent) {
+        JPanel card = new RoundedPanel(15, BG_CARD);
         card.setLayout(new BorderLayout());
-        card.setMaximumSize(new Dimension(350, 140));
-        card.setPreferredSize(new Dimension(300, 140));
-        card.setBorder(new EmptyBorder(10, 15, 10, 15));
+        card.setMaximumSize(new Dimension(400, 160)); // Tamanho fixo para alinhar
+        card.setPreferredSize(new Dimension(300, 160));
+        card.setBorder(new EmptyBorder(12, 15, 12, 15));
 
-        // Header do Card
-        JPanel header = new JPanel(new BorderLayout());
-        header.setOpaque(false);
-        JLabel lblId = new JLabel("#" + p.id);
-        lblId.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        lblId.setForeground(accentColor);
+        // 1. Topo: ID e Tempo
+        JPanel top = new JPanel(new BorderLayout());
+        top.setOpaque(false);
+        JLabel lblId = new JLabel("Pedido #" + p.id);
+        lblId.setFont(FONT_BOLD);
+        lblId.setForeground(accent);
+        top.add(lblId, BorderLayout.WEST);
         
-        JLabel lblTempo = new JLabel("~25 min");
-        lblTempo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblTempo.setForeground(Color.GRAY);
+        // 2. Meio: Cliente e Endereço
+        JPanel mid = new JPanel(new GridLayout(3, 1, 0, 2));
+        mid.setOpaque(false);
+        mid.setBorder(new EmptyBorder(10, 0, 10, 0));
         
-        header.add(lblId, BorderLayout.WEST);
-        header.add(lblTempo, BorderLayout.EAST);
+        JLabel lblCliente = new JLabel(p.cliente);
+        lblCliente.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        lblCliente.setForeground(Color.WHITE);
         
-        // Corpo do Card
-        JPanel body = new JPanel(new GridLayout(2, 1));
-        body.setOpaque(false);
-        JLabel lblNome = new JLabel(p.cliente);
-        lblNome.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        lblNome.setForeground(Color.WHITE);
-        
-        JLabel lblEnd = new JLabel("<html>"+p.endereco+"</html>");
-        lblEnd.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        JLabel lblEnd = new JLabel("<html>" + p.endereco + "</html>");
+        lblEnd.setFont(FONT_SMALL);
         lblEnd.setForeground(Color.LIGHT_GRAY);
+
+        JLabel lblMotoboy = new JLabel("Entregador: " + p.motoboy);
+        lblMotoboy.setFont(new Font("Segoe UI", Font.ITALIC, 11));
+        lblMotoboy.setForeground(new Color(150,150,150));
         
-        body.add(lblNome);
-        body.add(lblEnd);
+        mid.add(lblCliente);
+        mid.add(lblEnd);
+        mid.add(lblMotoboy);
 
-        // Footer (Botões)
-        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
-        footer.setOpaque(false);
+        // 3. Bottom: Botões de Ação
+        JPanel bot = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
+        bot.setOpaque(false);
 
-        if ("pronto".equalsIgnoreCase(p.status) || "pendente".equalsIgnoreCase(p.status)) {
-            JButton btnEnviar = criarBotaoPequeno(GoogleMaterialDesignIcons.LOCATION_ON, COLOR_ROTA);
-            btnEnviar.setToolTipText("Iniciar Entrega");
-            btnEnviar.addActionListener(e -> atualizarStatusPedido(p.id, "em rota"));
-            footer.add(btnEnviar);
+        if ("em rota".equalsIgnoreCase(p.status)) {
+            JButton btnRastrear = criarBotaoIcone(GoogleMaterialDesignIcons.MAP, new Color(70, 70, 200));
+            btnRastrear.setToolTipText("Abrir Rastreamento GPS");
+            btnRastrear.addActionListener(e -> abrirRastreamento(p));
+            
+            JButton btnCheck = criarBotaoIcone(GoogleMaterialDesignIcons.CHECK, COLOR_FINALIZADO);
+            btnCheck.setToolTipText("Finalizar Entrega");
+            btnCheck.addActionListener(e -> finalizarEntrega(p));
+            
+            bot.add(btnRastrear);
+            bot.add(btnCheck);
         } else {
-            // Botão Mapa
-            JButton btnMapa = criarBotaoPequeno(GoogleMaterialDesignIcons.MAP, new Color(100, 100, 255));
-            btnMapa.setToolTipText("Ver Rota no Mapa");
-            btnMapa.addActionListener(e -> abrirSimuladorMapa(p));
-            
-            // Botão Finalizar
-            JButton btnFim = criarBotaoPequeno(GoogleMaterialDesignIcons.CHECK, COLOR_FINALIZADO);
-            btnFim.setToolTipText("Confirmar Entrega");
-            btnFim.addActionListener(e -> {
-                if(JOptionPane.showConfirmDialog(this, "Confirmar entrega?", "Fim", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
-                    atualizarStatusPedido(p.id, "finalizado");
-                }
-            });
-            
-            footer.add(btnMapa);
-            footer.add(btnFim);
+            JButton btnDespachar = criarBotaoTexto("DESPACHAR", GoogleMaterialDesignIcons.SEND, accent);
+            btnDespachar.addActionListener(e -> atualizarStatus(p.id, "em rota"));
+            bot.add(btnDespachar);
         }
 
-        card.add(header, BorderLayout.NORTH);
-        card.add(body, BorderLayout.CENTER);
-        card.add(footer, BorderLayout.SOUTH);
-        
+        card.add(top, BorderLayout.NORTH);
+        card.add(mid, BorderLayout.CENTER);
+        card.add(bot, BorderLayout.SOUTH);
+
         return card;
     }
 
-    private JButton criarBotaoPequeno(GoogleMaterialDesignIcons icon, Color bg) {
-        JButton btn = new JButton(IconFontSwing.buildIcon(icon, 16, Color.WHITE));
+    // --- AÇÕES DO SISTEMA ---
+    private void atualizarStatus(int id, String status) {
+        // Lógica de update no banco (simulada se offline)
+        String sql = "UPDATE tb_pedidos SET status_pedido = ? WHERE ID_pedido = ?";
+        ConexaoBanco cb = new ConexaoBanco();
+        try {
+             if (cb.conn == null) cb.conn = java.sql.DriverManager.getConnection("jdbc:sqlserver://127.0.0.1:1433;databaseName=FoodVerseDB;encrypt=false", "sa", "123456");
+             PreparedStatement ps = cb.conn.prepareStatement(sql);
+             ps.setString(1, status);
+             ps.setInt(2, id);
+             ps.executeUpdate();
+        } catch(Exception e) {
+             JOptionPane.showMessageDialog(this, "(Simulação) Status alterado para: " + status);
+        }
+        carregarDados();
+    }
+
+    private void finalizarEntrega(PedidoDeliveryDTO p) {
+        int opt = JOptionPane.showConfirmDialog(this, "O entregador confirmou a entrega?", "Finalizar", JOptionPane.YES_NO_OPTION);
+        if(opt == JOptionPane.YES_OPTION) {
+            atualizarStatus(p.id, "finalizado");
+        }
+    }
+
+    // --- TELA DE RASTREAMENTO (GPS) ---
+    private void abrirRastreamento(PedidoDeliveryDTO p) {
+        JDialog d = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Rastreamento em Tempo Real", true);
+        d.setSize(700, 500);
+        d.setLocationRelativeTo(this);
+        d.setLayout(new BorderLayout());
+        d.getContentPane().setBackground(BG_DARK);
+
+        // Painel Superior (Info)
+        JPanel top = new JPanel(new GridLayout(1, 3));
+        top.setBackground(BG_CARD);
+        top.setBorder(new EmptyBorder(15, 20, 15, 20));
+        top.add(criarInfoLabel("Tempo Est.", "12 min", COLOR_EM_ROTA));
+        top.add(criarInfoLabel("Distância", "3.4 km", Color.WHITE));
+        top.add(criarInfoLabel("Entregador", p.motoboy, Color.LIGHT_GRAY));
+        d.add(top, BorderLayout.NORTH);
+
+        // O MAPA ANIMADO
+        GPSPanel mapa = new GPSPanel();
+        d.add(mapa, BorderLayout.CENTER);
+
+        // Painel Inferior (Ações Reais)
+        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        bottom.setBackground(BG_DARK);
+        bottom.setBorder(new EmptyBorder(10,0,10,0));
+
+        JButton btnGoogle = criarBotaoTexto("ABRIR NO GOOGLE MAPS", GoogleMaterialDesignIcons.OPEN_IN_BROWSER, new Color(219, 68, 55));
+        btnGoogle.addActionListener(e -> {
+            try {
+                // Abre o navegador padrão com o endereço
+                String enderecoFormatado = p.endereco.replace(" ", "+");
+                Desktop.getDesktop().browse(new URI("https://www.google.com/maps/search/?api=1&query=" + enderecoFormatado));
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(d, "Erro ao abrir navegador: " + ex.getMessage());
+            }
+        });
+        
+        bottom.add(btnGoogle);
+        d.add(bottom, BorderLayout.SOUTH);
+
+        d.setVisible(true);
+    }
+    
+    private JLabel criarInfoLabel(String titulo, String valor, Color corValor) {
+        JLabel l = new JLabel("<html><center><span style='font-size:10px;color:gray'>"+titulo+"</span><br><span style='font-size:14px'>"+valor+"</span></center></html>");
+        l.setForeground(corValor);
+        l.setHorizontalAlignment(SwingConstants.CENTER);
+        return l;
+    }
+
+    // --- COMPONENTES AUXILIARES ---
+    private JButton criarBotaoIcone(GoogleMaterialDesignIcons icon, Color bg) {
+        JButton btn = new JButton(IconFontSwing.buildIcon(icon, 18, Color.WHITE));
         btn.setBackground(bg);
-        btn.setPreferredSize(new Dimension(35, 30));
+        btn.setPreferredSize(new Dimension(40, 35));
         btn.setFocusPainted(false);
-        btn.setBorder(null);
+        btn.setBorder(new EmptyBorder(5,5,5,5));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return btn;
     }
 
-    // --- AÇÕES ---
-    private void atualizarStatusPedido(int id, String novoStatus) {
-        // Tenta atualizar no banco, se falhar (modo offline), atualiza na memória visualmente
-        String sql = "UPDATE tb_pedidos SET status_pedido = ? WHERE ID_pedido = ?";
-        ConexaoBanco cb = new ConexaoBanco();
-        try {
-            if (cb.conn == null) cb.conn = java.sql.DriverManager.getConnection("jdbc:sqlserver://127.0.0.1:1433;databaseName=FoodVerseDB;encrypt=false", "sa", "123456");
-            PreparedStatement ps = cb.conn.prepareStatement(sql);
-            ps.setString(1, novoStatus);
-            ps.setInt(2, id);
-            int rows = ps.executeUpdate();
-            if(rows == 0) throw new Exception("Offline");
-        } catch (Exception e) {
-            // Simulação Visual
-            JOptionPane.showMessageDialog(this, "(Simulação) Status do pedido #" + id + " alterado para: " + novoStatus);
+    private JButton criarBotaoTexto(String txt, GoogleMaterialDesignIcons icon, Color bg) {
+        JButton btn = new JButton(txt);
+        btn.setIcon(IconFontSwing.buildIcon(icon, 18, Color.WHITE));
+        btn.setBackground(bg);
+        btn.setForeground(Color.WHITE);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btn.setFocusPainted(false);
+        btn.setBorder(new EmptyBorder(8, 15, 8, 15));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return btn;
+    }
+
+    // --- CLASSES INTERNAS ---
+
+    // DTO Simples
+    static class PedidoDeliveryDTO {
+        int id; String cliente, endereco, detalhes, status, motoboy;
+        public PedidoDeliveryDTO(int id, String c, String e, String d, String s, String m) {
+            this.id=id; this.cliente=c; this.endereco=e; this.detalhes=d; this.status=s; this.motoboy=m;
         }
-        carregarDados(); // Recarrega interface
     }
 
-    // --- O GRANDE DIFERENCIAL: SIMULADOR DE MAPA ---
-    private void abrirSimuladorMapa(PedidoDeliveryDTO p) {
-        JDialog mapDialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Rastreamento em Tempo Real - Pedido #" + p.id, true);
-        mapDialog.setSize(600, 450);
-        mapDialog.setLocationRelativeTo(this);
-        
-        // Painel do Mapa Customizado
-        JPanel mapPanel = new MapPanel(p.cliente);
-        mapDialog.add(mapPanel);
-        
-        mapDialog.setVisible(true);
+    // Painel Arredondado
+    static class RoundedPanel extends JPanel {
+        private int r; private Color c;
+        public RoundedPanel(int r, Color c) { this.r=r; this.c=c; setOpaque(false); }
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2=(Graphics2D)g;
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(c);
+            g2.fillRoundRect(0,0,getWidth(),getHeight(),r,r);
+            super.paintComponent(g);
+        }
     }
 
-    /**
-     * Classe interna que desenha um "Mapa" vetorial usando Java 2D.
-     * Desenha ruas, o restaurante, o cliente e a rota do motoboy.
-     */
-    private static class MapPanel extends JPanel {
-        private String clienteNome;
-        private Timer animationTimer;
-        private float progress = 0.0f; // 0.0 a 1.0 (Progresso do motoboy)
-
-        public MapPanel(String clienteNome) {
-            this.clienteNome = clienteNome;
-            setBackground(new Color(30, 30, 30));
-            // Animação do motoboy
-            animationTimer = new Timer(50, e -> {
-                progress += 0.01f;
-                if (progress > 1.0f) progress = 0.0f; // Loop
+    // --- O NOVO MAPA ESTILO GPS ---
+    static class GPSPanel extends JPanel {
+        private float progress = 0;
+        
+        public GPSPanel() {
+            setBackground(new Color(25, 25, 25));
+            new Timer(50, e -> {
+                progress += 0.005;
+                if(progress > 1) progress = 0;
                 repaint();
-            });
-            animationTimer.start();
+            }).start();
         }
 
         @Override
@@ -323,105 +378,79 @@ public class EntregasPainel extends JPanel {
             super.paintComponent(g);
             Graphics2D g2 = (Graphics2D) g;
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            int w = getWidth();
-            int h = getHeight();
-
-            // 1. Desenhar Grid (Ruas)
-            g2.setColor(new Color(50, 50, 50));
-            for (int i = 0; i < w; i += 40) g2.drawLine(i, 0, i, h);
-            for (int i = 0; i < h; i += 40) g2.drawLine(0, i, w, i);
-
-            // 2. Definir Pontos
-            int xRest = 50, yRest = 50;
-            int xCli = w - 80, yCli = h - 80;
-
-            // 3. Desenhar Rota (Linha Tracejada)
-            g2.setColor(new Color(100, 100, 255));
-            g2.setStroke(new BasicStroke(3, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 10, new float[]{10}, 0));
-            // Caminho simples estilo "L" (Manhattan distance)
-            Path2D path = new Path2D.Float();
-            path.moveTo(xRest, yRest);
-            path.lineTo(xCli, yRest); // Vai reto horizontal
-            path.lineTo(xCli, yCli);  // Desce vertical
-            g2.draw(path);
-
-            // 4. Desenhar Ícones (Simulados com Formas)
             
-            // Restaurante
-            g2.setColor(new Color(230, 126, 34)); // Laranja
-            g2.fill(new RoundRectangle2D.Double(xRest-15, yRest-15, 30, 30, 10, 10));
-            g2.setColor(Color.WHITE);
-            g2.drawString("R", xRest-4, yRest+5);
-            g2.drawString("Restaurante", xRest-20, yRest-20);
-
-            // Cliente
-            g2.setColor(new Color(46, 204, 113)); // Verde
-            g2.fill(new Ellipse2D.Double(xCli-15, yCli-15, 30, 30));
-            g2.setColor(Color.WHITE);
-            g2.drawString("C", xCli-4, yCli+5);
-            g2.drawString(clienteNome, xCli-30, yCli+25);
-
-            // 5. Motoboy Animado
-            // Calcular posição atual baseada no progresso ao longo do "L"
-            double currentX, currentY;
-            if (progress < 0.5) {
-                // Primeira perna (Horizontal)
-                currentX = xRest + ((xCli - xRest) * (progress * 2));
-                currentY = yRest;
-            } else {
-                // Segunda perna (Vertical)
-                currentX = xCli;
-                currentY = yRest + ((yCli - yRest) * ((progress - 0.5) * 2));
-            }
-
-            g2.setColor(Color.WHITE);
-            g2.fill(new Ellipse2D.Double(currentX-8, currentY-8, 16, 16));
-            g2.setColor(new Color(52, 152, 219)); // Azul aura
+            int w = getWidth(); int h = getHeight();
+            
+            // 1. Ruas (Grid Estilizado)
+            g2.setColor(new Color(40, 40, 40));
             g2.setStroke(new BasicStroke(2));
-            g2.draw(new Ellipse2D.Double(currentX-8, currentY-8, 16, 16));
+            for(int i=0; i<w; i+=60) g2.drawLine(i, 0, i, h); // Verticais
+            for(int i=0; i<h; i+=60) g2.drawLine(0, i, w, i); // Horizontais
             
-            // Info HUD
-            g2.setColor(new Color(0,0,0,150));
-            g2.fillRoundRect(10, h-60, 200, 50, 10, 10);
+            // 2. Rota (Linha Curva Suave)
+            Path2D path = new Path2D.Float();
+            path.moveTo(50, h/2);
+            path.curveTo(w/3, h/2 - 100, w/1.5, h/2 + 100, w-50, h/2);
+            
+            // Desenhar a linha da rota
+            g2.setColor(new Color(60, 60, 200)); // Azul Escuro (Fundo da rota)
+            g2.setStroke(new BasicStroke(12, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            g2.draw(path);
+            
+            g2.setColor(new Color(100, 100, 255)); // Azul Claro (Meio da rota)
+            g2.setStroke(new BasicStroke(4));
+            g2.draw(path);
+            
+            // 3. Pontos (Restaurante e Casa)
+            drawMarker(g2, 50, h/2, new Color(241, 196, 15), "R"); // Restaurante
+            drawMarker(g2, w-50, h/2, new Color(46, 204, 113), "C"); // Cliente
+            
+            // 4. Motoboy Animado
+            Point2D p = getPointOnPath(path, progress);
+            if(p != null) {
+                // Sombra/Pulse do Motoboy
+                g2.setColor(new Color(52, 152, 219, 100));
+                int pulse = (int)(Math.sin(progress * 50) * 5 + 15);
+                g2.fillOval((int)p.getX()-pulse, (int)p.getY()-pulse, pulse*2, pulse*2);
+                
+                // Ponto do Motoboy
+                g2.setColor(Color.WHITE);
+                g2.fillOval((int)p.getX()-8, (int)p.getY()-8, 16, 16);
+                g2.setColor(new Color(52, 152, 219));
+                g2.setStroke(new BasicStroke(3));
+                g2.drawOval((int)p.getX()-8, (int)p.getY()-8, 16, 16);
+            }
+        }
+        
+        private void drawMarker(Graphics2D g2, int x, int y, Color c, String txt) {
+            g2.setColor(c);
+            g2.fillOval(x-15, y-15, 30, 30);
             g2.setColor(Color.WHITE);
-            g2.drawString("Status: Em Rota", 20, h-40);
-            g2.drawString("Velocidade: 45 km/h", 20, h-20);
+            g2.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            g2.drawString(txt, x-5, y+5);
         }
-    }
-
-    // --- DTO INTERNO (Data Transfer Object) ---
-    private static class PedidoDeliveryDTO {
-        int id;
-        String cliente;
-        String endereco;
-        String detalhes;
-        String status;
-
-        public PedidoDeliveryDTO(int id, String cliente, String endereco, String detalhes, String status) {
-            this.id = id;
-            this.cliente = cliente;
-            this.endereco = endereco;
-            this.detalhes = detalhes;
-            this.status = status;
-        }
-    }
-
-    // --- COMPONENTE VISUAL ARREDONDADO ---
-    private static class RoundedPanel extends JPanel {
-        private int radius; 
-        private Color bgColor;
-        public RoundedPanel(int radius, Color bgColor) { 
-            this.radius = radius; 
-            this.bgColor = bgColor; 
-            setOpaque(false); 
-        }
-        @Override protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2 = (Graphics2D) g;
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(bgColor);
-            g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), radius, radius));
+        
+        // Matemática para pegar ponto na curva (Simplificada)
+        private Point2D getPointOnPath(Path2D path, float t) {
+            // Aproximação linear para fins visuais (pegar ponto exato de Bezier é complexo math puro)
+            // Aqui usamos interpolação simples entre inicio e fim para o exemplo visual
+            PathIterator pi = path.getPathIterator(null);
+            double[] coords = new double[6];
+            // Simplificando: Movimento linear visual sobre o eixo X com senoide no Y para simular a curva
+            double x = 50 + (getWidth()-100) * t;
+            // Recria a curva matemática usada no draw
+            // curveTo(w/3, h/2 - 100, w/1.5, h/2 + 100, w-50, h/2);
+            double w = getWidth(); double h = getHeight();
+            // Bezier Cubica Fórmula: B(t) = (1-t)^3 P0 + 3(1-t)^2 t P1 + 3(1-t)t^2 P2 + t^3 P3
+            double p0x = 50, p0y = h/2;
+            double p1x = w/3, p1y = h/2 - 100;
+            double p2x = w/1.5, p2y = h/2 + 100;
+            double p3x = w-50, p3y = h/2;
+            
+            double bx = Math.pow(1-t,3)*p0x + 3*Math.pow(1-t,2)*t*p1x + 3*(1-t)*Math.pow(t,2)*p2x + Math.pow(t,3)*p3x;
+            double by = Math.pow(1-t,3)*p0y + 3*Math.pow(1-t,2)*t*p1y + 3*(1-t)*Math.pow(t,2)*p2y + Math.pow(t,3)*p3y;
+            
+            return new Point2D.Double(bx, by);
         }
     }
 }
