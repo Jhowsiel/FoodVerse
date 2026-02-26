@@ -219,6 +219,58 @@ def cadastro_view(request):
 
     return render(request, 'pages/Autentificacao/cadastro.html')
 
+from django.shortcuts import render, redirect
+from django.contrib.auth.models import User
+from django.contrib import messages
+from .models import Perfil
+
+def perfil_view(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    
+    perfil, created = Perfil.objects.get_or_create(user=request.user)
+    return render(request, 'pages/perfil/perfil.html', {
+        'perfil': perfil
+    })
+
+def editar_perfil_view(request):
+    perfil, created = Perfil.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        telefone = request.POST.get('telefone')
+        endereco = request.POST.get('endereco')
+
+        # Validações
+        if User.objects.filter(username=username).exclude(pk=request.user.pk).exists():
+            messages.error(request, 'Este nome de usuário já está em uso.')
+            return render(request, 'pages/perfil/editar/editar.html', {'perfil': perfil})
+
+        if User.objects.filter(email=email).exclude(pk=request.user.pk).exists():
+            messages.error(request, 'Este e-mail já está cadastrado em outra conta.')
+            return render(request, 'pages/perfil/editar/editar.html', {'perfil': perfil})
+
+        # Salvando
+        try:
+            # Atualiza User
+            request.user.username = username
+            request.user.email = email
+            request.user.save()
+
+            # Atualiza Perfil (Agora o 'perfil' é o objeto correto, então o save() funciona)
+            perfil.telefone = telefone
+            perfil.endereco = endereco 
+            perfil.save()
+
+            messages.success(request, 'Perfil atualizado com sucesso!')
+            return redirect('perfil') 
+            
+        except Exception as e:
+            messages.error(request, f'Erro ao salvar: {e}')
+
+    return render(request, 'pages/perfil/editar/editar.html', {'perfil': perfil})
+
 def restaurante_view(request):
     categoria = request.GET.get('categoria')
     restaurantes_filtrados = RESTAURANTES
