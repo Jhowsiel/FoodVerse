@@ -13,6 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class TelaInicial extends JFrame {
 
@@ -27,8 +28,10 @@ public class TelaInicial extends JFrame {
     // Campos Cadastro
     private JTextField txtCadNome, txtCadUser, txtCadEmail, txtCadTelefone;
     private JPasswordField txtCadSenha, txtCadConfirma;
+    
+    // Cargos
     private ButtonGroup grupoCargos;
-    private JRadioButton rbCozinheiro, rbEntregador, rbAtendente;
+    private JToggleButton tbAtendente, tbCozinheiro, tbEntregador;
 
     // Dashboard e Menu
     private JPanel dashboardPanel;
@@ -37,7 +40,6 @@ public class TelaInicial extends JFrame {
     private JLabel lblNomeUsuario;
     private JLabel lblCargoUsuario;
     
-    // Lista para gerenciar botões do menu
     private final List<JButton> botoesMenu = new ArrayList<>();
 
     public TelaInicial() {
@@ -47,13 +49,15 @@ public class TelaInicial extends JFrame {
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
         
-        // Aplica o tema escuro
         UIConstants.applyDarkDefaults();
-        // Registra ícones
+        
         try {
             IconFontSwing.register(GoogleMaterialDesignIcons.getIconFont());
+            
+            // Define o ícone da janela e da barra de tarefas do Windows
+            setIconImage(UIConstants.getAppIcon());
+            
         } catch (Exception e) { e.printStackTrace(); }
-
         cardLayout = new CardLayout();
         mainContainer = new JPanel(cardLayout);
         
@@ -65,13 +69,12 @@ public class TelaInicial extends JFrame {
     }
 
     // =================================================================================
-    // 1. TELA DE LOGIN (CORRIGIDA)
+    // 1. TELA DE LOGIN
     // =================================================================================
     private void initLoginScreen() {
         JPanel loginPanel = new JPanel(new GridBagLayout());
         loginPanel.setBackground(UIConstants.BG_DARK);
 
-        // Card Central Arredondado
         UIConstants.RoundedPanel card = new UIConstants.RoundedPanel(30, UIConstants.BG_DARK_ALT);
         card.setLayout(new GridBagLayout());
         card.setBorder(new EmptyBorder(40, 50, 40, 50));
@@ -82,7 +85,6 @@ public class TelaInicial extends JFrame {
         gc.insets = new Insets(10, 0, 10, 0);
         gc.weightx = 1.0;
 
-        // Logo
         JLabel lblLogo = new JLabel("FOODVERSE");
         lblLogo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.RESTAURANT_MENU, 50, UIConstants.PRIMARY_RED));
         lblLogo.setFont(new Font("Segoe UI", Font.BOLD, 28));
@@ -99,7 +101,6 @@ public class TelaInicial extends JFrame {
         lblSub.setHorizontalAlignment(SwingConstants.CENTER);
         card.add(lblSub, gc);
 
-        // Inputs
         gc.gridy++; gc.insets = new Insets(30, 0, 5, 0);
         card.add(criarLabelSimples("E-mail ou Usuário"), gc);
         
@@ -115,7 +116,6 @@ public class TelaInicial extends JFrame {
         txtLoginSenha.addActionListener(e -> logar());
         card.add(txtLoginSenha, gc);
 
-        // Botão Entrar
         gc.gridy++; gc.insets = new Insets(0, 0, 20, 0);
         JButton btnEntrar = new JButton("ENTRAR");
         UIConstants.stylePrimary(btnEntrar);
@@ -123,8 +123,6 @@ public class TelaInicial extends JFrame {
         btnEntrar.addActionListener(e -> logar());
         card.add(btnEntrar, gc);
 
-        // --- CORREÇÃO DO LINK DE CADASTRO ---
-        // Usar JLabel em vez de JButton evita o problema de borda/fundo "estranho"
         gc.gridy++;
         JLabel lblLink = new JLabel("Não tem conta? Solicite Acesso");
         lblLink.setFont(UIConstants.ARIAL_12);
@@ -140,7 +138,7 @@ public class TelaInicial extends JFrame {
             }
             @Override
             public void mouseEntered(MouseEvent e) {
-                lblLink.setForeground(UIConstants.PRIMARY_RED); // Destaque ao passar mouse
+                lblLink.setForeground(UIConstants.PRIMARY_RED);
             }
             @Override
             public void mouseExited(MouseEvent e) {
@@ -154,7 +152,7 @@ public class TelaInicial extends JFrame {
     }
 
     // =================================================================================
-    // 2. TELA DE CADASTRO
+    // 2. TELA DE CADASTRO (Com Validações e Chips)
     // =================================================================================
     private void initCadastroScreen() {
         JPanel cadastroPanel = new JPanel(new GridBagLayout());
@@ -169,7 +167,6 @@ public class TelaInicial extends JFrame {
         gc.insets = new Insets(5, 10, 5, 10);
         gc.weightx = 1.0;
 
-        // Título
         gc.gridx = 0; gc.gridy = 0; gc.gridwidth = 2;
         JLabel lblTitulo = new JLabel("Novo Colaborador");
         lblTitulo.setFont(UIConstants.FONT_TITLE);
@@ -177,7 +174,6 @@ public class TelaInicial extends JFrame {
         lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
         card.add(lblTitulo, gc);
 
-        // Linha 1
         gc.gridwidth = 1; gc.gridy++;
         gc.gridx = 0; card.add(criarLabelSimples("Nome Completo *"), gc);
         gc.gridx = 1; card.add(criarLabelSimples("Usuário *"), gc);
@@ -186,41 +182,38 @@ public class TelaInicial extends JFrame {
         gc.gridx = 0; txtCadNome = criarInputTexto(); card.add(txtCadNome, gc);
         gc.gridx = 1; txtCadUser = criarInputTexto(); card.add(txtCadUser, gc);
 
-        // Linha 2
         gc.gridy++;
         gc.gridx = 0; card.add(criarLabelSimples("E-mail *"), gc);
-        gc.gridx = 1; card.add(criarLabelSimples("Telefone"), gc);
+        gc.gridx = 1; card.add(criarLabelSimples("Telefone (Apenas Números)"), gc);
 
         gc.gridy++;
         gc.gridx = 0; txtCadEmail = criarInputTexto(); card.add(txtCadEmail, gc);
         gc.gridx = 1; txtCadTelefone = criarInputTexto(); card.add(txtCadTelefone, gc);
 
-        // Linha 3: Cargo
+        // Painel de Cargos em formato Chip
         gc.gridy++; gc.gridx = 0; gc.gridwidth = 2;
-        JPanel pCargo = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
+        JPanel pCargo = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
         pCargo.setOpaque(false);
-        pCargo.setBorder(new EmptyBorder(10, 0, 10, 0));
+        pCargo.setBorder(new EmptyBorder(15, 0, 15, 0));
         
         grupoCargos = new ButtonGroup();
-        rbAtendente = criarRadio("Atendente");
-        rbCozinheiro = criarRadio("Cozinheiro");
-        rbEntregador = criarRadio("Entregador");
-        rbAtendente.setSelected(true);
+        tbAtendente = criarChip("Atendente");
+        tbCozinheiro = criarChip("Cozinheiro");
+        tbEntregador = criarChip("Entregador");
+        tbAtendente.setSelected(true);
 
-        grupoCargos.add(rbAtendente); grupoCargos.add(rbCozinheiro); grupoCargos.add(rbEntregador);
-        pCargo.add(rbAtendente); pCargo.add(rbCozinheiro); pCargo.add(rbEntregador);
+        grupoCargos.add(tbAtendente); grupoCargos.add(tbCozinheiro); grupoCargos.add(tbEntregador);
+        pCargo.add(tbAtendente); pCargo.add(tbCozinheiro); pCargo.add(tbEntregador);
         card.add(pCargo, gc);
 
-        // Linha 4
         gc.gridy++; gc.gridwidth = 1;
-        gc.gridx = 0; card.add(criarLabelSimples("Senha *"), gc);
+        gc.gridx = 0; card.add(criarLabelSimples("Senha (mín 6 carac.) *"), gc);
         gc.gridx = 1; card.add(criarLabelSimples("Confirmar Senha *"), gc);
 
         gc.gridy++;
         gc.gridx = 0; txtCadSenha = criarInputSenha(); card.add(txtCadSenha, gc);
         gc.gridx = 1; txtCadConfirma = criarInputSenha(); card.add(txtCadConfirma, gc);
 
-        // Botões
         gc.gridy++; gc.gridwidth = 2; gc.gridx = 0; gc.insets = new Insets(25, 10, 10, 10);
         JButton btnSalvar = new JButton("ENVIAR SOLICITAÇÃO");
         UIConstants.styleSuccess(btnSalvar);
@@ -259,13 +252,10 @@ public class TelaInicial extends JFrame {
         return l;
     }
 
-    private JRadioButton criarRadio(String text) {
-        JRadioButton rb = new JRadioButton(text);
-        rb.setOpaque(false);
-        rb.setForeground(UIConstants.FG_LIGHT);
-        rb.setFocusPainted(false);
-        rb.setFont(UIConstants.ARIAL_14);
-        return rb;
+    private JToggleButton criarChip(String text) {
+        JToggleButton tb = new JToggleButton(text);
+        UIConstants.styleChipButton(tb);
+        return tb;
     }
 
     // =================================================================================
@@ -360,11 +350,6 @@ public class TelaInicial extends JFrame {
         botoesMenu.clear();
         panelBody.removeAll();
         
-        // --- INSTANCIAÇÃO DAS TELAS ---
-        // Aqui usamos try-catch para cada painel. Se uma tela (ex: EstoquePainel) tiver erro no código dela,
-        // o menu continua carregando e colocamos um painel de erro no lugar.
-        
-        // 1. Home (Dashboard)
         try {
             panelBody.add(new HomePanel(), "HOME");
             adicionarModulo("Início", GoogleMaterialDesignIcons.HOME, "HOME");
@@ -376,7 +361,6 @@ public class TelaInicial extends JFrame {
         boolean isAtend = role.contains("atendente") || role.contains("garçom");
         boolean isEntreg = role.contains("entregador");
 
-        // --- SEÇÃO GESTÃO ---
         if (isAdmin) {
             addTituloSecao("ADMINISTRAÇÃO");
             adicionarPainelSeguro("Equipe", GoogleMaterialDesignIcons.SUPERVISOR_ACCOUNT, "USUARIOS", new AprovacaoCadastrosPanel());
@@ -384,24 +368,20 @@ public class TelaInicial extends JFrame {
             adicionarPainelSeguro("Estoque", GoogleMaterialDesignIcons.STORE, "ESTOQUE", new EstoquePainel());
         }
 
-        // --- SEÇÃO OPERAÇÃO ---
         if (isAdmin || isAtend) {
             addTituloSecao("SALÃO & PEDIDOS");
             adicionarPainelSeguro("Mesas", GoogleMaterialDesignIcons.EVENT_SEAT, "MESAS", new GestaoMesasPanel());
             adicionarPainelSeguro("Novo Pedido", GoogleMaterialDesignIcons.ADD_SHOPPING_CART, "PEDIDOS", new PedidosPanel());
         }
 
-        // --- SEÇÃO PRODUÇÃO ---
         if (isAdmin || isCozinha) {
             addTituloSecao("COZINHA");
             adicionarPainelSeguro("KDS / Produção", GoogleMaterialDesignIcons.KITCHEN, "KDS", new GestaoCozinhaPanel());
             if(isCozinha) { 
-                // Cozinheiro vê estoque mas talvez use outra tela ou a mesma em modo leitura
                 adicionarPainelSeguro("Ver Estoque", GoogleMaterialDesignIcons.STORE, "ESTOQUE", new EstoquePainel());
             }
         }
 
-        // --- SEÇÃO DELIVERY ---
         if (isAdmin || isEntreg || isAtend) {
             addTituloSecao("DELIVERY");
             adicionarPainelSeguro("Entregas", GoogleMaterialDesignIcons.MOTORCYCLE, "ENTREGAS", new EntregasPainel());
@@ -410,13 +390,11 @@ public class TelaInicial extends JFrame {
         sidebarContainer.revalidate();
         sidebarContainer.repaint();
         
-        // Força ir para Home ao logar
         CardLayout cl = (CardLayout) panelBody.getLayout();
         cl.show(panelBody, "HOME");
         resetarBotoesMenu("HOME");
     }
     
-    // Método auxiliar para adicionar painel com segurança (evita crash se a classe do painel tiver erro)
     private void adicionarPainelSeguro(String nome, GoogleMaterialDesignIcons icone, String cardName, JPanel painelInstancia) {
         try {
             if (painelInstancia != null) {
@@ -426,7 +404,6 @@ public class TelaInicial extends JFrame {
         } catch (Exception e) {
             System.err.println("Erro ao carregar módulo: " + nome);
             e.printStackTrace();
-            // Opcional: Adicionar um painel de erro visual
             JPanel erroPanel = new JPanel(new BorderLayout());
             erroPanel.setBackground(UIConstants.BG_DARK);
             erroPanel.add(new JLabel("Erro ao carregar módulo " + nome, SwingConstants.CENTER));
@@ -455,7 +432,7 @@ public class TelaInicial extends JFrame {
         btn.setHorizontalAlignment(SwingConstants.LEFT);
         btn.setMaximumSize(new Dimension(280, 50));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setActionCommand(cardName); // Usamos action command para identificar qual é
+        btn.setActionCommand(cardName); 
 
         btn.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent e) {
@@ -484,7 +461,6 @@ public class TelaInicial extends JFrame {
             if (b.getActionCommand().equals(cardNameAtivo)) {
                 b.setBackground(UIConstants.BG_DARK);
                 b.setForeground(UIConstants.PRIMARY_RED);
-                // Atualizar ícone para vermelho seria ideal, mas exige recriar o ícone
             } else {
                 b.setBackground(UIConstants.BG_DARK_ALT);
                 b.setForeground(UIConstants.FG_LIGHT);
@@ -501,7 +477,7 @@ public class TelaInicial extends JFrame {
         String senha = new String(txtLoginSenha.getPassword());
 
         if (email.isEmpty() || senha.isEmpty()) {
-            Toast.show(this, "Preencha e-mail e senha!", Toast.Type.WARNING);
+            UIConstants.showWarning(this, "Preencha e-mail e senha!");
             return;
         }
         
@@ -517,7 +493,7 @@ public class TelaInicial extends JFrame {
                 ConexaoBanco cb = new ConexaoBanco();
                 try (Connection conn = cb.abrirConexao()) {
                     if (conn == null) {
-                        // BACKDOOR PARA TESTES (Remover em produção)
+                        // BACKDOOR PARA TESTES
                         if(email.equals("admin") && senha.equals("admin")) {
                             dbNome = "Administrador";
                             dbCargo = "Gerente";
@@ -557,7 +533,7 @@ public class TelaInicial extends JFrame {
             protected void done() {
                 setCursor(Cursor.getDefaultCursor());
                 if(erroMsg != null) {
-                    Toast.show(TelaInicial.this, erroMsg, Toast.Type.ERROR);
+                    UIConstants.showError(TelaInicial.this, erroMsg);
                 } else if (dbNome != null) {
                     loginSucesso(dbNome, dbCargo);
                 }
@@ -578,32 +554,55 @@ public class TelaInicial extends JFrame {
     }
 
     private void logout() {
-        int confirm = JOptionPane.showConfirmDialog(this, "Deseja realmente sair?", "Sair", JOptionPane.YES_NO_OPTION);
-        if(confirm == JOptionPane.YES_OPTION) {
-            panelBody.removeAll();
-            cardLayout.show(mainContainer, "LOGIN");
-        }
+        UIConstants.showSuccess(this, "Saindo do sistema...");
+        panelBody.removeAll();
+        cardLayout.show(mainContainer, "LOGIN");
     }
 
     private void cadastrar() {
         String nome = txtCadNome.getText().trim();
         String user = txtCadUser.getText().trim();
         String email = txtCadEmail.getText().trim();
+        String tel = txtCadTelefone.getText().trim();
         String senha = new String(txtCadSenha.getPassword());
         String conf = new String(txtCadConfirma.getPassword());
         
+        // --- VALIDAÇÕES COM TOAST ---
         if(nome.isEmpty() || user.isEmpty() || email.isEmpty() || senha.isEmpty()) {
-            Toast.show(this, "Preencha todos os campos obrigatórios (*)", Toast.Type.WARNING);
+            UIConstants.showWarning(this, "Preencha todos os campos obrigatórios (*)");
             return;
         }
+
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
+        if (!Pattern.matches(emailRegex, email)) {
+            UIConstants.showWarning(this, "Por favor, insira um e-mail válido.");
+            return;
+        }
+
+        if (!tel.isEmpty()) {
+            if (!tel.matches("\\d+")) {
+                UIConstants.showWarning(this, "O telefone deve conter apenas números.");
+                return;
+            }
+            if (tel.length() < 10) {
+                UIConstants.showWarning(this, "Insira um telefone válido com DDD.");
+                return;
+            }
+        }
+
+        if(senha.length() < 6) {
+            UIConstants.showWarning(this, "A senha deve ter no mínimo 6 caracteres.");
+            return;
+        }
+
         if(!senha.equals(conf)) {
-            Toast.show(this, "As senhas não coincidem.", Toast.Type.ERROR);
+            UIConstants.showError(this, "As senhas não coincidem.");
             return;
         }
 
         String cargo = "Atendente";
-        if(rbCozinheiro.isSelected()) cargo = "Cozinheiro";
-        if(rbEntregador.isSelected()) cargo = "Entregador";
+        if(tbCozinheiro.isSelected()) cargo = "Cozinheiro";
+        if(tbEntregador.isSelected()) cargo = "Entregador";
         final String finalCargo = cargo;
 
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -615,13 +614,22 @@ public class TelaInicial extends JFrame {
                 try (Connection conn = cb.abrirConexao()) {
                     if(conn == null) throw new Exception("Sem conexão");
                     
+                    String checkSql = "SELECT id FROM tb_funcionarios WHERE email = ? OR userName = ?";
+                    PreparedStatement checkPs = conn.prepareStatement(checkSql);
+                    checkPs.setString(1, email);
+                    checkPs.setString(2, user);
+                    if(checkPs.executeQuery().next()) {
+                        erro = "Usuário ou E-mail já cadastrado.";
+                        return null;
+                    }
+                    
                     String sql = "INSERT INTO tb_funcionarios (name, userName, email, role, phone, password, registrationDate, status) VALUES (?, ?, ?, ?, ?, ?, GETDATE(), 'pendente')";
                     PreparedStatement ps = conn.prepareStatement(sql);
                     ps.setString(1, nome);
                     ps.setString(2, user);
                     ps.setString(3, email);
                     ps.setString(4, finalCargo);
-                    ps.setString(5, txtCadTelefone.getText());
+                    ps.setString(5, tel);
                     ps.setString(6, senha);
                     ps.executeUpdate();
                     
@@ -635,9 +643,9 @@ public class TelaInicial extends JFrame {
             protected void done() {
                 setCursor(Cursor.getDefaultCursor());
                 if(erro != null) {
-                    Toast.show(TelaInicial.this, erro, Toast.Type.ERROR);
+                    UIConstants.showError(TelaInicial.this, erro);
                 } else {
-                    Toast.show(TelaInicial.this, "Solicitação enviada!", Toast.Type.SUCCESS);
+                    UIConstants.showSuccess(TelaInicial.this, "Solicitação validada e enviada!");
                     limparFormCadastro();
                     cardLayout.show(mainContainer, "LOGIN");
                 }
@@ -652,10 +660,16 @@ public class TelaInicial extends JFrame {
         txtCadTelefone.setText("");
         txtCadSenha.setText("");
         txtCadConfirma.setText("");
-        rbAtendente.setSelected(true);
+        tbAtendente.setSelected(true);
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new TelaInicial().setVisible(true));
-    }
+            try {
+                UIManager.setLookAndFeel("com.formdev.flatlaf.FlatDarkLaf");
+            } catch (Exception ex) {
+                System.err.println("Não foi possível inicializar o FlatLaf Dark.");
+            }
+            
+            SwingUtilities.invokeLater(() -> new TelaInicial().setVisible(true));
+        }
 }

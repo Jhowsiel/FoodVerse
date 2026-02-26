@@ -6,8 +6,6 @@ import jiconfont.swing.IconFontSwing;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class Toast extends JWindow {
 
@@ -32,11 +30,14 @@ public class Toast extends JWindow {
         }
     }
 
-    // Método estático para chamar facilmente: Toast.show(painel, "Msg", Type.SUCCESS)
     public static void show(Component owner, String message, Type type) {
-        Window window = SwingUtilities.getWindowAncestor(owner);
+        // Verifica se o owner JÁ É uma Window (como JFrame/TelaInicial)
+        Window window = (owner instanceof Window) ? (Window) owner : SwingUtilities.getWindowAncestor(owner);
+        
         if (window != null) {
             new Toast(window, message, type).animate();
+        } else {
+            System.err.println("Erro no Toast: Nenhuma janela encontrada para exibir a notificação.");
         }
     }
 
@@ -46,21 +47,18 @@ public class Toast extends JWindow {
         setBackground(new Color(0, 0, 0, 0)); // Transparente para suportar bordas arredondadas
         setSize(350, 50);
 
-        // Painel interno com desenho arredondado
         JPanel content = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 
-                // Fundo escuro semi-transparente
                 g2.setColor(new Color(40, 40, 40, 240));
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS, RADIUS);
 
-                // Barra lateral colorida
                 g2.setColor(type.color);
                 g2.fillRoundRect(0, 0, 10, getHeight(), RADIUS, RADIUS);
-                g2.fillRect(5, 0, 10, getHeight()); // Retângulo para cobrir a curva interna da barra
+                g2.fillRect(5, 0, 10, getHeight());
                 
                 g2.dispose();
             }
@@ -68,11 +66,9 @@ public class Toast extends JWindow {
         content.setLayout(new FlowLayout(FlowLayout.LEFT, 15, 12));
         content.setOpaque(false);
 
-        // Ícone
         JLabel iconLabel = new JLabel(IconFontSwing.buildIcon(type.icon, 24, type.color));
         content.add(iconLabel);
 
-        // Texto
         JLabel textLabel = new JLabel(message);
         textLabel.setFont(UIConstants.FONT_BOLD);
         textLabel.setForeground(Color.WHITE);
@@ -80,11 +76,9 @@ public class Toast extends JWindow {
 
         add(content);
 
-        // Posicionamento (Canto inferior direito da janela pai, ou centro topo)
-        // Vamos colocar no Topo Central, estilo notificação moderna
         Point loc = owner.getLocationOnScreen();
         int x = loc.x + (owner.getWidth() - getWidth()) / 2;
-        int y = loc.y + 80; // 80px do topo
+        int y = loc.y + 80; 
         setLocation(x, y);
         
         setOpacity(0f);
@@ -92,8 +86,6 @@ public class Toast extends JWindow {
 
     private void animate() {
         setVisible(true);
-
-        // Fade In
         fadeInTimer = new Timer(20, e -> {
             opacity += 0.1f;
             if (opacity >= 0.95f) {

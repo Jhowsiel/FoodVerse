@@ -60,17 +60,20 @@ public class HomePanel extends JPanel {
         gc.gridx = 0; gc.weightx = 0.7; gc.weighty = 1.0;
         
         JPanel pTable = new JPanel(new BorderLayout());
-        UIConstants.stylePanel(pTable); // Borda e fundo
         pTable.setBackground(UIConstants.BG_DARK_ALT);
-        pTable.setBorder(new EmptyBorder(15, 15, 15, 15));
+        // Borda elegante ao redor de todo o bloco da tabela
+        pTable.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(UIConstants.GRID_DARK, 1),
+            new EmptyBorder(15, 15, 15, 15)
+        ));
         
-        JLabel lblUltimos = new JLabel("Últimos Pedidos");
+        JLabel lblUltimos = new JLabel("Atividades Recentes");
         lblUltimos.setFont(UIConstants.FONT_BOLD);
         lblUltimos.setForeground(UIConstants.FG_LIGHT);
         lblUltimos.setBorder(new EmptyBorder(0, 0, 15, 0));
         pTable.add(lblUltimos, BorderLayout.NORTH);
         
-        // Tabela Mockada para Visualização
+        // Dados provisórios
         String[] colunas = {"ID", "Cliente", "Status", "Valor", "Hora"};
         Object[][] dados = {
             {"#1024", "João Silva", "Entregue", "R$ 45,00", "19:30"},
@@ -80,10 +83,11 @@ public class HomePanel extends JPanel {
             {"#1028", "Mesa 02", "Novo", "R$ 15,00", "20:15"},
         };
         JTable table = new JTable(dados, colunas);
-        UIConstants.styleTable(table);
+        UIConstants.styleTable(table); // APLICA O ESTILO CORRIGIDO
+        
         JScrollPane scroll = new JScrollPane(table);
-        UIConstants.styleScrollPane(scroll);
-        scroll.setBorder(null); // Remove borda extra
+        UIConstants.styleScrollPane(scroll); 
+        scroll.setBorder(null); // Remove a borda extra do Scroll para ficar flat
         pTable.add(scroll, BorderLayout.CENTER);
         
         bottomSection.add(pTable, gc);
@@ -94,9 +98,9 @@ public class HomePanel extends JPanel {
         JPanel pActions = new JPanel(new GridLayout(4, 1, 0, 15));
         pActions.setOpaque(false);
         
-        pActions.add(criarBotaoAtalho("Novo Pedido Balcão", GoogleMaterialDesignIcons.ADD_SHOPPING_CART));
+        pActions.add(criarBotaoAtalho("Novo Pedido", GoogleMaterialDesignIcons.ADD_SHOPPING_CART));
         pActions.add(criarBotaoAtalho("Reservar Mesa", GoogleMaterialDesignIcons.EVENT_SEAT));
-        pActions.add(criarBotaoAtalho("Cadastrar Cliente", GoogleMaterialDesignIcons.PERSON_ADD));
+        pActions.add(criarBotaoAtalho("Novo Cliente", GoogleMaterialDesignIcons.PERSON_ADD));
         pActions.add(criarBotaoAtalho("Fechar Caixa", GoogleMaterialDesignIcons.ATTACH_MONEY));
         
         bottomSection.add(pActions, gc);
@@ -106,6 +110,7 @@ public class HomePanel extends JPanel {
         add(content, BorderLayout.CENTER);
     }
     
+    // Construtor auxiliar para os botões de atalho da Home
     private JButton criarBotaoAtalho(String texto, GoogleMaterialDesignIcons icon) {
         JButton btn = new JButton(texto);
         UIConstants.styleSecondary(btn);
@@ -115,14 +120,14 @@ public class HomePanel extends JPanel {
         return btn;
     }
 
-    // --- Componente Interno: Card de Informação ---
+    // --- Componente Interno: Card de Informação Visual ---
     private class InfoCard extends UIConstants.RoundedPanel {
         public InfoCard(String titulo, String valor, GoogleMaterialDesignIcons icon, Color corIcone) {
-            super(20, UIConstants.BG_DARK_ALT); // Arredondado
+            super(20, UIConstants.BG_DARK_ALT); // Painel com bordas arredondadas
             setLayout(new BorderLayout());
             setBorder(new EmptyBorder(20, 20, 20, 20));
             
-            // Ícone
+            // Ícone grande
             JLabel lblIcon = new JLabel(IconFontSwing.buildIcon(icon, 40, corIcone));
             add(lblIcon, BorderLayout.EAST);
             
@@ -135,7 +140,7 @@ public class HomePanel extends JPanel {
             lblTit.setForeground(UIConstants.FG_MUTED);
             
             JLabel lblVal = new JLabel(valor);
-            lblVal.setFont(new Font("Segoe UI", Font.BOLD, 22)); // Fonte maior
+            lblVal.setFont(new Font("Segoe UI", Font.BOLD, 22)); 
             lblVal.setForeground(UIConstants.FG_LIGHT);
             
             pText.add(lblTit);

@@ -17,22 +17,22 @@ public final class UIConstants {
     // =================================================================================
     // 1. PALETA DE CORES
     // =================================================================================
-    public static final Color BG_DARK         = new Color(0x30,0x30,0x30);
-    public static final Color BG_DARK_ALT     = new Color(0x38,0x38,0x38);
-    public static final Color CARD_DARK       = new Color(0x3F,0x3F,0x3F);
-    public static final Color HEADER_DARK     = new Color(0x2B,0x2B,0x2B);
-    public static final Color FG_LIGHT        = new Color(0xE4,0xE4,0xE4);
-    public static final Color FG_MUTED        = new Color(0xB0,0xB0,0xB0);
+    public static final Color BG_DARK         = new Color(0x30, 0x30, 0x30);
+    public static final Color BG_DARK_ALT     = new Color(0x38, 0x38, 0x38);
+    public static final Color CARD_DARK       = new Color(0x3F, 0x3F, 0x3F);
+    public static final Color HEADER_DARK     = new Color(0x2B, 0x2B, 0x2B);
+    public static final Color FG_LIGHT        = new Color(0xE4, 0xE4, 0xE4);
+    public static final Color FG_MUTED        = new Color(0xB0, 0xB0, 0xB0);
     
     // Cores de Ação
-    public static final Color PRIMARY_RED     = new Color(0xBC,0x10,0x15);
-    public static final Color PRIMARY_RED_ALT = new Color(0xEB,0x00,0x29);
-    public static final Color SUCCESS_GREEN   = new Color(0x19,0x87,0x54);
-    public static final Color DANGER_RED      = new Color(220, 53, 69); // Nova para erros
+    public static final Color PRIMARY_RED     = new Color(0xBC, 0x10, 0x15);
+    public static final Color PRIMARY_RED_ALT = new Color(0xEB, 0x00, 0x29);
+    public static final Color SUCCESS_GREEN   = new Color(0x19, 0x87, 0x54);
+    public static final Color DANGER_RED      = new Color(220, 53, 69);
     
     // Tabelas e Grades
-    public static final Color GRID_DARK       = new Color(70,70,70);
-    public static final Color ALT_ROW         = new Color(0x35,0x35,0x35);
+    public static final Color GRID_DARK       = new Color(70, 70, 70);
+    public static final Color ALT_ROW         = new Color(0x35, 0x35, 0x35);
     public static final Color SEL_BG          = PRIMARY_RED;
     public static final Color SEL_FG          = Color.WHITE;
     public static final Color STATUS_INACTIVE_BG = CARD_DARK;
@@ -49,14 +49,16 @@ public final class UIConstants {
     public static final Font FONT_BOLD  = new Font("Segoe UI", Font.BOLD, 14);
     public static final Font FONT_REGULAR = new Font("Segoe UI", Font.PLAIN, 14);
 
-    // Fontes extras para títulos modernos
-    public static final Font SEGOE_14   = new Font("Segoe UI", Font.PLAIN, 14);
-    public static final Font SEGOE_18_B = new Font("Segoe UI", Font.BOLD, 18);
-
     // =================================================================================
     // 3. CONFIGURAÇÃO GLOBAL (FLATLAF)
     // =================================================================================
     public static void applyDarkDefaults() {
+        // Remove bordas azuis de foco globais (Focus Rings)
+        put("Component.focusWidth", 0);
+        put("Component.innerFocusWidth", 0);
+        put("TabbedPane.focusColor", new Color(0,0,0,0));
+        put("Button.focusWidth", 0);
+
         // General
         put("Panel.background", BG_DARK);
         put("Label.foreground", FG_LIGHT);
@@ -69,26 +71,22 @@ public final class UIConstants {
         put("TextComponent.arc", 12);
         put("Button.arc", 12);
 
-        // Buttons
-        put("Button.background", PRIMARY_RED);
-        put("Button.foreground", Color.WHITE);
-        put("Button.focusColor", PRIMARY_RED_ALT);
-        put("Button.hoverBackground", PRIMARY_RED_ALT);
-        put("Button.border", BorderFactory.createEmptyBorder());
-
+        // Definimos a cor de destaque (Accent) para o Vermelho do FoodVerse
+        put("Component.focusColor", PRIMARY_RED);
+        put("TextComponent.selectionBackground", PRIMARY_RED);
+        put("TextComponent.selectionForeground", Color.WHITE);
+        
         // Text Components
         put("TextComponent.background", CARD_DARK);
         put("TextComponent.foreground", FG_LIGHT);
         put("TextComponent.caretForeground", FG_LIGHT);
-        put("TextComponent.selectionBackground", SEL_BG);
-        put("TextComponent.selectionForeground", SEL_FG);
         put("TextComponent.border", BorderFactory.createEmptyBorder(6, 8, 6, 8));
 
         // ComboBox
         put("ComboBox.background", CARD_DARK);
         put("ComboBox.foreground", FG_LIGHT);
-        put("ComboBox.selectionBackground", SEL_BG);
-        put("ComboBox.selectionForeground", SEL_FG);
+        put("ComboBox.selectionBackground", PRIMARY_RED);
+        put("ComboBox.selectionForeground", Color.WHITE);
         put("ComboBox.buttonBackground", CARD_DARK);
         put("ComboBox.buttonHoverBackground", BG_DARK_ALT);
         put("ComboBox.popupBackground", CARD_DARK);
@@ -96,8 +94,8 @@ public final class UIConstants {
         // Table
         put("Table.background", BG_DARK);
         put("Table.foreground", FG_LIGHT);
-        put("Table.selectionBackground", SEL_BG);
-        put("Table.selectionForeground", SEL_FG);
+        put("Table.selectionBackground", PRIMARY_RED);
+        put("Table.selectionForeground", Color.WHITE);
         put("Table.gridColor", GRID_DARK);
         put("TableHeader.background", HEADER_DARK);
         put("TableHeader.foreground", FG_LIGHT);
@@ -105,10 +103,11 @@ public final class UIConstants {
 
         // ScrollPane
         put("ScrollPane.background", BG_DARK);
+        put("ScrollPane.border", BorderFactory.createLineBorder(GRID_DARK, 1));
         put("ScrollBar.track", CARD_DARK);
         put("ScrollBar.thumb", HEADER_DARK);
         put("ScrollBar.background", BG_DARK);
-        put("ScrollBar.thumbArc", 999); // Scroll arredondado
+        put("ScrollBar.thumbArc", 999); 
 
         // Menus e Dialogs
         put("Menu.background", CARD_DARK);
@@ -117,10 +116,11 @@ public final class UIConstants {
         put("PopupMenu.foreground", FG_LIGHT);
         put("MenuItem.background", CARD_DARK);
         put("MenuItem.foreground", FG_LIGHT);
+        
+        // Fundo dos Pop-ups e Dialogs ---
         put("OptionPane.background", BG_DARK);
-        put("OptionPane.foreground", FG_LIGHT);
+        put("OptionPane.messageForeground", FG_LIGHT);
         put("Dialog.background", BG_DARK);
-        put("Dialog.foreground", FG_LIGHT);
         
         // Borders e Tooltips
         put("TitledBorder.titleColor", FG_LIGHT);
@@ -130,7 +130,7 @@ public final class UIConstants {
 
     private static void put(String k, Object v){ UIManager.put(k,v); }
 
-    // =================================================================================
+// =================================================================================
     // 4. ESTILIZADORES DE COMPONENTES
     // =================================================================================
     
@@ -141,15 +141,46 @@ public final class UIConstants {
         l.setOpaque(false);
     }
 
+    public static void styleChipButton(JToggleButton tb) {
+        tb.setFont(ARIAL_12_B);
+        tb.setBackground(CARD_DARK);
+        tb.setForeground(FG_MUTED);
+        tb.setFocusPainted(false);
+        tb.setBorderPainted(false);
+        tb.setOpaque(true); // CORREÇÃO
+        tb.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        tb.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(GRID_DARK, 1),
+            BorderFactory.createEmptyBorder(8, 20, 8, 20)
+        ));
+
+        tb.addItemListener(e -> {
+            if (tb.isSelected()) {
+                tb.setBackground(PRIMARY_RED);
+                tb.setForeground(Color.WHITE);
+                tb.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(PRIMARY_RED.darker(), 1),
+                    BorderFactory.createEmptyBorder(8, 20, 8, 20)
+                ));
+            } else {
+                tb.setBackground(CARD_DARK);
+                tb.setForeground(FG_MUTED);
+                tb.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(GRID_DARK, 1),
+                    BorderFactory.createEmptyBorder(8, 20, 8, 20)
+                ));
+            }
+        });
+    }
+
     public static void stylePrimary(JButton b){
         b.setFont(ARIAL_12_B);
         b.setBackground(PRIMARY_RED);
         b.setForeground(Color.WHITE);
         b.setFocusPainted(false);
         b.setBorderPainted(false);
-        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        // Remove borda composta complexa se quiser usar o look 'clean' do FlatLaf, 
-        // mas mantendo sua preferência:
+        b.setOpaque(true); // CORREÇÃO: Força a cor do fundo
+        b.setCursor(new Cursor(Cursor.HAND_CURSOR));
         b.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(PRIMARY_RED.darker(), 1),
             BorderFactory.createEmptyBorder(8, 16, 8, 16)
@@ -162,7 +193,8 @@ public final class UIConstants {
         b.setForeground(FG_LIGHT);
         b.setFocusPainted(false);
         b.setBorderPainted(false);
-        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        b.setOpaque(true); // CORREÇÃO
+        b.setCursor(new Cursor(Cursor.HAND_CURSOR));
         b.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(GRID_DARK, 1),
             BorderFactory.createEmptyBorder(8, 16, 8, 16)
@@ -175,21 +207,22 @@ public final class UIConstants {
         b.setForeground(Color.WHITE);
         b.setFocusPainted(false);
         b.setBorderPainted(false);
-        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        b.setOpaque(true); // CORREÇÃO
+        b.setCursor(new Cursor(Cursor.HAND_CURSOR));
         b.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(SUCCESS_GREEN.darker(), 1),
             BorderFactory.createEmptyBorder(8, 16, 8, 16)
         ));
     }
     
-    // Adicionado: Botão de Perigo (Excluir/Cancelar)
     public static void styleDanger(JButton b){
         b.setFont(ARIAL_12_B);
         b.setBackground(DANGER_RED);
         b.setForeground(Color.WHITE);
         b.setFocusPainted(false);
         b.setBorderPainted(false);
-        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        b.setOpaque(true); // CORREÇÃO
+        b.setCursor(new Cursor(Cursor.HAND_CURSOR));
         b.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(DANGER_RED.darker(), 1),
             BorderFactory.createEmptyBorder(8, 16, 8, 16)
@@ -197,14 +230,13 @@ public final class UIConstants {
     }
 
     public static void styleField(JTextField tf) {
-        tf.setBackground(CARD_DARK); // Fundo cinza escuro
-        tf.setForeground(Color.WHITE); // Texto BRANCO (para não ficar invisível)
-        tf.setCaretColor(Color.WHITE); // Cursor piscante BRANCO
+        tf.setBackground(CARD_DARK); 
+        tf.setForeground(Color.WHITE); 
+        tf.setCaretColor(Color.WHITE); 
         tf.setFont(ARIAL_14);
-        // Borda simples e elegante
         tf.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(GRID_DARK, 1),
-            BorderFactory.createEmptyBorder(8, 10, 8, 10) // Padding interno
+            BorderFactory.createEmptyBorder(8, 10, 8, 10) 
         ));
         tf.setOpaque(true); 
     }
@@ -254,16 +286,18 @@ public final class UIConstants {
         sp.getViewport().setBackground(BG_DARK);
     }
 
-    // Estilo de Tabela Completo
+    // Estilo de Tabela Completo e Limpo
     public static void styleTable(JTable table) {
         table.setRowHeight(40);
         table.setShowVerticalLines(false);
+        table.setShowHorizontalLines(true);
         table.setGridColor(GRID_DARK);
         table.setBackground(BG_DARK_ALT);
         table.setForeground(FG_LIGHT);
         table.setSelectionBackground(SEL_BG);
         table.setSelectionForeground(SEL_FG);
         table.setFont(ARIAL_14);
+        table.setFocusable(false); // Remove a borda azul ao clicar na célula
 
         JTableHeader header = table.getTableHeader();
         header.setBackground(HEADER_DARK);
@@ -271,6 +305,7 @@ public final class UIConstants {
         header.setFont(ARIAL_12_B);
         header.setPreferredSize(new Dimension(0, 45));
         header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, GRID_DARK));
+        header.setReorderingAllowed(false); // Impede reordenação bugada
 
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
@@ -279,26 +314,17 @@ public final class UIConstants {
         }
     }
 
-    // Sistema de Mensagens (Success/Error)
+    // Sistema de Mensagens (Toast)
     public static void showSuccess(Component parent, String mensagem) {
-        displayMessage(parent, mensagem, "Sucesso", GoogleMaterialDesignIcons.CHECK_CIRCLE, SUCCESS_GREEN);
+        Toast.show(parent, mensagem, Toast.Type.SUCCESS);
     }
 
     public static void showError(Component parent, String mensagem) {
-        displayMessage(parent, mensagem, "Erro", GoogleMaterialDesignIcons.ERROR, DANGER_RED);
+        Toast.show(parent, mensagem, Toast.Type.ERROR);
     }
     
     public static void showWarning(Component parent, String mensagem) {
-        displayMessage(parent, mensagem, "Atenção", GoogleMaterialDesignIcons.WARNING, Color.ORANGE);
-    }
-
-    private static void displayMessage(Component parent, String msg, String title, GoogleMaterialDesignIcons icon, Color iconColor) {
-        JLabel label = new JLabel(msg);
-        label.setFont(ARIAL_14);
-        label.setForeground(FG_LIGHT);
-        label.setIcon(IconFontSwing.buildIcon(icon, 28, iconColor));
-        label.setIconTextGap(15);
-        JOptionPane.showMessageDialog(parent, label, title, JOptionPane.PLAIN_MESSAGE);
+        Toast.show(parent, mensagem, Toast.Type.WARNING);
     }
 
     // Classe Interna para Painéis Arredondados
@@ -320,5 +346,28 @@ public final class UIConstants {
             g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), radius, radius));
             g2.dispose();
         }
+    }
+
+
+    // =================================================================================
+    // 5. ÍCONE DO SISTEMA (TASKBAR E JANELA)
+    // =================================================================================
+    public static Image getAppIcon() {
+        // Cria o ícone usando a biblioteca que já temos (Tamanho 64x64 para ficar nítido na barra de tarefas)
+        Icon icon = IconFontSwing.buildIcon(GoogleMaterialDesignIcons.RESTAURANT_MENU, 64, PRIMARY_RED);
+        
+        // Converte o Icon do Swing para um Image nativo do sistema operacional
+        java.awt.image.BufferedImage image = new java.awt.image.BufferedImage(
+            icon.getIconWidth(), 
+            icon.getIconHeight(), 
+            java.awt.image.BufferedImage.TYPE_INT_ARGB
+        );
+        
+        Graphics2D g2d = image.createGraphics();
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        icon.paintIcon(null, g2d, 0, 0);
+        g2d.dispose();
+        
+        return image;
     }
 }
