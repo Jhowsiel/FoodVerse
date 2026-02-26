@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include "pages/pagePrincipal/header.html" %}
+
+<style>
+  body { padding-top: 100px; background-color: #f4f7f6; }
+  
+  .payment-card {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+    background: #fff;
+  }
+
+  /* Estilo dos métodos de pagamento */
+  .method-option {
+    border: 2px solid #eee;
+    border-radius: 15px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+
+  .method-option:hover { border-color: #dc3545; background-color: #fff8f8; }
+
+  .btn-check:checked + .method-option {
+    border-color: #dc3545;
+    background-color: #fff8f8;
+    box-shadow: 0 5px 15px rgba(220, 53, 69, 0.1);
+  }
+
+  .summary-badge {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 15px;
+    border-left: 4px solid #dc3545;
+  }
+
+  .total-section {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #dc3545;
+  }
+</style>
+
+<section class="container py-4">
+  <div class="row g-4">
+    
+    <div class="col-12 col-lg-8">
+      <div class="card payment-card p-4">
+        <h2 class="fw-bold mb-4">Pagamento da Reserva</h2>
+        
+        <div class="summary-badge mb-4">
+          <div class="row text-center text-md-start">
+            <div class="col-md-4">
+              <small class="text-muted d-block">Data</small>
+              <span class="fw-bold">{{ data }}</span>
+            </div>
+            <div class="col-md-4 border-start border-end">
+              <small class="text-muted d-block">Horário</small>
+              <span class="fw-bold">{{ horario }}</span>
+            </div>
+            <div class="col-md-4">
+              <small class="text-muted d-block">Pessoas</small>
+              <span class="fw-bold">{{ pessoas }}</span>
+            </div>
+          </div>
+        </div>
+
+        <form action="{% url 'pedido' %}" method="POST">
+          {% csrf_token %}
+          <h5 class="fw-bold mb-3">Escolha como pagar:</h5>
+          
+          <input type="radio" class="btn-check" name="metodo_pagamento" id="pix" value="pix" checked>
+          <label class="method-option" for="pix">
+            <i class="bi bi-qr-code-scan fs-2 text-danger me-3"></i>
+            <div>
+              <span class="fw-bold d-block">Pix</span>
+              <small class="text-muted">Aprovação imediata e reserva garantida na hora.</small>
+            </div>
+            <i class="bi bi-check-circle-fill ms-auto text-danger fs-4"></i>
+          </label>
+
+          <input type="radio" class="btn-check" name="metodo_pagamento" id="cartao" value="cartao">
+          <label class="method-option" for="cartao">
+            <i class="bi bi-credit-card-2-back fs-2 text-danger me-3"></i>
+            <div>
+              <span class="fw-bold d-block">Cartão de Crédito</span>
+              <small class="text-muted">Parcele sua reserva em até 2x sem juros.</small>
+            </div>
+          </label>
+
+          <div class="alert alert-light border mt-4">
+            <small class="text-muted">
+              <i class="bi bi-shield-lock-fill me-1"></i> 
+              Seus dados estão seguros. Utilizamos criptografia de ponta a ponta.
+            </small>
+          </div>
+
+          <button type="submit" class="btn btn-danger btn-lg w-100 py-3 mt-3 fw-bold shadow">
+            Finalizar Pagamento de R$ 38,31
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+      <div class="card payment-card p-4 sticky-top" style="top: 110px;">
+        <h5 class="fw-bold mb-4">Resumo do Valor</h5>
+        
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Taxa de Serviço</span>
+          <span>R$ 10,00</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Consumação Antecipada</span>
+          <span>R$ 28,31</span>
+        </div>
+        
+        <hr class="my-3">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <span class="fw-bold">Total a Pagar</span>
+          <span class="total-section">R$ 38,31</span>
+        </div>
+
+        <div class="bg-danger bg-opacity-10 p-3 rounded-3">
+          <p class="small text-danger mb-0">
+            <strong>Atenção:</strong> Em caso de cancelamento com menos de 2h de antecedência, a taxa de serviço não será reembolsada.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{% include "pages/pagePrincipal/footer.html" %}
+{% endblock %}

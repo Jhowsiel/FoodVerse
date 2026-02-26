@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include "pages/pagePrincipal/header.html" %}
+
+<style>
+  body { padding-top: 90px; background-color: #f8f9fa; }
+  .selection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+  }
+  .btn-check:checked + .btn-outline-danger {
+    background-color: #dc3545;
+    color: white;
+    border-color: #dc3545;
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+  }
+  .card-reserva { border-radius: 20px; border: none; }
+  .resumo-reserva { background-color: #fff; position: sticky; top: 100px; }
+</style>
+
+<section class="container py-4">
+  <div class="mb-3">
+    <a href="javascript:history.back()" class="text-decoration-none text-muted small">
+      <i class="bi bi-arrow-left"></i> Voltar para o restaurante
+    </a>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-12 col-lg-8">
+      <div class="card card-reserva shadow-sm p-4">
+        <h2 class="fw-bold mb-4">Reservar Mesa</h2>
+
+        <form method="POST" action="{% url 'reserva_pagamento' %}">
+          {% csrf_token %}
+
+          <input type="hidden" name="restaurante_id" value="{{ restaurante.id }}" />
+
+          <div class="mb-4">
+            <label class="form-label fw-bold"><i class="bi bi-calendar-event me-2"></i>Selecione a Data</label>
+            <div class="selection-grid">
+              {% for data in datas %}
+              <input type="radio" class="btn-check" name="data" id="data_{{ forloop.counter }}" value="{{ data }}" required />
+              <label class="btn btn-outline-danger py-2" for="data_{{ forloop.counter }}">{{ data }}</label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-bold"><i class="bi bi-clock me-2"></i>Horários Disponíveis</label>
+            <div class="selection-grid">
+              {% for horario in horarios %}
+              <input type="radio" class="btn-check" name="horario" id="hora_{{ forloop.counter }}" value="{{ horario }}" required />
+              <label class="btn btn-outline-danger py-2" for="hora_{{ forloop.counter }}">{{ horario }}</label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Quantidade de Pessoas</label>
+              <div class="input-group">
+                <span class="input-group-text bg-white"><i class="bi bi-people"></i></span>
+                <select class="form-select" name="pessoas" required>
+                  <option value="1">1 Pessoa</option>
+                  <option value="2" selected>2 Pessoas</option>
+                  <option value="4">4 Pessoas</option>
+                  <option value="6">6 Pessoas</option>
+                  <option value="8">8+ Pessoas</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-bold">Observações Especiais</label>
+              <textarea class="form-control" name="obs" rows="3" placeholder="Ex: Aniversário, mesa perto da janela..."></textarea>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-danger btn-lg w-100 mt-4 fw-bold shadow-sm">
+            Confirmar Reserva
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+      <div class="card card-reserva resumo-reserva shadow-sm overflow-hidden">
+        <img src="{% static restaurante.imagem %}" class="card-img-top" style="height: 180px; object-fit: cover" />
+        <div class="card-body">
+          <h4 class="fw-bold mb-1">{{ restaurante.nome }}</h4>
+          <p class="text-muted small mb-3">
+            <i class="bi bi-geo-alt-fill me-1"></i> {{ restaurante.endereco|default:"Endereço do Restaurante" }}
+          </p>
+
+          <div class="p-3 bg-light rounded-3 mb-3">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Avaliação:</span>
+              <span class="fw-bold text-warning"><i class="bi bi-star-fill"></i> {{ restaurante.avaliacao }}</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="text-muted">Taxa de Reserva:</span>
+              <span class="text-success fw-bold">Grátis</span>
+            </div>
+          </div>
+
+          <div class="alert alert-info border-0 small mb-0">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            Sua reserva será garantida por até 15 minutos após o horário selecionado.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% include "pages/pagePrincipal/footer.html" %} 
+{% endblock %}

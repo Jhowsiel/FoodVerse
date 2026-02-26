@@ -2,52 +2,118 @@
 
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
-<section class="container page-offset py-4">
+
+<style>
+  body { padding-top: 90px; background-color: #f8f9fa; }
+  
+  .checkout-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+
+  /* Foco nos inputs para o usuário saber que pode digitar */
+  .form-control:focus, .form-select:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.25 rbg(220, 53, 69, 0.25);
+  }
+
+  .label-custom {
+    font-weight: 700;
+    color: #495057;
+    margin-bottom: 0.5rem;
+  }
+
+  .summary-box {
+    background-color: #fff;
+    border-radius: 15px;
+    position: sticky;
+    top: 110px;
+  }
+</style>
+
+<section class="container py-4">
   <h1 class="fw-bold mb-4">Finalização do pedido</h1>
+
   <div class="row g-4">
     <div class="col-12 col-lg-7">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <h5 class="fw-bold">Entrega e pagamento</h5>
-          <div class="mb-3">
-            <label class="form-label">Endereço</label>
-            <input type="text" class="form-control" value="Rua Exemplo, 123 - Taboão da Serra" readonly>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Forma de pagamento</label>
-            <select class="form-select">
-              <option>Pix</option>
-              <option>Cartão de crédito</option>
-              <option>Cartão de débito</option>
-              <option>Carteira digital</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Cupom</label>
-            <div class="input-group">
-              <input type="text" class="form-control" value="FOOD10" readonly>
-              <button class="btn btn-outline-danger" type="button">Trocar</button>
+      <div class="card checkout-card">
+        <div class="card-body p-4">
+          
+          <h5 class="fw-bold mb-4 text-danger"><i class="bi bi-truck me-2"></i>Entrega e Pagamento</h5>
+          
+          <form id="form-checkout">
+            <div class="mb-4">
+              <label class="form-label label-custom">Endereço de Entrega</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-geo-alt"></i></span>
+                <input type="text" class="form-control form-control-lg" 
+                       placeholder="Digite seu endereço completo..." 
+                       value="Rua Exemplo, 123 - Taboão da Serra"> 
+              </div>
+              <small class="text-muted">Você pode alterar o endereço acima se necessário.</small>
             </div>
+
+            <div class="mb-4">
+              <label class="form-label label-custom">Forma de pagamento</label>
+              <select class="form-select form-select-lg">
+                <option value="pix">Pix</option>
+                <option value="cartao_credito">Cartão de crédito</option>
+                <option value="cartao_debito">Cartão de débito</option>
+                <option value="dinheiro">Dinheiro (Pagar na entrega)</option>
+              </select>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label label-custom">Possui um cupom?</label>
+              <div class="input-group">
+                <input type="text" class="form-control" placeholder="Código do cupom" value="FOOD10">
+                <button class="btn btn-dark" type="button">Aplicar</button>
+              </div>
+            </div>
+          </form>
+
+          <div class="alert alert-info d-flex align-items-center border-0 shadow-sm" role="alert">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            <div>Você poderá acompanhar o status do pedido após a confirmação.</div>
           </div>
-          <div class="alert alert-info mb-0">Após confirmar, você receberá notificações de status do pedido.</div>
         </div>
       </div>
     </div>
 
     <div class="col-12 col-lg-5">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <h5 class="fw-bold">Resumo final</h5>
-          <p class="mb-1">Subtotal: {{ subtotal }}</p>
-          <p class="mb-1">Entrega: {{ entrega }}</p>
-          <p class="mb-1">Cupom FOOD10: {{ desconto }}</p>
-          <hr>
-          <h4 class="fw-bold">Total: {{ total }}</h4>
-          <a href="{% url 'pedido' %}" class="btn btn-danger w-100 mt-2">Confirmar pedido</a>
+      <div class="card checkout-card summary-box p-4 shadow-sm">
+        <h5 class="fw-bold mb-4">Resumo do valor</h5>
+        
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Subtotal</span>
+          <span>R$ {{ subtotal }}</span>
         </div>
+        
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Entrega</span>
+          <span class="text-success fw-bold">R$ {{ entrega }}</span>
+        </div>
+        
+        <div class="d-flex justify-content-between mb-3 text-success">
+          <span>Cupom (FOOD10)</span>
+          <span>- R$ {{ desconto }}</span>
+        </div>
+
+        <hr class="my-3">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <span class="h4 fw-bold">Total</span>
+          <span class="h4 fw-bold text-danger">R$ {{ total }}</span>
+        </div>
+
+        <a href="{% url 'pedido'  %}"><button class="btn btn-danger btn-lg w-100 fw-bold shadow-sm">
+          Confirmar Pedido
+        </button></a>
       </div>
     </div>
   </div>
 </section>
+
 {% include "pages/pagePrincipal/footer.html" %}
 {% endblock %}

@@ -4,31 +4,130 @@
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
 
-<section class="container py-4">
-  <h1 class="mb-4">Restaurantes</h1>
+<style>
+  body { 
+    padding-top: 80px; 
+    background-color: #f8f9fa; 
+  }
+  
+  /* Scroll de categorias horizontal para Mobile */
+  .category-scroll {
+    overflow-x: auto;
+    white-space: nowrap;
+    padding: 5px 0 15px 0;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+  }
+  .category-scroll::-webkit-scrollbar { display: none; }
 
-  <div class="d-flex flex-wrap gap-2 mb-4">
-    <a href="{% url 'restaurantes' %}" class="btn {% if not categoria_ativa %}btn-danger{% else %}btn-outline-danger{% endif %}">Todos</a>
+  /* Card de Restaurante */
+  .res-card {
+    transition: all 0.3s ease;
+    border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.05);
+  }
+  .res-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.08) !important;
+  }
+
+  .res-img {
+    height: 160px;
+    object-fit: cover;
+    border-radius: 12px;
+  }
+
+  .rating-badge {
+    background: #fff9e6;
+    color: #ffb800;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.8rem;
+  }
+
+  /* Efeito de texto em duas linhas */
+  .text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>
+
+<section class="container py-4">
+  
+  <div class="mb-4">
+    <h1 class="fw-bold text-dark mb-1">Restaurantes</h1>
+    <p class="text-muted">Explore as melhores opções próximas a você</p>
+  </div>
+
+  <div class="category-scroll d-flex gap-2 mb-4">
+    <a href="{% url 'restaurantes' %}" 
+       class="btn rounded-pill px-4 fw-medium {% if not categoria_ativa %}btn-danger shadow-sm{% else %}btn-outline-dark border-secondary-subtle{% endif %}">
+      Todos
+    </a>
     {% for categoria in categorias %}
-      <a href="{% url 'restaurantes' %}?categoria={{ categoria }}" class="btn {% if categoria_ativa == categoria %}btn-danger{% else %}btn-outline-danger{% endif %}">{{ categoria }}</a>
+      <a href="{% url 'restaurantes' %}?categoria={{ categoria }}" 
+         class="btn rounded-pill px-4 fw-medium {% if categoria_ativa == categoria %}btn-danger shadow-sm{% else %}btn-outline-dark border-secondary-subtle{% endif %}">
+        {{ categoria }}
+      </a>
     {% endfor %}
   </div>
 
-  <div class="row g-3">
+  <div class="row g-4">
     {% for restaurante in restaurantes %}
     <div class="col-12 col-md-6 col-lg-4">
-      <div class="card shadow-sm p-3 h-100 d-flex flex-column">
-        <img src="{% static restaurante.imagem %}" class="card-img-top" alt="{{ restaurante.nome }}">
-        <div class="card-body flex-grow-1 d-flex flex-column">
-          <h5>{{ restaurante.nome }}</h5>
-          <p class="text-muted small mb-2">{{ restaurante.descricao }}</p>
-          <p class="small mb-2"><strong>{{ restaurante.avaliacao }}/5</strong> · {{ restaurante.tempo }} · {{ restaurante.taxa }}</p>
-          <a href="{% url 'restaurante_detalhe' restaurante.id %}" class="btn btn-danger mt-auto w-100">Ver detalhes</a>
+      <div class="card h-100 border-0 shadow-sm p-3 res-card">
+        <div class="row g-0 h-100">
+          
+          <div class="col-5 col-md-12 mb-md-3">
+            <div class="position-relative h-100">
+              <img src="{% static restaurante.imagem %}" class="res-img w-100 h-100" alt="{{ restaurante.nome }}" loading="lazy">
+              {% if restaurante.cupom %}
+                <span class="position-absolute top-0 start-0 badge bg-success m-2 shadow-sm">
+                  <i class="bi bi-tag-fill"></i> Cupom
+                </span>
+              {% endif %}
+            </div>
+          </div>
+          
+          <div class="col-7 col-md-12 ps-3 ps-md-0 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <h5 class="fw-bold text-dark mb-0 text-truncate">{{ restaurante.nome }}</h5>
+              <div class="rating-badge">
+                <i class="bi bi-star-fill"></i> {{ restaurante.avaliacao }}
+              </div>
+            </div>
+            
+            <p class="text-muted small mb-3 text-truncate-2">
+              {{ restaurante.descricao }}
+            </p>
+
+            <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+              <div class="small">
+                <span class="text-dark fw-bold"><i class="bi bi-clock me-1"></i>{{ restaurante.tempo }}</span>
+                <span class="text-muted mx-1">•</span>
+                <span class="text-success fw-medium">{{ restaurante.taxa }}</span>
+              </div>
+              <a href="{% url 'restaurante_detalhe' restaurante.id %}" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                Ver Loja
+              </a>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
     {% empty %}
-    <p>Nenhum restaurante encontrado.</p>
+    <div class="col-12 text-center py-5">
+      <div class="bg-light d-inline-block p-4 rounded-circle mb-3">
+        <i class="bi bi-shop-window fs-1 text-muted"></i>
+      </div>
+      <h4 class="fw-bold">Nenhum resultado</h4>
+      <p class="text-muted">Parece que não temos restaurantes nessa categoria no momento.</p>
+      <a href="{% url 'restaurantes' %}" class="btn btn-danger rounded-pill px-4">Ver todos</a>
+    </div>
     {% endfor %}
   </div>
 </section>

@@ -222,6 +222,7 @@ def cadastro_view(request):
 def restaurante_view(request):
     categoria = request.GET.get('categoria')
     restaurantes_filtrados = RESTAURANTES
+    
     if categoria:
         restaurantes_filtrados = [r for r in RESTAURANTES if r['categoria'] == categoria]
 
@@ -244,18 +245,57 @@ def restaurante_detalhe_view(request, id):
     })
 
 def prato_view(request):
-    restaurante = _restaurante_por_id(_int_param(request.GET.get('restaurante'), 1))
+    restaurante = _restaurante_por_id(_int_param(request.GET.get('restaurante_id'), 1))
     prato = _prato_por_id(restaurante, _int_param(request.GET.get('id'), restaurante['pratos'][0]['id']))
     return render(request, 'pages/catalogo/prato.html', {
         'restaurante': restaurante,
         'prato': prato,
     })
 
+def reserva_view(request):
+    restaurante_id = _int_param(request.GET.get('restaurante_id'), 1)
+    restaurante = _restaurante_por_id(restaurante_id)
+
+    print(f"DEBUG: O ID que chegou na View foi: {restaurante_id}")
+    return render(request, 'pages/pedido/reserva.html', {
+        'restaurante': restaurante,
+        'horarios': ['19:00', '19:30', '20:00', '20:30', '21:00'],
+        'datas': ['2024-07-01', '2024-07-02', '2024-07-03', '2024-07-04', '2024-07-05'],
+    })
+
+def reserva_pagamento(request):
+    if request.method == 'POST':
+        restaurante_id = _int_param(request.POST.get('restaurante_id'), 1)
+        restaurante = _restaurante_por_id(restaurante_id)
+
+        return render(request, 'pages/pedido/reserva_pagamento.html', {
+            'restaurante': restaurante,
+            'horario': request.POST.get('horario'),
+            'data': request.POST.get('data'),
+            'pessoas': request.POST.get('pessoas'),
+
+            'total': 'R$ 38,31',
+        })
+    else:
+        return redirect('reserva')
+
 
 def pedido_view(request):
-    restaurante = _restaurante_por_id(1)
+    restaurante = _restaurante_por_id(_int_param(request.GET.get('restaurante_id'), 1))
     item = restaurante['pratos'][0]
     return render(request, 'pages/pedido/pedido.html', {
+        'restaurante': restaurante,
+        'item': item,
+        'subtotal': 'R$ 34,90',
+        'entrega': 'R$ 6,90',
+        'desconto': '-R$ 3,49',
+        'total': 'R$ 38,31',
+    })
+
+def carrinho_view(request):
+    restaurante = _restaurante_por_id(_int_param(request.GET.get('restaurante_id'), 1))
+    item = restaurante['pratos'][0]
+    return render(request, 'pages/pedido/carrinho.html', {
         'restaurante': restaurante,
         'item': item,
         'subtotal': 'R$ 34,90',
