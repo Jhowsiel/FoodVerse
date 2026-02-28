@@ -2,7 +2,6 @@ package com.senac.food.verse;
 
 import java.sql.*;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,14 +26,16 @@ public class ReservaDAO {
                      "ORDER BY r.data_reserva ASC";
 
         ConexaoBanco cb = new ConexaoBanco();
-        try {
-            if (cb.conn == null || cb.conn.isClosed()) {
-                // Fallback de segurança se a conexão não abrir no construtor
-                cb.conn = DriverManager.getConnection("jdbc:sqlserver://127.0.0.1:1433;databaseName=FoodVerseDB;encrypt=false;trustServerCertificate=true;loginTimeout=10", "sa", "123456");
-            }
-            
-            PreparedStatement ps = cb.conn.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery();
+        Connection conn = cb.abrirConexao();
+        
+        // PREVENÇÃO DO BUG: Se o banco estiver offline, devolve lista vazia em vez de dar Crash
+        if (conn == null) {
+            System.out.println(">> [ReservaDAO] Offline: Retornando lista de reservas vazia.");
+            return lista; 
+        }
+
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 Reserva r = new Reserva();
@@ -52,6 +53,8 @@ public class ReservaDAO {
             }
         } catch (SQLException e) {
             System.err.println("Erro ao listar reservas: " + e.getMessage());
+        } finally {
+            cb.fecharConexao(); // Garante que a conexão será fechada
         }
         return lista;
     }
@@ -59,18 +62,27 @@ public class ReservaDAO {
     public boolean criarReserva(Reserva r) {
         String sql = "INSERT INTO tb_reservas (ID_cliente, data_reserva, num_pessoas, mesa) VALUES (?, ?, ?, ?)";
         ConexaoBanco cb = new ConexaoBanco();
-        try {
-            if (cb.conn == null) cb.conn = DriverManager.getConnection("jdbc:sqlserver://127.0.0.1:1433;databaseName=FoodVerseDB;encrypt=false", "sa", "123456"); // Ajuste suas credenciais se necessário
-            
-            PreparedStatement ps = cb.conn.prepareStatement(sql);
+        Connection conn = cb.abrirConexao();
+        
+        // PREVENÇÃO DO BUG
+        if (conn == null) {
+            System.out.println(">> [ReservaDAO] Offline: Não é possível criar reserva no momento.");
+            return false;
+        }
+        
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, r.getIdCliente());
             ps.setTimestamp(2, Timestamp.valueOf(r.getDataReserva()));
             ps.setInt(3, r.getNumPessoas());
             ps.setString(4, r.getMesa());
+            
             return ps.executeUpdate() > 0;
+            
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            cb.fecharConexao();
         }
     }
     
@@ -79,14 +91,26 @@ public class ReservaDAO {
         List<String> clientes = new ArrayList<>();
         String sql = "SELECT UserId, name FROM tb_clientes ORDER BY name";
         ConexaoBanco cb = new ConexaoBanco();
-        try {
-             if (cb.conn == null) cb.conn = DriverManager.getConnection("jdbc:sqlserver://127.0.0.1:1433;databaseName=FoodVerseDB;encrypt=false", "sa", "123456");
-             Statement st = cb.conn.createStatement();
-             ResultSet rs = st.executeQuery(sql);
+        Connection conn = cb.abrirConexao();
+        
+        // PREVENÇÃO DO BUG
+        if (conn == null) {
+            System.out.println(">> [ReservaDAO] Offline: Sem clientes para listar.");
+            clientes.add("0 - Cliente Visitante (Modo Offline)");
+            return clientes;
+        }
+        
+        try (Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+             
              while(rs.next()) {
                  clientes.add(rs.getInt("UserId") + " - " + rs.getString("name"));
              }
-        } catch(Exception e) { e.printStackTrace(); }
+        } catch(Exception e) { 
+            e.printStackTrace(); 
+        } finally {
+            cb.fecharConexao();
+        }
         return clientes;
     }
 }

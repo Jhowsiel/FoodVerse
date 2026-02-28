@@ -664,12 +664,17 @@ public class TelaInicial extends JFrame {
     }
 
     public static void main(String[] args) {
-            try {
-                UIManager.setLookAndFeel("com.formdev.flatlaf.FlatDarkLaf");
-            } catch (Exception ex) {
-                System.err.println("Não foi possível inicializar o FlatLaf Dark.");
-            }
-            
-            SwingUtilities.invokeLater(() -> new TelaInicial().setVisible(true));
+        // 1. REGISTAR A FONTE DOS ÍCONES ANTES DE TUDO
+        IconFontSwing.register(GoogleMaterialDesignIcons.getIconFont());
+
+        // 2. APLICAR O TEMA DARK
+        try {
+            UIManager.setLookAndFeel("com.formdev.flatlaf.FlatDarkLaf");
+        } catch (Exception ex) {
+            System.err.println("Não foi possível inicializar o FlatLaf Dark.");
         }
+        
+        // 3. ARRANCAR O SISTEMA
+        SwingUtilities.invokeLater(() -> new TelaInicial().setVisible(true));
+    }
 }

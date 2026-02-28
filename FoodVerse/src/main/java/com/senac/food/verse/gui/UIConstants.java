@@ -280,6 +280,62 @@ public final class UIConstants {
         p.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
     }
 
+
+    public static void showConfirmDialog(Component parent, String titulo, String mensagem, Runnable onConfirm) {
+        Window window = SwingUtilities.getWindowAncestor(parent);
+        if (window == null && parent instanceof Window) {
+            window = (Window) parent;
+        }
+        
+        JDialog dialog = new JDialog(window, titulo, Dialog.ModalityType.APPLICATION_MODAL);
+        dialog.setLayout(new BorderLayout());
+        dialog.setUndecorated(true); 
+        
+        RoundedPanel panel = new RoundedPanel(20, BG_DARK_ALT);
+        panel.setLayout(new BorderLayout(20, 20));
+        panel.setBorder(new EmptyBorder(25, 30, 25, 30));
+        
+        JLabel lblIcon = new JLabel(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.HELP_OUTLINE, 40, PRIMARY_RED));
+        JLabel lblMsg = new JLabel("<html><center>" + mensagem + "</center></html>");
+        lblMsg.setFont(new Font("Arial", Font.BOLD, 16));
+        lblMsg.setForeground(Color.WHITE);
+        lblMsg.setHorizontalAlignment(SwingConstants.CENTER);
+        
+        JPanel pnlCenter = new JPanel(new BorderLayout(10, 10));
+        pnlCenter.setOpaque(false);
+        pnlCenter.add(lblIcon, BorderLayout.NORTH);
+        pnlCenter.add(lblMsg, BorderLayout.CENTER);
+        
+        JPanel pnlBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
+        pnlBotoes.setOpaque(false);
+        
+        JButton btnCancelar = new JButton("CANCELAR");
+        styleSecondary(btnCancelar);
+        btnCancelar.setPreferredSize(new Dimension(130, 40));
+        btnCancelar.addActionListener(e -> dialog.dispose());
+        
+        JButton btnConfirmar = new JButton("CONFIRMAR");
+        stylePrimary(btnConfirmar);
+        btnConfirmar.setPreferredSize(new Dimension(130, 40));
+        btnConfirmar.addActionListener(e -> {
+            dialog.dispose();
+            if (onConfirm != null) onConfirm.run();
+        });
+        
+        pnlBotoes.add(btnCancelar);
+        pnlBotoes.add(btnConfirmar);
+        
+        panel.add(pnlCenter, BorderLayout.CENTER);
+        panel.add(pnlBotoes, BorderLayout.SOUTH);
+        
+        dialog.add(panel, BorderLayout.CENTER);
+        dialog.pack();
+        dialog.setLocationRelativeTo(parent);
+        dialog.setBackground(new Color(0, 0, 0, 0)); 
+        dialog.setVisible(true);
+    }
+
+
     public static void styleScrollPane(JScrollPane sp){
         sp.setBackground(BG_DARK);
         sp.setBorder(BorderFactory.createLineBorder(GRID_DARK, 1));
