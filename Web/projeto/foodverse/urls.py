@@ -25,6 +25,8 @@ urlpatterns = [
     path('reserva/pagamento', views.reserva_pagamento, name='reserva_pagamento'),
     path('pedido/', views.pedido_view, name='pedido'),
     path('finalizacao/', views.finalizacao_view, name='finalizacao'),
+    path('feedback/', views.feedback_view, name='feedback'),
+    path('/feedback/sucesso/', views.feedback_sucesso_view, name='feedback_sucesso'),
     
     # Sugestão: Rota de confirmação após pagar
     # path('confirmacao/', views.confirmacao_view, name='confirmacao'),

@@ -365,6 +365,48 @@ def finalizacao_view(request):
         'total': 'R$ 38,31',
     })
 
+def feedback_view(request):
+    # Simulando um restaurante fixo para não dar erro de variável inexistente
+    restaurante_fake = {
+        "nome": "Sabor da Casa",
+        "id": 1
+    }
+
+    if request.method == 'POST':
+        # Captura o que veio do form
+        nota = int(request.POST.get('avaliacao', 5)) # Padrão 5 estrelas se vier vazio
+        comentario = request.POST.get('comentario', '')
+
+        fake_avaliacao = {
+            'nota': nota,
+            'comentario': comentario,
+            'usuario': request.user.username if request.user.is_authenticated else "Visitante",
+        }
+
+        # Renderiza a tela de SUCESSO
+        return render(request, 'pages/pedido/feedback_sucesso.html', {
+            'avaliacao': fake_avaliacao,
+            'restaurante': restaurante_fake
+        })
+    
+    # Se for GET (acesso direto à página), renderiza o FORMULÁRIO
+    return render(request, 'pages/pedido/feedback.html', {
+        'restaurante': restaurante_fake
+    })
+
+def feedback_sucesso_view(request):
+    return render(request, 'pages/pedido/feedback_sucesso.html', {
+        'avaliacao': {
+            'nota': 5,
+            'comentario': "Ótimo restaurante, comida deliciosa e entrega rápida!",
+            'usuario': "Usuário Exemplo",
+        },
+        'restaurante': {
+            "nome": "Sabor da Casa",
+            "id": 1
+        }
+    })
+    
 def filtrar_restaurantes(query):
     resultados = []
 

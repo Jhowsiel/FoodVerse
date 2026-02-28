@@ -13,44 +13,74 @@
         --ifood-bg: #f7f7f7;
     }
 
-    body { background-color: var(--ifood-bg); padding-top: 110px; }
-    .profile-container { max-width: 600px; margin-bottom: 60px; }
-    .edit-card { border: none; border-radius: 12px; background: #fff; }
+    /* Estrutura Principal */
+    .main-wrapper {
+        background-color: var(--ifood-bg);
+        min-height: 100vh;
+        padding-bottom: 60px;
+    }
 
-    .form-label {
+    .header-spacer {
+        height: 100px; 
+    }
+
+    .profile-container { 
+        max-width: 600px; 
+        margin: 0 auto;
+    }
+
+    .edit-card { 
+        border: none; 
+        border-radius: 12px; 
+        background: #fff; 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    /* Labels Customizadas */
+    .label-custom-perfil {
         font-size: 0.75rem;
         color: var(--ifood-gray-text);
         text-transform: uppercase;
         font-weight: 700;
         margin-bottom: 4px;
+        display: block;
     }
 
-    .form-control {
-        border: 1px solid #e8e8e8;
-        padding: 12px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-        font-weight: 500;
+    /* NOVA CLASSE: input-perfil-edit 
+       Ela convive com a form-control sem bugar o layout global */
+    .input-perfil-edit {
+        border: 1px solid #e8e8e8 !important;
+        padding: 12px !important;
+        border-radius: 8px !important;
+        margin-bottom: 20px !important;
+        font-weight: 500 !important;
+        transition: all 0.2s !important;
+        height: auto !important; /* Garante que não herde alturas estranhas */
     }
 
-    .form-control:focus {
-        border-color: var(--ifood-red);
-        box-shadow: 0 0 0 0.2rem rgba(234, 29, 44, 0.1);
+    .input-perfil-edit:focus {
+        border-color: var(--ifood-red) !important;
+        box-shadow: 0 0 0 0.2rem rgba(234, 29, 44, 0.1) !important;
+        outline: none !important;
+        background-color: #fff !important;
     }
 
-    .form-control:read-only {
-        background-color: #f8f9fa;
-        color: #adb5bd;
-        cursor: not-allowed;
-        border-style: dashed;
+    /* Estado Read-only (Cadeado) */
+    .input-perfil-edit:read-only {
+        background-color: #f8f9fa !important;
+        color: #adb5bd !important;
+        cursor: not-allowed !important;
+        border-style: dashed !important;
     }
 
-    .address-missing {
-        border: 2px dashed #ffc107;
-        background-color: #fffdf5;
+    /* Alerta de Endereço Faltando */
+    .perfil-input-missing {
+        border: 2px dashed #ffc107 !important;
+        background-color: #fffdf5 !important;
     }
 
-    .btn-save {
+    /* Botão Salvar */
+    .btn-perfil-save {
         background-color: var(--ifood-red);
         color: white;
         border: none;
@@ -59,79 +89,93 @@
         border-radius: 8px;
         width: 100%;
         transition: 0.2s;
+        cursor: pointer;
     }
 
-    .btn-save:hover { background-color: #d91a27; transform: translateY(-1px); }
+    .btn-perfil-save:hover { 
+        background-color: #d91a27; 
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(234, 29, 44, 0.2);
+    }
 
-    /* Estilo para o carregamento do CEP */
-    #cep-status { font-size: 0.75rem; margin-top: -15px; display: block; margin-bottom: 10px; }
+    #cep-status { 
+        font-size: 0.75rem; 
+        margin-top: -15px; 
+        display: block; 
+        margin-bottom: 10px; 
+    }
 </style>
 
-<div class="container profile-container px-3">
-    <div class="edit-card shadow-sm p-4">
-        
-        <div class="mb-4">
-            <h4 class="fw-bold text-dark">Editar Dados</h4>
-            <p class="text-muted small">Campos com cadeado <i class="bi bi-lock"></i> são imutáveis.</p>
+<div class="main-wrapper">
+    <div class="header-spacer"></div>
+
+    <div class="container profile-container px-3">
+        <div class="edit-card p-4">
+            
+            <div class="mb-4">
+                <h4 class="fw-bold text-dark">Editar Dados</h4>
+                <p class="text-muted small">Campos com cadeado <i class="bi bi-lock"></i> não podem ser alterados.</p>
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-12">
+                        <label class="label-custom-perfil">CPF <i class="bi bi-lock-fill small"></i></label>
+                        <input type="text" class="form-control input-perfil-edit" value="{{ perfil.cpf|default:'Não informado' }}" readonly>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="username" class="label-custom-perfil">Nome de Usuário</label>
+                        <input type="text" name="username" id="username" class="form-control input-perfil-edit" value="{{ request.user.username }}" required>
+                    </div>  
+
+                    <div class="col-md-6">
+                        <label for="email" class="label-custom-perfil">E-mail</label>
+                        <input type="email" name="email" id="email" class="form-control input-perfil-edit" value="{{ request.user.email }}" required>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="telefone" class="label-custom-perfil">Telefone</label>
+                        <input type="text" name="telefone" id="telefone" class="form-control input-perfil-edit" placeholder="(00) 00000-0000" value="{{ perfil.telefone|default:'' }}">
+                    </div>
+
+                    <div class="col-md-5">
+                        <label for="cep" class="label-custom-perfil">CEP (Busca automática)</label>
+                        <input type="text" name="cep" id="cep" class="form-control input-perfil-edit" placeholder="00000-000" maxlength="9">
+                        <span id="cep-status"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="endereco" class="label-custom-perfil">Endereço Completo</label>
+                        {% if not perfil.endereco %}
+                            <div class="alert alert-warning py-2 mb-2 d-flex align-items-center" id="alert-address" style="font-size: 0.85rem;">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                Digite o CEP para preencher o endereço.
+                            </div>
+                        {% endif %}
+                        <input type="text" 
+                               name="endereco" 
+                               id="endereco" 
+                               class="form-control input-perfil-edit {% if not perfil.endereco %}perfil-input-missing{% endif %}" 
+                               placeholder="Rua, Número, Bairro, Cidade - UF" 
+                               value="{{ perfil.endereco|default:'' }}">
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-perfil-save shadow-sm mb-3">Salvar Alterações</button>
+                    <div class="text-center">
+                        <a href="{% url 'perfil' %}" class="text-muted text-decoration-none small fw-bold">Cancelar</a>
+                    </div>
+                </div>
+            </form>
         </div>
-
-        <form method="POST">
-            {% csrf_token %}
-            <div class="row">
-                <div class="col-12">
-                    <label class="form-label">CPF <i class="bi bi-lock-fill small"></i></label>
-                    <input type="text" class="form-control" value="{{ perfil.cpf|default:'Não informado' }}" readonly>
-                </div>
-
-                <div class="col-md-6">
-                    <label for="username" class="form-label">Nome de Usuário</label>
-                    <input type="text" name="username" id="username" class="form-control" value="{{ request.user.username }}" required>
-                </div>  
-
-                <div class="col-md-6">
-                    <label for="email" class="form-label">E-mail</label>
-                    <input type="email" name="email" id="email" class="form-control" value="{{ request.user.email }}" required>
-                </div>
-
-                <div class="col-12">
-                    <label for="telefone" class="form-label">Telefone</label>
-                    <input type="text" name="telefone" id="telefone" class="form-control" placeholder="(00) 00000-0000" value="{{ perfil.telefone|default:'' }}">
-                </div>
-
-                <div class="col-md-5">
-                    <label for="cep" class="form-label">CEP (Busca automática)</label>
-                    <input type="text" name="cep" id="cep" class="form-control" placeholder="00000-000" maxlength="9">
-                    <span id="cep-status"></span>
-                </div>
-
-                <div class="col-12">
-                    <label for="endereco" class="form-label">Endereço Completo</label>
-                    {% if not perfil.endereco %}
-                        <div class="alert alert-warning py-2 mb-2 d-flex align-items-center" id="alert-address" style="font-size: 0.85rem;">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                            Digite o CEP para preencher o endereço.
-                        </div>
-                    {% endif %}
-                    <input type="text" 
-                           name="endereco" 
-                           id="endereco" 
-                           class="form-control {% if not perfil.endereco %}address-missing{% endif %}" 
-                           placeholder="Rua, Número, Bairro, Cidade - UF" 
-                           value="{{ perfil.endereco|default:'' }}">
-                </div>
-            </div>
-
-            <div class="mt-3">
-                <button type="submit" class="btn btn-save shadow-sm mb-3">Salvar Alterações</button>
-                <div class="text-center">
-                    <a href="{% url 'perfil' %}" class="text-muted text-decoration-none small fw-bold">Cancelar</a>
-                </div>
-            </div>
-        </form>
     </div>
 </div>
 
 <script>
+    // Lógica do CEP
     document.getElementById('cep').addEventListener('blur', function() {
         const cep = this.value.replace(/\D/g, '');
         const status = document.getElementById('cep-status');
@@ -145,12 +189,9 @@
                 .then(response => response.json())
                 .then(data => {
                     if (!data.erro) {
-                        // Formata o endereço estilo iFood
                         const info = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`;
                         enderecoInput.value = info;
-                        
-                        // Remove avisos de erro/pendência
-                        enderecoInput.classList.remove('address-missing');
+                        enderecoInput.classList.remove('perfil-input-missing');
                         if (alertAddress) alertAddress.style.display = 'none';
                         status.innerHTML = '<span class="text-success">CEP Encontrado!</span>';
                     } else {
@@ -163,7 +204,7 @@
         }
     });
 
-
+    // Máscara de CEP (00000-000)
     document.getElementById('cep').addEventListener('input', function (e) {
         let value = e.target.value.replace(/\D/g, '');
         if (value.length > 5) {

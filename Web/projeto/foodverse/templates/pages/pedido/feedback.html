@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    body { background-color: #f4f7f6; padding-top: 80px; }
+    
+    .feedback-card {
+        border: none;
+        border-radius: 25px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        background: white;
+    }
+
+    /* Estrela Interativa */
+    .rating-wrapper {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: center;
+    }
+    .rating-wrapper input { display: none; }
+    .rating-wrapper label {
+        cursor: pointer;
+        font-size: 2.5rem;
+        color: #ddd;
+        transition: color 0.2s;
+    }
+    .rating-wrapper label:before { content: "\f588"; font-family: "bootstrap-icons"; }
+    .rating-wrapper input:checked ~ label,
+    .rating-wrapper label:hover,
+    .rating-wrapper label:hover ~ label { color: #ffc107; }
+    .rating-wrapper input:checked ~ label:before { content: "\f586"; }
+
+    .form-control {
+        border-radius: 15px;
+        border: 2px solid #eee;
+        padding: 15px;
+    }
+    .form-control:focus { border-color: #dc3545; box-shadow: none; }
+</style>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card feedback-card p-4">
+                <div class="text-center mb-4">
+                    <h3 class="fw-bold">O que achou do pedido?</h3>
+                    <p class="text-muted">Sua opinião é muito importante para o {{ restaurante.nome }}</p>
+                </div>
+
+                <form action="{% url 'feedback' %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="restaurante_id" value="{{ restaurante.id }}">
+
+                    <div class="mb-4">
+                        <label class="d-block text-center fw-bold mb-2">Sua nota:</label>
+                        <div class="rating-wrapper">
+                            <input type="radio" name="avaliacao" id="star5" value="5" required><label for="star5"></label>
+                            <input type="radio" name="avaliacao" id="star4" value="4"><label for="star4"></label>
+                            <input type="radio" name="avaliacao" id="star3" value="3"><label for="star3"></label>
+                            <input type="radio" name="avaliacao" id="star2" value="2"><label for="star2"></label>
+                            <input type="radio" name="avaliacao" id="star1" value="1"><label for="star1"></label>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="fw-bold mb-2">Conte mais (opcional):</label>
+                        <textarea name="comentario" class="form-control" rows="4" placeholder="O prato estava bom? A entrega foi rápida?"></textarea>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-danger btn-lg rounded-pill fw-bold">
+                            Enviar Avaliação
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
