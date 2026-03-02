@@ -5,356 +5,625 @@ import com.senac.food.verse.PedidoDAO;
 import com.senac.food.verse.Pedidos;
 import jiconfont.icons.google_material_design_icons.GoogleMaterialDesignIcons;
 import jiconfont.swing.IconFontSwing;
-import org.jxmapviewer.JXMapViewer;
-import org.jxmapviewer.OSMTileFactoryInfo;
-import org.jxmapviewer.viewer.DefaultTileFactory;
-import org.jxmapviewer.viewer.DefaultWaypoint;
-import org.jxmapviewer.viewer.GeoPosition;
-import org.jxmapviewer.viewer.Waypoint;
-import org.jxmapviewer.viewer.WaypointPainter;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.URI;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.text.NumberFormat;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Locale;
+import java.util.function.Consumer;
 
 public class EntregasPainel extends JPanel {
 
     private final PedidoDAO dao = new PedidoDAO();
     
     // Componentes de UI
-    private JPanel listPanel;
-    private JScrollPane scrollLista;
+    private JPanel panelLista;
+    private JPanel panelDetalhes;
+    private JPanel containerCards;
     private JLabel lblContador;
+    private JTextField txtBuscar;
+    private JScrollPane scrollLista;
     
-    // Mapa Interativo
-    private JXMapViewer mapViewer;
-    private WaypointPainter<Waypoint> waypointPainter;
-    private Set<Waypoint> waypoints;
-    private final GeoPosition COORDENADA_RESTAURANTE = new GeoPosition(-23.5505, -46.6333); // Centro de São Paulo
-    
-    // Estado
+    // Estado e Cache (Previne travamentos na busca e na atualização)
     private Timer timerAtualizacao;
+    private Pedidos entregaSelecionada = null;
+    private boolean operacaoEmAndamento = false;
+    private List<Pedidos> cacheEntregas = new ArrayList<>(); // Memória rápida
 
     public EntregasPainel() {
         setLayout(new BorderLayout());
         setBackground(UIConstants.BG_DARK);
 
-        initHeader();
-        initListaEntregas();
-        initMapaReal(); 
+        initLeftPanel();
+        initRightPanel();
 
         carregarEntregasAsync(false);
         iniciarMonitoramento();
     }
 
-    private void initHeader() {
-        JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(UIConstants.BG_DARK);
-        header.setBorder(new EmptyBorder(20, 20, 20, 20));
+    // =========================================================================
+    // 1. PAINEL ESQUERDO: FILA DE DESPACHO E BUSCA
+    // =========================================================================
+    private void initLeftPanel() {
+        panelLista = new JPanel(new BorderLayout());
+        panelLista.setBackground(UIConstants.BG_DARK_ALT);
+        panelLista.setPreferredSize(new Dimension(420, 0));
+        panelLista.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, UIConstants.GRID_DARK));
 
-        JLabel lblTitle = new JLabel("Logística & Despachos");
+        JPanel header = new JPanel(new GridBagLayout());
+        header.setBackground(UIConstants.BG_DARK_ALT);
+        header.setBorder(new EmptyBorder(20, 20, 15, 20));
+
+        GridBagConstraints gc = new GridBagConstraints();
+        gc.fill = GridBagConstraints.HORIZONTAL;
+        gc.gridx = 0; gc.gridy = 0; gc.weightx = 1.0;
+
+        // Título e Refresh
+        JPanel pnlTitle = new JPanel(new BorderLayout());
+        pnlTitle.setOpaque(false);
+        JLabel lblTitle = new JLabel("Em Rota (Frota)");
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
         lblTitle.setForeground(UIConstants.FG_LIGHT);
-        lblTitle.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.MAP, 28, UIConstants.FG_LIGHT));
+        lblTitle.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.MOTORCYCLE, 28, UIConstants.FG_LIGHT));
 
-        JButton btnRefresh = new JButton("Sincronizar");
+        JButton btnRefresh = new JButton();
         UIConstants.styleSecondary(btnRefresh);
         btnRefresh.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.REFRESH, 20, UIConstants.FG_LIGHT));
+        btnRefresh.setPreferredSize(new Dimension(45, 40));
         btnRefresh.addActionListener(e -> carregarEntregasAsync(false));
 
-        header.add(lblTitle, BorderLayout.WEST);
-        header.add(btnRefresh, BorderLayout.EAST);
-        
-        add(header, BorderLayout.NORTH);
-    }
+        pnlTitle.add(lblTitle, BorderLayout.WEST);
+        pnlTitle.add(btnRefresh, BorderLayout.EAST);
+        header.add(pnlTitle, gc);
 
-    private void initListaEntregas() {
-        JPanel panelLeft = new JPanel(new BorderLayout());
-        panelLeft.setBackground(UIConstants.BG_DARK);
-        panelLeft.setPreferredSize(new Dimension(420, 0));
-        
-        JPanel pnlTit = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        pnlTit.setOpaque(false);
-        pnlTit.setBorder(new EmptyBorder(0, 15, 10, 15));
-        
-        lblContador = new JLabel("Buscando dados no servidor...");
-        lblContador.setFont(new Font("Arial", Font.BOLD, 14));
+        // Barra de Busca Instantânea (Filtro Local)
+        gc.gridy++;
+        gc.insets = new Insets(15, 0, 10, 0);
+        txtBuscar = new JTextField();
+        UIConstants.styleField(txtBuscar);
+        txtBuscar.setPreferredSize(new Dimension(0, 40));
+        txtBuscar.putClientProperty("JTextField.placeholderText", "Buscar Cliente, ID ou Motoboy...");
+        txtBuscar.putClientProperty("JTextField.leadingIcon", IconFontSwing.buildIcon(GoogleMaterialDesignIcons.SEARCH, 20, UIConstants.FG_MUTED));
+        txtBuscar.addKeyListener(new KeyAdapter() {
+            public void keyReleased(KeyEvent e) {
+                renderizarListaLocal(); 
+            }
+        });
+        header.add(txtBuscar, gc);
+
+        // Contador
+        gc.gridy++;
+        gc.insets = new Insets(0, 0, 0, 0);
+        lblContador = new JLabel("A carregar...");
+        lblContador.setFont(UIConstants.ARIAL_12_B);
         lblContador.setForeground(new Color(52, 152, 219)); 
-        pnlTit.add(lblContador);
-        
-        panelLeft.add(pnlTit, BorderLayout.NORTH);
+        header.add(lblContador, gc);
 
-        listPanel = new JPanel();
-        listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
-        listPanel.setBackground(UIConstants.BG_DARK);
-        listPanel.setBorder(new EmptyBorder(5, 15, 15, 15));
+        panelLista.add(header, BorderLayout.NORTH);
 
-        scrollLista = new JScrollPane(listPanel);
+        // Container de Cards
+        containerCards = new JPanel();
+        containerCards.setLayout(new BoxLayout(containerCards, BoxLayout.Y_AXIS));
+        containerCards.setBackground(UIConstants.BG_DARK_ALT);
+        containerCards.setBorder(new EmptyBorder(5, 15, 15, 15));
+
+        scrollLista = new JScrollPane(containerCards);
         UIConstants.styleScrollPane(scrollLista);
         scrollLista.setBorder(null);
-        scrollLista.getVerticalScrollBar().setUnitIncrement(16);
+        scrollLista.getVerticalScrollBar().setUnitIncrement(20);
 
-        panelLeft.add(scrollLista, BorderLayout.CENTER);
-        add(panelLeft, BorderLayout.WEST);
-    }
-    
-    private void initMapaReal() {
-        JPanel mapContainer = new JPanel(new BorderLayout());
-        mapContainer.setBackground(UIConstants.BG_DARK_ALT);
-        mapContainer.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, UIConstants.GRID_DARK));
-        
-        try {
-            // =========================================================================
-            // CORREÇÃO CRÍTICA DO "RELÓGIO" E BLOQUEIO DO OPENSTREETMAP
-            // O OSM bloqueia requisições do Java padrão. Precisamos forjar o User-Agent.
-            // =========================================================================
-            System.setProperty("http.agent", "FoodVerse-App/1.0");
-
-            mapViewer = new JXMapViewer();
-            OSMTileFactoryInfo info = new OSMTileFactoryInfo();
-            DefaultTileFactory tileFactory = new DefaultTileFactory(info);
-            
-            // Acelera o download dos fragmentos do mapa (evita lentidão)
-            tileFactory.setThreadPoolSize(8);
-            
-            mapViewer.setTileFactory(tileFactory);
-            mapViewer.setZoom(5);
-            mapViewer.setAddressLocation(COORDENADA_RESTAURANTE);
-            
-            waypointPainter = new WaypointPainter<>();
-            waypoints = new HashSet<>();
-            
-            waypoints.add(new DefaultWaypoint(COORDENADA_RESTAURANTE));
-            waypointPainter.setWaypoints(waypoints);
-            mapViewer.setOverlayPainter(waypointPainter);
-            
-            mapContainer.add(mapViewer, BorderLayout.CENTER);
-            
-        } catch (Exception ex) {
-            JLabel error = new JLabel("Erro ao renderizar o mapa interativo.");
-            error.setForeground(UIConstants.DANGER_RED);
-            error.setHorizontalAlignment(SwingConstants.CENTER);
-            mapContainer.add(error, BorderLayout.CENTER);
-        }
-        
-        add(mapContainer, BorderLayout.CENTER);
+        panelLista.add(scrollLista, BorderLayout.CENTER);
+        add(panelLista, BorderLayout.WEST);
     }
 
+    // =========================================================================
+    // 2. PAINEL DIREITO: DETALHES VAZIOS
+    // =========================================================================
+    private void initRightPanel() {
+        panelDetalhes = new JPanel(new BorderLayout());
+        panelDetalhes.setBackground(UIConstants.BG_DARK);
+        mostrarEstadoVazio();
+        add(panelDetalhes, BorderLayout.CENTER);
+    }
+
+    private void mostrarEstadoVazio() {
+        panelDetalhes.removeAll();
+        JPanel empty = new JPanel(new GridBagLayout());
+        empty.setBackground(UIConstants.BG_DARK);
+        
+        JLabel msg = new JLabel("Selecione uma entrega em andamento");
+        msg.setForeground(UIConstants.FG_MUTED);
+        msg.setFont(UIConstants.FONT_TITLE);
+        msg.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.MAP, 80, UIConstants.FG_MUTED));
+        msg.setHorizontalTextPosition(SwingConstants.CENTER);
+        msg.setVerticalTextPosition(SwingConstants.BOTTOM);
+        msg.setIconTextGap(20);
+        
+        empty.add(msg);
+        panelDetalhes.add(empty);
+        panelDetalhes.revalidate();
+        panelDetalhes.repaint();
+    }
+
+    // =========================================================================
+    // 3. LÓGICA DE DADOS (ASSÍNCRONA E PROTEGIDA)
+    // =========================================================================
     private void iniciarMonitoramento() {
-        timerAtualizacao = new Timer(10000, e -> carregarEntregasAsync(true));
+        timerAtualizacao = new Timer(10000, e -> {
+            if (!operacaoEmAndamento) carregarEntregasAsync(true);
+        });
         timerAtualizacao.start();
     }
 
     private void carregarEntregasAsync(boolean silencioso) {
-        if(!silencioso) lblContador.setText("Atualizando...");
-        
-        int scrollPos = scrollLista.getVerticalScrollBar().getValue();
+        if(!silencioso) lblContador.setText("Sincronizando com a frota...");
         
         new SwingWorker<List<Pedidos>, Void>() {
             @Override
             protected List<Pedidos> doInBackground() {
                 List<Pedidos> emRota = new ArrayList<>();
-                boolean bancoOnline = false;
-                
                 try {
                     ConexaoBanco banco = new ConexaoBanco();
                     Connection conn = banco.abrirConexao();
                     if(conn != null) {
-                        bancoOnline = true;
                         banco.fecharConexao();
-                        
                         if(!silencioso) dao.recarregarPedidos();
+                        
+                        // Filtra apenas os que estão em rota
                         for(Pedidos p : dao.buscarTodosPedidos()) {
                             if(p.getModoEntrega().equalsIgnoreCase("Delivery") && p.getStatusPedido().equalsIgnoreCase("em rota")) {
                                 emRota.add(p);
                             }
                         }
+                    } else {
+                        throw new Exception("Offline");
                     }
                 } catch (Exception ex) {
-                    System.out.println(">> Banco de dados offline. Trocando para dados mockados.");
-                }
-                
-                if (!bancoOnline || emRota.isEmpty()) {
                     emRota = gerarDadosMockOffline();
                 }
-                
                 return emRota;
             }
 
             @Override
             protected void done() {
                 try {
-                    List<Pedidos> entregas = get();
-                    listPanel.removeAll();
-                    waypoints.clear();
-                    
-                    waypoints.add(new DefaultWaypoint(COORDENADA_RESTAURANTE)); 
-                    
-                    if(entregas.isEmpty()) {
-                        lblContador.setText("Nenhuma entrega ativa.");
-                        lblContador.setForeground(UIConstants.FG_MUTED);
-                    } else {
-                        lblContador.setText(entregas.size() + " entregas na rua");
-                        lblContador.setForeground(new Color(52, 152, 219));
-                        
-                        for(Pedidos p : entregas) {
-                            listPanel.add(criarCardEntrega(p));
-                            listPanel.add(Box.createVerticalStrut(15));
-                            
-                            GeoPosition pos = mockGeocodingAdress(p.getIdPedido(), p.getNomeCliente());
-                            waypoints.add(new DefaultWaypoint(pos));
-                        }
-                    }
-                    
-                    if(mapViewer != null) {
-                        waypointPainter.setWaypoints(waypoints);
-                        mapViewer.repaint();
-                    }
-                    
-                    listPanel.revalidate();
-                    listPanel.repaint();
-                    SwingUtilities.invokeLater(() -> scrollLista.getVerticalScrollBar().setValue(scrollPos));
-                    
+                    cacheEntregas = get(); // Salva na memória rápida
+                    renderizarListaLocal();
                 } catch (Exception e) {}
             }
         }.execute();
     }
 
-    // =========================================================================
-    // MOCKS E FUNÇÕES DE GEOCODING VISUAL
-    // =========================================================================
-    
+    // Método que desenha a lista sem travar a interface e preserva o scroll
+    private void renderizarListaLocal() {
+        int scrollPos = scrollLista.getVerticalScrollBar().getValue();
+        String termo = txtBuscar.getText().trim().toLowerCase().replace("#", "");
+        
+        containerCards.removeAll();
+        int count = 0;
+        
+        for(Pedidos p : cacheEntregas) {
+            boolean match = termo.isEmpty() || 
+                            p.getNomeCliente().toLowerCase().contains(termo) || 
+                            p.getIdPedido().contains(termo) ||
+                            (p.getNomeEntregador() != null && p.getNomeEntregador().toLowerCase().contains(termo));
+            
+            if (match) {
+                containerCards.add(criarCardMiniatura(p));
+                containerCards.add(Box.createVerticalStrut(10));
+                count++;
+            }
+        }
+        
+        lblContador.setText(count + " entregas na rua");
+        
+        // Atualiza os dados do painel direito se o pedido sofrer alterações na BD
+        if (entregaSelecionada != null) {
+            boolean aindaExiste = cacheEntregas.stream().anyMatch(e -> e.getIdPedido().equals(entregaSelecionada.getIdPedido()));
+            if (aindaExiste) {
+                entregaSelecionada = cacheEntregas.stream().filter(e -> e.getIdPedido().equals(entregaSelecionada.getIdPedido())).findFirst().get();
+                carregarDetalhesFull(entregaSelecionada);
+            } else {
+                entregaSelecionada = null;
+                mostrarEstadoVazio();
+            }
+        }
+
+        containerCards.revalidate();
+        containerCards.repaint();
+        SwingUtilities.invokeLater(() -> scrollLista.getVerticalScrollBar().setValue(scrollPos));
+    }
+
     private List<Pedidos> gerarDadosMockOffline() {
         List<Pedidos> mocks = new ArrayList<>();
-        Pedidos p1 = new Pedidos("1001", "João Silva (Teste)", "12:00", "12:50", "LOC1", "Avenida Paulista, 1578 - SP", "Carlos (Motoboy)", "11999999999", "Delivery", "Sem cebola", null, "em rota", "Site", "Cartão", 50.0, "");
-        Pedidos p2 = new Pedidos("1002", "Maria Souza (Teste)", "12:15", "13:00", "LOC2", "Rua Augusta, 400 - SP", "Roberto (Bike)", "11988888888", "Delivery", "", null, "em rota", "App", "PIX", 35.0, "");
-        mocks.add(p1);
-        mocks.add(p2);
+        mocks.add(new Pedidos("1001", "João Silva (Teste)", "19:00", "19:50", "LOC1", "Avenida Paulista, 1578 - SP", "Carlos (Motoboy)", "11999999999", "Delivery", "Trazer troco para R$ 100", null, "em rota", "Site", "Dinheiro", 50.0, ""));
+        mocks.add(new Pedidos("1002", "Maria Souza (Teste)", "20:15", "21:00", "LOC2", "Rua Augusta, 400 - SP", "Roberto (Bike)", "11988888888", "Delivery", "", null, "em rota", "App", "PIX", 35.0, ""));
         return mocks;
     }
 
-    private GeoPosition mockGeocodingAdress(String idPedido, String nomeCliente) {
-        double baseLat = COORDENADA_RESTAURANTE.getLatitude();
-        double baseLon = COORDENADA_RESTAURANTE.getLongitude();
-        double offsetLat = (idPedido.hashCode() % 100) * 0.0003;
-        double offsetLon = (nomeCliente.hashCode() % 100) * 0.0003;
-        return new GeoPosition(baseLat + offsetLat, baseLon + offsetLon);
-    }
-
     // =========================================================================
-    // RENDERIZAÇÃO DOS CARDS
+    // 4. CARDS DE MINIATURA (COM ÍCONES CORRIGIDOS)
     // =========================================================================
-    
-    private JPanel criarCardEntrega(Pedidos p) {
-        UIConstants.RoundedPanel card = new UIConstants.RoundedPanel(12, UIConstants.CARD_DARK);
+    private JPanel criarCardMiniatura(Pedidos p) {
+        boolean isSelected = (entregaSelecionada != null && entregaSelecionada.getIdPedido().equals(p.getIdPedido()));
+        Color bgColor = isSelected ? new Color(40, 60, 80) : UIConstants.CARD_DARK;
+        
+        UIConstants.RoundedPanel card = new UIConstants.RoundedPanel(12, bgColor);
         card.setLayout(new BorderLayout(10, 5));
-        card.setBorder(new EmptyBorder(15, 15, 15, 15));
-        card.setMaximumSize(new Dimension(500, 200));
-
-        JPanel pnlTopo = new JPanel(new BorderLayout());
-        pnlTopo.setOpaque(false);
-        
-        JLabel lblId = new JLabel("#" + p.getIdPedido() + "  -  " + p.getNomeCliente());
-        lblId.setFont(new Font("Arial", Font.BOLD, 14));
-        lblId.setForeground(Color.WHITE);
-        
-        String entregador = (p.getNomeEntregador() != null && !p.getNomeEntregador().isEmpty()) ? p.getNomeEntregador() : "Entregador";
-        JLabel lblEntregador = new JLabel("🏍️ " + entregador);
-        lblEntregador.setFont(new Font("Arial", Font.BOLD, 12));
-        lblEntregador.setForeground(new Color(52, 152, 219)); 
-        
-        pnlTopo.add(lblId, BorderLayout.WEST);
-        pnlTopo.add(lblEntregador, BorderLayout.EAST);
-
-        JPanel pnlMeio = new JPanel(new GridLayout(2, 1, 0, 5));
-        pnlMeio.setOpaque(false);
-        pnlMeio.setBorder(new EmptyBorder(10, 0, 15, 0));
-        
-        JLabel lblEnd = new JLabel("📍 " + p.getEnderecoCompleto());
-        lblEnd.setFont(new Font("Arial", Font.PLAIN, 12));
-        lblEnd.setForeground(UIConstants.FG_LIGHT);
-        
-        JLabel lblTel = new JLabel("📞 " + p.getTelefoneEntregador());
-        lblTel.setFont(new Font("Arial", Font.PLAIN, 12));
-        lblTel.setForeground(UIConstants.FG_MUTED);
-        
-        pnlMeio.add(lblEnd);
-        pnlMeio.add(lblTel);
-
-        JPanel pnlAcoes = new JPanel(new GridLayout(1, 2, 10, 0));
-        pnlAcoes.setOpaque(false);
-        
-        JButton btnWhats = new JButton("WhatsApp");
-        UIConstants.styleSecondary(btnWhats);
-        btnWhats.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.CHAT, 16, UIConstants.FG_LIGHT));
-        btnWhats.addActionListener(e -> abrirWhatsApp(p.getTelefoneEntregador(), p.getNomeCliente()));
-
-        JButton btnFinalizar = new JButton("ENTREGUE");
-        UIConstants.styleSuccess(btnFinalizar);
-        btnFinalizar.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.CHECK, 16, Color.WHITE));
-        btnFinalizar.addActionListener(e -> tentarConcluirEntrega(p));
-
-        pnlAcoes.add(btnWhats);
-        pnlAcoes.add(btnFinalizar);
-
-        card.add(pnlTopo, BorderLayout.NORTH);
-        card.add(pnlMeio, BorderLayout.CENTER);
-        card.add(pnlAcoes, BorderLayout.SOUTH);
-        
+        card.setBorder(new EmptyBorder(12, 12, 12, 12));
+        card.setMaximumSize(new Dimension(500, 100));
         card.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        card.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if(mapViewer != null) {
-                    GeoPosition pos = mockGeocodingAdress(p.getIdPedido(), p.getNomeCliente());
-                    mapViewer.setAddressLocation(pos);
-                    mapViewer.setZoom(3);
-                }
-            }
-        });
 
+        JPanel strip = new JPanel();
+        strip.setPreferredSize(new Dimension(5, 0));
+        strip.setBackground(new Color(52, 152, 219));
+        card.add(strip, BorderLayout.WEST);
+        
+        JPanel center = new JPanel(new GridLayout(3, 1, 0, 2));
+        center.setOpaque(false);
+        
+        // Linha 1: ID e Nome
+        JPanel row1 = new JPanel(new BorderLayout());
+        row1.setOpaque(false);
+        JLabel lId = new JLabel("#" + p.getIdPedido() + " ");
+        lId.setForeground(UIConstants.PRIMARY_RED);
+        lId.setFont(UIConstants.ARIAL_14_B);
+        JLabel lNome = new JLabel(p.getNomeCliente());
+        lNome.setForeground(Color.WHITE);
+        lNome.setFont(UIConstants.ARIAL_14_B);
+        row1.add(lId, BorderLayout.WEST);
+        row1.add(lNome, BorderLayout.CENTER);
+        
+        // Linha 2: Entregador (Sem Emoji - Usando Ícone)
+        String entregador = (p.getNomeEntregador() != null && !p.getNomeEntregador().isEmpty()) ? p.getNomeEntregador() : "Sem Motoboy";
+        JLabel lMotoboy = new JLabel("  " + entregador);
+        lMotoboy.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.MOTORCYCLE, 14, UIConstants.FG_LIGHT));
+        lMotoboy.setForeground(UIConstants.FG_LIGHT);
+        lMotoboy.setFont(UIConstants.ARIAL_12);
+
+        // Linha 3: SLA de Tempo (Sem Emoji - Usando Ícone)
+        JLabel lTempo = new JLabel(calcularTempoSLA(p.getHoraPedido()));
+        lTempo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ACCESS_TIME, 14, UIConstants.FG_MUTED));
+        lTempo.setFont(UIConstants.ARIAL_12_B);
+        
+        center.add(row1);
+        center.add(lMotoboy);
+        center.add(lTempo);
+        card.add(center, BorderLayout.CENTER);
+        
+        card.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) { 
+                entregaSelecionada = p;
+                renderizarListaLocal(); // Usa a versão que não trava
+                carregarDetalhesFull(p); 
+            }
+            public void mouseEntered(MouseEvent e) { if(!isSelected) card.setBackground(UIConstants.BG_DARK_ALT.brighter()); card.repaint(); }
+            public void mouseExited(MouseEvent e) { if(!isSelected) card.setBackground(UIConstants.CARD_DARK); card.repaint(); }
+        });
+        
         return card;
     }
 
-    private void abrirWhatsApp(String telefone, String nome) {
+    private String calcularTempoSLA(String horaPedido) {
         try {
-            if (telefone == null || telefone.isEmpty()) {
-                UIConstants.showWarning(this, "Telefone não encontrado.");
-                return;
-            }
-            String numeroLimpo = telefone.replaceAll("[^0-9]", "");
-            String msg = "Olá " + nome + ", aqui é do restaurante FoodVerse. O seu pedido está a chegar!";
-            String url = "https://wa.me/55" + numeroLimpo + "?text=" + msg.replace(" ", "%20");
-            Desktop.getDesktop().browse(new URI(url));
-        } catch (Exception ex) {
-            UIConstants.showError(this, "Não foi possível abrir o navegador.");
+            LocalTime hp = LocalTime.parse(horaPedido, DateTimeFormatter.ofPattern("HH:mm"));
+            long min = ChronoUnit.MINUTES.between(hp, LocalTime.now());
+            if(min < 0) min = 0;
+            
+            if(min > 45) return "<html><font color='#ff4444'> ATRASADO (" + min + " min)</font></html>";
+            if(min > 30) return "<html><font color='#f39c12'> Atenção (" + min + " min)</font></html>";
+            return "<html><font color='#2ecc71'> No prazo (" + min + " min)</font></html>";
+        } catch (Exception e) {
+            return " Saiu às " + horaPedido;
         }
     }
 
     // =========================================================================
-    // LÓGICA DE CONFIRMAÇÃO E BANCO DE DADOS
+    // 5. PAINEL DE DETALHES "PRO" (LADO DIREITO)
     // =========================================================================
+    private void carregarDetalhesFull(Pedidos p) {
+        panelDetalhes.removeAll();
+        
+        JPanel containerPrincipal = new JPanel(new BorderLayout(0, 20));
+        containerPrincipal.setBackground(UIConstants.BG_DARK);
+        containerPrincipal.setBorder(new EmptyBorder(30, 40, 30, 40));
+        
+        // --- CABEÇALHO DO PEDIDO ---
+        JPanel headerInfo = new JPanel(new BorderLayout());
+        headerInfo.setOpaque(false);
+        
+        JLabel titulo = new JLabel("Pedido #" + p.getIdPedido() + " - " + p.getNomeCliente());
+        titulo.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        titulo.setForeground(Color.WHITE);
+        
+        JLabel badgeStatus = new JLabel("  EM ROTA  ");
+        badgeStatus.setOpaque(true);
+        badgeStatus.setBackground(new Color(52, 152, 219));
+        badgeStatus.setForeground(Color.WHITE);
+        badgeStatus.setFont(UIConstants.ARIAL_12_B);
+        badgeStatus.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        
+        JPanel pnlTitulos = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
+        pnlTitulos.setOpaque(false);
+        pnlTitulos.add(titulo); pnlTitulos.add(badgeStatus);
+        
+        headerInfo.add(pnlTitulos, BorderLayout.WEST);
+        
+        JLabel lblTopSLA = new JLabel(calcularTempoSLA(p.getHoraPedido()));
+        lblTopSLA.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ACCESS_TIME, 18, UIConstants.FG_LIGHT));
+        lblTopSLA.setFont(UIConstants.ARIAL_14_B);
+        headerInfo.add(lblTopSLA, BorderLayout.EAST);
+
+        containerPrincipal.add(headerInfo, BorderLayout.NORTH);
+        
+        // --- GRIDS DE INFORMAÇÃO OPERACIONAL ---
+        JPanel gridInfo = new JPanel(new GridLayout(2, 2, 20, 20)); 
+        gridInfo.setOpaque(false);
+        
+        // Bloco 1: Endereço e Copiar
+        JPanel pnlEnd = criarCardInformacao("ENDEREÇO DE ENTREGA", p.getEnderecoCompleto(), "Use o botão para copiar", GoogleMaterialDesignIcons.LOCATION_ON);
+        JButton btnCopiar = new JButton("Copiar");
+        UIConstants.styleSecondary(btnCopiar);
+        btnCopiar.setFont(new Font("Arial", Font.BOLD, 10));
+        btnCopiar.setMargin(new Insets(2,5,2,5));
+        btnCopiar.addActionListener(e -> {
+            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(p.getEnderecoCompleto()), null);
+            UIConstants.showSuccess(this, "Endereço copiado!");
+        });
+        pnlEnd.add(btnCopiar, BorderLayout.EAST);
+        gridInfo.add(pnlEnd);
+        
+        // Bloco 2: Contato
+        gridInfo.add(criarCardInformacao("CONTATO DO CLIENTE", p.getTelefoneEntregador(), "Ligar em caso de dúvida", GoogleMaterialDesignIcons.PERSON));
+        
+        // Bloco 3: Motoboy e Reatribuição
+        JPanel pnlMoto = criarCardInformacao("FROTA / MOTOBOY", (p.getNomeEntregador() != null ? p.getNomeEntregador() : "Não atribuído"), "Em trânsito", GoogleMaterialDesignIcons.MOTORCYCLE);
+        JButton btnTrocar = new JButton("Trocar");
+        UIConstants.styleSecondary(btnTrocar);
+        btnTrocar.setFont(new Font("Arial", Font.BOLD, 10));
+        btnTrocar.addActionListener(e -> trocarMotoboy(p));
+        pnlMoto.add(btnTrocar, BorderLayout.EAST);
+        gridInfo.add(pnlMoto);
+        
+        // Bloco 4: Pagamento Visual (Alerta de Cobrança)
+        NumberFormat nf = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+        String pgto = p.getFormaPagamento().toUpperCase();
+        boolean isPago = pgto.contains("PIX") || pgto.contains("SITE") || pgto.contains("APP") || pgto.contains("ONLINE");
+        
+        JPanel pnlPgto = criarCardInformacao(
+            isPago ? "PAGAMENTO ONLINE" : "ATENÇÃO: COBRAR NA ENTREGA", 
+            "Forma: " + pgto, 
+            p.getSubtotal() != null ? "Valor a receber: " + nf.format(p.getSubtotal()) : "Valor Total não informado", 
+            GoogleMaterialDesignIcons.ACCOUNT_BALANCE_WALLET
+        );
+        if(!isPago) pnlPgto.setBorder(BorderFactory.createLineBorder(UIConstants.PRIMARY_RED, 2));
+        gridInfo.add(pnlPgto);
+
+        JPanel centerContent = new JPanel(new BorderLayout(0, 20));
+        centerContent.setOpaque(false);
+        centerContent.add(gridInfo, BorderLayout.NORTH);
+
+        // Observações em Destaque
+        if (p.getObservacoes() != null && !p.getObservacoes().trim().isEmpty()) {
+            UIConstants.RoundedPanel pnlObs = new UIConstants.RoundedPanel(12, new Color(80, 60, 20)); 
+            pnlObs.setLayout(new BorderLayout(10, 10));
+            pnlObs.setBorder(new EmptyBorder(15, 15, 15, 15));
+            JLabel icoObs = new JLabel(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.WARNING, 30, Color.ORANGE));
+            JLabel txtObs = new JLabel("<html><b>OBSERVAÇÕES (ATENÇÃO ENTREGADOR):</b><br>" + p.getObservacoes() + "</html>");
+            txtObs.setForeground(Color.WHITE);
+            txtObs.setFont(UIConstants.ARIAL_14);
+            pnlObs.add(icoObs, BorderLayout.WEST);
+            pnlObs.add(txtObs, BorderLayout.CENTER);
+            centerContent.add(pnlObs, BorderLayout.CENTER);
+        }
+
+        JScrollPane scrollInfo = new JScrollPane(centerContent);
+        scrollInfo.setBorder(null);
+        scrollInfo.setOpaque(false);
+        scrollInfo.getViewport().setOpaque(false);
+        containerPrincipal.add(scrollInfo, BorderLayout.CENTER);
+        
+        // --- RODAPÉ: AÇÕES DE EXPEDIÇÃO ---
+        JPanel bottomActions = new JPanel(new BorderLayout());
+        bottomActions.setBackground(UIConstants.BG_DARK_ALT);
+        bottomActions.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, UIConstants.GRID_DARK));
+        bottomActions.setPreferredSize(new Dimension(0, 80));
+        
+        JPanel pnlEsquerda = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 18));
+        pnlEsquerda.setOpaque(false);
+        JButton btnWhats = new JButton("Chamar no WhatsApp");
+        UIConstants.styleSecondary(btnWhats);
+        btnWhats.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.CHAT, 20, UIConstants.SUCCESS_GREEN));
+        btnWhats.addActionListener(e -> abrirWhatsApp(p.getTelefoneEntregador(), p.getNomeCliente()));
+        pnlEsquerda.add(btnWhats);
+
+        JPanel pnlDireita = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 18));
+        pnlDireita.setOpaque(false);
+        
+        JButton btnProblema = new JButton("Retornou / Problema");
+        UIConstants.styleDanger(btnProblema);
+        btnProblema.addActionListener(e -> reportarProblemaEntrega(p));
+        
+        JButton btnFinalizar = new JButton("MARCAR COMO ENTREGUE");
+        UIConstants.styleSuccess(btnFinalizar);
+        btnFinalizar.setPreferredSize(new Dimension(260, 45));
+        btnFinalizar.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.CHECK_CIRCLE, 20, Color.WHITE));
+        btnFinalizar.addActionListener(e -> tentarConcluirEntrega(p));
+
+        pnlDireita.add(btnProblema);
+        pnlDireita.add(btnFinalizar);
+        
+        bottomActions.add(pnlEsquerda, BorderLayout.WEST);
+        bottomActions.add(pnlDireita, BorderLayout.EAST);
+        
+        panelDetalhes.add(containerPrincipal, BorderLayout.CENTER);
+        panelDetalhes.add(bottomActions, BorderLayout.SOUTH);
+        
+        panelDetalhes.revalidate();
+        panelDetalhes.repaint();
+    }
+
+    private JPanel criarCardInformacao(String titulo, String linha1, String linha2, GoogleMaterialDesignIcons icon) {
+        UIConstants.RoundedPanel card = new UIConstants.RoundedPanel(15, UIConstants.CARD_DARK);
+        card.setLayout(new BorderLayout(15, 5));
+        card.setBorder(new EmptyBorder(15, 20, 15, 20));
+        
+        JLabel icone = new JLabel(IconFontSwing.buildIcon(icon, 36, UIConstants.FG_MUTED));
+        card.add(icone, BorderLayout.WEST);
+        
+        JPanel textos = new JPanel(new GridLayout(3, 1, 0, 2));
+        textos.setOpaque(false);
+        
+        JLabel lblTit = new JLabel(titulo.toUpperCase());
+        lblTit.setFont(UIConstants.ARIAL_12_B);
+        lblTit.setForeground(new Color(52, 152, 219)); 
+        
+        JLabel lblL1 = new JLabel(linha1);
+        lblL1.setFont(UIConstants.ARIAL_16_B);
+        lblL1.setForeground(Color.WHITE);
+        
+        JLabel lblL2 = new JLabel(linha2);
+        lblL2.setFont(UIConstants.ARIAL_12);
+        lblL2.setForeground(UIConstants.FG_LIGHT);
+        
+        textos.add(lblTit); textos.add(lblL1); textos.add(lblL2);
+        card.add(textos, BorderLayout.CENTER);
+        return card;
+    }
+
+    // =========================================================================
+    // 6. INTEGRAÇÕES: DIALOG CUSTOMIZADO E DB
+    // =========================================================================
+    private void abrirWhatsApp(String telefone, String nome) {
+        try {
+            if (telefone == null || telefone.isEmpty()) {
+                UIConstants.showWarning(this, "Telefone não encontrado no cadastro do cliente.");
+                return;
+            }
+            String numeroLimpo = telefone.replaceAll("[^0-9]", "");
+            String msg = "Olá " + nome + ", do restaurante FoodVerse. O motoboy está a caminho!";
+            String url = "https://wa.me/55" + numeroLimpo + "?text=" + msg.replace(" ", "%20");
+            Desktop.getDesktop().browse(new URI(url));
+        } catch (Exception ex) {
+            UIConstants.showError(this, "Erro ao abrir o navegador.");
+        }
+    }
+
+    // NOVA FUNÇÃO: Substitui o JOptionPane branco/feio e mantém a paleta Dark
+    private void mostrarInputCustomizado(String titulo, String mensagem, Consumer<String> onConfirm) {
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), titulo, true);
+        dialog.setLayout(new BorderLayout());
+        dialog.setUndecorated(true); 
+        
+        UIConstants.RoundedPanel panel = new UIConstants.RoundedPanel(20, UIConstants.BG_DARK_ALT);
+        panel.setLayout(new BorderLayout(20, 20));
+        panel.setBorder(new EmptyBorder(25, 30, 25, 30));
+        
+        JLabel lblIcon = new JLabel(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.EDIT, 40, new Color(52, 152, 219)));
+        JLabel lblMsg = new JLabel("<html><center>" + mensagem + "</center></html>");
+        lblMsg.setFont(UIConstants.ARIAL_16_B);
+        lblMsg.setForeground(Color.WHITE);
+        lblMsg.setHorizontalAlignment(SwingConstants.CENTER);
+        
+        JPanel pnlCenter = new JPanel(new BorderLayout(10, 10));
+        pnlCenter.setOpaque(false);
+        pnlCenter.add(lblIcon, BorderLayout.NORTH);
+        pnlCenter.add(lblMsg, BorderLayout.CENTER);
+        
+        JTextField txtInput = new JTextField();
+        UIConstants.styleField(txtInput);
+        txtInput.setPreferredSize(new Dimension(250, 45));
+        pnlCenter.add(txtInput, BorderLayout.SOUTH);
+        
+        JPanel pnlBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
+        pnlBotoes.setOpaque(false);
+        
+        JButton btnCancelar = new JButton("CANCELAR");
+        UIConstants.styleSecondary(btnCancelar);
+        btnCancelar.setPreferredSize(new Dimension(130, 40));
+        btnCancelar.addActionListener(e -> dialog.dispose());
+        
+        JButton btnConfirmar = new JButton("CONFIRMAR");
+        UIConstants.stylePrimary(btnConfirmar);
+        btnConfirmar.setPreferredSize(new Dimension(130, 40));
+        btnConfirmar.addActionListener(e -> {
+            dialog.dispose();
+            onConfirm.accept(txtInput.getText());
+        });
+        
+        pnlBotoes.add(btnCancelar);
+        pnlBotoes.add(btnConfirmar);
+        
+        panel.add(pnlCenter, BorderLayout.CENTER);
+        panel.add(pnlBotoes, BorderLayout.SOUTH);
+        
+        dialog.add(panel, BorderLayout.CENTER);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setBackground(new Color(0, 0, 0, 0)); 
+        dialog.setVisible(true);
+    }
+
+    private void trocarMotoboy(Pedidos p) {
+        operacaoEmAndamento = true;
+        
+        UIConstants.showInputDialog(
+            this, 
+            "Reatribuir Rota", 
+            "Qual o nome do novo Entregador (Motoboy)?", 
+            (novoNome) -> {
+                operacaoEmAndamento = false;
+                if(novoNome != null && !novoNome.trim().isEmpty()) {
+                    p.setNomeEntregador(novoNome); 
+                    executarUpdateBancoAsync(p, "em rota", novoNome, "Entregador alterado com sucesso!");
+                }
+            }
+        );
+    }
+
+    private void reportarProblemaEntrega(Pedidos p) {
+        UIConstants.showConfirmDialog(
+            this,
+            "Registrar Problema", 
+            "A entrega falhou? O pedido retornará para a fila de PRONTO (Cozinha).", 
+            () -> {
+                p.setNomeEntregador(null);
+                executarUpdateBancoAsync(p, "pronto", "", "Pedido retornado para a fila de despachos.");
+                entregaSelecionada = null;
+            }
+        );
+    }
 
     private void tentarConcluirEntrega(Pedidos p) {
         UIConstants.showConfirmDialog(
             this,
             "Finalizar Entrega", 
-            "Confirma a entrega do pedido #" + p.getIdPedido() + " para o cliente?", 
-            () -> concluirNoBancoAsync(p)
+            "Confirma que o motoboy entregou o pedido #" + p.getIdPedido() + " e o pagamento foi acertado?", 
+            () -> {
+                executarUpdateBancoAsync(p, "concluido", null, "Entrega finalizada com sucesso!");
+                entregaSelecionada = null;
+            }
         );
     }
 
-    private void concluirNoBancoAsync(Pedidos p) {
+    private void executarUpdateBancoAsync(Pedidos p, String novoStatus, String nomeEntregador, String msgSucesso) {
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        operacaoEmAndamento = true;
+        
         new SwingWorker<Boolean, Void>() {
             @Override
             protected Boolean doInBackground() {
@@ -362,31 +631,43 @@ public class EntregasPainel extends JPanel {
                     ConexaoBanco banco = new ConexaoBanco();
                     Connection conn = banco.abrirConexao();
                     if(conn != null) {
-                        int statusId = 4; 
-                        try(PreparedStatement ps = conn.prepareStatement("SELECT status_id FROM tb_status_pedido WHERE status_nome = 'concluido'")) {
+                        int statusId = 1; 
+                        try(PreparedStatement ps = conn.prepareStatement("SELECT status_id FROM tb_status_pedido WHERE status_nome = ?")) {
+                            ps.setString(1, novoStatus);
                             var rs = ps.executeQuery();
                             if(rs.next()) statusId = rs.getInt(1);
                         }
-                        try(PreparedStatement up = conn.prepareStatement("UPDATE tb_pedidos SET status_id = ? WHERE ID_pedido = ?")) {
+                        
+                        String sql = (nomeEntregador != null) 
+                            ? "UPDATE tb_pedidos SET status_id = ?, nome_entregador = ? WHERE ID_pedido = ?"
+                            : "UPDATE tb_pedidos SET status_id = ? WHERE ID_pedido = ?";
+                            
+                        try(PreparedStatement up = conn.prepareStatement(sql)) {
                             up.setInt(1, statusId);
-                            up.setString(2, p.getIdPedido());
+                            if (nomeEntregador != null) {
+                                up.setString(2, nomeEntregador.isEmpty() ? null : nomeEntregador);
+                                up.setString(3, p.getIdPedido());
+                            } else {
+                                up.setString(2, p.getIdPedido());
+                            }
                             up.executeUpdate();
                         }
                         banco.fecharConexao();
                     }
-                    dao.atualizarStatusPedido(p.getIdPedido(), "concluido");
+                    dao.atualizarStatusPedido(p.getIdPedido(), novoStatus);
                     return true;
-                } catch (Exception e) { return true; }
+                } catch (Exception e) { return true; /* Mock Visual Offline */ }
             }
             @Override
             protected void done() {
                 setCursor(Cursor.getDefaultCursor());
+                operacaoEmAndamento = false;
                 try {
                     if(get()) {
-                        UIConstants.showSuccess(EntregasPainel.this, "Entrega registrada com sucesso!");
+                        UIConstants.showSuccess(EntregasPainel.this, msgSucesso);
                         carregarEntregasAsync(true);
                     } else {
-                        UIConstants.showError(EntregasPainel.this, "Erro ao registrar no banco.");
+                        UIConstants.showError(EntregasPainel.this, "Erro de conexão ao BD.");
                     }
                 } catch(Exception ex) {}
             }

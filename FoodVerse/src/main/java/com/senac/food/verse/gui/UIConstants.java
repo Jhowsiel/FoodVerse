@@ -9,6 +9,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
+import java.util.function.Consumer;
 
 public final class UIConstants {
 
@@ -53,36 +54,30 @@ public final class UIConstants {
     // 3. CONFIGURAÇÃO GLOBAL (FLATLAF)
     // =================================================================================
     public static void applyDarkDefaults() {
-        // Remove bordas azuis de foco globais (Focus Rings)
         put("Component.focusWidth", 0);
         put("Component.innerFocusWidth", 0);
         put("TabbedPane.focusColor", new Color(0,0,0,0));
         put("Button.focusWidth", 0);
 
-        // General
         put("Panel.background", BG_DARK);
         put("Label.foreground", FG_LIGHT);
         put("Label.background", BG_DARK);
         put("Separator.foreground", GRID_DARK);
         put("Separator.background", BG_DARK);
 
-        // Componentes Arredondados
         put("Component.arc", 12);
         put("TextComponent.arc", 12);
         put("Button.arc", 12);
 
-        // Definimos a cor de destaque (Accent) para o Vermelho do FoodVerse
         put("Component.focusColor", PRIMARY_RED);
         put("TextComponent.selectionBackground", PRIMARY_RED);
         put("TextComponent.selectionForeground", Color.WHITE);
         
-        // Text Components
         put("TextComponent.background", CARD_DARK);
         put("TextComponent.foreground", FG_LIGHT);
         put("TextComponent.caretForeground", FG_LIGHT);
         put("TextComponent.border", BorderFactory.createEmptyBorder(6, 8, 6, 8));
 
-        // ComboBox
         put("ComboBox.background", CARD_DARK);
         put("ComboBox.foreground", FG_LIGHT);
         put("ComboBox.selectionBackground", PRIMARY_RED);
@@ -91,7 +86,6 @@ public final class UIConstants {
         put("ComboBox.buttonHoverBackground", BG_DARK_ALT);
         put("ComboBox.popupBackground", CARD_DARK);
 
-        // Table
         put("Table.background", BG_DARK);
         put("Table.foreground", FG_LIGHT);
         put("Table.selectionBackground", PRIMARY_RED);
@@ -101,7 +95,6 @@ public final class UIConstants {
         put("TableHeader.foreground", FG_LIGHT);
         put("Table.alternateRowColor", ALT_ROW);
 
-        // ScrollPane
         put("ScrollPane.background", BG_DARK);
         put("ScrollPane.border", BorderFactory.createLineBorder(GRID_DARK, 1));
         put("ScrollBar.track", CARD_DARK);
@@ -109,7 +102,6 @@ public final class UIConstants {
         put("ScrollBar.background", BG_DARK);
         put("ScrollBar.thumbArc", 999); 
 
-        // Menus e Dialogs
         put("Menu.background", CARD_DARK);
         put("Menu.foreground", FG_LIGHT);
         put("PopupMenu.background", CARD_DARK);
@@ -117,12 +109,10 @@ public final class UIConstants {
         put("MenuItem.background", CARD_DARK);
         put("MenuItem.foreground", FG_LIGHT);
         
-        // Fundo dos Pop-ups e Dialogs ---
         put("OptionPane.background", BG_DARK);
         put("OptionPane.messageForeground", FG_LIGHT);
         put("Dialog.background", BG_DARK);
         
-        // Borders e Tooltips
         put("TitledBorder.titleColor", FG_LIGHT);
         put("ToolTip.background", CARD_DARK);
         put("ToolTip.foreground", FG_LIGHT);
@@ -130,7 +120,7 @@ public final class UIConstants {
 
     private static void put(String k, Object v){ UIManager.put(k,v); }
 
-// =================================================================================
+    // =================================================================================
     // 4. ESTILIZADORES DE COMPONENTES
     // =================================================================================
     
@@ -147,7 +137,7 @@ public final class UIConstants {
         tb.setForeground(FG_MUTED);
         tb.setFocusPainted(false);
         tb.setBorderPainted(false);
-        tb.setOpaque(true); // CORREÇÃO
+        tb.setOpaque(true);
         tb.setCursor(new Cursor(Cursor.HAND_CURSOR));
         tb.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(GRID_DARK, 1),
@@ -179,7 +169,7 @@ public final class UIConstants {
         b.setForeground(Color.WHITE);
         b.setFocusPainted(false);
         b.setBorderPainted(false);
-        b.setOpaque(true); // CORREÇÃO: Força a cor do fundo
+        b.setOpaque(true); 
         b.setCursor(new Cursor(Cursor.HAND_CURSOR));
         b.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(PRIMARY_RED.darker(), 1),
@@ -193,7 +183,7 @@ public final class UIConstants {
         b.setForeground(FG_LIGHT);
         b.setFocusPainted(false);
         b.setBorderPainted(false);
-        b.setOpaque(true); // CORREÇÃO
+        b.setOpaque(true);
         b.setCursor(new Cursor(Cursor.HAND_CURSOR));
         b.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(GRID_DARK, 1),
@@ -207,7 +197,7 @@ public final class UIConstants {
         b.setForeground(Color.WHITE);
         b.setFocusPainted(false);
         b.setBorderPainted(false);
-        b.setOpaque(true); // CORREÇÃO
+        b.setOpaque(true); 
         b.setCursor(new Cursor(Cursor.HAND_CURSOR));
         b.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(SUCCESS_GREEN.darker(), 1),
@@ -221,7 +211,7 @@ public final class UIConstants {
         b.setForeground(Color.WHITE);
         b.setFocusPainted(false);
         b.setBorderPainted(false);
-        b.setOpaque(true); // CORREÇÃO
+        b.setOpaque(true); 
         b.setCursor(new Cursor(Cursor.HAND_CURSOR));
         b.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(DANGER_RED.darker(), 1),
@@ -280,6 +270,9 @@ public final class UIConstants {
         p.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
     }
 
+    // =================================================================================
+    // MÉTODOS DE JANELAS CUSTOMIZADAS (MODAIS)
+    // =================================================================================
 
     public static void showConfirmDialog(Component parent, String titulo, String mensagem, Runnable onConfirm) {
         Window window = SwingUtilities.getWindowAncestor(parent);
@@ -335,14 +328,78 @@ public final class UIConstants {
         dialog.setVisible(true);
     }
 
+    public static void showInputDialog(Component parent, String titulo, String mensagem, Consumer<String> onConfirm) {
+        Window window = SwingUtilities.getWindowAncestor(parent);
+        if (window == null && parent instanceof Window) {
+            window = (Window) parent;
+        }
 
+        JDialog dialog = new JDialog(window, titulo, Dialog.ModalityType.APPLICATION_MODAL);
+        dialog.setLayout(new BorderLayout());
+        dialog.setUndecorated(true); 
+
+        RoundedPanel panel = new RoundedPanel(20, BG_DARK_ALT);
+        panel.setLayout(new BorderLayout(20, 20));
+        panel.setBorder(new EmptyBorder(25, 30, 25, 30));
+
+        JLabel lblIcon = new JLabel(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.EDIT, 40, new Color(52, 152, 219)));
+        JLabel lblMsg = new JLabel("<html><center>" + mensagem + "</center></html>");
+        lblMsg.setFont(new Font("Arial", Font.BOLD, 16));
+        lblMsg.setForeground(Color.WHITE);
+        lblMsg.setHorizontalAlignment(SwingConstants.CENTER);
+
+        JPanel pnlCenter = new JPanel(new BorderLayout(10, 10));
+        pnlCenter.setOpaque(false);
+        pnlCenter.add(lblIcon, BorderLayout.NORTH);
+        pnlCenter.add(lblMsg, BorderLayout.CENTER);
+
+        JTextField txtInput = new JTextField();
+        styleField(txtInput);
+        txtInput.setPreferredSize(new Dimension(250, 45));
+        pnlCenter.add(txtInput, BorderLayout.SOUTH);
+
+        JPanel pnlBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
+        pnlBotoes.setOpaque(false);
+
+        JButton btnCancelar = new JButton("CANCELAR");
+        styleSecondary(btnCancelar);
+        btnCancelar.setPreferredSize(new Dimension(130, 40));
+        btnCancelar.addActionListener(e -> dialog.dispose());
+
+        JButton btnConfirmar = new JButton("CONFIRMAR");
+        stylePrimary(btnConfirmar);
+        btnConfirmar.setPreferredSize(new Dimension(130, 40));
+        btnConfirmar.addActionListener(e -> {
+            dialog.dispose();
+            if (onConfirm != null) onConfirm.accept(txtInput.getText());
+        });
+
+        pnlBotoes.add(btnCancelar);
+        pnlBotoes.add(btnConfirmar);
+
+        panel.add(pnlCenter, BorderLayout.CENTER);
+        panel.add(pnlBotoes, BorderLayout.SOUTH);
+
+        dialog.add(panel, BorderLayout.CENTER);
+        dialog.pack();
+        dialog.setLocationRelativeTo(parent);
+        dialog.setBackground(new Color(0, 0, 0, 0)); 
+        dialog.setVisible(true);
+        
+        // Foca automaticamente no campo de texto ao abrir
+        SwingUtilities.invokeLater(txtInput::requestFocusInWindow);
+    }
+
+    // =================================================================================
+    // MÉTODOS DE TABELAS E SCROLL
+    // =================================================================================
+    
     public static void styleScrollPane(JScrollPane sp){
         sp.setBackground(BG_DARK);
         sp.setBorder(BorderFactory.createLineBorder(GRID_DARK, 1));
         sp.getViewport().setBackground(BG_DARK);
     }
 
-    // Estilo de Tabela Completo e Limpo
     public static void styleTable(JTable table) {
         table.setRowHeight(40);
         table.setShowVerticalLines(false);
@@ -353,7 +410,7 @@ public final class UIConstants {
         table.setSelectionBackground(SEL_BG);
         table.setSelectionForeground(SEL_FG);
         table.setFont(ARIAL_14);
-        table.setFocusable(false); // Remove a borda azul ao clicar na célula
+        table.setFocusable(false); 
 
         JTableHeader header = table.getTableHeader();
         header.setBackground(HEADER_DARK);
@@ -361,7 +418,7 @@ public final class UIConstants {
         header.setFont(ARIAL_12_B);
         header.setPreferredSize(new Dimension(0, 45));
         header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, GRID_DARK));
-        header.setReorderingAllowed(false); // Impede reordenação bugada
+        header.setReorderingAllowed(false); 
 
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
@@ -404,15 +461,12 @@ public final class UIConstants {
         }
     }
 
-
     // =================================================================================
     // 5. ÍCONE DO SISTEMA (TASKBAR E JANELA)
     // =================================================================================
     public static Image getAppIcon() {
-        // Cria o ícone usando a biblioteca que já temos (Tamanho 64x64 para ficar nítido na barra de tarefas)
         Icon icon = IconFontSwing.buildIcon(GoogleMaterialDesignIcons.RESTAURANT_MENU, 64, PRIMARY_RED);
         
-        // Converte o Icon do Swing para um Image nativo do sistema operacional
         java.awt.image.BufferedImage image = new java.awt.image.BufferedImage(
             icon.getIconWidth(), 
             icon.getIconHeight(), 

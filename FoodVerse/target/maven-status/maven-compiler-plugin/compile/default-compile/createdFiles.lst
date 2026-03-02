@@ -70,6 +70,7 @@ com\senac\food\verse\gui\CardapioPainel$5.class
 com\senac\food\verse\Admin.class
 com\senac\food\verse\CardapioDAO$Prato.class
 com\senac\food\verse\ReservaDAO.class
+com\senac\food\verse\gui\EntregasPainel$4.class
 com\senac\food\verse\gui\GestaoCozinhaPanel$RoundedPanel.class
 com\senac\food\verse\gui\GestaoMesasPanel.class
 com\senac\food\verse\gui\UIConstants$RoundedPanel.class

@@ -18,7 +18,9 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.util.function.Consumer;
 
 public class PedidosPanel extends JPanel {
 
@@ -33,10 +35,11 @@ public class PedidosPanel extends JPanel {
     private JLabel lblContador;
     private JScrollPane scrollLista;
     
-    // Controlo de Estado
+    // Controlo de Estado e Cache Local
     private Pedidos pedidoSelecionado = null;
     private Timer timerAtualizacao;
     private boolean operacaoEmAndamento = false; 
+    private List<Pedidos> cachePedidos = new ArrayList<>(); // Cache para buscas instantâneas
     
     public PedidosPanel() {
         setLayout(new BorderLayout());
@@ -68,14 +71,19 @@ public class PedidosPanel extends JPanel {
         gc.fill = GridBagConstraints.HORIZONTAL;
         gc.gridx = 0; gc.gridy = 0; gc.weightx = 1.0;
         
+        // Linha 1: Busca e Refresh
         JPanel pnlBusca = new JPanel(new BorderLayout(10, 0));
         pnlBusca.setOpaque(false);
         
         txtBuscar = new JTextField();
         UIConstants.styleField(txtBuscar);
         txtBuscar.setPreferredSize(new Dimension(200, 40));
-        txtBuscar.putClientProperty("JTextField.placeholderText", "🔍 Buscar (Cliente, ID)...");
-        txtBuscar.addKeyListener(new KeyAdapter() { public void keyReleased(KeyEvent e) { renderizarListaLocal(); } });
+        txtBuscar.putClientProperty("JTextField.placeholderText", "Buscar Cliente ou ID...");
+        txtBuscar.putClientProperty("JTextField.leadingIcon", IconFontSwing.buildIcon(GoogleMaterialDesignIcons.SEARCH, 20, UIConstants.FG_MUTED));
+        
+        txtBuscar.addKeyListener(new KeyAdapter() { 
+            public void keyReleased(KeyEvent e) { renderizarListaLocal(); } 
+        });
         
         JButton btnRefresh = new JButton();
         UIConstants.styleSecondary(btnRefresh);
@@ -91,6 +99,7 @@ public class PedidosPanel extends JPanel {
         gc.gridy++;
         gc.insets = new Insets(10, 0, 0, 0);
         
+        // Linha 2: Filtros
         JPanel filters = new JPanel(new BorderLayout(10, 0));
         filters.setOpaque(false);
         
@@ -154,7 +163,7 @@ public class PedidosPanel extends JPanel {
     }
 
     // =========================================================================
-    // 3. LÓGICA DE ATUALIZAÇÃO E DADOS
+    // 3. LÓGICA DE ATUALIZAÇÃO E CACHE
     // =========================================================================
     private void iniciarMonitoramentoBackground() {
         timerAtualizacao = new Timer(5000, e -> {
@@ -176,47 +185,37 @@ public class PedidosPanel extends JPanel {
     }
     
     private void carregarDadosAsync(boolean silencioso) {
-        if(!silencioso) lblContador.setText("A atualizar...");
-        int scrollPos = scrollLista.getVerticalScrollBar().getValue();
+        if(!silencioso) lblContador.setText("Atualizando...");
         
-        new SwingWorker<ArrayList<Pedidos>, Void>() {
+        new SwingWorker<List<Pedidos>, Void>() {
             @Override
-            protected ArrayList<Pedidos> doInBackground() {
-                dao.recarregarPedidos();
-                return dao.buscarTodosPedidos();
+            protected List<Pedidos> doInBackground() {
+                try {
+                    dao.recarregarPedidos();
+                    return dao.buscarTodosPedidos();
+                } catch (Exception e) {
+                    return cachePedidos; 
+                }
             }
             @Override
             protected void done() {
                 try {
+                    cachePedidos = get();
                     renderizarListaLocal();
-                    SwingUtilities.invokeLater(() -> scrollLista.getVerticalScrollBar().setValue(scrollPos));
-                    
-                    if (pedidoSelecionado != null) {
-                        Pedidos atualizado = dao.buscarPedidoPorId(pedidoSelecionado.getIdPedido());
-                        if (atualizado != null) {
-                            pedidoSelecionado = atualizado;
-                            carregarDetalhesFull(pedidoSelecionado);
-                        } else {
-                            pedidoSelecionado = null;
-                            mostrarEstadoVazio();
-                        }
-                    }
-                } catch (Exception e) {
-                    UIConstants.showError(PedidosPanel.this, "Erro de ligação ao servidor.");
-                }
+                } catch (Exception e) {}
             }
         }.execute();
     }
     
     private void renderizarListaLocal() {
+        int scrollPos = scrollLista.getVerticalScrollBar().getValue();
         String termo = txtBuscar.getText().trim().toLowerCase().replace("#", "");
         String filtro = (String) cbFiltro.getSelectedItem();
         
-        ArrayList<Pedidos> todos = dao.buscarTodosPedidos();
         containerCards.removeAll();
-        
         int count = 0;
-        for (Pedidos p : todos) {
+        
+        for (Pedidos p : cachePedidos) {
             boolean match = true;
             String status = p.getStatusPedido().toLowerCase();
             String tipo = p.getModoEntrega().toLowerCase();
@@ -239,8 +238,21 @@ public class PedidosPanel extends JPanel {
         }
         
         lblContador.setText(count + " na fila");
+        
+        if (pedidoSelecionado != null) {
+            boolean aindaExiste = cachePedidos.stream().anyMatch(p -> p.getIdPedido().equals(pedidoSelecionado.getIdPedido()));
+            if(aindaExiste) {
+                pedidoSelecionado = cachePedidos.stream().filter(p -> p.getIdPedido().equals(pedidoSelecionado.getIdPedido())).findFirst().get();
+                carregarDetalhesFull(pedidoSelecionado);
+            } else {
+                pedidoSelecionado = null;
+                mostrarEstadoVazio();
+            }
+        }
+        
         containerCards.revalidate();
         containerCards.repaint();
+        SwingUtilities.invokeLater(() -> scrollLista.getVerticalScrollBar().setValue(scrollPos));
     }
     
     // =========================================================================
@@ -275,23 +287,22 @@ public class PedidosPanel extends JPanel {
         row1.add(lId, BorderLayout.WEST);
         row1.add(lNome, BorderLayout.CENTER);
         
-        String tipoStr = p.getModoEntrega().equalsIgnoreCase("Delivery") ? "🛵 Delivery" : "🍽️ Salão (Mesa " + p.getMesa() + ")";
+        boolean isDelivery = p.getModoEntrega().equalsIgnoreCase("Delivery");
+        String tipoStr = isDelivery ? "Delivery" : "Salão (Mesa " + p.getMesa() + ")";
         JLabel lTipo = new JLabel(tipoStr);
+        lTipo.setIcon(IconFontSwing.buildIcon(isDelivery ? GoogleMaterialDesignIcons.MOTORCYCLE : GoogleMaterialDesignIcons.RESTAURANT, 14, UIConstants.FG_LIGHT));
         lTipo.setForeground(UIConstants.FG_LIGHT);
         lTipo.setFont(UIConstants.ARIAL_12);
+        lTipo.setIconTextGap(8); // Afasta o texto do ícone sem bugar o HTML
         
-        JPanel row3 = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        row3.setOpaque(false);
-        JLabel icSLA = new JLabel(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ACCESS_TIME, 14, UIConstants.FG_MUTED));
-        JLabel lblSLA = new JLabel(calcularSLA(p.getHoraPedido(), p.getStatusPedido()));
-        lblSLA.setFont(UIConstants.ARIAL_12_B);
-        row3.add(icSLA);
-        row3.add(new JLabel(" ")); 
-        row3.add(lblSLA);
+        JLabel lTempo = new JLabel(calcularSLA(p.getHoraPedido(), p.getStatusPedido()));
+        lTempo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ACCESS_TIME, 14, UIConstants.FG_MUTED));
+        lTempo.setFont(UIConstants.ARIAL_12_B);
+        lTempo.setIconTextGap(8); // Afasta o texto do ícone
         
         center.add(row1);
         center.add(lTipo);
-        center.add(row3);
+        center.add(lTempo);
         card.add(center, BorderLayout.CENTER);
         
         card.addMouseListener(new MouseAdapter() {
@@ -313,14 +324,14 @@ public class PedidosPanel extends JPanel {
         }
         try {
             LocalTime hp = LocalTime.parse(horaPedido, DateTimeFormatter.ofPattern("HH:mm"));
-            long minutosEspera = ChronoUnit.MINUTES.between(hp, LocalTime.now());
-            if(minutosEspera < 0) minutosEspera = 0; 
+            long min = ChronoUnit.MINUTES.between(hp, LocalTime.now());
+            if(min < 0) min = 0; 
             
-            if(minutosEspera > 30) return "<html><font color='#ff4444'>ATRASADO (" + minutosEspera + " min)</font></html>";
-            else if (minutosEspera > 15) return "<html><font color='#ffaa00'>Em espera (" + minutosEspera + " min)</font></html>";
-            else return "<html><font color='#00cc66'>No prazo (" + minutosEspera + " min)</font></html>";
+            if(min > 30) return "<html><font color='#ff4444'>ATRASADO (" + min + " min)</font></html>";
+            else if (min > 15) return "<html><font color='#ffaa00'>Em espera (" + min + " min)</font></html>";
+            else return "<html><font color='#00cc66'>No prazo (" + min + " min)</font></html>";
         } catch (Exception e) {
-            return "<html><font color='#aaaaaa'>" + horaPedido + "</font></html>";
+            return "<html><font color='#aaaaaa'>Às " + horaPedido + "</font></html>";
         }
     }
     
@@ -366,19 +377,19 @@ public class PedidosPanel extends JPanel {
         
         JPanel col1 = new JPanel(new BorderLayout(0, 15));
         col1.setOpaque(false);
-        col1.add(criarCardInformacao("Cliente / Contato", p.getNomeCliente(), "📞 " + p.getTelefoneEntregador(), GoogleMaterialDesignIcons.PERSON), BorderLayout.NORTH);
+        col1.add(criarCardInformacao("CLIENTE / CONTATO", p.getNomeCliente(), p.getTelefoneEntregador(), GoogleMaterialDesignIcons.PERSON), BorderLayout.NORTH);
         
         NumberFormat nf = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
-        col1.add(criarCardInformacao("Caixa / Financeiro", "Total: " + nf.format(p.getSubtotal()), "Pagamento: " + p.getFormaPagamento(), GoogleMaterialDesignIcons.ACCOUNT_BALANCE_WALLET), BorderLayout.CENTER);
+        col1.add(criarCardInformacao("CAIXA / FINANCEIRO", "Total: " + nf.format(p.getSubtotal()), "Pagamento: " + p.getFormaPagamento(), GoogleMaterialDesignIcons.ACCOUNT_BALANCE_WALLET), BorderLayout.CENTER);
         
         JPanel col2 = new JPanel(new BorderLayout(0, 15));
         col2.setOpaque(false);
         
         if (p.getModoEntrega().equalsIgnoreCase("Delivery")) {
             String nomeEntregador = (p.getNomeEntregador() != null && !p.getNomeEntregador().isEmpty()) ? p.getNomeEntregador() : "A aguardar atribuição";
-            col2.add(criarCardInformacao("Despacho Delivery", p.getEnderecoCompleto(), "Entregador: " + nomeEntregador, GoogleMaterialDesignIcons.LOCAL_SHIPPING), BorderLayout.NORTH);
+            col2.add(criarCardInformacao("ENDEREÇO DE DESPACHO", p.getEnderecoCompleto(), "Entregador: " + nomeEntregador, GoogleMaterialDesignIcons.LOCAL_SHIPPING), BorderLayout.NORTH);
         } else {
-            col2.add(criarCardInformacao("Atendimento Local", "Mesa Selecionada: " + p.getMesa(), "Consumo no Salão", GoogleMaterialDesignIcons.RESTAURANT), BorderLayout.NORTH);
+            col2.add(criarCardInformacao("ATENDIMENTO LOCAL", "Mesa Selecionada: " + p.getMesa(), "Consumo no Salão", GoogleMaterialDesignIcons.RESTAURANT), BorderLayout.NORTH);
         }
         
         if (p.getObservacoes() != null && !p.getObservacoes().trim().isEmpty()) {
@@ -482,7 +493,7 @@ public class PedidosPanel extends JPanel {
         pnlPrint.add(btnPrintCozinha);
         pnlPrint.add(btnPrintCliente);
         
-        // --- FLUXO DE BOTÕES ---
+        // --- FLUXO DE BOTÕES (USANDO UICONSTANTS) ---
         JPanel pnlFluxo = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 12));
         pnlFluxo.setOpaque(false);
         
@@ -619,13 +630,13 @@ public class PedidosPanel extends JPanel {
     }
 
     // =========================================================================
-    // 6. MODAIS (IMPRESSÃO E DESPACHO)
+    // 6. MODAIS (IMPRESSÃO E DESPACHO COM UICONSTANTS)
     // =========================================================================
     
     private void mostrarVisualizadorImpressao(Pedidos p, boolean viaCozinha) {
         operacaoEmAndamento = true; 
         
-        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Visualizador de Impressão Térmica", true);
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Visualizador de Impressão", true);
         dialog.setSize(400, 600);
         dialog.setLocationRelativeTo(this);
         dialog.setLayout(new BorderLayout());
@@ -715,23 +726,22 @@ public class PedidosPanel extends JPanel {
         dialog.setVisible(true);
     }
     
+    // --- LÓGICA DRY: UTILIZAÇÃO DA UICONSTANTS ---
     private void solicitarEntregadorEDespachar(Pedidos p) {
         operacaoEmAndamento = true;
-        
-        String nome = JOptionPane.showInputDialog(
-            this, 
-            "Introduza o nome do entregador para despacho:", 
+        UIConstants.showInputDialog(
+            this,
             "Atribuir Motoboy", 
-            JOptionPane.QUESTION_MESSAGE
+            "Introduza o nome do entregador para despacho:", 
+            (nome) -> {
+                operacaoEmAndamento = false;
+                if(nome != null && !nome.trim().isEmpty()) {
+                    atualizarStatusEDespachoAsync(p, "em rota", nome);
+                } else {
+                    UIConstants.showWarning(this, "O nome do entregador é obrigatório.");
+                }
+            }
         );
-        
-        operacaoEmAndamento = false;
-        
-        if(nome != null && !nome.trim().isEmpty()) {
-            atualizarStatusEDespachoAsync(p, "em rota", nome);
-        } else if (nome != null) {
-            UIConstants.showWarning(this, "Nome do entregador é obrigatório para o despacho.");
-        }
     }
     
     // =========================================================================
@@ -747,14 +757,18 @@ public class PedidosPanel extends JPanel {
         return UIConstants.FG_MUTED; 
     }
     
+    // --- LÓGICA DRY: UTILIZAÇÃO DA UICONSTANTS ---
     private void confirmarProcessarStatus(Pedidos p, String novoStatus, String mensagem) {
         operacaoEmAndamento = true;
-        int resp = JOptionPane.showConfirmDialog(this, mensagem, "Atenção", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-        operacaoEmAndamento = false;
-        
-        if (resp == JOptionPane.YES_OPTION) {
-            processarStatusAsync(p, novoStatus);
-        }
+        UIConstants.showConfirmDialog(
+            this,
+            "Atenção", 
+            mensagem, 
+            () -> {
+                operacaoEmAndamento = false;
+                processarStatusAsync(p, novoStatus);
+            }
+        );
     }
     
     private void processarStatusAsync(Pedidos p, String novoStatus) {
@@ -762,8 +776,6 @@ public class PedidosPanel extends JPanel {
     }
     
     private void atualizarStatusEDespachoAsync(Pedidos p, String novoStatus, String nomeEntregador) {
-        if(operacaoEmAndamento) return;
-        
         panelDetalhes.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         operacaoEmAndamento = true;
         
@@ -800,7 +812,6 @@ public class PedidosPanel extends JPanel {
                     dao.atualizarStatusPedido(p.getIdPedido(), novoStatus);
                     return true;
                 } catch (Exception ex) { 
-                    ex.printStackTrace();
                     return false; 
                 }
             }

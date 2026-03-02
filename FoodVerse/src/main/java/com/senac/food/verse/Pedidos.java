@@ -59,6 +59,10 @@ public class Pedidos {
         return statusPedido;
     }
 
+    public void setStatusPedido(String statusPedido) {
+        this.statusPedido = statusPedido;
+    }
+
     public String getTipoPedido() {
         return tipoPedido;
     }
@@ -87,8 +91,16 @@ public class Pedidos {
         return nomeEntregador;
     }
 
+    public void setNomeEntregador(String nomeEntregador) {
+        this.nomeEntregador = nomeEntregador;
+    }
+
     public String getTelefoneEntregador() {
         return telefoneEntregador;
+    }
+    
+    public void setTelefoneEntregador(String telefoneEntregador) {
+        this.telefoneEntregador = telefoneEntregador;
     }
 
     public String getModoEntrega() {
@@ -109,10 +121,6 @@ public class Pedidos {
 
     public boolean isEntregaParceira() {
         return false;
-    }
-
-    public void setStatusPedido(String statusPedido) {
-        this.statusPedido = statusPedido;
     }
 
     public Number getSubtotal() {
