@@ -1,52 +1,110 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
+
+<style>
+  body { padding-top: 90px; background-color: #f8f9fa; }
+  .page-offset { margin-top: 20px; }
+
+  /* CARD DO PEDIDO */
+  .card-pedido {
+    border-radius: 20px;
+    border: none;
+    transition: transform 0.2s;
+  }
+  .card-pedido:hover {
+    transform: translateY(-3px);
+  }
+
+  .pedido-item {
+    border-bottom: 1px solid #e9ecef;
+    padding: 1rem 0;
+  }
+  .pedido-item:last-child { border-bottom: none; }
+
+  .progress-custom {
+    height: 10px;
+    border-radius: 8px;
+    background-color: #e9ecef;
+    overflow: hidden;
+  }
+  .progress-custom-bar {
+    height: 100%;
+    background-color: #dc3545;
+    border-radius: 8px;
+    transition: width 0.4s ease;
+  }
+
+  /* RESUMO FINANCEIRO */
+  .resumo-card {
+    border-radius: 20px;
+    border: none;
+  }
+  .resumo-card h5 { font-weight: 700; }
+  .resumo-card p { margin-bottom: 0.5rem; }
+  .resumo-card .total { font-size: 1.3rem; font-weight: 800; }
+
+  /* BOTÕES */
+  .btn-continua {
+    border-radius: 50px;
+  }
+</style>
+
 <section class="container page-offset py-4">
+
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="fw-bold mb-0">Meu pedido</h1>
-    <a href="{% url 'restaurantes' %}" class="btn btn-outline-danger rounded-pill">Continuar comprando</a>
+    <h1 class="fw-bold mb-0">Meu Pedido</h1>
+    <a href="{% url 'restaurantes' %}" class="btn btn-outline-danger btn-continua">Continuar comprando</a>
   </div>
 
   <div class="row g-4">
+    
+    <!-- ITENS DO PEDIDO -->
     <div class="col-12 col-lg-8">
-      <div class="card border-0 shadow-sm mb-3">
-        <div class="card-body d-flex justify-content-between align-items-center">
+      <div class="card shadow-sm card-pedido p-4 mb-3">
+        {% for item in itens %}
+        <div class="pedido-item d-flex justify-content-between align-items-center">
           <div>
             <h5 class="mb-1">{{ item.nome }}</h5>
-            <p class="small text-muted mb-0">{{ restaurante.nome }} · porção média · sem lactose</p>
+            <p class="small text-muted mb-0">{{ item.restaurante.nome }} · {{ item.porcao }} · {{ item.restricoes }}</p>
           </div>
           <div class="text-end">
-            <strong>{{ item.preco }}</strong>
-            <p class="small text-muted mb-0">Qtd: 1</p>
+            <strong>R$ {{ item.preco }}</strong>
+            <p class="small text-muted mb-0">Qtd: {{ item.quantidade }}</p>
           </div>
         </div>
+        {% empty %}
+        <p class="text-center text-muted py-4">Nenhum item no pedido.</p>
+        {% endfor %}
       </div>
 
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <h5 class="fw-bold">Acompanhamento em tempo real</h5>
-          <p class="mb-1">Status atual: <strong>Aguardando confirmação do restaurante</strong></p>
-          <div class="progress" role="progressbar" aria-label="Progresso do pedido" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" style="height: 8px;">
-            <div class="progress-bar bg-danger" style="width: 25%"></div>
-          </div>
-          <p class="text-muted small mt-2 mb-0">Você ainda pode editar o pedido antes do início do preparo.</p>
+      <div class="card shadow-sm card-pedido p-4">
+        <h5 class="fw-bold mb-3">Acompanhamento em tempo real</h5>
+        <p class="mb-2">Status atual: <strong>{{ pedido.status_texto }}</strong></p>
+        <div class="progress-custom mb-2" role="progressbar" aria-valuenow="{{ pedido_progress }}" aria-valuemin="0" aria-valuemax="100">
+          <div class="progress-custom-bar" style="width: {{ pedido_progress }}%"></div>
         </div>
+        <p class="text-muted small mb-0">Você ainda pode editar o pedido antes do início do preparo.</p>
       </div>
     </div>
 
+    <!-- RESUMO FINANCEIRO -->
     <div class="col-12 col-lg-4">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <h5 class="fw-bold">Resumo financeiro</h5>
-          <p class="mb-1">Subtotal: {{ subtotal }}</p>
-          <p class="mb-1">Entrega: {{ entrega }}</p>
-          <p class="mb-3">Desconto cupom: {{ desconto }}</p>
-          <h5>Total: {{ total }}</h5>
-        </div>
+      <div class="card shadow-sm resumo-card p-4">
+        <h5 class="fw-bold mb-3">Resumo financeiro</h5>
+        <p class="d-flex justify-content-between"><span>Subtotal:</span> <span>R$ {{ subtotal }}</span></p>
+        <p class="d-flex justify-content-between"><span>Entrega:</span> <span>R$ {{ entrega }}</span></p>
+        <p class="d-flex justify-content-between"><span>Desconto cupom:</span> <span>- R$ {{ desconto }}</span></p>
+        <hr>
+        <p class="d-flex justify-content-between total"><span>Total:</span> <span>R$ {{ total }}</span></p>
       </div>
     </div>
+
   </div>
+
 </section>
+
 {% include "pages/pagePrincipal/footer.html" %}
 {% endblock %}

@@ -5,119 +5,245 @@
 {% include "pages/pagePrincipal/header.html" %}
 
 <style>
-  :root { --brand-color: #dc3545; }
-  body { padding-top: 80px; background-color: #f8f9fa; }
-
-  .restaurant-header {
-    background: white;
-    border-radius: 15px;
-    padding: 2rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    margin-bottom: 2rem;
+  :root {
+    --brand-red: #BC1015;
+    --brand-hover: #E61218;
+    --card-bg: #ffffff;
+    --card-hover: #f8f9fa;
+    --page-bg: #f8f9fa;
+    --text-main: #212529;
+    --text-muted: #6c757d;
+    --border-light: #dee2e6;
   }
 
-  .dish-card {
-    transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+  body {
+    padding-top: 80px;
+    background-color: var(--page-bg);
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* ===== HEADER DO RESTAURANTE ===== */
+  .restaurant-header {
+    background: var(--card-bg);
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    margin-bottom: 3rem;
+  }
+
+  .restaurant-title {
+    font-weight: 800;
+    font-size: 2rem;
+  }
+
+  .restaurant-description {
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .restaurant-meta {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .restaurant-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 600;
+  }
+
+  .btn-cupom {
+    background-color: #22C55E;
+    color: #fff;
+    font-weight: 700;
+    padding: 0.4rem 0.8rem;
+    border-radius: 8px;
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+  }
+
+  .btn-reserva {
+    background-color: var(--brand-red);
+    color: #fff;
+    font-weight: 700;
+    padding: 0.75rem 1.5rem;
     border-radius: 12px;
+    transition: 0.3s;
+  }
+
+  .btn-reserva:hover {
+    background-color: var(--brand-hover);
+    color: #fff;
+  }
+
+  /* ===== FILTROS ===== */
+  .btn-filter {
+    background: #fff;
+    border: 1px solid var(--border-light);
+    color: var(--text-main);
+    border-radius: 12px;
+    padding: 0.5rem 1.25rem;
+    font-weight: 600;
+    transition: 0.25s;
+    white-space: nowrap;
+  }
+
+  .btn-filter.active {
+    background-color: var(--brand-red);
+    color: #fff;
+    border-color: var(--brand-red);
+  }
+
+  .btn-filter:hover {
+    background-color: var(--card-hover);
+  }
+
+  /* ===== CARD DE PRATO ===== */
+  .dish-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    border: 1px solid var(--border-light);
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+  }
+
+  .dish-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  }
+
+  .dish-img-wrapper {
+    position: relative;
+    height: 200px;
     overflow: hidden;
   }
-  .dish-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 12px 24px rgba(0,0,0,0.1) !important;
+
+  .dish-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s;
   }
-  .dish-img-wrapper { position: relative; overflow: hidden; }
-  
+
+  .dish-card:hover img {
+    transform: scale(1.05);
+  }
+
   .dish-price-tag {
     position: absolute;
-    bottom: 10px;
-    right: 10px;
-    background: rgba(255, 255, 255, 0.95);
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-weight: bold;
-    color: var(--brand-color);
+    top: 12px;
+    right: 12px;
+    background-color: var(--brand-red);
+    color: #fff;
+    font-weight: 700;
+    padding: 0.4rem 0.8rem;
+    border-radius: 50px;
+    font-size: 0.85rem;
+  }
+
+  .dish-info {
+    padding: 1rem 1.25rem 1.5rem;
+  }
+
+  .dish-name {
+    font-weight: 700;
+    font-size: 1.15rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .dish-desc {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    min-height: 50px;
+  }
+
+  .btn-vermais {
+    background: transparent;
+    border: 1px solid var(--brand-red);
+    color: var(--brand-red);
+    font-weight: 600;
+    border-radius: 50px;
+    padding: 0.4rem 1rem;
+    transition: 0.25s;
+  }
+
+  .btn-vermais:hover {
+    background-color: var(--brand-red);
+    color: #fff;
   }
 </style>
 
 <section class="container mb-5">
-  
-  <nav aria-label="breadcrumb" class="mb-3">
-    <a href="{% url 'restaurantes' %}" class="text-decoration-none text-muted small">
-      <i class="bi bi-chevron-left"></i> Voltar para restaurantes
+
+  <!-- VOLTAR -->
+  <nav class="mb-4">
+    <a href="{% url 'restaurantes' %}" class="text-decoration-none d-inline-flex align-items-center gap-2 text-muted fw-medium">
+      <i class="bi bi-arrow-left-circle fs-4 text-danger"></i> Voltar para restaurantes
     </a>
   </nav>
 
-  <div class="restaurant-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-    <div>
-      <div class="d-flex align-items-center gap-2 mb-2">
-        <h1 class="h2 fw-bold mb-0">{{ restaurante.nome }}</h1>
-        <span class="badge bg-warning text-dark"><i class="bi bi-star-fill"></i> {{ restaurante.avaliacao }}</span>
+  <!-- HEADER RESTAURANTE -->
+  <div class="restaurant-header row align-items-center g-4">
+    <div class="col-lg-8">
+      <h1 class="restaurant-title">{{ restaurante.nome }}</h1>
+      <p class="restaurant-description">{{ restaurante.descricao }}</p>
+      <div class="restaurant-meta">
+        <span><i class="bi bi-clock text-danger"></i> {{ restaurante.tempo }}</span>
+        <span><i class="bi bi-bicycle text-danger"></i> Entrega Grátis</span>
       </div>
-      <p class="text-muted mb-0"><i class="bi bi-info-circle me-1"></i> {{ restaurante.descricao }}</p>
-    </div>
-    
-    <div class="d-flex flex-wrap gap-2 align-items-center">
-      <div class="text-md-end me-2">
-        <small class="text-muted d-block">Tempo estimado</small>
-        <span class="fw-bold"><i class="bi bi-clock me-1"></i>{{ restaurante.tempo }}</span>
-      </div>
-
-      <a href="{% url 'reserva' %}?restaurante_id={{ restaurante.id }}" class="btn btn-danger fw-bold rounded-pill px-4">
-        <i class="bi bi-calendar-check me-2"></i>Fazer Reserva
-      </a>
-
       {% if restaurante.cupom %}
-      <div class="ms-md-3 p-2 border-dashed border-success border rounded bg-light">
-        <small class="text-success d-block fw-bold" style="font-size: 0.7rem; text-transform: uppercase;">Cupom Ativo</small>
-        <code class="text-success fw-bold">{{ restaurante.cupom }}</code>
-      </div>
+        <span class="btn-cupom">CUPOM: {{ restaurante.cupom }}</span>
       {% endif %}
     </div>
+    <div class="col-lg-4 text-lg-end">
+      <a href="{% url 'reserva' %}?restaurante_id={{ restaurante.id }}" class="btn btn-reserva">RESERVAR AGORA</a>
+    </div>
   </div>
 
-  <div class="d-flex gap-2 mb-4 overflow-auto pb-2" style="white-space: nowrap;">
-    <button class="btn btn-danger rounded-pill px-4">Todos</button>
-    <button class="btn btn-outline-secondary rounded-pill px-4">Mais Pedidos</button>
-    <button class="btn btn-outline-secondary rounded-pill px-4">Promoções</button>
+  <!-- FILTROS -->
+  <div class="d-flex justify-content-between align-items-center mt-5 mb-4">
+    <h3 class="fw-bold mb-0 border-start border-danger border-4 ps-3">MENU</h3>
+    <div class="d-flex gap-2 overflow-auto">
+      <button class="btn-filter active">Todos</button>
+      <button class="btn-filter">Mais Pedidos</button>
+      <button class="btn-filter">Promoções</button>
+    </div>
   </div>
 
+  <!-- CARDS DE PRATOS -->
   <div class="row g-4">
     {% for prato in restaurante.pratos %}
     <div class="col-12 col-md-6 col-lg-4">
-      <div class="card h-100 border-0 shadow-sm dish-card">
-        
+      <div class="dish-card">
         <div class="dish-img-wrapper">
           {% if prato.imagem %}
-            <img src="{% static prato.imagem %}" class="card-img-top" alt="{{ prato.nome }}" style="height: 220px; object-fit: cover;" loading="lazy">
+            <img src="{% static prato.imagem %}" alt="{{ prato.nome }}">
           {% else %}
-            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 220px;">
-              <i class="bi bi-egg-fried fs-1 text-muted"></i>
+            <div class="w-100 h-100 bg-light d-flex align-items-center justify-content-center">
+              <i class="bi bi-egg fs-1 text-muted"></i>
             </div>
           {% endif %}
-          <div class="dish-price-tag shadow-sm">
-            R$ {{ prato.preco }}
-          </div>
+          <div class="dish-price-tag">R$ {{ prato.preco }}</div>
         </div>
-
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title fw-bold mb-1">{{ prato.nome }}</h5>
-          <p class="card-text text-muted small flex-grow-1">
-            {{ prato.descricao|truncatechars:90 }}
-          </p>
-          
-          <div class="d-grid mt-3">
-            <a href="{% url 'prato' %}?restaurante_id={{ restaurante.id }}&id={{ prato.id }}" class="btn btn-outline-danger fw-bold rounded-3">
-              Ver Detalhes
-            </a>
-          </div>
+        <div class="dish-info">
+          <h5 class="dish-name">{{ prato.nome }}</h5>
+          <p class="dish-desc">{{ prato.descricao|truncatechars:100 }}</p>
+          <a href="{% url 'prato' %}?restaurante_id={{ restaurante.id }}&id={{ prato.id }}" class="btn-vermais">Ver Mais</a>
         </div>
       </div>
     </div>
     {% empty %}
     <div class="col-12 text-center py-5">
-      <i class="bi bi-search fs-1 text-muted"></i>
-      <h4 class="mt-3">Nenhum prato encontrado</h4>
-      <p class="text-muted">Este restaurante ainda não cadastrou o cardápio.</p>
+      <p class="text-muted fs-5">Nenhum item cadastrado no momento.</p>
     </div>
     {% endfor %}
   </div>

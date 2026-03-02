@@ -5,131 +5,246 @@
 {% include "pages/pagePrincipal/header.html" %}
 
 <style>
-  body { 
-    padding-top: 80px; 
-    background-color: #f8f9fa; 
+  :root {
+    --brand-red: #BC1015;
+    --brand-hover: #E61218;
+    --page-bg: #F6F7F9;
+    --card-bg: #FFFFFF;
+    --text-muted: #6B7280;
+    --border-color: #E5E7EB;
   }
-  
-  /* Scroll de categorias horizontal para Mobile */
+
+  body {
+    padding-top: 100px;
+    background-color: var(--page-bg);
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* ===== TÍTULO ===== */
+  .section-title h1 {
+    font-weight: 800;
+    font-size: 2.4rem;
+    color: #111827;
+    margin-bottom: 0.5rem;
+  }
+
+  .section-title p {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+  }
+
+  /* ===== CATEGORIAS ===== */
   .category-scroll {
+    display: flex;
+    gap: 12px;
     overflow-x: auto;
-    white-space: nowrap;
-    padding: 5px 0 15px 0;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
+    padding-bottom: 5px;
+    scrollbar-width: none;
   }
   .category-scroll::-webkit-scrollbar { display: none; }
 
-  /* Card de Restaurante */
-  .res-card {
-    transition: all 0.3s ease;
-    border-radius: 16px;
-    border: 1px solid rgba(0,0,0,0.05);
+  .category-btn {
+    padding: 10px 22px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    background: #FFFFFF;
+    border: 1px solid var(--border-color);
+    color: #374151;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    white-space: nowrap;
   }
+
+  .category-btn:hover {
+    background: #F3F4F6;
+  }
+
+  .category-btn.active {
+    background: var(--brand-red);
+    border-color: var(--brand-red);
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(188,16,21,0.25);
+  }
+
+  /* ===== CARD RESTAURANTE ===== */
+  .res-card {
+    background: var(--card-bg);
+    border-radius: 18px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
   .res-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 25px rgba(0,0,0,0.08) !important;
+    transform: translateY(-6px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+  }
+
+  .res-img-wrapper {
+    position: relative;
+    height: 190px;
+    overflow: hidden;
   }
 
   .res-img {
-    height: 160px;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    border-radius: 12px;
+    transition: transform 0.4s ease;
+  }
+
+  .res-card:hover .res-img {
+    transform: scale(1.05);
   }
 
   .rating-badge {
-    background: #fff9e6;
-    color: #ffb800;
-    padding: 4px 10px;
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #FFFFFF;
+    color: #F59E0B;
+    padding: 5px 10px;
     border-radius: 8px;
     font-weight: 700;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   }
 
-  /* Efeito de texto em duas linhas */
-  .text-truncate-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+  .res-info {
+    padding: 20px;
   }
+
+  .res-name {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 6px;
+  }
+
+  .res-description {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  /* ===== RODAPÉ CARD ===== */
+  .res-footer {
+    margin-top: auto;
+    padding: 15px 20px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .res-meta {
+    font-size: 0.85rem;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .btn-loja {
+    background: var(--brand-red);
+    color: #fff;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .btn-loja:hover {
+    background: var(--brand-hover);
+    color: #fff;
+  }
+
+  .cupom-tag {
+    background: #22C55E;
+    color: #065F46;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+
 </style>
 
-<section class="container py-4">
-  
-  <div class="mb-4">
-    <h1 class="fw-bold text-dark mb-1">Restaurantes</h1>
-    <p class="text-muted">Explore as melhores opções próximas a você</p>
+<section class="container py-5">
+
+  <div class="section-title mb-5">
+    <h1>Restaurantes</h1>
+    <p>Os melhores sabores, entregues na sua porta.</p>
   </div>
 
-  <div class="category-scroll d-flex gap-2 mb-4">
+  <!-- CATEGORIAS -->
+  <div class="category-scroll mb-5">
     <a href="{% url 'restaurantes' %}" 
-       class="btn rounded-pill px-4 fw-medium {% if not categoria_ativa %}btn-danger shadow-sm{% else %}btn-outline-dark border-secondary-subtle{% endif %}">
-      Todos
+       class="category-btn {% if not categoria_ativa %}active{% endif %}">
+      🍔 Todos
     </a>
+
     {% for categoria in categorias %}
       <a href="{% url 'restaurantes' %}?categoria={{ categoria }}" 
-         class="btn rounded-pill px-4 fw-medium {% if categoria_ativa == categoria %}btn-danger shadow-sm{% else %}btn-outline-dark border-secondary-subtle{% endif %}">
+         class="category-btn {% if categoria_ativa == categoria %}active{% endif %}">
         {{ categoria }}
       </a>
     {% endfor %}
   </div>
 
+  <!-- RESTAURANTES -->
   <div class="row g-4">
     {% for restaurante in restaurantes %}
     <div class="col-12 col-md-6 col-lg-4">
-      <div class="card h-100 border-0 shadow-sm p-3 res-card">
-        <div class="row g-0 h-100">
-          
-          <div class="col-5 col-md-12 mb-md-3">
-            <div class="position-relative h-100">
-              <img src="{% static restaurante.imagem %}" class="res-img w-100 h-100" alt="{{ restaurante.nome }}" loading="lazy">
-              {% if restaurante.cupom %}
-                <span class="position-absolute top-0 start-0 badge bg-success m-2 shadow-sm">
-                  <i class="bi bi-tag-fill"></i> Cupom
-                </span>
-              {% endif %}
-            </div>
-          </div>
-          
-          <div class="col-7 col-md-12 ps-3 ps-md-0 d-flex flex-column">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <h5 class="fw-bold text-dark mb-0 text-truncate">{{ restaurante.nome }}</h5>
-              <div class="rating-badge">
-                <i class="bi bi-star-fill"></i> {{ restaurante.avaliacao }}
-              </div>
-            </div>
-            
-            <p class="text-muted small mb-3 text-truncate-2">
-              {{ restaurante.descricao }}
-            </p>
+      <div class="res-card">
 
-            <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
-              <div class="small">
-                <span class="text-dark fw-bold"><i class="bi bi-clock me-1"></i>{{ restaurante.tempo }}</span>
-                <span class="text-muted mx-1">•</span>
-                <span class="text-success fw-medium">{{ restaurante.taxa }}</span>
-              </div>
-              <a href="{% url 'restaurante_detalhe' restaurante.id %}" class="btn btn-sm btn-outline-danger rounded-pill px-3">
-                Ver Loja
-              </a>
-            </div>
+        <div class="res-img-wrapper">
+          <img src="{% static restaurante.imagem %}" class="res-img" alt="{{ restaurante.nome }}">
+          <div class="rating-badge">
+            <i class="bi bi-star-fill me-1"></i>{{ restaurante.avaliacao }}
           </div>
-
         </div>
+
+        <div class="res-info">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <h5 class="res-name text-truncate mb-0">{{ restaurante.nome }}</h5>
+            {% if restaurante.cupom %}
+              <span class="cupom-tag">Cupom</span>
+            {% endif %}
+          </div>
+
+          <p class="res-description">
+            {{ restaurante.descricao|truncatechars:80 }}
+          </p>
+        </div>
+
+        <div class="res-footer">
+          <div class="res-meta">
+            <span><i class="bi bi-clock text-danger me-1"></i>{{ restaurante.tempo }}</span>
+            <span class="text-success fw-bold">{{ restaurante.taxa }}</span>
+          </div>
+
+          <a href="{% url 'restaurante_detalhe' restaurante.id %}" class="btn-loja">
+            VER LOJA
+          </a>
+        </div>
+
       </div>
     </div>
     {% empty %}
     <div class="col-12 text-center py-5">
-      <div class="bg-light d-inline-block p-4 rounded-circle mb-3">
-        <i class="bi bi-shop-window fs-1 text-muted"></i>
-      </div>
-      <h4 class="fw-bold">Nenhum resultado</h4>
-      <p class="text-muted">Parece que não temos restaurantes nessa categoria no momento.</p>
-      <a href="{% url 'restaurantes' %}" class="btn btn-danger rounded-pill px-4">Ver todos</a>
+       <h4 class="text-muted">Nenhum restaurante nesta categoria.</h4>
     </div>
     {% endfor %}
   </div>
+
 </section>
 
 {% include "pages/pagePrincipal/footer.html" %}
