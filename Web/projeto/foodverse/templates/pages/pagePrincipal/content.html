@@ -1,82 +1,174 @@
 {% load static %}
 
-<section class="banner text-white py-5">
-  <div class="container">
-    <h1 class="fw-bold display-5 mb-3">Você está morrendo de fome?</h1>
-    <p class="mb-4 fs-5">Em poucos cliques, encontre refeições perto de você.</p>
+<main>
+  <section class="banner text-white py-5">
+    <div class="container">
+      
+      <h1 class="fw-bold display-5 mb-3">Você está morrendo de fome?</h1>
+      <p class="mb-4 fs-5">
+        Em poucos cliques, encontre refeições perto de você.
+      </p>
 
-    <div class="bg-dark p-4 rounded-4 shadow-lg">
-      <ul class="nav nav-tabs mb-4">
-        <li class="nav-item"><span class="nav-link active bg-warning text-dark rounded-start fw-bold"><i class="fas fa-motorcycle me-2"></i>Delivery</span></li>
-        <li class="nav-item"><span class="nav-link text-white"><i class="fas fa-store me-2"></i>Retirada</span></li>
-      </ul>
+      <div class="bg-dark p-4 rounded-4 shadow-lg">
 
-      <form method="POST">
-        {% csrf_token %}
-        <div class="input-group mb-3">
-          <span class="input-group-text bg-white"><i class="fas fa-map-marker-alt text-danger"></i></span>
-          <input type="text" name="cep" class="form-control" placeholder="Digite seu CEP" value="{{ cep|default:'' }}">
-          <button class="btn text-white fw-bold btn-encontrar-comida" type="submit"><i class="fas fa-search me-1"></i>Encontrar comida</button>
-        </div>
+        <ul class="nav nav-tabs mb-4">
+          <li class="nav-item">
+            <span class="nav-link active bg-warning text-dark rounded-start fw-bold">
+              <i class="fas fa-motorcycle me-2"></i>Delivery
+            </span>
+          </li>
+          <li class="nav-item">
+            <span class="nav-link text-white">
+              <i class="fas fa-store me-2"></i>Retirada
+            </span>
+          </li>
+        </ul>
 
-        {% if endereco %}
-          <div class="alert alert-success mt-3"><strong>Endereço encontrado:</strong> {{ endereco }}</div>
-        {% elif cep %}
-          <div class="alert alert-danger mt-3"><strong>Erro:</strong> CEP inválido ou endereço não encontrado.</div>
-        {% endif %}
-      </form>
-    </div>
-  </div>
-</section>
+        <form method="POST">
+          {% csrf_token %}
 
-<section class="categorias container-fluid bg-dark py-4 px-3">
-  <div class="header-categoria d-flex flex-column align-items-start justify-content-start mb-4">
-    <h2 class="titulo-header-menu text-danger text-uppercase small mb-2">Menu de Comidas</h2>
-    <h2 class="text-white fw-bold m-0">Categorias</h2>
-  </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text bg-white">
+              <i class="fas fa-map-marker-alt text-danger"></i>
+            </span>
 
-  <div class="categorias-lista d-flex gap-3">
-    {% for categoria in categorias %}
-      <a href="{% url 'restaurantes' %}?categoria={{ categoria }}" class="btn-categoria text-decoration-none">
-        <img src="{% static 'img/logo.png' %}" alt="{{ categoria }}">{{ categoria }}
-      </a>
-    {% endfor %}
-  </div>
-</section>
+            <input 
+              type="text"
+              name="cep"
+              class="form-control"
+              placeholder="Digite seu CEP"
+              value="{{ cep|default:'' }}"
+            >
 
-<section class="menu-cardapios container-fluid bg-dark py-4 px-0">
-  <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4 px-4">
-      <h2 class="text-white fw-bold m-0">Restaurantes populares</h2>
-      <a href="{% url 'restaurantes' %}" class="btn btn-outline-light rounded-pill">Ver todos</a>
-    </div>
-
-    <div class="row justify-content-center g-4">
-      {% for restaurante in restaurantes %}
-      <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-        <div class="card menu-cardapios-card">
-          <img src="{% static restaurante.imagem %}" alt="{{ restaurante.nome }}">
-          <div class="card-top-bar menu-cardapios-card-top">
-            <span class="badge-desconto">{{ restaurante.cupom }}</span>
-            <span class="d-flex align-items-center gap-1 mx-auto"><i class="fas fa-star text-warning"></i><span class="fw-bold">{{ restaurante.avaliacao }}/5</span></span>
+            <button 
+              class="btn text-white fw-bold btn-encontrar-comida"
+              type="submit"
+            >
+              <i class="fas fa-search me-1"></i>
+              Encontrar comida
+            </button>
           </div>
-          <div class="card-footer-bar">
-            <h5 class="fw-bold mb-1" style="font-size: 1.2rem;">{{ restaurante.nome }}</h5>
-            <div class="d-flex align-items-center justify-content-between">
-              <div class="d-flex align-items-center gap-2">
-                <span class="fw-bold text-warning">{{ restaurante.taxa }}</span>
-                <span class="text-white small">{{ restaurante.tempo }}</span>
-              </div>
-              <a href="{% url 'restaurantes' %}?id={{ restaurante.id }}" class="btn btn-light rounded-circle p-2 d-flex align-items-center justify-content-center">
-                <i class="fas fa-arrow-right text-dark"></i>
-              </a>
+
+          {% if endereco %}
+            <div class="alert alert-success mt-3">
+              <strong>Endereço encontrado:</strong> {{ endereco }}
             </div>
-          </div>
-        </div>
+          {% elif cep %}
+            <div class="alert alert-danger mt-3">
+              <strong>Erro:</strong> CEP inválido ou endereço não encontrado.
+            </div>
+          {% endif %}
+
+        </form>
+
       </div>
-      {% endfor %}
     </div>
-  </div>
-</section>
+  </section>
+
+  <section class="categorias container-fluid bg-dark py-4 px-3">
+
+    <div class="header-categoria d-flex flex-column align-items-start justify-content-start mb-4">
+      <h2 class="titulo-header-menu text-danger text-uppercase small mb-2">
+        Menu de Comidas
+      </h2>
+
+      <h2 class="text-white fw-bold m-0">
+        Categorias
+      </h2>
+    </div>
+
+    <div class="categorias-lista d-flex gap-3">
+
+      {% for categoria in categorias %}
+        <a 
+          href="{% url 'restaurantes' %}?categoria={{ categoria }}"
+          class="btn-categoria text-decoration-none"
+        >
+          <img src="{% static 'img/logo.png' %}" alt="{{ categoria }}">
+          {{ categoria }}
+        </a>
+      {% endfor %}
+
+    </div>
+  </section>
+
+  <section class="menu-cardapios container-fluid bg-dark py-4 px-0">
+    <div class="container-fluid">
+
+      <div class="d-flex justify-content-between align-items-center mb-4 px-4">
+        <h2 class="text-white fw-bold m-0">
+          Restaurantes populares
+        </h2>
+
+        <a 
+          href="{% url 'restaurantes' %}"
+          class="btn btn-outline-light rounded-pill"
+        >
+          Ver todos
+        </a>
+      </div>
+
+      <div class="row justify-content-center g-4">
+
+        {% for restaurante in restaurantes %}
+          <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+
+            <div class="card menu-cardapios-card">
+
+              <img 
+                src="{% static restaurante.imagem %}" 
+                alt="{{ restaurante.nome }}"
+              >
+
+              <div class="card-top-bar menu-cardapios-card-top">
+                <span class="badge-desconto">
+                  {{ restaurante.cupom }}
+                </span>
+
+                <span class="d-flex align-items-center gap-1 mx-auto">
+                  <i class="fas fa-star text-warning"></i>
+                  <span class="fw-bold">
+                    {{ restaurante.avaliacao }}/5
+                  </span>
+                </span>
+              </div>
+
+              <div class="card-footer-bar">
+
+                <h5 class="fw-bold mb-1" style="font-size: 1.2rem;">
+                  {{ restaurante.nome }}
+                </h5>
+
+                <div class="d-flex align-items-center justify-content-between">
+
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="fw-bold text-warning">
+                      {{ restaurante.taxa }}
+                    </span>
+
+                    <span class="text-white small">
+                      {{ restaurante.tempo }}
+                    </span>
+                  </div>
+
+                  <a 
+                    href="{% url 'restaurantes' %}?id={{ restaurante.id }}"
+                    class="btn btn-light rounded-circle p-2 d-flex align-items-center justify-content-center"
+                  >
+                    <i class="fas fa-arrow-right text-dark"></i>
+                  </a>
+
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        {% endfor %}
+
+      </div>
+    </div>
+  </section>
+</main>
 
 {% include "pages/pagePrincipal/footer.html" %}
