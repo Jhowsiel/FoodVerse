@@ -7,11 +7,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class ConexaoBanco {
+    // Variáveis mantidas públicas para não quebrar o ValidarCadastro.java
     public Connection conn = null;
     public Statement stmt = null;
     public ResultSet resultSet = null;
     
-    // Configurações do Banco (mantemos para quando quiseres conectar no futuro)
+    // Configurações do Banco
     final String SERVIDOR = "jdbc:sqlserver://127.0.0.1:1433;databaseName=FoodVerseDB;encrypt=false;trustServerCertificate=true";
     final String USUARIO = "sa";
     private final String SENHA = "pw_user_app";
@@ -26,9 +27,7 @@ public class ConexaoBanco {
             System.out.println("Conexão com o banco aberta com sucesso!");
         }
         catch (ClassNotFoundException | SQLException ex){
-            // ALTERAÇÃO: Em vez de mostrar o erro completo, mostramos um aviso simples.
             System.out.println(">> [Aviso] Banco de dados indisponível. A rodar em Modo Offline.");
-            // O conn continua null, o que sinaliza para a classe Funcionario que deve usar a simulação.
             conn = null;
         }
         return conn;
@@ -36,7 +35,12 @@ public class ConexaoBanco {
     
     public void fecharConexao(){
         try{
-            // ALTERAÇÃO: Só tentamos fechar se a conexão realmente existir
+            if (resultSet != null && !resultSet.isClosed()) {
+                resultSet.close();
+            }
+            if (stmt != null && !stmt.isClosed()) {
+                stmt.close();
+            }
             if (conn != null && !conn.isClosed()) {
                 conn.close();
                 System.out.println("Conexão finalizada com sucesso!");

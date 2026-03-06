@@ -1,25 +1,25 @@
 package com.senac.food.verse;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-
 public class CardapioDAO {
 
-    // MODELOS (internos para manter simples)
     public static class ReceitaItem {
-        private Long itemEstoqueId; // futuro vínculo com o módulo de estoque
+        private Long itemEstoqueId; 
         private String itemNome;
-        private String unidade; // ex.: g, kg, ml, un
+        private String unidade; 
         private double quantidade;
 
         public ReceitaItem() {}
         public ReceitaItem(Long itemEstoqueId, String itemNome, String unidade, double quantidade) {
-            this.itemEstoqueId = itemEstoqueId;
-            this.itemNome = itemNome;
-            this.unidade = unidade;
-            this.quantidade = quantidade;
+            this.itemEstoqueId = itemEstoqueId; this.itemNome = itemNome;
+            this.unidade = unidade; this.quantidade = quantidade;
         }
         public Long getItemEstoqueId() { return itemEstoqueId; }
         public void setItemEstoqueId(Long itemEstoqueId) { this.itemEstoqueId = itemEstoqueId; }
@@ -34,7 +34,7 @@ public class CardapioDAO {
     public static class Prato {
         private Long id;
         private String nome;
-        private String categoria; // ex.: Lanches, Pratos, Bebidas
+        private String categoria; 
         private boolean ativo = true;
         private double preco;
         private final List<ReceitaItem> ingredientes = new ArrayList<>();
@@ -79,117 +79,214 @@ public class CardapioDAO {
         public void setPreco(double preco) { this.preco = preco; }
     }
 
-    // "Banco" em memória
-    private static final List<Prato> PRATOS = new ArrayList<>();
-    private static final List<ProdutoVenda> PRODUTOS = new ArrayList<>();
-    private static final AtomicLong SEQ_PRATO = new AtomicLong(1);
-    private static final AtomicLong SEQ_PROD = new AtomicLong(1000);
+    // --- MOCKS (Offline Mode) ---
+    private static final List<Prato> PRATOS_MOCK = new ArrayList<>();
+    private static final List<ProdutoVenda> PRODUTOS_MOCK = new ArrayList<>();
+    private static final AtomicLong SEQ_ID = new AtomicLong(1000);
 
     static {
-        // Seeds de produtos
-        PRODUTOS.add(new ProdutoVenda(SEQ_PROD.getAndIncrement(), "Coca-Cola Lata 350ml", "Bebidas", true, 7.00));
-        PRODUTOS.add(new ProdutoVenda(SEQ_PROD.getAndIncrement(), "Água Mineral 500ml", "Bebidas", true, 4.00));
-        PRODUTOS.add(new ProdutoVenda(SEQ_PROD.getAndIncrement(), "Bolo de Chocolate (fatia)", "Sobremesas", true, 9.50));
-
-        // Seeds de pratos
-        Prato p1 = new Prato(SEQ_PRATO.getAndIncrement(), "Hambúrguer Clássico", "Lanches", true, 24.90);
-        p1.getIngredientes().add(new ReceitaItem(null, "Pão de hambúrguer", "un", 1));
-        p1.getIngredientes().add(new ReceitaItem(null, "Carne bovina 160g", "g", 160));
-        p1.getIngredientes().add(new ReceitaItem(null, "Queijo cheddar", "fatia", 1));
-        PRATOS.add(p1);
-
-        Prato p2 = new Prato(SEQ_PRATO.getAndIncrement(), "Salada Caesar", "Pratos", true, 29.90);
-        p2.getIngredientes().add(new ReceitaItem(null, "Alface", "g", 120));
-        p2.getIngredientes().add(new ReceitaItem(null, "Molho Caesar", "ml", 40));
-        p2.getIngredientes().add(new ReceitaItem(null, "Croutons", "g", 30));
-        PRATOS.add(p2);
+        PRODUTOS_MOCK.add(new ProdutoVenda(SEQ_ID.getAndIncrement(), "Coca-Cola Lata 350ml", "Bebidas", true, 7.00));
+        Prato p1 = new Prato(SEQ_ID.getAndIncrement(), "Hambúrguer Clássico", "Lanches", true, 24.90);
+        PRATOS_MOCK.add(p1);
     }
 
-    // PRATOS
-    public List<Prato> listarPratos(String termo, String categoria, String status) {
-        String t = termo == null ? "" : termo.trim().toLowerCase();
-        boolean filtraCategoria = categoria != null && !categoria.equalsIgnoreCase("Todas");
-        boolean filtraStatus = status != null && !status.equalsIgnoreCase("Todos");
+    // ================== PRATOS (is_prato = 1) ==================
 
-        return PRATOS.stream()
-            .filter(p -> p.getNome().toLowerCase().contains(t)
-                || (p.getCategoria() != null && p.getCategoria().toLowerCase().contains(t)))
-            .filter(p -> !filtraCategoria || (p.getCategoria() != null && p.getCategoria().equalsIgnoreCase(categoria)))
-            .filter(p -> !filtraStatus || (status.equalsIgnoreCase("Ativos") ? p.isAtivo() : !p.isAtivo()))
-            .collect(Collectors.toList());
+    public List<Prato> listarPratos(String termo, String categoria, String status) {
+        List<Prato> pratos = new ArrayList<>();
+        ConexaoBanco cb = new ConexaoBanco();
+        try(Connection conn = cb.abrirConexao()) {
+            if(conn == null) {
+                String t = termo == null ? "" : termo.toLowerCase();
+                return PRATOS_MOCK.stream()
+                    .filter(p -> p.getNome().toLowerCase().contains(t))
+                    .filter(p -> categoria == null || "Todas".equals(categoria) || categoria.equals(p.getCategoria()))
+                    .collect(Collectors.toList());
+            }
+
+            StringBuilder sql = new StringBuilder("SELECT * FROM tb_produtos WHERE is_prato = 1 AND nome_produto LIKE ?");
+            if(categoria != null && !categoria.equalsIgnoreCase("Todas")) sql.append(" AND categoria = ?");
+            if("Ativos".equalsIgnoreCase(status)) sql.append(" AND ativo = 1");
+            if("Inativos".equalsIgnoreCase(status)) sql.append(" AND ativo = 0");
+
+            try(PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                ps.setString(1, "%" + (termo==null?"":termo) + "%");
+                if(categoria != null && !categoria.equalsIgnoreCase("Todas")) ps.setString(2, categoria);
+                
+                try(ResultSet rs = ps.executeQuery()) {
+                    while(rs.next()) {
+                        Prato p = new Prato(rs.getLong("ID_produto"), rs.getString("nome_produto"),
+                                rs.getString("categoria"), rs.getBoolean("ativo"), rs.getDouble("preco_produto"));
+                        pratos.add(p);
+                    }
+                }
+            }
+        } catch(Exception e) { e.printStackTrace(); }
+        return pratos;
     }
 
     public Prato salvarPrato(Prato prato) {
-        prato.setId(SEQ_PRATO.getAndIncrement());
-        PRATOS.add(prato);
+        ConexaoBanco cb = new ConexaoBanco();
+        try(Connection conn = cb.abrirConexao()) {
+            if(conn == null) { prato.setId(SEQ_ID.getAndIncrement()); PRATOS_MOCK.add(prato); return prato; }
+
+            String sql = "INSERT INTO tb_produtos (nome_produto, categoria, preco_produto, ativo, is_prato) VALUES (?, ?, ?, ?, 1)";
+            try(PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setString(1, prato.getNome()); ps.setString(2, prato.getCategoria());
+                ps.setDouble(3, prato.getPreco()); ps.setBoolean(4, prato.isAtivo());
+                ps.executeUpdate();
+                
+                try(ResultSet rs = ps.getGeneratedKeys()) {
+                    if(rs.next()) prato.setId(rs.getLong(1));
+                }
+            }
+            // (Para expandir: Fazer um FOR para salvar os ingredientes na tb_receitas_prato)
+        } catch(Exception e) { e.printStackTrace(); }
         return prato;
     }
 
     public void atualizarPrato(Prato prato) {
-        if (prato.getId() == null) return;
-        for (int i = 0; i < PRATOS.size(); i++) {
-            if (PRATOS.get(i).getId().equals(prato.getId())) {
-                PRATOS.set(i, prato);
+        if(prato.getId() == null) return;
+        ConexaoBanco cb = new ConexaoBanco();
+        try(Connection conn = cb.abrirConexao()) {
+            if(conn == null) {
+                for(int i=0; i<PRATOS_MOCK.size(); i++) if(PRATOS_MOCK.get(i).getId().equals(prato.getId())) { PRATOS_MOCK.set(i, prato); break; }
                 return;
             }
-        }
+            String sql = "UPDATE tb_produtos SET nome_produto=?, categoria=?, preco_produto=?, ativo=? WHERE ID_produto=? AND is_prato=1";
+            try(PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, prato.getNome()); ps.setString(2, prato.getCategoria());
+                ps.setDouble(3, prato.getPreco()); ps.setBoolean(4, prato.isAtivo());
+                ps.setLong(5, prato.getId());
+                ps.executeUpdate();
+            }
+        } catch(Exception e) { e.printStackTrace(); }
     }
 
     public void excluirPrato(Long id) {
-        PRATOS.removeIf(p -> p.getId().equals(id));
+        ConexaoBanco cb = new ConexaoBanco();
+        try(Connection conn = cb.abrirConexao()) {
+            if(conn == null) { PRATOS_MOCK.removeIf(p -> p.getId().equals(id)); return; }
+            try(PreparedStatement ps = conn.prepareStatement("DELETE FROM tb_produtos WHERE ID_produto=? AND is_prato=1")) {
+                ps.setLong(1, id); ps.executeUpdate();
+            }
+        } catch(Exception e) { e.printStackTrace(); }
     }
 
     public Prato buscarPratoPorId(Long id) {
-        return PRATOS.stream().filter(p -> p.getId().equals(id)).findFirst().orElse(null);
+        ConexaoBanco cb = new ConexaoBanco();
+        try(Connection conn = cb.abrirConexao()) {
+            if(conn == null) return PRATOS_MOCK.stream().filter(p -> p.getId().equals(id)).findFirst().orElse(null);
+            
+            String sql = "SELECT * FROM tb_produtos WHERE ID_produto=? AND is_prato=1";
+            try(PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setLong(1, id);
+                try(ResultSet rs = ps.executeQuery()) {
+                    if(rs.next()) return new Prato(rs.getLong("ID_produto"), rs.getString("nome_produto"),
+                                rs.getString("categoria"), rs.getBoolean("ativo"), rs.getDouble("preco_produto"));
+                }
+            }
+        } catch(Exception e) { e.printStackTrace(); }
+        return null;
     }
 
     public List<String> categoriasPratos() {
-        return PRATOS.stream()
-            .map(Prato::getCategoria)
-            .filter(c -> c != null && !c.isBlank())
-            .distinct()
-            .sorted()
-            .collect(Collectors.toList());
+        List<String> cat = new ArrayList<>();
+        ConexaoBanco cb = new ConexaoBanco();
+        try(Connection conn = cb.abrirConexao()) {
+            if(conn == null) return PRATOS_MOCK.stream().map(Prato::getCategoria).distinct().collect(Collectors.toList());
+            try(Statement st = conn.createStatement(); ResultSet rs = st.executeQuery("SELECT DISTINCT categoria FROM tb_produtos WHERE is_prato=1 AND categoria IS NOT NULL")) {
+                while(rs.next()) cat.add(rs.getString(1));
+            }
+        } catch(Exception e) { e.printStackTrace(); }
+        return cat;
     }
 
-    // PRODUTOS
-    public List<ProdutoVenda> listarProdutos(String termo, String categoria, String status) {
-        String t = termo == null ? "" : termo.trim().toLowerCase();
-        boolean filtraCategoria = categoria != null && !categoria.equalsIgnoreCase("Todas");
-        boolean filtraStatus = status != null && !status.equalsIgnoreCase("Todos");
+    // ================== PRODUTOS VENDA (is_prato = 0) ==================
 
-        return PRODUTOS.stream()
-            .filter(p -> p.getNome().toLowerCase().contains(t)
-                || (p.getCategoria() != null && p.getCategoria().toLowerCase().contains(t)))
-            .filter(p -> !filtraCategoria || (p.getCategoria() != null && p.getCategoria().equalsIgnoreCase(categoria)))
-            .filter(p -> !filtraStatus || (status.equalsIgnoreCase("Ativos") ? p.isAtivo() : !p.isAtivo()))
-            .collect(Collectors.toList());
+    public List<ProdutoVenda> listarProdutos(String termo, String categoria, String status) {
+        List<ProdutoVenda> prods = new ArrayList<>();
+        ConexaoBanco cb = new ConexaoBanco();
+        try(Connection conn = cb.abrirConexao()) {
+            if(conn == null) {
+                String t = termo == null ? "" : termo.toLowerCase();
+                return PRODUTOS_MOCK.stream().filter(p -> p.getNome().toLowerCase().contains(t))
+                    .filter(p -> categoria == null || "Todas".equals(categoria) || categoria.equals(p.getCategoria()))
+                    .collect(Collectors.toList());
+            }
+
+            StringBuilder sql = new StringBuilder("SELECT * FROM tb_produtos WHERE is_prato = 0 AND nome_produto LIKE ?");
+            if(categoria != null && !categoria.equalsIgnoreCase("Todas")) sql.append(" AND categoria = ?");
+            if("Ativos".equalsIgnoreCase(status)) sql.append(" AND ativo = 1");
+            if("Inativos".equalsIgnoreCase(status)) sql.append(" AND ativo = 0");
+
+            try(PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                ps.setString(1, "%" + (termo==null?"":termo) + "%");
+                if(categoria != null && !categoria.equalsIgnoreCase("Todas")) ps.setString(2, categoria);
+                
+                try(ResultSet rs = ps.executeQuery()) {
+                    while(rs.next()) {
+                        prods.add(new ProdutoVenda(rs.getLong("ID_produto"), rs.getString("nome_produto"),
+                                rs.getString("categoria"), rs.getBoolean("ativo"), rs.getDouble("preco_produto")));
+                    }
+                }
+            }
+        } catch(Exception e) { e.printStackTrace(); }
+        return prods;
     }
 
     public ProdutoVenda salvarProduto(ProdutoVenda p) {
-        p.setId(SEQ_PROD.getAndIncrement());
-        PRODUTOS.add(p);
+        ConexaoBanco cb = new ConexaoBanco();
+        try(Connection conn = cb.abrirConexao()) {
+            if(conn == null) { p.setId(SEQ_ID.getAndIncrement()); PRODUTOS_MOCK.add(p); return p; }
+
+            String sql = "INSERT INTO tb_produtos (nome_produto, categoria, preco_produto, ativo, is_prato) VALUES (?, ?, ?, ?, 0)";
+            try(PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setString(1, p.getNome()); ps.setString(2, p.getCategoria());
+                ps.setDouble(3, p.getPreco()); ps.setBoolean(4, p.isAtivo());
+                ps.executeUpdate();
+                try(ResultSet rs = ps.getGeneratedKeys()) { if(rs.next()) p.setId(rs.getLong(1)); }
+            }
+        } catch(Exception e) { e.printStackTrace(); }
         return p;
     }
 
     public void atualizarProduto(ProdutoVenda p) {
-        for (int i = 0; i < PRODUTOS.size(); i++) {
-            if (PRODUTOS.get(i).getId().equals(p.getId())) {
-                PRODUTOS.set(i, p); return;
+        if(p.getId() == null) return;
+        ConexaoBanco cb = new ConexaoBanco();
+        try(Connection conn = cb.abrirConexao()) {
+            if(conn == null) {
+                for(int i=0; i<PRODUTOS_MOCK.size(); i++) if(PRODUTOS_MOCK.get(i).getId().equals(p.getId())) { PRODUTOS_MOCK.set(i, p); break; }
+                return;
             }
-        }
+            String sql = "UPDATE tb_produtos SET nome_produto=?, categoria=?, preco_produto=?, ativo=? WHERE ID_produto=? AND is_prato=0";
+            try(PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, p.getNome()); ps.setString(2, p.getCategoria());
+                ps.setDouble(3, p.getPreco()); ps.setBoolean(4, p.isAtivo()); ps.setLong(5, p.getId());
+                ps.executeUpdate();
+            }
+        } catch(Exception e) { e.printStackTrace(); }
     }
 
     public void excluirProduto(Long id) {
-        PRODUTOS.removeIf(p -> p.getId().equals(id));
+        ConexaoBanco cb = new ConexaoBanco();
+        try(Connection conn = cb.abrirConexao()) {
+            if(conn == null) { PRODUTOS_MOCK.removeIf(p -> p.getId().equals(id)); return; }
+            try(PreparedStatement ps = conn.prepareStatement("DELETE FROM tb_produtos WHERE ID_produto=? AND is_prato=0")) {
+                ps.setLong(1, id); ps.executeUpdate();
+            }
+        } catch(Exception e) { e.printStackTrace(); }
     }
 
     public List<String> categoriasProdutos() {
-        return PRODUTOS.stream()
-            .map(ProdutoVenda::getCategoria)
-            .filter(c -> c != null && !c.isBlank())
-            .distinct()
-            .sorted()
-            .collect(Collectors.toList());
+        List<String> cat = new ArrayList<>();
+        ConexaoBanco cb = new ConexaoBanco();
+        try(Connection conn = cb.abrirConexao()) {
+            if(conn == null) return PRODUTOS_MOCK.stream().map(ProdutoVenda::getCategoria).distinct().collect(Collectors.toList());
+            try(Statement st = conn.createStatement(); ResultSet rs = st.executeQuery("SELECT DISTINCT categoria FROM tb_produtos WHERE is_prato=0 AND categoria IS NOT NULL")) {
+                while(rs.next()) cat.add(rs.getString(1));
+            }
+        } catch(Exception e) { e.printStackTrace(); }
+        return cat;
     }
 }

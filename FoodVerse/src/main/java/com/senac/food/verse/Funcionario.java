@@ -38,17 +38,14 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
         PreparedStatement stmt = null;
 
         try {
-            // Tenta abrir conexão
             conn = banco.abrirConexao();
             
-            // VERIFICAÇÃO DE SEGURANÇA (MODO OFFLINE)
             if (conn == null) {
                 System.out.println("⚠️ AVISO: Banco de dados não encontrado.");
                 System.out.println("✅ MODO SIMULAÇÃO: Funcionário cadastrado virtualmente.");
-                return true; // Retorna true para fingir que salvou
+                return true; 
             }
 
-            // Query parametrizada
             String query = "INSERT INTO tb_funcionarios (name, userName, email, role, phone, password, registrationDate, status) "
                     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -66,10 +63,9 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
             cadastroEfetuado = (linhasAfetadas > 0);
 
         } catch (SQLException ex) {
-            // Se der erro de SQL, mostramos o erro mas não travamos o app
             Logger.getLogger(Funcionario.class.getName()).log(Level.SEVERE, "Erro ao inserir o funcionário (Banco Offline): ", ex);
             System.out.println("Simulando cadastro com sucesso para teste...");
-            return true; // Retorna true para permitir continuar os testes
+            return true; 
         } finally {
             try {
                 if (stmt != null) stmt.close();
@@ -86,12 +82,10 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
     public static String loginFuncionario(String email, String senha) {
         
         // --- BYPASS / MODO DE TESTE SEM BANCO ---
-        // Se o login for admin/admin, entramos direto como Administrador
         if ("admin".equals(email) && "admin".equals(senha)) {
             System.out.println("🔓 MODO DEBUG: Login realizado sem banco de dados.");
-            return "admin"; // Retorna a permissão de administrador
+            return "admin"; 
         }
-        // Se quiseres testar como funcionário comum:
         if ("user".equals(email) && "123".equals(senha)) {
              System.out.println("🔓 MODO DEBUG: Login realizado sem banco de dados (Funcionário).");
             return "funcionario";
@@ -107,7 +101,6 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
         try {
             conn = banco.abrirConexao();
             
-            // Se a conexão falhar (banco desligado), retornamos null sem quebrar
             if (conn == null) {
                 System.out.println("❌ Erro: Não foi possível conectar ao banco.");
                 return null;
@@ -138,7 +131,6 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
     }
 
     public static void permissaoFunc(String userRole, javax.swing.JFrame frame) {
-        // Proteção contra nulos
         if (userRole == null) {
             System.out.println("Erro: Cargo do usuário é inválido (null). Login falhou.");
             return;
@@ -164,7 +156,7 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
 
         try {
             conn = banco.abrirConexao();
-            if (conn == null) return "Simulação"; // Retorno falso para não quebrar telas
+            if (conn == null) return "Simulação"; 
 
             String query = "SELECT " + colunaDesejada + " FROM tb_funcionarios WHERE " + colunaFiltro + " = ?";
             stmt = conn.prepareStatement(query);
@@ -177,7 +169,7 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
 
         } catch (SQLException ex) {
             System.err.println("Erro ao consultar valor: " + ex.getMessage());
-            return "ErroBD"; // Retorno visual de erro
+            return "ErroBD"; 
         } finally {
             try {
                 if (resultSet != null) resultSet.close();

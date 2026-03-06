@@ -19,16 +19,16 @@ public class ReservaDAO {
     // Busca reservas ativas para hoje
     public List<Reserva> listarReservasDoDia() {
         List<Reserva> lista = new ArrayList<>();
-        String sql = "SELECT r.ID_reserva, r.ID_cliente, c.name, r.data_reserva, r.num_pessoas, r.mesa " +
+        // ATUALIZADO: JOIN com auth_user do Django
+        String sql = "SELECT r.ID_reserva, r.ID_cliente, u.username AS name, r.data_reserva, r.num_pessoas, r.mesa " +
                      "FROM tb_reservas r " +
-                     "LEFT JOIN tb_clientes c ON r.ID_cliente = c.UserId " +
+                     "LEFT JOIN auth_user u ON r.ID_cliente = u.id " +
                      "WHERE CAST(r.data_reserva AS DATE) = CAST(GETDATE() AS DATE) " +
                      "ORDER BY r.data_reserva ASC";
 
         ConexaoBanco cb = new ConexaoBanco();
         Connection conn = cb.abrirConexao();
         
-        // PREVENÇÃO DO BUG: Se o banco estiver offline, devolve lista vazia em vez de dar Crash
         if (conn == null) {
             System.out.println(">> [ReservaDAO] Offline: Retornando lista de reservas vazia.");
             return lista; 
@@ -54,7 +54,7 @@ public class ReservaDAO {
         } catch (SQLException e) {
             System.err.println("Erro ao listar reservas: " + e.getMessage());
         } finally {
-            cb.fecharConexao(); // Garante que a conexão será fechada
+            cb.fecharConexao(); 
         }
         return lista;
     }
@@ -64,7 +64,6 @@ public class ReservaDAO {
         ConexaoBanco cb = new ConexaoBanco();
         Connection conn = cb.abrirConexao();
         
-        // PREVENÇÃO DO BUG
         if (conn == null) {
             System.out.println(">> [ReservaDAO] Offline: Não é possível criar reserva no momento.");
             return false;
@@ -89,11 +88,11 @@ public class ReservaDAO {
     // Método auxiliar para buscar clientes para o combobox
     public List<String> listarClientesSimples() {
         List<String> clientes = new ArrayList<>();
-        String sql = "SELECT UserId, name FROM tb_clientes ORDER BY name";
+        // ATUALIZADO: Busca na auth_user do Django
+        String sql = "SELECT id, username FROM auth_user ORDER BY username";
         ConexaoBanco cb = new ConexaoBanco();
         Connection conn = cb.abrirConexao();
         
-        // PREVENÇÃO DO BUG
         if (conn == null) {
             System.out.println(">> [ReservaDAO] Offline: Sem clientes para listar.");
             clientes.add("0 - Cliente Visitante (Modo Offline)");
@@ -104,7 +103,7 @@ public class ReservaDAO {
              ResultSet rs = st.executeQuery(sql)) {
              
              while(rs.next()) {
-                 clientes.add(rs.getInt("UserId") + " - " + rs.getString("name"));
+                 clientes.add(rs.getInt("id") + " - " + rs.getString("username"));
              }
         } catch(Exception e) { 
             e.printStackTrace(); 
