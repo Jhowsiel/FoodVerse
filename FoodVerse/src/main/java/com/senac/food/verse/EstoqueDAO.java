@@ -1,203 +1,290 @@
 package com.senac.food.verse;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class EstoqueDAO {
 
-    // ========================================================================
-    // 1. MODELOS (Originais + Aliases de Compatibilidade)
-    // ========================================================================
-
     public static class Unidade {
-        private final String codigo;     // ex.: g, kg, ml, L, un, pct, cx
-        private final String base;       // grupo base (g/ml/un)
-        private final double fatorBase;  // multiplicador para a base (kg=1000 -> g)
+        private final String codigo;
+        private final String base;
+        private final double fatorBase;  
         
         public Unidade(String codigo, String base, double fatorBase) {
             this.codigo = codigo; this.base = base; this.fatorBase = fatorBase;
         }
-        
         public String getCodigo() { return codigo; }
         public String getBase()   { return base; }
         public double getFatorBase() { return fatorBase; }
-        
-        @Override
-        public String toString() { return codigo; } // Importante para ComboBox
-    }
-
-    public static class CategoriaEstoque {
-        private final Long id;
-        private final String nome;
-        private final boolean ativo;
-        public CategoriaEstoque(Long id, String nome, boolean ativo) {
-            this.id=id; this.nome=nome; this.ativo=ativo;
-        }
-        public Long getId() { return id; }
-        public String getNome() { return nome; }
-        public boolean isAtivo() { return ativo; }
+        @Override public String toString() { return codigo; }
     }
 
     public static class ItemEstoque {
         private Long id;
         private String nome;
-        private String categoria;     // nome da categoria
-        private String unidadePadrao; // un, g, ml...
+        private String categoria;
+        private String unidadePadrao;
+        private double estoqueAtual;
+        private double estoqueMinimo;
+        private double custoMedio;
         private boolean ativo = true;
-        private double estoqueAtual;  // quantidade na unidade padrão
-        private double custoMedio;    // custo médio atual (por unidade padrão)
-        private Double fatorCxParaUn; // 1 cx/pct = X un (opcional)
+        private Double fatorCxParaUn; 
 
         public ItemEstoque() {}
-        public ItemEstoque(Long id, String nome, String categoria, String unidadePadrao,
-                           boolean ativo, double estoqueAtual, double custoMedio, Double fatorCxParaUn) {
-            this.id=id; this.nome=nome; this.categoria=categoria; this.unidadePadrao=unidadePadrao;
-            this.ativo=ativo; this.estoqueAtual=estoqueAtual; this.custoMedio=custoMedio; this.fatorCxParaUn=fatorCxParaUn;
+        public ItemEstoque(Long id, String nome, String categoria, String unidadePadrao, double estoqueAtual, double custoMedio) {
+            this.id = id; this.nome = nome; this.categoria = categoria;
+            this.unidadePadrao = unidadePadrao; this.estoqueAtual = estoqueAtual;
+            this.custoMedio = custoMedio;
         }
         public Long getId() { return id; }
+        public void setId(Long id) { this.id = id; }
         public String getNome() { return nome; }
+        public void setNome(String nome) { this.nome = nome; }
         public String getCategoria() { return categoria; }
+        public void setCategoria(String categoria) { this.categoria = categoria; }
         public String getUnidadePadrao() { return unidadePadrao; }
-        public boolean isAtivo() { return ativo; }
+        public void setUnidadePadrao(String unidadePadrao) { this.unidadePadrao = unidadePadrao; }
         public double getEstoqueAtual() { return estoqueAtual; }
+        public void setEstoqueAtual(double estoqueAtual) { this.estoqueAtual = estoqueAtual; }
+        public double getEstoqueMinimo() { return estoqueMinimo; }
+        public void setEstoqueMinimo(double estoqueMinimo) { this.estoqueMinimo = estoqueMinimo; }
         public double getCustoMedio() { return custoMedio; }
+        public void setCustoMedio(double custoMedio) { this.custoMedio = custoMedio; }
+        public boolean isAtivo() { return ativo; }
+        public void setAtivo(boolean ativo) { this.ativo = ativo; }
         public Double getFatorCxParaUn() { return fatorCxParaUn; }
-        
-        // --- ALIAS DE COMPATIBILIDADE (Para TelaInicial funcionar) ---
-        public double getQuantidadeAtual() { return estoqueAtual; }
+        public void setFatorCxParaUn(Double fatorCxParaUn) { this.fatorCxParaUn = fatorCxParaUn; }
     }
 
-    // ========================================================================
-    // 2. DADOS EM MEMÓRIA (SIMULAÇÃO DE BANCO)
-    // ========================================================================
-    
-    private static final List<CategoriaEstoque> CATEGORIAS = new ArrayList<>();
-    private static final Map<String, Unidade> UNIDADES = new LinkedHashMap<>();
-    private static final List<ItemEstoque> ITENS = new ArrayList<>();
+    public static class MovimentacaoEstoque {
+        private Long id;
+        private Long itemId;
+        private String nomeItemSnapshot; 
+        private String tipo; 
+        private double quantidade;
+        private String observacao;
+        private LocalDateTime dataMovimento;
+
+        public MovimentacaoEstoque() { this.dataMovimento = LocalDateTime.now(); }
+        public Long getId() { return id; }
+        public void setId(Long id) { this.id = id; }
+        public Long getItemId() { return itemId; }
+        public void setItemId(Long itemId) { this.itemId = itemId; }
+        public String getNomeItemSnapshot() { return nomeItemSnapshot; }
+        public void setNomeItemSnapshot(String nomeItemSnapshot) { this.nomeItemSnapshot = nomeItemSnapshot; }
+        public String getTipo() { return tipo; }
+        public void setTipo(String tipo) { this.tipo = tipo; }
+        public double getQuantidade() { return quantidade; }
+        public void setQuantidade(double quantidade) { this.quantidade = quantidade; }
+        public String getObservacao() { return observacao; }
+        public void setObservacao(String observacao) { this.observacao = observacao; }
+        public LocalDateTime getDataMovimento() { return dataMovimento; }
+        public void setDataMovimento(LocalDateTime dataMovimento) { this.dataMovimento = dataMovimento; }
+    }
+
+    // Cache / Fallback para modo Offline
+    private static final List<ItemEstoque> ITENS_MOCK = new ArrayList<>();
+    private static final List<Unidade> UNIDADES_MOCK = new ArrayList<>();
+    private static final List<MovimentacaoEstoque> MOVS_MOCK = new ArrayList<>();
     private static final AtomicLong SEQ_ITEM = new AtomicLong(1);
 
     static {
-        // Categorias padrão
-        String[] cats = {
-            "Carnes","Hortifruti","Laticínios","Secos e Molhados","Bebidas","Temperos/Especiarias",
-            "Embalagens","Limpeza","Congelados","Padaria/Massas","Molhos/Conservas","Descartáveis",
-            "Higiene","Mercearia"
-        };
-        long cid=1;
-        for (String c : cats) CATEGORIAS.add(new CategoriaEstoque(cid++, c, true));
+        UNIDADES_MOCK.add(new Unidade("kg", "g", 1000));
+        UNIDADES_MOCK.add(new Unidade("g", "g", 1));
+        UNIDADES_MOCK.add(new Unidade("L", "ml", 1000));
+        UNIDADES_MOCK.add(new Unidade("ml", "ml", 1));
+        UNIDADES_MOCK.add(new Unidade("un", "un", 1));
 
-        // Unidades e bases (Configuração completa para conversão)
-        UNIDADES.put("g",  new Unidade("g",  "g", 1.0));
-        UNIDADES.put("kg", new Unidade("kg", "g", 1000.0));
-        UNIDADES.put("ml", new Unidade("ml","ml", 1.0));
-        UNIDADES.put("L",  new Unidade("L", "ml", 1000.0));
-        UNIDADES.put("un", new Unidade("un","un", 1.0));
-        UNIDADES.put("pct",new Unidade("pct","un", 0)); // conversão por item
-        UNIDADES.put("cx", new Unidade("cx", "un", 0)); // conversão por item
-
-        // Seeds de Itens (Dados iniciais para não abrir vazio)
-        ITENS.add(new ItemEstoque(SEQ_ITEM.getAndIncrement(), "Pão de hambúrguer", "Padaria/Massas", "un", true, 120, 1.20, 12.0));
-        ITENS.add(new ItemEstoque(SEQ_ITEM.getAndIncrement(), "Carne bovina 160g", "Carnes", "g", true, 25000, 0.045, null));
-        ITENS.add(new ItemEstoque(SEQ_ITEM.getAndIncrement(), "Queijo cheddar (fatia)", "Laticínios", "un", true, 300, 0.80, 24.0));
-        ITENS.add(new ItemEstoque(SEQ_ITEM.getAndIncrement(), "Alface", "Hortifruti", "g", true, 8000, 0.012, null));
-        ITENS.add(new ItemEstoque(SEQ_ITEM.getAndIncrement(), "Molho Caesar", "Molhos/Conservas", "ml", true, 5000, 0.010, null));
-        ITENS.add(new ItemEstoque(SEQ_ITEM.getAndIncrement(), "Croutons", "Mercearia", "g", true, 1500, 0.030, null));
-        ITENS.add(new ItemEstoque(SEQ_ITEM.getAndIncrement(), "Coca-Cola Lata", "Bebidas", "un", true, 150, 2.50, 12.0));
-    }
-
-    // ========================================================================
-    // 3. MÉTODOS DE SERVIÇO
-    // ========================================================================
-
-    // Listagens
-    public List<CategoriaEstoque> listarCategorias(boolean apenasAtivas) {
-        return CATEGORIAS.stream().filter(c -> !apenasAtivas || c.isAtivo()).collect(Collectors.toList());
-    }
-
-    public List<String> categoriasNomes() {
-        return CATEGORIAS.stream().map(CategoriaEstoque::getNome).collect(Collectors.toList());
-    }
-    
-    // Alias para o novo Dashboard
-    public List<String> categoriasEstoque() {
-        return categoriasNomes();
+        ItemEstoque i1 = new ItemEstoque(SEQ_ITEM.getAndIncrement(), "Arroz Branco", "Mercearia", "kg", 50.0, 4.50);
+        i1.setEstoqueMinimo(10.0); ITENS_MOCK.add(i1);
+        ItemEstoque i2 = new ItemEstoque(SEQ_ITEM.getAndIncrement(), "Coca-Cola Lata", "Bebidas", "un", 120.0, 2.80);
+        i2.setEstoqueMinimo(24.0); ITENS_MOCK.add(i2);
     }
 
     public List<Unidade> listarUnidades() { 
-        return new ArrayList<>(UNIDADES.values()); 
+        List<Unidade> unidades = new ArrayList<>();
+        String sql = "SELECT codigo_unidade, base, fator_base FROM tb_unidades_medida";
+        ConexaoBanco cb = new ConexaoBanco();
+        try(Connection conn = cb.abrirConexao()) {
+            if(conn == null) return UNIDADES_MOCK;
+            try(Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(sql)) {
+                while(rs.next()) unidades.add(new Unidade(rs.getString("codigo_unidade"), rs.getString("base"), rs.getDouble("fator_base")));
+            }
+        } catch(Exception e) { e.printStackTrace(); }
+        return unidades.isEmpty() ? UNIDADES_MOCK : unidades;
+    }
+
+    public List<String> categoriasNomes() {
+        List<String> categorias = new ArrayList<>();
+        String sql = "SELECT DISTINCT categoria FROM tb_itens_estoque WHERE categoria IS NOT NULL";
+        ConexaoBanco cb = new ConexaoBanco();
+        try(Connection conn = cb.abrirConexao()) {
+            if(conn == null) return ITENS_MOCK.stream().map(ItemEstoque::getCategoria).distinct().collect(Collectors.toList());
+            try(Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(sql)) {
+                while(rs.next()) categorias.add(rs.getString("categoria"));
+            }
+        } catch(Exception e) { e.printStackTrace(); }
+        return categorias;
     }
 
     public List<ItemEstoque> listarItens(String termo, String categoria, String status) {
-        String t = termo == null ? "" : termo.trim().toLowerCase();
-        boolean filtraCat = categoria != null && !categoria.equalsIgnoreCase("Todas") && !categoria.isEmpty();
-        boolean filtraStatus = status != null && !status.equalsIgnoreCase("Todos");
-        
-        return ITENS.stream()
-            .filter(i -> (String.valueOf(i.getId()).contains(t)) ||
-                         i.getNome().toLowerCase().contains(t) ||
-                         (i.getCategoria()!=null && i.getCategoria().toLowerCase().contains(t)))
-            .filter(i -> !filtraCat || (i.getCategoria()!=null && i.getCategoria().equalsIgnoreCase(categoria)))
-            .filter(i -> !filtraStatus || (status.equalsIgnoreCase("Ativos") ? i.isAtivo() : !i.isAtivo()))
-            .sorted(Comparator.comparing(ItemEstoque::getNome, String.CASE_INSENSITIVE_ORDER))
-            .collect(Collectors.toList());
-    }
-    
-    // --- ALIAS DE COMPATIBILIDADE (Para TelaInicial funcionar) ---
-    public List<ItemEstoque> buscarTodos() {
-        return new ArrayList<>(ITENS);
-    }
-
-    // Básicos
-    public ItemEstoque buscarItemPorId(Long id) {
-        return ITENS.stream().filter(i -> i.getId().equals(id)).findFirst().orElse(null);
-    }
-
-    public boolean unidadeExiste(String cod) { return UNIDADES.containsKey(cod); }
-
-    // Conversões simples
-    public double converterQuantidade(double quantidade, String de, String para, ItemEstoque itemContexto) {
-        if (de == null || para == null || de.equalsIgnoreCase(para)) return quantidade;
-        Unidade uDe = UNIDADES.get(de);
-        Unidade uPara = UNIDADES.get(para);
-        if (uDe == null || uPara == null) return quantidade;
-
-        // Mesmo grupo (ex.: g<->kg, ml<->L)
-        if (Objects.equals(uDe.getBase(), uPara.getBase()) && uDe.getFatorBase() > 0 && uPara.getFatorBase() > 0) {
-            double emBase = quantidade * uDe.getFatorBase();
-            return emBase / uPara.getFatorBase();
-        }
-
-        // Conversões por item (cx/pct <-> un)
-        if (itemContexto != null && itemContexto.getFatorCxParaUn() != null) {
-            double f = itemContexto.getFatorCxParaUn();
-            if (f > 0) {
-                if (de.equals("cx") && para.equals("un")) return quantidade * f;
-                if (de.equals("un") && para.equals("cx")) return quantidade / f;
-                if (de.equals("pct") && para.equals("un")) return quantidade * f;
-                if (de.equals("un") && para.equals("pct")) return quantidade / f;
+        List<ItemEstoque> itens = new ArrayList<>();
+        ConexaoBanco cb = new ConexaoBanco();
+        try(Connection conn = cb.abrirConexao()) {
+            if(conn == null) {
+                // Filtro em memória
+                String t = termo == null ? "" : termo.toLowerCase();
+                boolean fCat = categoria != null && !categoria.equalsIgnoreCase("Todas");
+                return ITENS_MOCK.stream().filter(i -> i.getNome().toLowerCase().contains(t))
+                    .filter(i -> !fCat || i.getCategoria().equalsIgnoreCase(categoria))
+                    .filter(i -> "Ativos".equalsIgnoreCase(status) ? i.isAtivo() : ("Inativos".equalsIgnoreCase(status) ? !i.isAtivo() : true))
+                    .collect(Collectors.toList());
             }
-        }
 
-        return quantidade;
+            StringBuilder sql = new StringBuilder("SELECT * FROM tb_itens_estoque WHERE nome LIKE ?");
+            if(categoria != null && !categoria.equalsIgnoreCase("Todas")) sql.append(" AND categoria = ?");
+            if("Ativos".equalsIgnoreCase(status)) sql.append(" AND ativo = 1");
+            if("Inativos".equalsIgnoreCase(status)) sql.append(" AND ativo = 0");
+
+            try(PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                ps.setString(1, "%" + (termo==null?"":termo) + "%");
+                if(categoria != null && !categoria.equalsIgnoreCase("Todas")) ps.setString(2, categoria);
+                
+                try(ResultSet rs = ps.executeQuery()) {
+                    while(rs.next()) {
+                        ItemEstoque i = new ItemEstoque(rs.getLong("ID_item_estoque"), rs.getString("nome"), 
+                                rs.getString("categoria"), rs.getString("unidade_padrao"), 
+                                rs.getDouble("estoque_atual"), rs.getDouble("custo_medio"));
+                        i.setEstoqueMinimo(rs.getDouble("estoque_minimo"));
+                        i.setAtivo(rs.getBoolean("ativo"));
+                        itens.add(i);
+                    }
+                }
+            }
+        } catch(Exception e) { e.printStackTrace(); }
+        return itens;
     }
-    
-    // Métodos Mock para Salvar/Editar (evita erros em tempo de execução)
-    public void salvarItem(ItemEstoque item) { 
-        System.out.println("Simulação: Item salvo no ArrayList.");
-        if(item.getId() == null) {
-            // Em um caso real atribuiriamos ID, mas aqui o objeto já vem do construtor ou mock
-        }
-        if(!ITENS.contains(item)) ITENS.add(item);
+
+    public ItemEstoque buscarItemPorId(Long id) {
+        ConexaoBanco cb = new ConexaoBanco();
+        try(Connection conn = cb.abrirConexao()) {
+            if(conn == null) return ITENS_MOCK.stream().filter(i -> i.getId().equals(id)).findFirst().orElse(null);
+            
+            String sql = "SELECT * FROM tb_itens_estoque WHERE ID_item_estoque = ?";
+            try(PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setLong(1, id);
+                try(ResultSet rs = ps.executeQuery()) {
+                    if(rs.next()) {
+                        ItemEstoque i = new ItemEstoque(rs.getLong("ID_item_estoque"), rs.getString("nome"), 
+                                rs.getString("categoria"), rs.getString("unidade_padrao"), 
+                                rs.getDouble("estoque_atual"), rs.getDouble("custo_medio"));
+                        i.setEstoqueMinimo(rs.getDouble("estoque_minimo"));
+                        i.setAtivo(rs.getBoolean("ativo"));
+                        return i;
+                    }
+                }
+            }
+        } catch(Exception e) { e.printStackTrace(); }
+        return null;
     }
-    
+
+    public void salvarItem(ItemEstoque item) {
+        ConexaoBanco cb = new ConexaoBanco();
+        try(Connection conn = cb.abrirConexao()) {
+            if(conn == null) {
+                item.setId(SEQ_ITEM.getAndIncrement()); ITENS_MOCK.add(item); return;
+            }
+            String sql = "INSERT INTO tb_itens_estoque (nome, categoria, unidade_padrao, estoque_atual, estoque_minimo, custo_medio, ativo) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            try(PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, item.getNome()); ps.setString(2, item.getCategoria());
+                ps.setString(3, item.getUnidadePadrao()); ps.setDouble(4, item.getEstoqueAtual());
+                ps.setDouble(5, item.getEstoqueMinimo()); ps.setDouble(6, item.getCustoMedio());
+                ps.setBoolean(7, item.isAtivo());
+                ps.executeUpdate();
+            }
+        } catch(Exception e) { e.printStackTrace(); }
+    }
+
     public void atualizarItem(ItemEstoque item) {
-        System.out.println("Simulação: Item atualizado.");
-        // Como é referência em memória, setar os valores no objeto já atualiza na lista
+        ConexaoBanco cb = new ConexaoBanco();
+        try(Connection conn = cb.abrirConexao()) {
+            if(conn == null) {
+                for(int i=0; i<ITENS_MOCK.size(); i++) {
+                    if(ITENS_MOCK.get(i).getId().equals(item.getId())) { ITENS_MOCK.set(i, item); return; }
+                }
+                return;
+            }
+            String sql = "UPDATE tb_itens_estoque SET nome=?, categoria=?, unidade_padrao=?, estoque_minimo=?, custo_medio=?, ativo=? WHERE ID_item_estoque=?";
+            try(PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, item.getNome()); ps.setString(2, item.getCategoria());
+                ps.setString(3, item.getUnidadePadrao()); ps.setDouble(4, item.getEstoqueMinimo());
+                ps.setDouble(5, item.getCustoMedio()); ps.setBoolean(6, item.isAtivo());
+                ps.setLong(7, item.getId());
+                ps.executeUpdate();
+            }
+        } catch(Exception e) { e.printStackTrace(); }
     }
-    
-    public void excluirItem(Long id) {
-        ITENS.removeIf(i -> i.getId().equals(id));
-        System.out.println("Simulação: Item removido.");
+
+    public void registrarMovimentacao(MovimentacaoEstoque mov) {
+        ConexaoBanco cb = new ConexaoBanco();
+        try(Connection conn = cb.abrirConexao()) {
+            if(conn == null) {
+                // Lógica Offline
+                ItemEstoque item = buscarItemPorId(mov.getItemId());
+                if(item != null) {
+                    mov.setNomeItemSnapshot(item.getNome());
+                    item.setEstoqueAtual(item.getEstoqueAtual() + ("ENTRADA".equals(mov.getTipo()) ? mov.getQuantidade() : -mov.getQuantidade()));
+                }
+                MOVS_MOCK.add(0, mov); return;
+            }
+            
+            // Grava Movimentação
+            String sqlMov = "INSERT INTO tb_movimentacoes_estoque (ID_item_estoque, nome_item_snapshot, tipo, quantidade, observacao, data_movimento) VALUES (?, ?, ?, ?, ?, GETDATE())";
+            try(PreparedStatement ps = conn.prepareStatement(sqlMov)) {
+                ps.setLong(1, mov.getItemId()); ps.setString(2, mov.getNomeItemSnapshot() != null ? mov.getNomeItemSnapshot() : "");
+                ps.setString(3, mov.getTipo()); ps.setDouble(4, mov.getQuantidade()); ps.setString(5, mov.getObservacao());
+                ps.executeUpdate();
+            }
+            
+            // Atualiza Saldo no Estoque
+            String op = "ENTRADA".equals(mov.getTipo()) ? "+" : "-";
+            String sqlUpd = "UPDATE tb_itens_estoque SET estoque_atual = estoque_atual " + op + " ? WHERE ID_item_estoque = ?";
+            try(PreparedStatement ps = conn.prepareStatement(sqlUpd)) {
+                ps.setDouble(1, mov.getQuantidade()); ps.setLong(2, mov.getItemId());
+                ps.executeUpdate();
+            }
+        } catch(Exception e) { e.printStackTrace(); }
+    }
+
+    public List<MovimentacaoEstoque> listarUltimasMovimentacoes() {
+        List<MovimentacaoEstoque> movs = new ArrayList<>();
+        ConexaoBanco cb = new ConexaoBanco();
+        try(Connection conn = cb.abrirConexao()) {
+            if(conn == null) return MOVS_MOCK.stream().limit(100).collect(Collectors.toList());
+            
+            String sql = "SELECT TOP 100 * FROM tb_movimentacoes_estoque ORDER BY data_movimento DESC";
+            try(Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(sql)) {
+                while(rs.next()) {
+                    MovimentacaoEstoque m = new MovimentacaoEstoque();
+                    m.setId(rs.getLong("ID_movimentacao"));
+                    m.setItemId(rs.getLong("ID_item_estoque"));
+                    m.setNomeItemSnapshot(rs.getString("nome_item_snapshot"));
+                    m.setTipo(rs.getString("tipo"));
+                    m.setQuantidade(rs.getDouble("quantidade"));
+                    m.setObservacao(rs.getString("observacao"));
+                    Timestamp ts = rs.getTimestamp("data_movimento");
+                    if(ts != null) m.setDataMovimento(ts.toLocalDateTime());
+                    movs.add(m);
+                }
+            }
+        } catch(Exception e) { e.printStackTrace(); }
+        return movs;
     }
 }
