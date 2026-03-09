@@ -1,97 +1,39 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
+from decimal import Decimal
+
+from django.http import JsonResponse
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.utils import timezone
+from django.db.models import Q
+from django.contrib.auth.hashers import make_password, check_password
 import requests
-from .models import Perfil
 import re
 
+# Importando as suas models
+from .models import (
+    TbClientes, TbRestaurantes, TbProdutos, TbNutricao, TbAvaliacoes
+)
 
-RESTAURANTES = [
-    {
-        "id": 1,
-        "nome": "Sabor da Casa",
-        "categoria": "Brasileira",
-        "descricao": "Pratos executivos, opções saudáveis e comida caseira.",
-        "avaliacao": 4.8,
-        "tempo": "25-35 min",
-        "taxa": "R$ 6,90",
-        "cupom": "FOOD10",
-        "imagem": "img/cardapio/brasileira.avif",
-        "pratos": [
-            {
-                "id": 101,
-                "nome": "Frango grelhado com legumes",
-                "descricao": "Alta proteína · sem fritura",
-                "preco": "R$ 34,90",
-                "nutri": {"kcal": 430, "proteina": "38g", "carbo": "25g", "gordura": "16g"},
-            },
-            {
-                "id": 102,
-                "nome": "Risoto de cogumelos",
-                "descricao": "Vegetariano · cremoso",
-                "preco": "R$ 37,90",
-                "nutri": {"kcal": 470, "proteina": "13g", "carbo": "58g", "gordura": "18g"},
-            },
-        ],
-    },
-    {
-        "id": 2,
-        "nome": "Fritello",
-        "categoria": "Fast Food",
-        "descricao": "Hambúrguer artesanal, combos e porções para compartilhar.",
-        "avaliacao": 4.6,
-        "tempo": "20-30 min",
-        "taxa": "Grátis",
-        "cupom": "FRITA5",
-        "imagem": "img/cardapio/fastfood.jpg",
-        "pratos": [
-            {
-                "id": 201,
-                "nome": "Burger duplo especial",
-                "descricao": "Pão brioche · queijo cheddar · molho da casa",
-                "preco": "R$ 29,90",
-                "nutri": {"kcal": 690, "proteina": "34g", "carbo": "52g", "gordura": "39g"},
-            }
-        ],
-    },
-    {
-        "id": 3,
-        "nome": "Yami Oriental",
-        "categoria": "Asiática",
-        "descricao": "Sushi, poke e pratos orientais leves.",
-        "avaliacao": 4.9,
-        "tempo": "30-45 min",
-        "taxa": "R$ 8,90",
-        "cupom": "YAMI15",
-        "imagem": "img/cardapio/japonesa.jpg",
-        "pratos": [
-            {
-                "id": 301,
-                "nome": "Poke de salmão",
-                "descricao": "Arroz gohan · salmão fresco · mix de vegetais",
-                "preco": "R$ 42,90",
-                "nutri": {"kcal": 520, "proteina": "30g", "carbo": "48g", "gordura": "20g"},
-            }
-        ],
-    },
-]
-
-
-def _restaurante_por_id(restaurante_id):
-    return next((r for r in RESTAURANTES if r["id"] == restaurante_id), RESTAURANTES[0])
-
-
-def _prato_por_id(restaurante, prato_id):
-    return next((p for p in restaurante["pratos"] if p["id"] == prato_id), restaurante["pratos"][0])
-
+# -------------------------------------------------------------------------
+# FUNÇÕES AUXILIARES
+# -------------------------------------------------------------------------
 def _int_param(valor, padrao):
+    """Converte parâmetro para inteiro com segurança."""
     try:
         return int(valor)
     except (TypeError, ValueError):
         return padrao
 
+def get_cliente_logado(request):
+    """Retorna a instância do cliente logado ou None."""
+    cliente_id = request.session.get('cliente_id')
+    if cliente_id:
+        return TbClientes.objects.filter(id_cliente=cliente_id).first()
+    return None
 
+# -------------------------------------------------------------------------
+# PÁGINA INICIAL
+# -------------------------------------------------------------------------
 def home(request):
     endereco = None
     cep = None
@@ -103,25 +45,28 @@ def home(request):
             try:
                 response = requests.get(url, timeout=5)
                 data = response.json()
-
                 if "erro" not in data:
                     endereco = f"{data.get('logradouro', '')}, {data.get('bairro', '')}, {data.get('localidade', '')} - {data.get('uf', '')}"
-                else:
-                    endereco = None
             except requests.RequestException:
                 endereco = None
+
+    restaurantes = TbRestaurantes.objects.all()
+    categorias = TbRestaurantes.objects.values_list('categoria', flat=True).distinct()
 
     context = {
         'endereco': endereco,
         'cep': cep,
-        'restaurantes': RESTAURANTES,
-        'categorias': sorted({r['categoria'] for r in RESTAURANTES}),
+        'restaurantes': restaurantes,
+        'categorias': sorted(filter(None, categorias)),
+        'cliente_logado': get_cliente_logado(request),
     }
     return render(request, 'index.html', context)
 
-
+# -------------------------------------------------------------------------
+# AUTENTICAÇÃO E CADASTRO
+# -------------------------------------------------------------------------
 def login_view(request):
-    if request.user.is_authenticated:
+    if get_cliente_logado(request):
         return redirect('home')
 
     if request.method == 'POST':
@@ -129,21 +74,26 @@ def login_view(request):
         password = request.POST.get('password')
         remember_me = request.POST.get('remember_me')
 
-        user = authenticate(request, username=username, password=password)
+        cliente = TbClientes.objects.filter(username=username).first()
 
-        if user is not None:
-            login(request, user)
+        if cliente and check_password(password, cliente.senha):
+            request.session['cliente_id'] = cliente.id_cliente
             request.session.set_expiry(1209600 if remember_me else 0)
             messages.success(request, 'Login realizado com sucesso!')
-            return render(request, 'pages/Autentificacao/login.html')
-
-        messages.error(request, 'Usuário ou senha incorretos.')
+            # return render(request, 'index.html')
+        else:
+            messages.error(request, 'Usuário ou senha incorretos.')
 
     return render(request, 'pages/Autentificacao/login.html')
 
+def logout_view(request):
+    if 'cliente_id' in request.session:
+        del request.session['cliente_id']
+    list(messages.get_messages(request))  # limpa todas as mensagens pendentes
+    return redirect('login')
 
 def cadastro_view(request):
-    if request.user.is_authenticated:
+    if get_cliente_logado(request):
         return redirect('home')
 
     if request.method == 'POST':
@@ -157,50 +107,13 @@ def cadastro_view(request):
 
         erros = []
 
-        if not nome or not username or not cpf or not telefone or not email or not password or not confirm_password:
+        if not all([nome, username, cpf, telefone, email, password, confirm_password]):
             erros.append("• Todos os campos são obrigatórios.")
-
-        if nome and len(nome) < 2:
-            erros.append("• O nome completo deve ter pelo menos 2 caracteres.")
-
-        if username and len(username) < 4:
-            erros.append("• O nome de usuário deve ter pelo menos 4 caracteres.")
-
-        if email and not re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email):
-            erros.append("• E-mail inválido.")
-
-        if cpf and not re.match(r'^\d{3}\.\d{3}\.\d{3}-\d{2}$', cpf):
-            erros.append("• CPF deve estar no formato XXX.XXX.XXX-XX.")
-
-        if telefone and not re.match(r'^\(\d{2}\) \d{4,5}-\d{4}$', telefone):
-            erros.append("• Telefone deve estar no formato (XX) XXXXX-XXXX ou (XX) XXXX-XXXX.")
-
-        if password != confirm_password:
-            erros.append("• As senhas não conferem.")
-
-        if password and len(password) < 8:
-            erros.append("• Deve ter pelo menos 8 caracteres.")
-
-        if password:
-            if not re.search(r"[a-z]", password):
-                erros.append("• Deve conter pelo menos uma letra minúscula.")
-            if not re.search(r"[A-Z]", password):
-                erros.append("• Deve conter pelo menos uma letra maiúscula.")
-            if not re.search(r"[0-9]", password):
-                erros.append("• Deve conter pelo menos um número.")
-            if not re.search(r"[^A-Za-z0-9]", password):
-                erros.append("• Deve conter pelo menos um símbolo (@, #, !, etc).")
-            if password.isdigit():
-                erros.append("• A senha não pode ser totalmente numérica.")
-
-        if User.objects.filter(username=username).exists():
+        
+        if TbClientes.objects.filter(username=username).exists():
             erros.append("• Este nome de usuário já está em uso.")
-        if Perfil.objects.filter(cpf=cpf).exists():
+        if TbClientes.objects.filter(cpf=cpf).exists():
             erros.append("• Este CPF já está cadastrado.")
-        if Perfil.objects.filter(telefone=telefone).exists():
-            erros.append("• Este telefone já está cadastrado.")
-        if User.objects.filter(email=email).exists():
-            erros.append("• Este e-mail já está cadastrado.")
 
         if erros:
             for erro in erros:
@@ -208,231 +121,272 @@ def cadastro_view(request):
             return render(request, 'pages/Autentificacao/cadastro.html')
 
         try:
-            user = User.objects.create_user(username=username, email=email, password=password)
-            Perfil.objects.create(user=user, cpf=cpf, telefone=telefone)
-            user.save()
+            TbClientes.objects.create(
+                nome=nome,
+                username=username,
+                email=email,
+                cpf=cpf,
+                telefone=telefone,
+                senha=make_password(password),
+                data_cadastro=timezone.now()
+            )
             messages.success(request, 'Cadastro realizado com sucesso! Faça login.')
-            return render(request, 'pages/Autentificacao/cadastro.html')
+            return redirect('login')
         except Exception:
-            messages.error(request, 'Ocorreu um erro ao criar a conta. Tente novamente.')
-            return render(request, 'pages/Autentificacao/cadastro.html')
+            messages.error(request, 'Ocorreu um erro ao criar a conta.')
 
     return render(request, 'pages/Autentificacao/cadastro.html')
 
-from django.shortcuts import render, redirect
-from django.contrib.auth.models import User
-from django.contrib import messages
-from .models import Perfil
-
+# -------------------------------------------------------------------------
+# PERFIL DO CLIENTE
+# -------------------------------------------------------------------------
 def perfil_view(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
+    cliente = get_cliente_logado(request)
     
-    perfil, created = Perfil.objects.get_or_create(user=request.user)
-    return render(request, 'pages/perfil/perfil.html', {
-        'perfil': perfil
-    })
+    if not cliente:
+        return redirect('login')
+    return render(request, 'pages/perfil/perfil.html', {'perfil': cliente})
+
 
 def editar_perfil_view(request):
-    perfil, created = Perfil.objects.get_or_create(user=request.user)
+    cliente = get_cliente_logado(request)
+    if not cliente:
+        return redirect('login')
 
     if request.method == 'POST':
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        telefone = request.POST.get('telefone')
-        endereco = request.POST.get('endereco')
+        cliente.username = request.POST.get('username')
+        cliente.email = request.POST.get('email')
+        cliente.telefone = request.POST.get('telefone')
+        cliente.endereco = request.POST.get('endereco')
+        cliente.save()
+        messages.success(request, 'Perfil atualizado!')
+        return redirect('perfil')
 
-        # Validações
-        if User.objects.filter(username=username).exclude(pk=request.user.pk).exists():
-            messages.error(request, 'Este nome de usuário já está em uso.')
-            return render(request, 'pages/perfil/editar/editar.html', {'perfil': perfil})
+    return render(request, 'pages/perfil/editar/editar.html', {'perfil': cliente})
 
-        if User.objects.filter(email=email).exclude(pk=request.user.pk).exists():
-            messages.error(request, 'Este e-mail já está cadastrado em outra conta.')
-            return render(request, 'pages/perfil/editar/editar.html', {'perfil': perfil})
-
-        # Salvando
-        try:
-            # Atualiza User
-            request.user.username = username
-            request.user.email = email
-            request.user.save()
-
-            # Atualiza Perfil (Agora o 'perfil' é o objeto correto, então o save() funciona)
-            perfil.telefone = telefone
-            perfil.endereco = endereco 
-            perfil.save()
-
-            messages.success(request, 'Perfil atualizado com sucesso!')
-            return redirect('perfil') 
-            
-        except Exception as e:
-            messages.error(request, f'Erro ao salvar: {e}')
-
-    return render(request, 'pages/perfil/editar/editar.html', {'perfil': perfil})
-
+# -------------------------------------------------------------------------
+# CATÁLOGO: RESTAURANTES E PRATOS
+# -------------------------------------------------------------------------
 def restaurante_view(request):
     categoria = request.GET.get('categoria')
-    restaurantes_filtrados = RESTAURANTES
+    restaurantes = TbRestaurantes.objects.all()
     
     if categoria:
-        restaurantes_filtrados = [r for r in RESTAURANTES if r['categoria'] == categoria]
+        restaurantes = restaurantes.filter(categoria=categoria)
+
+    categorias = TbRestaurantes.objects.values_list('categoria', flat=True).distinct()
 
     return render(request, 'pages/catalogo/restaurante.html', {
-        'restaurantes': restaurantes_filtrados,
-        'categorias': sorted({r['categoria'] for r in RESTAURANTES}),
+        'restaurantes': restaurantes,
+        'categorias': sorted(filter(None, categorias)),
         'categoria_ativa': categoria,
-        'restaurante_destaque': restaurantes_filtrados[0] if restaurantes_filtrados else None,
+        'restaurante_destaque': restaurantes.first(),
     })
 
-from django.http import Http404
-
 def restaurante_detalhe_view(request, id):
-    restaurante = _restaurante_por_id(id)  # função que retorna restaurante por id
-    if not restaurante:
-        raise Http404("Restaurante não encontrado")
+    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=id)
+    # Filtra produtos usando a instância do restaurante
+    pratos = TbProdutos.objects.filter(restaurante=restaurante, disponivel=True)
 
     return render(request, 'pages/catalogo/restaurante_detalhe.html', {
-        'restaurante': restaurante
+        'restaurante': restaurante,
+        'pratos': pratos
     })
 
 def prato_view(request):
-    restaurante = _restaurante_por_id(_int_param(request.GET.get('restaurante_id'), 1))
-    prato = _prato_por_id(restaurante, _int_param(request.GET.get('id'), restaurante['pratos'][0]['id']))
+    rest_id = _int_param(request.GET.get('restaurante_id'), 1)  
+    p_id = _int_param(request.GET.get('produto_id'), 1)
+
+    print(f"Recebendo restaurante_id={rest_id} e produto_id={p_id}")  # Debug
+    
+    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=rest_id)
+    prato = get_object_or_404(TbProdutos, id_produto=p_id, restaurante=restaurante)
+    # O campo na model TbNutricao chama-se 'produto'
+    nutricao = TbNutricao.objects.filter(produto=prato).first()
+
     return render(request, 'pages/catalogo/prato.html', {
         'restaurante': restaurante,
         'prato': prato,
+        'nutricao': nutricao
     })
 
-def reserva_view(request):
-    restaurante_id = _int_param(request.GET.get('restaurante_id'), 1)
-    restaurante = _restaurante_por_id(restaurante_id)
+def buscar_prato_restaurante(request):
+    query = request.GET.get('q', '').strip()
+    if query:
+        resultados = TbRestaurantes.objects.filter(
+            Q(nome__icontains=query) | 
+            Q(tbprodutos__nome_produto__icontains=query)
+        ).distinct()
+    else:
+        resultados = TbRestaurantes.objects.all()
 
-    print(f"DEBUG: O ID que chegou na View foi: {restaurante_id}")
+    categorias = TbRestaurantes.objects.values_list('categoria', flat=True).distinct()
+
+    return render(request, 'pages/catalogo/restaurante.html', {
+        'restaurantes': resultados,
+        'categorias': sorted(filter(None, categorias)),
+    })
+
+# -------------------------------------------------------------------------
+# PEDIDOS E RESERVAS
+# -------------------------------------------------------------------------
+def reserva_view(request):
+    r_id = _int_param(request.GET.get('restaurante_id'), 1)
+    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
+
     return render(request, 'pages/pedido/reserva.html', {
         'restaurante': restaurante,
-        'horarios': ['19:00', '19:30', '20:00', '20:30', '21:00'],
-        'datas': ['2024-07-01', '2024-07-02', '2024-07-03', '2024-07-04', '2024-07-05'],
+        'horarios': ['19:00', '20:00', '21:00'],
+        'datas': ['2026-03-07', '2026-03-08'],
     })
 
 def reserva_pagamento(request):
+    """Processa a visualização de pagamento da reserva."""
     if request.method == 'POST':
-        restaurante_id = _int_param(request.POST.get('restaurante_id'), 1)
-        restaurante = _restaurante_por_id(restaurante_id)
+        r_id = _int_param(request.POST.get('restaurante_id'), 1)
+        restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
 
         return render(request, 'pages/pedido/reserva_pagamento.html', {
             'restaurante': restaurante,
             'horario': request.POST.get('horario'),
             'data': request.POST.get('data'),
             'pessoas': request.POST.get('pessoas'),
-
-            'total': 'R$ 38,31',
+            'total': 'R$ 38,31', 
         })
-    else:
-        return redirect('reserva')
-
+    return redirect('reserva')
 
 def pedido_view(request):
-    restaurante = _restaurante_por_id(_int_param(request.GET.get('restaurante_id'), 1))
-    item = restaurante['pratos'][0]
+    r_id = _int_param(request.GET.get('restaurante_id'), 1)
+    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
+    item = TbProdutos.objects.filter(restaurante=restaurante).first()
+
     return render(request, 'pages/pedido/pedido.html', {
         'restaurante': restaurante,
         'item': item,
-        'subtotal': 'R$ 34,90',
-        'entrega': 'R$ 6,90',
-        'desconto': '-R$ 3,49',
-        'total': 'R$ 38,31',
+        'subtotal': item.preco if item else 0,
+        'entrega': restaurante.taxa_entrega,
     })
 
+# View 1 — só ADICIONA e redireciona
+def adicionar_carrinho(request):
+    r_id = _int_param(request.GET.get('restaurante_id'), 1)
+    p_id = _int_param(request.GET.get('produto_id'), 1)
+
+    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
+    produto = get_object_or_404(TbProdutos, id_produto=p_id, restaurante=restaurante)
+
+    carrinho = request.session.get('carrinho', {})
+
+    if str(r_id) not in carrinho:
+        carrinho[str(r_id)] = {'restaurante': restaurante.nome, 'itens': []}
+
+    itens = carrinho[str(r_id)]['itens']
+    existente = next((i for i in itens if i['id'] == p_id), None)
+
+    if existente:
+        if (existente['quantidade'] + 1) * Decimal(existente['preco']) > produto.preco * 10:
+            messages.error(request, 'Limite de 10 unidades por produto.')
+        else:
+            existente['quantidade'] += 1
+    else:
+        itens.append({
+            'id': produto.id_produto,
+            'nome': produto.nome_produto,
+            'preco': float(produto.preco),
+            'quantidade': 1
+        })
+
+    request.session['carrinho'] = carrinho
+    request.session.modified = True
+
+    return redirect('carrinho')  
+        
+# View 2 — só EXIBE o carrinho, nunca modifica
 def carrinho_view(request):
-    restaurante = _restaurante_por_id(_int_param(request.GET.get('restaurante_id'), 1))
-    item = restaurante['pratos'][0]
+    carrinho = request.session.get('carrinho', {})
+    subtotal = sum(
+        i['preco'] * i['quantidade']
+        for r in carrinho.values()
+        for i in r['itens']
+    )
+
     return render(request, 'pages/pedido/carrinho.html', {
-        'restaurante': restaurante,
-        'item': item,
-        'subtotal': 'R$ 34,90',
-        'entrega': 'R$ 6,90',
-        'desconto': '-R$ 3,49',
-        'total': 'R$ 38,31',
+        'carrinho': carrinho,
+        'subtotal': f"R$ {subtotal:.2f}",
+        'entrega': 'Grátis',
+        'desconto': 'R$ 0,00',
+        'total': f"R$ {subtotal:.2f}",
     })
+
+def aumentar_item(request, r_id, produto_id):
+    carrinho = request.session.get('carrinho', {})
+    itens = carrinho.get(str(r_id), {}).get('itens', [])
+    item = next((i for i in itens if i['id'] == produto_id), None)
+    if item:
+        if (item['quantidade'] + 1) * Decimal(item['preco']) > Decimal(item['preco']) * 10:
+            return JsonResponse({'error': 'Limite de 10 unidades por produto.'}, status=400)
+        item['quantidade'] += 1
+    request.session['carrinho'] = carrinho
+    request.session.modified = True
+    return JsonResponse({'quantidade': item['quantidade'] if item else 0})
+
+
+def diminuir_item(request, r_id, produto_id):
+    carrinho = request.session.get('carrinho', {})
+    itens = carrinho.get(str(r_id), {}).get('itens', [])
+    item = next((i for i in itens if i['id'] == produto_id), None)
+    if item:
+        if item['quantidade'] > 1:
+            item['quantidade'] -= 1
+        else:
+            itens.remove(item)  # remove se chegar a 0
+    request.session['carrinho'] = carrinho
+    request.session.modified = True
+    return JsonResponse({'quantidade': item['quantidade'] if item in itens else 0})
+
+
+def remover_restaurante(request, r_id):
+    carrinho = request.session.get('carrinho', {})
+
+    if str(r_id) in carrinho:
+        del carrinho[str(r_id)]
+
+    request.session['carrinho'] = carrinho
+    request.session.modified = True
+
+    return JsonResponse({"status":"ok"})
+
 
 
 def finalizacao_view(request):
-    return render(request, 'pages/pedido/finalizacao.html', {
-        'subtotal': 'R$ 34,90',
-        'entrega': 'R$ 6,90',
-        'desconto': '-R$ 3,49',
-        'total': 'R$ 38,31',
-    })
+    return render(request, 'pages/pedido/finalizacao.html')
 
+# -------------------------------------------------------------------------
+# FEEDBACK
+# -------------------------------------------------------------------------
 def feedback_view(request):
-    # Simulando um restaurante fixo para não dar erro de variável inexistente
-    restaurante_fake = {
-        "nome": "Sabor da Casa",
-        "id": 1
-    }
+    r_id = _int_param(request.GET.get('restaurante_id'), 1)
+    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
+    cliente = get_cliente_logado(request)
 
     if request.method == 'POST':
-        # Captura o que veio do form
-        nota = int(request.POST.get('avaliacao', 5)) # Padrão 5 estrelas se vier vazio
+        nota = _int_param(request.POST.get('avaliacao'), 5)
         comentario = request.POST.get('comentario', '')
 
-        fake_avaliacao = {
-            'nota': nota,
-            'comentario': comentario,
-            'usuario': request.user.username if request.user.is_authenticated else "Visitante",
-        }
+        if cliente:
+            TbAvaliacoes.objects.create(
+                cliente=cliente,
+                restaurante=restaurante,
+                nota=nota,
+                comentario=comentario,
+                data_avaliacao=timezone.now()
+            )
 
-        # Renderiza a tela de SUCESSO
         return render(request, 'pages/pedido/feedback_sucesso.html', {
-            'avaliacao': fake_avaliacao,
-            'restaurante': restaurante_fake
+            'restaurante': restaurante
         })
     
-    # Se for GET (acesso direto à página), renderiza o FORMULÁRIO
-    return render(request, 'pages/pedido/feedback.html', {
-        'restaurante': restaurante_fake
-    })
+    return render(request, 'pages/pedido/feedback.html', {'restaurante': restaurante})
 
 def feedback_sucesso_view(request):
-    return render(request, 'pages/pedido/feedback_sucesso.html', {
-        'avaliacao': {
-            'nota': 5,
-            'comentario': "Ótimo restaurante, comida deliciosa e entrega rápida!",
-            'usuario': "Usuário Exemplo",
-        },
-        'restaurante': {
-            "nome": "Sabor da Casa",
-            "id": 1
-        }
-    })
-    
-def filtrar_restaurantes(query):
-    resultados = []
-
-    for r in RESTAURANTES:
-        if query in r["nome"].lower():
-            resultados.append(r)
-            continue
-
-        for prato in r.get("pratos", []):
-            if query in prato["nome"].lower():
-                resultados.append(r)
-                break
-
-    return resultados
-
-def buscar_prato_restaurante(request):
-    query = request.GET.get('q', '').strip().lower()
-
-    resultados = filtrar_restaurantes(query)
-
-    return render(request, 'pages/catalogo/restaurante.html', {
-        'restaurantes': resultados,
-        'categorias': sorted({r['categoria'] for r in RESTAURANTES}),
-        'categoria_ativa': None,
-    })
-
-def logout_view(request):
-    logout(request)
-    return redirect('login')
+    return render(request, 'pages/pedido/feedback_sucesso.html')

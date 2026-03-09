@@ -133,15 +133,15 @@
         
         <div class="avatar-wrapper text-center">
             <div class="mb-3">
-                {% if user.perfil.foto %}
-                    <img src="{{ user.perfil.foto.url }}" class="profile-avatar">
+                {% if perfil.foto %}
+                    <img src="{{ perfil.foto.url }}" class="profile-avatar">
                 {% else %}
                     <div class="initials-avatar">
-                        {{ user.username|slice:":1"|upper }}
+                        {{ perfil.username|slice:":1"|upper }}
                     </div>
                 {% endif %}
             </div>
-            <h4 class="fw-bold mb-1 text-dark">{{ user.get_full_name|default:user.username }}</h4>
+            <h4 class="fw-bold mb-1 text-dark">{{ perfil.nome|default:perfil.username }}</h4>
             <span class="badge rounded-pill bg-light text-muted border px-3">Cliente FoodVerse</span>
         </div>
 
@@ -151,7 +151,7 @@
                 <i class="bi bi-person info-icon"></i>
                 <div class="info-content">
                     <label>Nome Completo</label>
-                    <span>{{ user.get_full_name|default:user.username }}</span>
+                    <span>{{ perfil.nome|default:perfil.username }}</span>
                 </div>
             </div>
 
@@ -159,7 +159,7 @@
                 <i class="bi bi-envelope info-icon"></i>
                 <div class="info-content">
                     <label>E-mail</label>
-                    <span>{{ user.email }}</span>
+                    <span>{{ perfil.email }}</span>
                 </div>
             </div>
 
@@ -167,7 +167,7 @@
                 <i class="bi bi-card-text info-icon"></i>
                 <div class="info-content">
                     <label>CPF</label>
-                    <span>{{ user.perfil.cpf|default:"Não cadastrado" }}</span>
+                    <span>{{ perfil.cpf|default:"Não cadastrado" }}</span>
                 </div>
             </div>
 
@@ -175,7 +175,7 @@
                 <i class="bi bi-phone info-icon"></i>
                 <div class="info-content">
                     <label>Celular / WhatsApp</label>
-                    <span>{{ user.perfil.telefone|default:"(00) 00000-0000" }}</span>
+                    <span>{{ perfil.telefone|default:"(00) 00000-0000" }}</span>
                 </div>
             </div>
             
@@ -183,7 +183,7 @@
                 <i class="bi bi-geo-alt info-icon"></i>
                 <div class="info-content">
                     <label>Endereço de Entrega</label>
-                    <span>{{ user.perfil.endereco|default:"Nenhum endereço salvo" }}</span>
+                    <span>{{ perfil.endereco|default:"Nenhum endereço salvo" }}</span>
                 </div>
             </div>
 

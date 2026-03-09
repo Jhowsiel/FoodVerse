@@ -127,15 +127,15 @@
 
                     <div class="col-md-6">
                         <label for="username" class="label-custom-perfil">Nome de Usuário</label>
-                        <input type="text" name="username" id="username" class="form-control input-perfil-edit" value="{{ request.user.username }}" required>
+                        <input type="text" name="username" id="username" class="form-control input-perfil-edit" value="{{ perfil.username }}" required>
                     </div>  
 
                     <div class="col-md-6">
                         <label for="email" class="label-custom-perfil">E-mail</label>
-                        <input type="email" name="email" id="email" class="form-control input-perfil-edit" value="{{ request.user.email }}" required>
+                        <input type="email" name="email" id="email" class="form-control input-perfil-edit" value="{{ perfil.email }}" required>
                     </div>
 
-                    <div class="col-12">
+                    <div class="col-12">    
                         <label for="telefone" class="label-custom-perfil">Telefone</label>
                         <input type="text" name="telefone" id="telefone" class="form-control input-perfil-edit" placeholder="(00) 00000-0000" value="{{ perfil.telefone|default:'' }}">
                     </div>

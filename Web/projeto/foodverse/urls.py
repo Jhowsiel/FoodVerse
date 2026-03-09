@@ -21,12 +21,17 @@ urlpatterns = [
     
     # Fluxo de Pedido e Carrinho
     path('carrinho/', views.carrinho_view, name='carrinho'), 
+    path('carrinho/adicionar/', views.adicionar_carrinho, name='adicionar_carrinho'),
+    path('carrinho/aumentar/<int:r_id>/<int:produto_id>/', views.aumentar_item, name='aumentar_item'),
+    path('carrinho/diminuir/<int:r_id>/<int:produto_id>/', views.diminuir_item, name='diminuir_item'),
+    path('remover-restaurante/<int:r_id>/', views.remover_restaurante, name='remover_restaurante'),
+
     path('reserva/', views.reserva_view, name='reserva'),
     path('reserva/pagamento', views.reserva_pagamento, name='reserva_pagamento'),
     path('pedido/', views.pedido_view, name='pedido'),
     path('finalizacao/', views.finalizacao_view, name='finalizacao'),
     path('feedback/', views.feedback_view, name='feedback'),
-    path('/feedback/sucesso/', views.feedback_sucesso_view, name='feedback_sucesso'),
+    path('feedback/sucesso/', views.feedback_sucesso_view, name='feedback_sucesso'),
     
     # Sugestão: Rota de confirmação após pagar
     # path('confirmacao/', views.confirmacao_view, name='confirmacao'),

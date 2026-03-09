@@ -1,123 +1,218 @@
 from django.db import models
 
-
-class Cliente(models.Model):
-    user_name = models.CharField(max_length=100)
-    name = models.CharField(max_length=100)
-    email = models.EmailField(max_length=100)
-    phone = models.CharField(max_length=100)
-    password = models.CharField(max_length=255)
-    cpf = models.CharField(max_length=255)
-    registration_date = models.DateField(auto_now_add=True)
-    is_login = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.name
-
-
-class Produto(models.Model):
-    nome_produto = models.CharField(max_length=100)
-    des_produto = models.CharField(max_length=255)
-    preco_produto = models.DecimalField(max_digits=10, decimal_places=2)
-
-    def __str__(self):
-        return self.nome_produto
-
-
-class Reserva(models.Model):
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
-    data_reserva = models.DateTimeField()
-    num_pessoas = models.IntegerField()
-    mesa = models.CharField(max_length=10)
-
-    def __str__(self):
-        return f"Reserva {self.id} - {self.cliente.name}"
-
-
-class StatusPedido(models.Model):
-    status_nome = models.CharField(max_length=50)
-
-    def __str__(self):
-        return self.status_nome
-
-
-class TipoPedido(models.Model):
-    tipo_nome = models.CharField(max_length=50)
-
-    def __str__(self):
-        return self.tipo_nome
-
-
-class Pedido(models.Model):
-    id_pedido = models.CharField(primary_key=True, max_length=10)
-    data_pedido = models.DateTimeField()
-    hora_entrega = models.DateTimeField(null=True, blank=True)
-    codigo_localizador = models.CharField(max_length=50, null=True, blank=True)
-
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
-    status = models.ForeignKey(StatusPedido, on_delete=models.CASCADE)
-    tipo = models.ForeignKey(TipoPedido, on_delete=models.CASCADE)
-
-    modo_consumo = models.CharField(max_length=20)
-    endereco_completo = models.CharField(max_length=255, null=True, blank=True)
-
-    nome_entregador = models.CharField(max_length=100, null=True, blank=True)
-    telefone_entregador = models.CharField(max_length=20, null=True, blank=True)
-    observacoes = models.CharField(max_length=255, null=True, blank=True)
-
-    reserva = models.ForeignKey(Reserva, on_delete=models.SET_NULL, null=True, blank=True)
-
-    def __str__(self):
-        return self.id_pedido
-
-
-class PedidoProduto(models.Model):
-    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
-    produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
-    quantidade = models.IntegerField()
+class TbClientes(models.Model):
+    id_cliente = models.AutoField(primary_key=True)
+    username = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    nome = models.CharField(max_length=100, null=True, blank=True)
+    email = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    telefone = models.CharField(max_length=20, null=True, blank=True)
+    cpf = models.CharField(max_length=14, unique=True, null=True, blank=True)
+    senha = models.CharField(max_length=255, null=True, blank=True)
+    endereco = models.CharField(max_length=255, null=True, blank=True)
+    data_cadastro = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        unique_together = ('pedido', 'produto')
+        db_table = "tb_clientes"
 
+class TbRestaurantes(models.Model):
+    id_restaurante = models.AutoField(primary_key=True)
+    nome = models.CharField(max_length=100, null=True, blank=True)
+    categoria = models.CharField(max_length=50, null=True, blank=True)
+    descricao = models.CharField(max_length=255, null=True, blank=True)
+    avaliacao = models.DecimalField(max_digits=3, decimal_places=2, null=True, blank=True)
+    tempo_entrega = models.CharField(max_length=20, null=True, blank=True)
+    taxa_entrega = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    cupom = models.CharField(max_length=50, null=True, blank=True)
+    imagem = models.CharField(max_length=255, null=True, blank=True)
 
-class Cupom(models.Model):
-    codigo_cupom = models.CharField(max_length=50)
-    desconto = models.DecimalField(max_digits=5, decimal_places=2)
-    validade = models.DateField()
+    class Meta:
+        db_table = "tb_restaurantes"
 
-    def __str__(self):
-        return self.codigo_cupom
+class TbProdutos(models.Model):
+    id_produto = models.AutoField(primary_key=True)
+    restaurante = models.ForeignKey(
+        TbRestaurantes,
+        on_delete=models.CASCADE,
+        db_column="ID_restaurante",
+        null=True,
+        blank=True
+    )
+    nome_produto = models.CharField(max_length=100, null=True, blank=True)
+    descricao = models.CharField(max_length=255, null=True, blank=True)
+    preco = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    categoria = models.CharField(max_length=50, null=True, blank=True)
+    imagem = models.CharField(max_length=255, null=True, blank=True)
+    tempo_preparo = models.IntegerField(null=True, blank=True)
+    disponivel = models.BooleanField(null=True, blank=True)
+    destaque = models.BooleanField(null=True, blank=True)
+    data_criacao = models.DateTimeField(null=True, blank=True)
 
+    class Meta:
+        db_table = "tb_produtos"
 
-class Avaliacao(models.Model):
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
-    produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
-    comentario = models.CharField(max_length=255)
-    nota = models.IntegerField()
-    data_avaliacao = models.DateField()
+class TbEstoque(models.Model):
+    id_estoque = models.AutoField(primary_key=True)
+    produto = models.ForeignKey(
+        TbProdutos,
+        on_delete=models.CASCADE,
+        db_column="ID_produto"
+    )
+    quantidade = models.IntegerField(null=True, blank=True)
+    estoque_minimo = models.IntegerField(null=True, blank=True)
+    ultima_atualizacao = models.DateTimeField(null=True, blank=True)
 
-    def __str__(self):
-        return f"{self.cliente.name} - {self.produto.nome_produto}"
+    class Meta:
+        db_table = "tb_estoque"
 
+class TbNutricao(models.Model):
+    id_nutricao = models.AutoField(primary_key=True)
+    produto = models.ForeignKey(
+        TbProdutos,
+        on_delete=models.CASCADE,
+        db_column="ID_produto"
+    )
+    kcal = models.IntegerField(null=True, blank=True)
+    proteina = models.CharField(max_length=20, null=True, blank=True)
+    carbo = models.CharField(max_length=20, null=True, blank=True)
+    gordura = models.CharField(max_length=20, null=True, blank=True)
 
-class Pagamento(models.Model):
-    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
-    metodo_pagamento = models.CharField(max_length=50)
-    valor_total = models.DecimalField(max_digits=10, decimal_places=2)
-    data_pagamento = models.DateField()
+    class Meta:
+        db_table = "tb_nutricao"
 
-    def __str__(self):
-        return f"Pagamento {self.id}"
-    
+class TbStatusPedido(models.Model):
+    id_status = models.IntegerField(primary_key=True)
+    nome_status = models.CharField(max_length=50, null=True, blank=True)
 
-from django.contrib.auth.models import User
-from django.db import models
+    class Meta:
+        db_table = "tb_status_pedido"
 
-class Perfil(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    cpf = models.CharField(max_length=14, unique=True)
-    telefone = models.CharField(max_length=15, blank=True)
+class TbPedidos(models.Model):
+    id_pedido = models.AutoField(primary_key=True)
+    cliente = models.ForeignKey(
+        TbClientes,
+        on_delete=models.CASCADE,
+        db_column="ID_cliente"
+    )
+    restaurante = models.ForeignKey(
+        TbRestaurantes,
+        on_delete=models.CASCADE,
+        db_column="ID_restaurante"
+    )
+    status = models.ForeignKey(
+        TbStatusPedido,
+        on_delete=models.SET_NULL,
+        db_column="status_id",
+        null=True
+    )
+    data_pedido = models.DateTimeField(null=True, blank=True)
+    endereco_entrega = models.CharField(max_length=255, null=True, blank=True)
+    valor_total = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
-    def __str__(self):
-        return self.user.username
-    
+    class Meta:
+        db_table = "tb_pedidos"
+
+class TbPedidosProdutos(models.Model):
+    id = models.AutoField(primary_key=True)
+    pedido = models.ForeignKey(
+        TbPedidos,
+        on_delete=models.CASCADE,
+        db_column="ID_pedido"
+    )
+    produto = models.ForeignKey(
+        TbProdutos,
+        on_delete=models.CASCADE,
+        db_column="ID_produto"
+    )
+    quantidade = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        db_table = "tb_pedidos_produtos"
+        unique_together = ("pedido", "produto")
+
+class TbReservas(models.Model):
+    id_reserva = models.AutoField(primary_key=True)
+    cliente = models.ForeignKey(
+        TbClientes,
+        on_delete=models.CASCADE,
+        db_column="ID_cliente"
+    )
+    restaurante = models.ForeignKey(
+        TbRestaurantes,
+        on_delete=models.CASCADE,
+        db_column="ID_restaurante"
+    )
+    data_reserva = models.DateTimeField(null=True, blank=True)
+    numero_pessoas = models.IntegerField(null=True, blank=True)
+    mesa = models.CharField(max_length=10, null=True, blank=True)
+
+    class Meta:
+        db_table = "tb_reservas"
+
+class TbPagamentos(models.Model):
+    id_pagamento = models.AutoField(primary_key=True)
+    pedido = models.ForeignKey(
+        TbPedidos,
+        on_delete=models.CASCADE,
+        db_column="ID_pedido"
+    )
+    metodo_pagamento = models.CharField(max_length=50, null=True, blank=True)
+    valor = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    data_pagamento = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "tb_pagamentos"
+
+class TbAvaliacoes(models.Model):
+    id_avaliacao = models.AutoField(primary_key=True)
+    cliente = models.ForeignKey(
+        TbClientes,
+        on_delete=models.CASCADE,
+        db_column="ID_cliente"
+    )
+    restaurante = models.ForeignKey(
+        TbRestaurantes,
+        on_delete=models.CASCADE,
+        db_column="ID_restaurante"
+    )
+    comentario = models.CharField(max_length=255, null=True, blank=True)
+    nota = models.IntegerField(null=True, blank=True)
+    data_avaliacao = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "tb_avaliacoes"
+
+class TbCupons(models.Model):
+    id_cupom = models.AutoField(primary_key=True)
+    codigo = models.CharField(max_length=50, null=True, blank=True)
+    desconto = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    validade = models.DateField(null=True, blank=True)
+
+    class Meta:
+        db_table = "tb_cupons"
+
+class TbFidelidade(models.Model):
+    id_fidelidade = models.AutoField(primary_key=True)
+    cliente = models.ForeignKey(
+        TbClientes,
+        on_delete=models.CASCADE,
+        db_column="ID_cliente"
+    )
+    pontos = models.IntegerField(null=True, blank=True)
+    cashback = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
+    class Meta:
+        db_table = "tb_fidelidade"
+
+class TbFuncionarios(models.Model):
+    id_funcionario = models.AutoField(primary_key=True)
+    nome = models.CharField(max_length=100, null=True, blank=True)
+    username = models.CharField(max_length=50, null=True, blank=True)
+    email = models.CharField(max_length=100, null=True, blank=True)
+    cargo = models.CharField(max_length=50, null=True, blank=True)
+    telefone = models.CharField(max_length=20, null=True, blank=True)
+    senha = models.CharField(max_length=255, null=True, blank=True)
+    status = models.CharField(max_length=20, null=True, blank=True)
+    data_cadastro = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "tb_funcionarios"

@@ -4,107 +4,412 @@
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
 
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900;1,9..144,400&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
-  body { padding-top: 90px; background-color: #f8f9fa; }
-  .page-offset { margin-top: 20px; }
-
-  /* CARD DO PEDIDO */
-  .card-pedido {
-    border-radius: 20px;
-    border: none;
-    transition: transform 0.2s;
-  }
-  .card-pedido:hover {
-    transform: translateY(-3px);
-  }
-
-  .pedido-item {
-    border-bottom: 1px solid #e9ecef;
-    padding: 1rem 0;
-  }
-  .pedido-item:last-child { border-bottom: none; }
-
-  .progress-custom {
-    height: 10px;
-    border-radius: 8px;
-    background-color: #e9ecef;
-    overflow: hidden;
-  }
-  .progress-custom-bar {
-    height: 100%;
-    background-color: #dc3545;
-    border-radius: 8px;
-    transition: width 0.4s ease;
+  :root {
+    --red:    #C41017;
+    --red-lt: #fdf2f2;
+    --ink:    #111010;
+    --warm:   #f8f6f1;
+    --stone:  #e8e4dc;
+    --muted:  #7a7570;
+    --white:  #ffffff;
+    --green:  #16a34a;
+    --radius: 20px;
+    --shadow: 0 2px 16px rgba(17,16,16,.07);
   }
 
-  /* RESUMO FINANCEIRO */
-  .resumo-card {
-    border-radius: 20px;
-    border: none;
-  }
-  .resumo-card h5 { font-weight: 700; }
-  .resumo-card p { margin-bottom: 0.5rem; }
-  .resumo-card .total { font-size: 1.3rem; font-weight: 800; }
+  *, *::before, *::after { box-sizing: border-box; }
 
-  /* BOTÕES */
-  .btn-continua {
-    border-radius: 50px;
+  body {
+    padding-top: 90px;
+    background: var(--warm);
+    font-family: 'Instrument Sans', sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
   }
+
+  .page-wrap { max-width: 1120px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  /* ── HEADER ── */
+  .page-top {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    margin-bottom: 32px; flex-wrap: wrap; gap: 14px;
+  }
+
+  .page-eyebrow {
+    font-size: .72rem; font-weight: 700; letter-spacing: .8px;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .page-title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+    font-weight: 900; line-height: 1.05; letter-spacing: -0.5px;
+  }
+
+  .btn-continuar {
+    display: inline-flex; align-items: center; gap: 7px;
+    border: 1.5px solid var(--stone); background: var(--white);
+    color: var(--muted); border-radius: 100px; padding: 10px 20px;
+    font-size: .82rem; font-weight: 600; text-decoration: none; transition: all .2s;
+  }
+
+  .btn-continuar:hover { border-color: var(--ink); color: var(--ink); }
+
+  /* ── LAYOUT ── */
+  .order-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 20px; align-items: start;
+  }
+
+  @media (max-width: 860px) { .order-layout { grid-template-columns: 1fr; } }
+
+  /* ── CARDS ── */
+  .o-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid var(--stone);
+    box-shadow: var(--shadow);
+    padding: 26px 28px;
+    margin-bottom: 18px;
+    animation: fadeUp .4s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .o-card:nth-child(1) { animation-delay: .04s; }
+  .o-card:nth-child(2) { animation-delay: .1s; }
+
+  .card-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.05rem; font-weight: 700;
+    margin-bottom: 20px; padding-bottom: 16px;
+    border-bottom: 1px solid var(--stone);
+    display: flex; align-items: center; gap: 9px;
+  }
+
+  .card-title i { color: var(--red); }
+
+  /* ── ITEMS ── */
+  .order-item {
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--stone);
+  }
+
+  .order-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .order-item:first-child { padding-top: 0; }
+
+  .item-left { display: flex; align-items: center; gap: 14px; }
+
+  .item-dot {
+    width: 42px; height: 42px; border-radius: 12px;
+    background: var(--warm); border: 1px solid var(--stone);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 1.1rem; flex-shrink: 0;
+  }
+
+  .item-name {
+    font-weight: 700; font-size: .95rem; margin-bottom: 3px; line-height: 1.2;
+  }
+
+  .item-meta {
+    font-size: .75rem; color: var(--muted); font-weight: 500;
+  }
+
+  .item-right { text-align: right; flex-shrink: 0; }
+
+  .item-price {
+    font-family: 'Fraunces', serif;
+    font-size: 1rem; font-weight: 700; display: block;
+  }
+
+  .item-qty {
+    font-size: .75rem; color: var(--muted); margin-top: 2px;
+  }
+
+  /* Empty */
+  .empty-order {
+    text-align: center; padding: 48px 20px; color: var(--muted);
+  }
+
+  .empty-order i { font-size: 2.5rem; opacity: .25; display: block; margin-bottom: 12px; }
+  .empty-order p { font-size: .88rem; }
+
+  /* ── TRACKING ── */
+  .tracking-status {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--warm); border: 1px solid var(--stone);
+    border-radius: 100px; padding: 6px 14px;
+    font-size: .8rem; font-weight: 700; color: var(--ink);
+    margin-bottom: 16px;
+  }
+
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--red); animation: blink 1.5s infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: .3; }
+  }
+
+  .track-bar-wrap {
+    background: var(--stone); border-radius: 100px;
+    height: 8px; overflow: hidden; margin-bottom: 10px;
+  }
+
+  .track-bar {
+    height: 100%; border-radius: 100px;
+    background: linear-gradient(90deg, var(--red), #e85d60);
+    transition: width .6s ease;
+  }
+
+  .track-steps {
+    display: flex; justify-content: space-between;
+    margin-top: 14px;
+  }
+
+  .track-step {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    font-size: .68rem; font-weight: 600; color: var(--muted); text-align: center;
+    flex: 1;
+  }
+
+  .track-step-icon {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--stone); color: var(--muted); font-size: .8rem;
+    transition: all .3s;
+  }
+
+  .track-step.done .track-step-icon  { background: var(--green); color: white; }
+  .track-step.active .track-step-icon { background: var(--red); color: white; }
+
+  .track-hint {
+    font-size: .75rem; color: var(--muted); margin-top: 14px;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  /* ── SUMMARY ── */
+  .summary-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid var(--stone);
+    box-shadow: var(--shadow);
+    padding: 26px;
+    position: sticky; top: 106px;
+    animation: fadeUp .4s ease .06s both;
+  }
+
+  .summary-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.05rem; font-weight: 800;
+    margin-bottom: 18px; padding-bottom: 14px;
+    border-bottom: 1px solid var(--stone);
+  }
+
+  .s-row {
+    display: flex; justify-content: space-between;
+    font-size: .88rem; margin-bottom: 11px; color: var(--muted);
+  }
+
+  .s-row .val { font-weight: 600; color: var(--ink); }
+  .s-row .val.green { color: var(--green); }
+  .s-row .val.red   { color: var(--red); }
+
+  .s-divider { border: none; border-top: 1px solid var(--stone); margin: 16px 0; }
+
+  .total-block {
+    display: flex; justify-content: space-between;
+    align-items: flex-end; margin-bottom: 22px;
+  }
+
+  .total-label { font-weight: 700; font-size: .95rem; }
+
+  .total-num {
+    font-family: 'Fraunces', serif;
+    font-size: 2rem; font-weight: 900; color: var(--red); line-height: 1;
+  }
+
+  /* Delivery info */
+  .delivery-info {
+    background: var(--warm); border-radius: 14px;
+    border: 1px solid var(--stone); padding: 14px 16px;
+    margin-bottom: 18px;
+  }
+
+  .delivery-row {
+    display: flex; align-items: center; gap: 9px;
+    font-size: .8rem; font-weight: 600; color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .delivery-row:last-child { margin-bottom: 0; }
+  .delivery-row i { color: var(--red); font-size: .85rem; width: 14px; text-align: center; }
+  .delivery-row span { color: var(--ink); }
+
+  .btn-track {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--ink); color: white; border-radius: 14px;
+    padding: 15px; font-size: .88rem; font-weight: 700;
+    text-decoration: none; width: 100%; transition: all .22s;
+    border: none; cursor: pointer; font-family: inherit;
+  }
+
+  .btn-track:hover { background: #2a2828; color: white; transform: translateY(-1px); }
 </style>
 
-<section class="container page-offset py-4">
+<div class="page-wrap">
 
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="fw-bold mb-0">Meu Pedido</h1>
-    <a href="{% url 'restaurantes' %}" class="btn btn-outline-danger btn-continua">Continuar comprando</a>
+  <!-- Header -->
+  <div class="page-top">
+    <div>
+      <p class="page-eyebrow"><i class="bi bi-bag-check-fill"></i> Pedido confirmado</p>
+      <h1 class="page-title">Meu Pedido</h1>
+    </div>
+    <a href="{% url 'restaurantes' %}" class="btn-continuar">
+      <i class="bi bi-grid"></i> Continuar comprando
+    </a>
   </div>
 
-  <div class="row g-4">
-    
-    <!-- ITENS DO PEDIDO -->
-    <div class="col-12 col-lg-8">
-      <div class="card shadow-sm card-pedido p-4 mb-3">
+  <div class="order-layout">
+
+    <!-- LEFT -->
+    <div>
+
+      <!-- Itens -->
+      <div class="o-card">
+        <div class="card-title">
+          <i class="bi bi-receipt"></i> Itens do pedido
+        </div>
+
         {% for item in itens %}
-        <div class="pedido-item d-flex justify-content-between align-items-center">
-          <div>
-            <h5 class="mb-1">{{ item.nome }}</h5>
-            <p class="small text-muted mb-0">{{ item.restaurante.nome }} · {{ item.porcao }} · {{ item.restricoes }}</p>
+        <div class="order-item">
+          <div class="item-left">
+            <div class="item-dot"><i class="bi bi-egg-fried"></i></div>
+            <div>
+              <div class="item-name">{{ item.nome }}</div>
+              <div class="item-meta">
+                {{ item.restaurante.nome }}
+                {% if item.porcao %} · {{ item.porcao }}{% endif %}
+                {% if item.restricoes %} · {{ item.restricoes }}{% endif %}
+              </div>
+            </div>
           </div>
-          <div class="text-end">
-            <strong>R$ {{ item.preco }}</strong>
-            <p class="small text-muted mb-0">Qtd: {{ item.quantidade }}</p>
+          <div class="item-right">
+            <span class="item-price">R$ {{ item.preco }}</span>
+            <div class="item-qty">× {{ item.quantidade }}</div>
           </div>
         </div>
         {% empty %}
-        <p class="text-center text-muted py-4">Nenhum item no pedido.</p>
+        <div class="empty-order">
+          <i class="bi bi-bag-x"></i>
+          <p>Nenhum item no pedido.</p>
+        </div>
         {% endfor %}
       </div>
 
-      <div class="card shadow-sm card-pedido p-4">
-        <h5 class="fw-bold mb-3">Acompanhamento em tempo real</h5>
-        <p class="mb-2">Status atual: <strong>{{ pedido.status_texto }}</strong></p>
-        <div class="progress-custom mb-2" role="progressbar" aria-valuenow="{{ pedido_progress }}" aria-valuemin="0" aria-valuemax="100">
-          <div class="progress-custom-bar" style="width: {{ pedido_progress }}%"></div>
+      <!-- Tracking -->
+      <div class="o-card">
+        <div class="card-title">
+          <i class="bi bi-lightning-charge-fill"></i> Acompanhamento em tempo real
         </div>
-        <p class="text-muted small mb-0">Você ainda pode editar o pedido antes do início do preparo.</p>
+
+        <div class="tracking-status">
+          <span class="status-dot"></span>
+          {{ pedido.status_texto|default:"Aguardando preparo" }}
+        </div>
+
+        <div class="track-bar-wrap">
+          <div class="track-bar" style="width: {{ pedido_progress|default:25 }}%"></div>
+        </div>
+
+        <div class="track-steps">
+          <div class="track-step done">
+            <div class="track-step-icon"><i class="bi bi-check2"></i></div>
+            Confirmado
+          </div>
+          <div class="track-step {% if pedido_progress >= 40 %}done{% elif pedido_progress >= 25 %}active{% endif %}">
+            <div class="track-step-icon"><i class="bi bi-fire"></i></div>
+            Preparando
+          </div>
+          <div class="track-step {% if pedido_progress >= 75 %}done{% elif pedido_progress >= 60 %}active{% endif %}">
+            <div class="track-step-icon"><i class="bi bi-bicycle"></i></div>
+            A caminho
+          </div>
+          <div class="track-step {% if pedido_progress >= 100 %}done{% endif %}">
+            <div class="track-step-icon"><i class="bi bi-house-check"></i></div>
+            Entregue
+          </div>
+        </div>
+
+        <p class="track-hint">
+          <i class="bi bi-info-circle"></i>
+          Você ainda pode editar o pedido antes do início do preparo.
+        </p>
       </div>
+
     </div>
 
-    <!-- RESUMO FINANCEIRO -->
-    <div class="col-12 col-lg-4">
-      <div class="card shadow-sm resumo-card p-4">
-        <h5 class="fw-bold mb-3">Resumo financeiro</h5>
-        <p class="d-flex justify-content-between"><span>Subtotal:</span> <span>R$ {{ subtotal }}</span></p>
-        <p class="d-flex justify-content-between"><span>Entrega:</span> <span>R$ {{ entrega }}</span></p>
-        <p class="d-flex justify-content-between"><span>Desconto cupom:</span> <span>- R$ {{ desconto }}</span></p>
-        <hr>
-        <p class="d-flex justify-content-between total"><span>Total:</span> <span>R$ {{ total }}</span></p>
+    <!-- RIGHT -->
+    <div>
+      <div class="summary-card">
+        <div class="summary-title">Resumo financeiro</div>
+
+        <div class="s-row">
+          <span>Subtotal</span>
+          <span class="val">R$ {{ subtotal }}</span>
+        </div>
+        <div class="s-row">
+          <span>Entrega</span>
+          <span class="val green">R$ {{ entrega }}</span>
+        </div>
+        <div class="s-row">
+          <span>Desconto cupom</span>
+          <span class="val red">− R$ {{ desconto }}</span>
+        </div>
+
+        <hr class="s-divider">
+
+        <div class="total-block">
+          <div class="total-label">Total</div>
+          <div class="total-num">R$ {{ total }}</div>
+        </div>
+
+        <!-- Delivery info -->
+        <div class="delivery-info">
+          <div class="delivery-row">
+            <i class="bi bi-geo-alt-fill"></i>
+            <span>Rua Exemplo, 123 - Taboão da Serra</span>
+          </div>
+          <div class="delivery-row">
+            <i class="bi bi-clock"></i>
+            <span>Previsão: 30–45 minutos</span>
+          </div>
+          <div class="delivery-row">
+            <i class="bi bi-qr-code"></i>
+            <span>Pagamento via Pix</span>
+          </div>
+        </div>
+
+        <button class="btn-track">
+          <i class="bi bi-map"></i> Rastrear pedido
+        </button>
       </div>
     </div>
 
   </div>
-
-</section>
+</div>
 
 {% include "pages/pagePrincipal/footer.html" %}
 {% endblock %}

@@ -1,174 +1,507 @@
 {% load static %}
 
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900;1,9..144,400&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --red:   #C41017;
+    --red-g: rgba(196,16,23,.18);
+    --ink:   #0d0c0c;
+    --line:  rgba(255,255,255,.08);
+    --muted: rgba(255,255,255,.45);
+    --card:  rgba(255,255,255,.05);
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  body { font-family: 'Instrument Sans', sans-serif; color: white; background: var(--ink); margin: 0; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+  /* ── HERO (mantido igual) ── */
+  .hero {
+    min-height: 100vh; background: var(--ink);
+    position: relative; display: flex; flex-direction: column;
+    justify-content: center; overflow: hidden; padding: 120px 0 80px;
+  }
+  .hero::before {
+    content: ''; position: absolute; top: -100px; right: -100px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(196,16,23,.18) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: ''; position: absolute; bottom: -80px; left: -80px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(196,16,23,.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-grid {
+    max-width: 1200px; margin: 0 auto; padding: 0 24px;
+    display: grid; grid-template-columns: 1fr 480px; gap: 60px; align-items: center;
+  }
+  @media (max-width: 960px) { .hero-grid { grid-template-columns: 1fr; } .hero-visual { display: none; } }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(196,16,23,.15); border: 1px solid rgba(196,16,23,.3);
+    color: #ff6b6b; font-size: .72rem; font-weight: 700;
+    letter-spacing: .8px; text-transform: uppercase;
+    border-radius: 100px; padding: 6px 14px; margin-bottom: 24px;
+  }
+  .hero-title {
+    font-family: 'Fraunces', serif; font-size: clamp(2.8rem, 6vw, 5rem);
+    font-weight: 900; line-height: 1.02; letter-spacing: -1.5px;
+    color: white; margin-bottom: 20px;
+  }
+  .hero-title em { font-style: italic; color: #E01E1E; }
+  .hero-sub { font-size: 1rem; color: var(--muted); line-height: 1.65; max-width: 420px; margin-bottom: 40px; }
+  .hero-search-box { background: rgba(255,255,255,.05); border: 1px solid var(--line); border-radius: 20px; padding: 24px; }
+  .search-tabs { display: flex; gap: 6px; margin-bottom: 20px; }
+  .search-tab { display: flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: 10px; font-size: .82rem; font-weight: 700; cursor: pointer; border: none; transition: all .2s; font-family: inherit; }
+  .search-tab.active { background: #E01E1E; color: white; box-shadow: 0 4px 14px rgba(224,30,30,.3); }
+  .search-tab:not(.active) { background: rgba(255,255,255,.07); color: var(--muted); }
+  .search-row { display: flex; gap: 8px; }
+  .search-field-wrap { flex: 1; position: relative; }
+  .search-field-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: .85rem; }
+  .search-field { width: 100%; height: 50px; background: rgba(255,255,255,.08); border: 1px solid var(--line); border-radius: 12px; color: white; font-family: 'Instrument Sans', sans-serif; font-size: .88rem; padding: 0 16px 0 40px; transition: all .2s; }
+  .search-field::placeholder { color: rgba(255,255,255,.3); }
+  .search-field:focus { outline: none; border-color: rgba(196,16,23,.5); background: rgba(255,255,255,.1); box-shadow: 0 0 0 3px rgba(196,16,23,.1); }
+  .search-submit { height: 50px; padding: 0 22px; background: #E01E1E; color: white; border: none; border-radius: 12px; font-family: 'Instrument Sans', sans-serif; font-size: .85rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all .22s; white-space: nowrap; box-shadow: 0 4px 16px rgba(224,30,30,.3); }
+  .search-submit:hover { background: #a00d13; transform: translateY(-1px); }
+  .address-result { margin-top: 12px; border-radius: 10px; padding: 11px 14px; font-size: .82rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .address-result.success { background: rgba(22,163,74,.15); border: 1px solid rgba(22,163,74,.3); color: #4ade80; }
+  .address-result.error { background: rgba(196,16,23,.15); border: 1px solid rgba(196,16,23,.3); color: #ff6b6b; }
+  .hero-stats { display: flex; gap: 24px; margin-top: 32px; flex-wrap: wrap; }
+  .h-stat { display: flex; flex-direction: column; }
+  .h-stat-num { font-family: 'Fraunces', serif; font-size: 1.6rem; font-weight: 900; color: white; line-height: 1; }
+  .h-stat-label { font-size: .72rem; color: var(--muted); margin-top: 3px; font-weight: 500; }
+  .hero-visual { position: relative; height: 480px; }
+  .vis-card { position: absolute; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 20px; backdrop-filter: blur(10px); overflow: hidden; }
+  .vis-main { width: 280px; height: 340px; top: 0; right: 0; display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; animation: float 4s ease-in-out infinite; }
+  .vis-main-img { position: absolute; inset: 0; background: linear-gradient(135deg, #1a0a0a, #2d1010); display: flex; align-items: center; justify-content: center; font-size: 5rem; opacity: .3; }
+  .vis-main-info { position: relative; z-index: 2; }
+  .vis-main-name { font-family: 'Fraunces', serif; font-size: 1.1rem; font-weight: 700; color: white; margin-bottom: 4px; }
+  .vis-main-meta { font-size: .75rem; color: rgba(255,255,255,.6); }
+  .vis-pill { width: 190px; padding: 14px 16px; left: 0; bottom: 60px; display: flex; align-items: center; gap: 12px; animation: float 4s ease-in-out infinite .8s; }
+  .vis-pill-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(196,16,23,.3); display: flex; align-items: center; justify-content: center; color: #ff6b6b; font-size: 1rem; flex-shrink: 0; }
+  .vis-pill-text { font-size: .78rem; font-weight: 600; color: rgba(255,255,255,.8); }
+  .vis-pill-sub { font-size: .68rem; color: rgba(255,255,255,.4); }
+  .vis-badge { width: 140px; padding: 12px 14px; top: 20px; left: 20px; display: flex; align-items: center; gap: 8px; animation: float 4s ease-in-out infinite 1.6s; }
+  .vis-badge i { color: #fbbf24; font-size: 1rem; }
+  .vis-badge-text { font-size: .78rem; font-weight: 700; color: white; }
+  .vis-badge-sub { font-size: .65rem; color: rgba(255,255,255,.4); }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+  /* ── SHARED ── */
+  .eyebrow {
+    font-size: .7rem; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; color: #ff6b6b; display: block; margin-bottom: 8px;
+  }
+  .sec-title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    font-weight: 900; letter-spacing: -0.5px; color: white;
+  }
+
+  /* ── CATEGORIES ── */
+  .cats-section {
+    background: var(--ink);
+    padding: 80px 0 64px;
+    border-top: 1px solid var(--line);
+    position: relative;
+  }
+
+  .cats-section::before {
+    content: ''; position: absolute; top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(196,16,23,.4), transparent);
+  }
+
+  .cats-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 36px; flex-wrap: wrap; gap: 12px; }
+
+  /* Emoji-based category cards — no image needed */
+  .cats-grid { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
+  .cats-grid::-webkit-scrollbar { display: none; }
+
+  .cat-emojis {
+    "🍔": "🍔", "🍕": "🍕", "🍣": "🍣", "🌮": "🌮", "🍜": "🍜"
+  }
+
+  .cat-pill {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 20px; min-width: fit-content;
+    background: rgba(255,255,255,.05);
+    border: 1.5px solid var(--line);
+    border-radius: 14px; text-decoration: none;
+    color: rgba(255,255,255,.7);
+    transition: all .25s; flex-shrink: 0;
+  }
+
+  .cat-pill:hover {
+    border-color: rgba(196,16,23,.5); color: white;
+    background: rgba(196,16,23,.12); transform: translateY(-2px);
+  }
+
+  .cat-pill-emoji {
+    font-size: 1.4rem; line-height: 1;
+    width: 40px; height: 40px; border-radius: 10px;
+    background: rgba(255,255,255,.06);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .cat-pill-name { font-size: .88rem; font-weight: 700; white-space: nowrap; }
+  .cat-pill-count { font-size: .72rem; color: var(--muted); }
+
+  /* ── RESTAURANTS ── */
+  .rest-section {
+    background: var(--ink);
+    padding: 0 0 80px;
+    border-top: 1px solid var(--line);
+    position: relative;
+  }
+
+  .rest-section::before {
+    content: ''; position: absolute; top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(196,16,23,.4), transparent);
+  }
+
+  .rest-header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 60px 0 32px; flex-wrap: wrap; gap: 14px;
+  }
+
+  .btn-all {
+    display: inline-flex; align-items: center; gap: 7px;
+    border: 1.5px solid var(--line); background: var(--card);
+    color: var(--muted); border-radius: 100px; padding: 9px 20px;
+    font-size: .8rem; font-weight: 600; text-decoration: none; transition: all .2s;
+  }
+  .btn-all:hover { border-color: rgba(255,255,255,.3); color: white; }
+
+  /* Restaurant cards — colorful gradient bg, no image dependency */
+  .res-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 1100px) { .res-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 760px)  { .res-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px)  { .res-grid { grid-template-columns: 1fr; } }
+
+  /* Gradient palettes cycling through cards */
+  .res-card { --g1: #1a0a0a; --g2: #3d1515; }
+  .res-card:nth-child(4n+1) { --g1: #0a0a1a; --g2: #151535; }
+  .res-card:nth-child(4n+2) { --g1: #0a1a0a; --g2: #153515; }
+  .res-card:nth-child(4n+3) { --g1: #1a1a0a; --g2: #353515; }
+
+  .res-card {
+    border-radius: 20px; overflow: hidden;
+    display: flex; flex-direction: column;
+    border: 1px solid var(--line);
+    text-decoration: none; color: white;
+    transition: transform .28s, box-shadow .28s, border-color .28s;
+    animation: fadeUp .5s ease both;
+    cursor: pointer;
+  }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .res-card:nth-child(1) { animation-delay: .04s; }
+  .res-card:nth-child(2) { animation-delay: .09s; }
+  .res-card:nth-child(3) { animation-delay: .14s; }
+  .res-card:nth-child(4) { animation-delay: .19s; }
+
+  .res-card:hover { transform: translateY(-5px); box-shadow: 0 24px 50px rgba(0,0,0,.5); border-color: rgba(196,16,23,.4); }
+
+  /* Card top — gradient + image attempt */
+  .res-top {
+    height: 160px; position: relative; overflow: hidden;
+    background: linear-gradient(135deg, var(--g1), var(--g2));
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .res-top img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%; object-fit: cover;
+    opacity: .6; transition: opacity .3s, transform .4s;
+  }
+
+  .res-card:hover .res-top img { opacity: .8; transform: scale(1.06); }
+
+  /* Emoji fallback shown always, hidden if img loads */
+  .res-top-emoji {
+    font-size: 3.5rem; opacity: .25; position: relative; z-index: 1;
+    transition: opacity .3s;
+  }
+
+  .res-top img.loaded ~ .res-top-emoji { opacity: 0; }
+
+  /* Overlay */
+  .res-top::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(13,12,12,.85) 0%, transparent 60%);
+    z-index: 2;
+  }
+
+  .res-top-badges {
+    position: absolute; top: 10px; left: 10px; right: 10px;
+    display: flex; justify-content: space-between; z-index: 3;
+  }
+
+  .badge-rat {
+    display: flex; align-items: center; gap: 4px;
+    background: rgba(13,12,12,.8); backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 100px; padding: 4px 10px;
+    font-size: .72rem; font-weight: 700; color: white;
+  }
+  .badge-rat i { color: #fbbf24; font-size: .65rem; }
+
+  .badge-cup {
+    background: #16a34a; color: white;
+    font-size: .6rem; font-weight: 800;
+    letter-spacing: .4px; text-transform: uppercase;
+    padding: 4px 9px; border-radius: 100px;
+  }
+
+  .res-name-over {
+    position: absolute; bottom: 12px; left: 14px; right: 14px; z-index: 3;
+    font-family: 'Fraunces', serif;
+    font-size: 1.05rem; font-weight: 700; color: white;
+    text-shadow: 0 1px 6px rgba(0,0,0,.6); line-height: 1.2;
+  }
+
+  /* Card bottom */
+  .res-bottom {
+    padding: 14px 16px 16px;
+    background: rgba(255,255,255,.03);
+    display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid var(--line);
+  }
+
+  .res-meta { display: flex; gap: 12px; font-size: .76rem; color: var(--muted); font-weight: 500; }
+  .res-meta span { display: flex; align-items: center; gap: 4px; }
+  .res-meta .free { color: #4ade80; font-weight: 700; }
+
+  .res-btn {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(255,255,255,.07); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: .72rem; flex-shrink: 0;
+    transition: all .2s;
+  }
+  .res-card:hover .res-btn { background: #E01E1E; border-color: #E01E1E; color: white; }
+
+  /* ── PROMO BANNER ── */
+  .promo-band {
+    margin: 0 0 0;
+    background: linear-gradient(135deg, #1a0505 0%, #2d0a0a 50%, #1a0505 100%);
+    border-top: 1px solid rgba(196,16,23,.2);
+    border-bottom: 1px solid rgba(196,16,23,.2);
+    padding: 48px 0;
+    position: relative; overflow: hidden;
+  }
+
+  .promo-band::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, rgba(196,16,23,.15) 0%, transparent 70%);
+  }
+
+  .promo-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 24px; position: relative; z-index: 1;
+  }
+
+  .promo-text {}
+  .promo-label {
+    font-size: .72rem; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; color: #ff6b6b; margin-bottom: 8px; display: block;
+  }
+  .promo-title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-weight: 900; color: white; line-height: 1.1;
+    letter-spacing: -0.3px;
+  }
+  .promo-title em { font-style: italic; color: #ff6b6b; }
+
+  .promo-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #E01E1E; color: white; border-radius: 12px;
+    padding: 14px 28px; font-size: .88rem; font-weight: 700;
+    text-decoration: none; transition: all .22s; white-space: nowrap;
+    box-shadow: 0 4px 20px rgba(196,16,23,.35);
+  }
+  .promo-btn:hover { background: #a00d13; color: white; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(196,16,23,.45); }
+</style>
+
 <main>
-  <section class="banner text-white py-5">
-    <div class="container">
-      
-      <h1 class="fw-bold display-5 mb-3">Você está morrendo de fome?</h1>
-      <p class="mb-4 fs-5">
-        Em poucos cliques, encontre refeições perto de você.
-      </p>
 
-      <div class="bg-dark p-4 rounded-4 shadow-lg">
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-grid">
+      <div>
+        <span class="hero-eyebrow"><i class="fas fa-bolt"></i> Delivery rápido</span>
+        <h1 class="hero-title">Com fome?<br>A gente <em>resolve.</em></h1>
+        <p class="hero-sub">Encontre os melhores restaurantes da sua cidade e receba no conforto da sua casa.</p>
 
-        <ul class="nav nav-tabs mb-4">
-          <li class="nav-item">
-            <span class="nav-link active bg-warning text-dark rounded-start fw-bold">
-              <i class="fas fa-motorcycle me-2"></i>Delivery
-            </span>
-          </li>
-          <li class="nav-item">
-            <span class="nav-link text-white">
-              <i class="fas fa-store me-2"></i>Retirada
-            </span>
-          </li>
-        </ul>
-
-        <form method="POST">
-          {% csrf_token %}
-
-          <div class="input-group mb-3">
-            <span class="input-group-text bg-white">
-              <i class="fas fa-map-marker-alt text-danger"></i>
-            </span>
-
-            <input 
-              type="text"
-              name="cep"
-              class="form-control"
-              placeholder="Digite seu CEP"
-              value="{{ cep|default:'' }}"
-            >
-
-            <button 
-              class="btn text-white fw-bold btn-encontrar-comida"
-              type="submit"
-            >
-              <i class="fas fa-search me-1"></i>
-              Encontrar comida
-            </button>
+        <div class="hero-search-box">
+          <div class="search-tabs">
+            <button class="search-tab active"><i class="fas fa-motorcycle"></i> Delivery</button>
+            <button class="search-tab"><i class="fas fa-store"></i> Retirada</button>
           </div>
-
-          {% if endereco %}
-            <div class="alert alert-success mt-3">
-              <strong>Endereço encontrado:</strong> {{ endereco }}
+          <form method="POST">
+            {% csrf_token %}
+            <div class="search-row">
+              <div class="search-field-wrap">
+                <i class="fas fa-map-marker-alt search-field-icon"></i>
+                <input type="text" name="cep" class="search-field" placeholder="Digite seu CEP..." value="{{ cep|default:'' }}">
+              </div>
+              <button class="search-submit" type="submit"><i class="fas fa-search"></i> Encontrar</button>
             </div>
-          {% elif cep %}
-            <div class="alert alert-danger mt-3">
-              <strong>Erro:</strong> CEP inválido ou endereço não encontrado.
-            </div>
-          {% endif %}
+            {% if endereco %}<div class="address-result success"><i class="fas fa-check-circle"></i> {{ endereco }}</div>
+            {% elif cep %}<div class="address-result error"><i class="fas fa-exclamation-circle"></i> CEP inválido.</div>{% endif %}
+          </form>
+        </div>
 
-        </form>
+        <div class="hero-stats">
+          <div class="h-stat"><span class="h-stat-num">200+</span><span class="h-stat-label">Restaurantes</span></div>
+          <div class="h-stat"><span class="h-stat-num">30'</span><span class="h-stat-label">Entrega média</span></div>
+          <div class="h-stat"><span class="h-stat-num">4.8★</span><span class="h-stat-label">Avaliação</span></div>
+        </div>
+      </div>
 
+      <div class="hero-visual">
+        <div class="vis-card vis-main">
+          <div class="vis-main-img">🍔</div>
+          <div class="vis-main-info">
+            <div class="vis-main-name">Sabor da Casa</div>
+            <div class="vis-main-meta"><i class="fas fa-star" style="color:#fbbf24"></i> 4.9 · 25 min · Grátis</div>
+          </div>
+        </div>
+        <div class="vis-card vis-pill">
+          <div class="vis-pill-icon"><i class="fas fa-bicycle"></i></div>
+          <div><div class="vis-pill-text">A caminho!</div><div class="vis-pill-sub">Chega em ~12 min</div></div>
+        </div>
+        <div class="vis-card vis-badge">
+          <i class="fas fa-star"></i>
+          <div><div class="vis-badge-text">4.9 / 5</div><div class="vis-badge-sub">2.4k avaliações</div></div>
+        </div>
       </div>
     </div>
   </section>
 
-  <section class="categorias container-fluid bg-dark py-4 px-3">
-
-    <div class="header-categoria d-flex flex-column align-items-start justify-content-start mb-4">
-      <h2 class="titulo-header-menu text-danger text-uppercase small mb-2">
-        Menu de Comidas
-      </h2>
-
-      <h2 class="text-white fw-bold m-0">
-        Categorias
-      </h2>
-    </div>
-
-    <div class="categorias-lista d-flex gap-3">
-
-      {% for categoria in categorias %}
-        <a 
-          href="{% url 'restaurantes' %}?categoria={{ categoria }}"
-          class="btn-categoria text-decoration-none"
-        >
-          <img src="{% static 'img/logo.png' %}" alt="{{ categoria }}">
-          {{ categoria }}
-        </a>
-      {% endfor %}
-
-    </div>
-  </section>
-
-  <section class="menu-cardapios container-fluid bg-dark py-4 px-0">
-    <div class="container-fluid">
-
-      <div class="d-flex justify-content-between align-items-center mb-4 px-4">
-        <h2 class="text-white fw-bold m-0">
-          Restaurantes populares
-        </h2>
-
-        <a 
-          href="{% url 'restaurantes' %}"
-          class="btn btn-outline-light rounded-pill"
-        >
-          Ver todos
+  <!-- PROMO BAND -->
+  <div class="promo-band">
+    <div class="wrap">
+      <div class="promo-inner">
+        <div class="promo-text">
+          <span class="promo-label">🎉 Oferta especial</span>
+          <div class="promo-title">Primeira entrega <em>grátis</em><br>no seu pedido hoje</div>
+        </div>
+        <a href="{% url 'restaurantes' %}" class="promo-btn">
+          <i class="fas fa-arrow-right"></i> Pedir agora
         </a>
       </div>
+    </div>
+  </div>
 
-      <div class="row justify-content-center g-4">
+  <!-- CATEGORIES -->
+  <section class="cats-section">
+    <div class="wrap">
+      <div class="cats-header">
+        <div>
+          <span class="eyebrow">O que você quer hoje?</span>
+          <h2 class="sec-title">Categorias</h2>
+        </div>
+      </div>
 
-        {% for restaurante in restaurantes %}
-          <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-
-            <div class="card menu-cardapios-card">
-
-              <img 
-                src="{% static restaurante.imagem %}" 
-                alt="{{ restaurante.nome }}"
-              >
-
-              <div class="card-top-bar menu-cardapios-card-top">
-                <span class="badge-desconto">
-                  {{ restaurante.cupom }}
-                </span>
-
-                <span class="d-flex align-items-center gap-1 mx-auto">
-                  <i class="fas fa-star text-warning"></i>
-                  <span class="fw-bold">
-                    {{ restaurante.avaliacao }}/5
-                  </span>
-                </span>
-              </div>
-
-              <div class="card-footer-bar">
-
-                <h5 class="fw-bold mb-1" style="font-size: 1.2rem;">
-                  {{ restaurante.nome }}
-                </h5>
-
-                <div class="d-flex align-items-center justify-content-between">
-
-                  <div class="d-flex align-items-center gap-2">
-                    <span class="fw-bold text-warning">
-                      {{ restaurante.taxa }}
-                    </span>
-
-                    <span class="text-white small">
-                      {{ restaurante.tempo }}
-                    </span>
-                  </div>
-
-                  <a 
-                    href="{% url 'restaurantes' %}?id={{ restaurante.id }}"
-                    class="btn btn-light rounded-circle p-2 d-flex align-items-center justify-content-center"
-                  >
-                    <i class="fas fa-arrow-right text-dark"></i>
-                  </a>
-
-                </div>
-              </div>
-
-            </div>
-
+      <div class="cats-grid">
+        {% for categoria in categorias %}
+        <a href="{% url 'restaurantes' %}?categoria={{ categoria }}" class="cat-pill">
+          <div class="cat-pill-emoji">
+            {% if "brasil" in categoria|lower %}🇧🇷
+            {% elif "lanche" in categoria|lower or "burger" in categoria|lower %}🍔
+            {% elif "pizza" in categoria|lower %}🍕
+            {% elif "sushi" in categoria|lower or "japan" in categoria|lower %}🍱
+            {% elif "taco" in categoria|lower or "mexic" in categoria|lower %}🌮
+            {% elif "massa" in categoria|lower or "ital" in categoria|lower %}🍝
+            {% elif "salada" in categoria|lower or "vegano" in categoria|lower %}🥗
+            {% elif "frango" in categoria|lower %}🍗
+            {% elif "peixe" in categoria|lower or "frutos" in categoria|lower %}🐟
+            {% elif "doce" in categoria|lower or "sobre" in categoria|lower %}🍰
+            {% else %}🍽️{% endif %}
           </div>
+          <div>
+            <div class="cat-pill-name">{{ categoria }}</div>
+            <div class="cat-pill-count">Ver restaurantes →</div>
+          </div>
+        </a>
         {% endfor %}
-
       </div>
     </div>
   </section>
+
+  <!-- RESTAURANTS -->
+  <section class="rest-section">
+    <div class="wrap">
+      <div class="rest-header">
+        <div>
+          <span class="eyebrow">Populares agora</span>
+          <h2 class="sec-title">Restaurantes em destaque</h2>
+        </div>
+        <a href="{% url 'restaurantes' %}" class="btn-all">Ver todos <i class="fas fa-arrow-right"></i></a>
+      </div>
+
+      <div class="res-grid">
+        {% for restaurante in restaurantes %}
+        <a href="{% url 'restaurante_detalhe' restaurante.id_restaurante %}" class="res-card">
+          <div class="res-top">
+            <span class="res-top-emoji">
+              {% if "brasil" in restaurante.nome|lower %}🇧🇷
+              {% elif "burger" in restaurante.nome|lower or "lanche" in restaurante.nome|lower %}🍔
+              {% elif "pizza" in restaurante.nome|lower %}🍕
+              {% elif "sushi" in restaurante.nome|lower %}🍱
+              {% else %}🍽️{% endif %}
+            </span>
+            <img src="{% static restaurante.imagem %}" alt="{{ restaurante.nome }}"
+                 onload="this.classList.add('loaded')"
+                 onerror="this.style.display='none'">
+
+            <div class="res-top-badges">
+              <span class="badge-rat"><i class="fas fa-star"></i> {{ restaurante.avaliacao }}</span>
+              {% if restaurante.cupom %}<span class="badge-cup">Cupom</span>{% endif %}
+            </div>
+            <div class="res-name-over">{{ restaurante.nome }}</div>
+          </div>
+          <div class="res-bottom">
+            <div class="res-meta">
+              <span><i class="fas fa-clock"></i> {{ restaurante.tempo }}</span>
+              <span class="free">{{ restaurante.taxa }}</span>
+            </div>
+            <div class="res-btn"><i class="fas fa-arrow-right"></i></div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
 </main>
 
 {% include "pages/pagePrincipal/footer.html" %}
+
+<script>
+  // Image load handler — hide emoji when image loads
+  document.querySelectorAll('.res-top img').forEach(img => {
+    if (img.complete && img.naturalWidth > 0) {
+      img.classList.add('loaded');
+      img.previousElementSibling.style.opacity = '0';
+    }
+    img.addEventListener('load', () => {
+      img.classList.add('loaded');
+      img.previousElementSibling.style.opacity = '0';
+    });
+  });
+</script>

@@ -1,96 +1,341 @@
 {% load static %}
 
-<nav class="navbar navbar-expand-lg fixed-top custom-navbar shadow-sm" id="mainNavbar">
-  <div class="container-fluid px-3 px-lg-4">
-    
-    <a href="{% url 'home' %}" class="navbar-brand d-flex align-items-center">
-      <img
-        src="{% static 'img/logobc.svg' %}"
-        alt="FoodVerse"
-        class="logo-img"
-        onerror="this.style.display = 'none'"
-      />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  /* ── GARANTE QUE O BODY NÃO FICA EMBAIXO DO NAVBAR ── */
+  body { padding-top: 68px !important; }
+
+  /* ── NAVBAR ── */
+  .custom-navbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 9999;
+    background: rgba(13, 12, 12, 0.96);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    height: 68px;
+    transition: all .3s;
+  }
+
+  .custom-navbar.scrolled {
+    background: rgba(10, 9, 9, 0.99);
+    box-shadow: 0 4px 24px rgba(0,0,0,.25);
+  }
+
+  .navbar-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+
+  /* ── LOGO ── */
+  .nav-logo {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none; flex-shrink: 0; margin-right: 32px;
+  }
+
+  .logo-img { height: 32px; width: auto; }
+
+  .logo-text {
+    font-family: 'Fraunces', serif;
+    font-size: 1.25rem; font-weight: 900;
+    color: white; letter-spacing: -0.3px;
+  }
+
+  .logo-text span { color: #E01E1E; }
+
+  /* ── NAV LINKS ── */
+  .nav-links {
+    display: flex; align-items: center; gap: 4px;
+    list-style: none; margin: 0; padding: 0;
+  }
+
+  .nav-links .nav-link {
+    display: flex; align-items: center; gap: 7px;
+    padding: 7px 14px; border-radius: 10px;
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: .85rem; font-weight: 600;
+    color: rgba(255,255,255,.65);
+    text-decoration: none; transition: all .2s; white-space: nowrap;
+  }
+
+  .nav-links .nav-link:hover { color: white; background: rgba(255,255,255,.08); }
+  .nav-links .nav-link.active { color: white; background: rgba(255,255,255,.1); }
+  .nav-links .nav-link i { font-size: .8rem; opacity: .7; }
+
+  /* ── SEARCH ── */
+  .nav-search { flex: 1; max-width: 320px; margin: 0 20px; }
+
+  .search-wrap {
+    display: flex; align-items: center;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 12px; padding: 0 4px 0 14px;
+    transition: all .2s; height: 40px;
+  }
+
+  .search-wrap:focus-within {
+    background: rgba(255,255,255,.12);
+    border-color: rgba(255,255,255,.25);
+    box-shadow: 0 0 0 3px rgba(224,30,30,.15);
+  }
+
+  .search-wrap i { color: rgba(255,255,255,.4); font-size: .82rem; flex-shrink: 0; }
+
+  .search-input {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: white; font-family: 'Instrument Sans', sans-serif;
+    font-size: .84rem; padding: 0 10px; height: 100%;
+  }
+
+  .search-input::placeholder { color: rgba(255,255,255,.35); }
+
+  .search-btn {
+    background: #E01E1E; border: none; border-radius: 9px;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: .78rem; cursor: pointer; flex-shrink: 0;
+    transition: background .2s;
+  }
+
+  .search-btn:hover { background: #b81818; }
+
+  /* ── RIGHT ── */
+  .nav-right {
+    display: flex; align-items: center; gap: 10px;
+    margin-left: auto; flex-shrink: 0;
+  }
+
+  /* Cart */
+  .cart-btn {
+    position: relative; width: 42px; height: 42px;
+    border-radius: 12px;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.1);
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,.8); text-decoration: none;
+    font-size: .95rem; transition: all .2s; flex-shrink: 0;
+  }
+
+  .cart-btn:hover { background: rgba(255,255,255,.15); color: white; border-color: rgba(255,255,255,.2); }
+
+  .cart-badge {
+    position: absolute; top: -5px; right: -5px;
+    background: #E01E1E; color: white;
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: .62rem; font-weight: 700;
+    min-width: 18px; height: 18px; border-radius: 100px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 4px; border: 2px solid #0d0c0c; line-height: 1;
+  }
+
+  /* User */
+  .user-btn {
+    display: flex; align-items: center; gap: 9px;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 12px; padding: 6px 12px 6px 6px;
+    cursor: pointer; transition: all .2s;
+    text-decoration: none; color: white;
+  }
+
+  .user-btn:hover { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.2); color: white; }
+
+  .user-avatar {
+    width: 30px; height: 30px; border-radius: 9px;
+    background: linear-gradient(135deg, #E01E1E, #ff4444);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-size: .85rem; font-weight: 900; color: white; flex-shrink: 0;
+  }
+
+  .user-name {
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: .82rem; font-weight: 600; color: white;
+    max-width: 100px; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  .user-chevron { font-size: .65rem; color: rgba(255,255,255,.4); transition: transform .2s; }
+  .show .user-chevron { transform: rotate(180deg); }
+
+  /* Dropdown */
+  .user-dropdown {
+    background: #1a1919;
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 16px; padding: 8px; min-width: 210px;
+    box-shadow: 0 16px 48px rgba(0,0,0,.4);
+    margin-top: 8px !important;
+  }
+
+  .dropdown-header-item {
+    padding: 10px 12px 12px;
+    border-bottom: 1px solid rgba(255,255,255,.07); margin-bottom: 6px;
+  }
+
+  .dropdown-header-item small {
+    font-size: .65rem; font-weight: 700; letter-spacing: .6px;
+    text-transform: uppercase; color: rgba(255,255,255,.3);
+    display: block; margin-bottom: 3px;
+  }
+
+  .dropdown-header-item strong { font-family: 'Instrument Sans', sans-serif; font-size: .9rem; font-weight: 700; color: white; }
+
+  .user-dropdown .dropdown-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 10px;
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: .84rem; font-weight: 600;
+    color: rgba(255,255,255,.7); transition: all .18s;
+  }
+
+  .user-dropdown .dropdown-item:hover { background: rgba(255,255,255,.08); color: white; }
+  .user-dropdown .dropdown-item i { width: 16px; text-align: center; font-size: .8rem; color: rgba(255,255,255,.4); }
+  .user-dropdown .dropdown-item:hover i { color: #E01E1E; }
+  .user-dropdown .dropdown-divider { border-color: rgba(255,255,255,.07); margin: 6px 0; }
+
+  .item-danger { color: #ff6b6b !important; }
+  .item-danger i { color: #ff6b6b !important; }
+  .item-danger:hover { background: rgba(224,30,30,.15) !important; }
+
+  /* Auth */
+  .btn-signup {
+    display: inline-flex; align-items: center; padding: 8px 18px;
+    border-radius: 10px; border: 1.5px solid rgba(255,255,255,.2);
+    background: transparent; color: rgba(255,255,255,.8);
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: .82rem; font-weight: 700;
+    text-decoration: none; transition: all .2s; white-space: nowrap;
+  }
+
+  .btn-signup:hover { border-color: rgba(255,255,255,.5); color: white; background: rgba(255,255,255,.06); }
+
+  .btn-login {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 18px; border-radius: 10px;
+    background: #E01E1E; color: white;
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: .82rem; font-weight: 700;
+    text-decoration: none; transition: all .2s;
+    box-shadow: 0 4px 14px rgba(224,30,30,.3); white-space: nowrap;
+  }
+
+  .btn-login:hover { background: #b81818; color: white; transform: translateY(-1px); }
+
+  /* ── MOBILE ── */
+  .mobile-toggle {
+    display: none;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 10px; width: 40px; height: 40px;
+    align-items: center; justify-content: center;
+    color: white; cursor: pointer; margin-left: auto; flex-shrink: 0;
+  }
+
+  @media (max-width: 991px) {
+    .mobile-toggle { display: flex; }
+
+    .nav-collapse {
+      display: none;
+      position: fixed;
+      top: 68px; left: 0; right: 0;
+      background: rgba(13,12,12,.98);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      padding: 16px 20px 24px;
+      flex-direction: column; gap: 12px; z-index: 9998;
+    }
+
+    .nav-collapse.open { display: flex; }
+    .nav-links { flex-direction: column; width: 100%; gap: 4px; }
+    .nav-links .nav-link { width: 100%; }
+    .nav-search { max-width: 100%; margin: 0; width: 100%; }
+    .nav-right { width: 100%; justify-content: flex-start; }
+  }
+
+  @media (min-width: 992px) {
+    .nav-collapse { display: flex !important; flex: 1; align-items: center; }
+  }
+</style>
+
+<nav class="custom-navbar" id="mainNavbar">
+  <div class="navbar-inner">
+
+    <a href="{% url 'home' %}" class="nav-logo">
+      <img src="{% static 'img/logobc.svg' %}" alt="FoodVerse" class="logo-img" onerror="this.style.display='none'">
     </a>
 
-    <button
-      class="navbar-toggler border-0 shadow-none ms-auto"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#menuNav"
-      aria-controls="menuNav"
-      aria-expanded="false"
-      aria-label="Alternar navegação"
-    >
-      <span class="navbar-toggler-icon"></span>
+    <button class="mobile-toggle" onclick="toggleNav()" aria-label="Menu">
+      <i class="fa-solid fa-bars" id="toggle-icon"></i>
     </button>
 
-    <div class="collapse navbar-collapse" id="menuNav">
-      
-      <ul class="navbar-nav ms-auto mb-2 mb-lg-0 gap-lg-2">
-        <li class="nav-item">
-          <a class="nav-link nav-link-custom active" href="{% url 'home' %}">
-            <i class="fa-solid fa-house me-2"></i>Início
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link nav-link-custom" href="{% url 'restaurantes' %}">
-            <i class="fa-solid fa-utensils me-2"></i>Restaurantes
-          </a>
-        </li>
+    <div class="nav-collapse" id="navCollapse">
+
+      <ul class="nav-links">
+        <li><a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}"><i class="fa-solid fa-house"></i> Início</a></li>
+        <li><a class="nav-link {% if request.resolver_match.url_name == 'restaurantes' %}active{% endif %}" href="{% url 'restaurantes' %}"><i class="fa-solid fa-utensils"></i> Restaurantes</a></li>
       </ul>
 
-      <div class="d-flex align-items-center ms-lg-4 mt-3 mt-lg-0 pb-3 pb-lg-0 border-top border-lg-0 border-secondary pt-3 pt-lg-0">
-        
-        {% if user.is_authenticated %}
-        
-        <a href="{% url 'carrinho' %}" class="btn-header-icon position-relative me-3" title="Carrinho">
+      <form class="nav-search" method="GET" action="{% url 'buscar_prato_restaurante' %}">
+        <div class="search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" name="q" class="search-input" placeholder="Buscar restaurantes ou pratos..." value="{{ request.GET.q }}">
+          <button class="search-btn" type="submit"><i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+      </form>
+
+      <div class="nav-right">
+        {% if cliente_logado %}
+
+        <a href="{% url 'carrinho' %}" class="cart-btn" title="Carrinho">
           <i class="fa-solid fa-cart-shopping"></i>
-          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
-            2 </span>
+          <span class="cart-badge">{{ carrinho_total_itens|default:0 }}</span>
         </a>
 
-        <div class="nav-item dropdown dropdown-user">
-          <a class="nav-link d-flex align-items-center gap-2" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <div class="user-avatar shadow-sm">
-              {{ user.username|make_list|first|upper }}
-            </div>
-            <span class="d-none d-lg-block text-white fw-bold">{{ user.username }}</span>
-            <i class="fa-solid fa-chevron-down ms-1 text-white-50 small"></i>
+        <div class="dropdown">
+          <a class="user-btn" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+            <div class="user-avatar">{{ cliente_logado.username|make_list|first|upper }}</div>
+            <span class="user-name d-none d-lg-block">{{ cliente_logado.username }}</span>
+            <i class="fa-solid fa-chevron-down user-chevron d-none d-lg-block"></i>
           </a>
-          
-          <ul class="dropdown-menu dropdown-menu-end shadow border-0 animate-fade-in mt-2 rounded-4" aria-labelledby="userDropdown">
-            <li class="px-3 py-2 border-bottom">
-              <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Conectado como</small>
-              <span class="fw-bold text-dark d-block text-truncate">{{ user.username }}</span>
+
+          <ul class="dropdown-menu user-dropdown dropdown-menu-end">
+            <li class="dropdown-header-item">
+              <small>Conectado como</small>
+              <strong>{{ cliente_logado.username }}</strong>
             </li>
-            <li>
-              <a class="dropdown-item py-2" href="{% url 'perfil' %}">
-                <i class="fa-solid fa-user-gear me-2 text-danger"></i>Meu Perfil
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item py-2" href="{% url 'pedido' %}">
-                <i class="fa-solid fa-receipt me-2 text-danger"></i>Meus Pedidos
-              </a>
-            </li>
-            <li><hr class="dropdown-divider my-1" /></li>
-            <li>
-              <a class="dropdown-item py-2 text-danger fw-bold" href="{% url 'logout' %}">
-                <i class="fa-solid fa-right-from-bracket me-2"></i>Sair
-              </a>
-            </li>
+            <li><a class="dropdown-item" href="{% url 'perfil' %}"><i class="fa-solid fa-user-gear"></i> Meu Perfil</a></li>
+            <li><a class="dropdown-item" href="{% url 'pedido' %}"><i class="fa-solid fa-receipt"></i> Meus Pedidos</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item item-danger" href="{% url 'logout' %}"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
           </ul>
         </div>
 
         {% else %}
-        
-        <div class="d-flex gap-2 w-100 mt-2 mt-lg-0">
-          <a href="{% url 'cadastro' %}" class="btn btn-outline-light btn-sm rounded-pill px-4 fw-bold">Criar conta</a>
-          <a href="{% url 'login' %}" class="btn btn-danger btn-sm rounded-pill px-4 fw-bold shadow-sm" style="background-color: #BC1015; border:none;">Entrar</a>
-        </div>
-        
+        <a href="{% url 'cadastro' %}" class="btn-signup">Criar conta</a>
+        <a href="{% url 'login' %}" class="btn-login"><i class="fa-solid fa-right-to-bracket"></i> Entrar</a>
         {% endif %}
       </div>
+
     </div>
   </div>
 </nav>
+
+<script>
+  window.addEventListener('scroll', () => {
+    document.getElementById('mainNavbar').classList.toggle('scrolled', window.scrollY > 20);
+  });
+
+  function toggleNav() {
+    const nav = document.getElementById('navCollapse');
+    const icon = document.getElementById('toggle-icon');
+    nav.classList.toggle('open');
+    icon.className = nav.classList.contains('open') ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
+  }
+</script>

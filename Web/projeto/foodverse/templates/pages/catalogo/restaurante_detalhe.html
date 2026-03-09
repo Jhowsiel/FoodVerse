@@ -4,251 +4,468 @@
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
 
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900;1,9..144,400&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
   :root {
-    --brand-red: #BC1015;
-    --brand-hover: #E61218;
-    --card-bg: #ffffff;
-    --card-hover: #f8f9fa;
-    --page-bg: #f8f9fa;
-    --text-main: #212529;
-    --text-muted: #6c757d;
-    --border-light: #dee2e6;
+    --red:     #C41017;
+    --red-dk:  #a00d13;
+    --red-lt:  #fdf2f2;
+    --ink:     #111010;
+    --warm:    #f8f6f1;
+    --stone:   #e8e4dc;
+    --muted:   #7a7570;
+    --white:   #ffffff;
+    --radius:  18px;
+    --shadow:  0 2px 12px rgba(17,16,16,.07);
   }
+
+  *, *::before, *::after { box-sizing: border-box; }
 
   body {
-    padding-top: 80px;
-    background-color: var(--page-bg);
-    color: var(--text-main);
-    font-family: 'Inter', sans-serif;
+    padding-top: 90px;
+    background: var(--warm);
+    font-family: 'Instrument Sans', sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
   }
 
-  /* ===== HEADER DO RESTAURANTE ===== */
-  .restaurant-header {
-    background: var(--card-bg);
-    border-radius: 20px;
-    padding: 2.5rem 2rem;
-    border: 1px solid var(--border-light);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    margin-bottom: 3rem;
+  .page-wrap { max-width: 1160px; margin: 0 auto; padding: 0 20px 80px; }
+
+  /* ── BACK ── */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 28px 0 24px;
+    transition: color .2s;
+  }
+  .back-link:hover { color: var(--red); }
+  .back-link i { font-size: 1rem; }
+
+  /* ── HERO RESTAURANTE ── */
+  .rest-hero {
+    background: var(--white);
+    border-radius: 24px;
+    border: 1px solid var(--stone);
+    overflow: hidden;
+    margin-bottom: 40px;
+    box-shadow: var(--shadow);
+    animation: fadeUp .5s ease both;
   }
 
-  .restaurant-title {
-    font-weight: 800;
-    font-size: 2rem;
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
-  .restaurant-description {
-    color: var(--text-muted);
-    font-size: 1rem;
-    margin-top: 0.5rem;
+  .hero-img-wrap {
+    height: 260px;
+    overflow: hidden;
+    position: relative;
+    background: var(--stone);
   }
 
-  .restaurant-meta {
-    margin-top: 1.5rem;
+  .hero-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform .5s ease;
+  }
+
+  .rest-hero:hover .hero-img { transform: scale(1.03); }
+
+  .hero-img-wrap::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(17,16,16,.55) 0%, transparent 55%);
+  }
+
+  .hero-overlay {
+    position: absolute;
+    bottom: 22px; left: 28px; right: 28px;
+    z-index: 2;
     display: flex;
-    gap: 1.5rem;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
     flex-wrap: wrap;
   }
 
-  .restaurant-meta span {
+  .hero-name {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+    font-weight: 900;
+    color: white;
+    line-height: 1.05;
+    text-shadow: 0 2px 8px rgba(0,0,0,.3);
+  }
+
+  .hero-rating {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
-    font-weight: 600;
-  }
-
-  .btn-cupom {
-    background-color: #22C55E;
-    color: #fff;
+    gap: 5px;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(6px);
+    border-radius: 100px;
+    padding: 6px 14px;
+    font-size: .82rem;
     font-weight: 700;
-    padding: 0.4rem 0.8rem;
-    border-radius: 8px;
-    display: inline-block;
-    margin-bottom: 1rem;
-    font-size: 0.85rem;
-  }
-
-  .btn-reserva {
-    background-color: var(--brand-red);
-    color: #fff;
-    font-weight: 700;
-    padding: 0.75rem 1.5rem;
-    border-radius: 12px;
-    transition: 0.3s;
-  }
-
-  .btn-reserva:hover {
-    background-color: var(--brand-hover);
-    color: #fff;
-  }
-
-  /* ===== FILTROS ===== */
-  .btn-filter {
-    background: #fff;
-    border: 1px solid var(--border-light);
-    color: var(--text-main);
-    border-radius: 12px;
-    padding: 0.5rem 1.25rem;
-    font-weight: 600;
-    transition: 0.25s;
+    color: var(--ink);
     white-space: nowrap;
   }
 
-  .btn-filter.active {
-    background-color: var(--brand-red);
-    color: #fff;
-    border-color: var(--brand-red);
+  .hero-rating i { color: #f59e0b; }
+
+  /* Info bar */
+  .hero-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 22px 28px;
   }
 
-  .btn-filter:hover {
-    background-color: var(--card-hover);
+  .info-pills {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
   }
 
-  /* ===== CARD DE PRATO ===== */
+  .info-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .info-pill i { color: var(--red); font-size: .9rem; }
+  .info-pill.free { color: #16a34a; }
+  .info-pill.free i { color: #16a34a; }
+
+  .cupom-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f0fdf4;
+    border: 1.5px solid #86efac;
+    color: #15803d;
+    font-size: .75rem;
+    font-weight: 700;
+    border-radius: 100px;
+    padding: 5px 14px;
+    letter-spacing: .3px;
+  }
+
+  .btn-reservar {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--red);
+    color: white;
+    border-radius: 100px;
+    padding: 11px 24px;
+    font-size: .85rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all .22s;
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(196,16,23,.22);
+  }
+
+  .btn-reservar:hover {
+    background: var(--red-dk);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(196,16,23,.28);
+  }
+
+  /* ── MENU SECTION ── */
+  .menu-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .menu-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.6rem;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .menu-title::before {
+    content: '';
+    width: 4px; height: 28px;
+    background: var(--red);
+    border-radius: 2px;
+  }
+
+  .filters {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .filters::-webkit-scrollbar { display: none; }
+
+  .filter-btn {
+    padding: 7px 18px;
+    border-radius: 100px;
+    font-size: .8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    border: 1.5px solid var(--stone);
+    background: var(--white);
+    color: var(--ink);
+    cursor: pointer;
+    transition: all .2s;
+    font-family: inherit;
+  }
+
+  .filter-btn:hover { border-color: var(--red); color: var(--red); }
+  .filter-btn.active { background: var(--ink); border-color: var(--ink); color: white; }
+
+  /* ── DISH GRID ── */
+  .dish-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+
+  @media (max-width: 900px) { .dish-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .dish-grid { grid-template-columns: 1fr; } }
+
+  /* ── DISH CARD ── */
   .dish-card {
-    background: var(--card-bg);
-    border-radius: 16px;
-    border: 1px solid var(--border-light);
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid var(--stone);
     overflow: hidden;
-    transition: transform 0.3s, box-shadow 0.3s;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    display: flex;
+    flex-direction: column;
+    transition: transform .28s, box-shadow .28s;
+    animation: fadeUp .45s ease both;
   }
+
+  .dish-card:nth-child(1) { animation-delay: .04s; }
+  .dish-card:nth-child(2) { animation-delay: .09s; }
+  .dish-card:nth-child(3) { animation-delay: .14s; }
+  .dish-card:nth-child(4) { animation-delay: .19s; }
+  .dish-card:nth-child(5) { animation-delay: .24s; }
+  .dish-card:nth-child(6) { animation-delay: .29s; }
 
   .dish-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    transform: translateY(-5px);
+    box-shadow: 0 18px 40px rgba(17,16,16,.1);
   }
 
-  .dish-img-wrapper {
-    position: relative;
-    height: 200px;
+  .dish-img-wrap {
+    height: 180px;
     overflow: hidden;
+    position: relative;
+    background: var(--stone);
+    flex-shrink: 0;
   }
 
-  .dish-img-wrapper img {
-    width: 100%;
-    height: 100%;
+  .dish-img-wrap img {
+    width: 100%; height: 100%;
     object-fit: cover;
-    transition: transform 0.4s;
+    transition: transform .4s ease;
   }
 
-  .dish-card:hover img {
-    transform: scale(1.05);
+  .dish-card:hover .dish-img-wrap img { transform: scale(1.07); }
+
+  .dish-no-img {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    color: #c5bfb6; font-size: 2.4rem;
+    background: linear-gradient(135deg, #f0ede6, #e8e4dc);
   }
 
-  .dish-price-tag {
+  .price-tag {
     position: absolute;
-    top: 12px;
-    right: 12px;
-    background-color: var(--brand-red);
-    color: #fff;
+    bottom: 12px; right: 12px;
+    background: var(--red);
+    color: white;
     font-weight: 700;
-    padding: 0.4rem 0.8rem;
-    border-radius: 50px;
-    font-size: 0.85rem;
+    font-size: .8rem;
+    padding: 5px 12px;
+    border-radius: 100px;
+    box-shadow: 0 3px 10px rgba(196,16,23,.3);
   }
 
-  .dish-info {
-    padding: 1rem 1.25rem 1.5rem;
+  .dish-body {
+    padding: 16px 18px 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
   }
 
   .dish-name {
+    font-family: 'Fraunces', serif;
+    font-size: 1rem;
     font-weight: 700;
-    font-size: 1.15rem;
-    margin-bottom: 0.4rem;
+    margin-bottom: 6px;
+    line-height: 1.25;
+    color: var(--ink);
   }
 
   .dish-desc {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    margin-bottom: 1rem;
-    min-height: 50px;
+    font-size: .78rem;
+    color: var(--muted);
+    line-height: 1.55;
+    flex: 1;
+    margin-bottom: 16px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
-  .btn-vermais {
-    background: transparent;
-    border: 1px solid var(--brand-red);
-    color: var(--brand-red);
-    font-weight: 600;
-    border-radius: 50px;
-    padding: 0.4rem 1rem;
-    transition: 0.25s;
+  .btn-ver {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: var(--red-lt);
+    color: var(--red);
+    border: 1.5px solid #fca5a5;
+    border-radius: 100px;
+    padding: 9px 18px;
+    font-size: .8rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all .2s;
+    align-self: flex-start;
   }
 
-  .btn-vermais:hover {
-    background-color: var(--brand-red);
-    color: #fff;
+  .btn-ver:hover {
+    background: var(--red);
+    color: white;
+    border-color: var(--red);
+    gap: 9px;
   }
+
+  /* ── EMPTY ── */
+  .empty-menu {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 72px 24px;
+    color: var(--muted);
+  }
+
+  .empty-menu i { font-size: 3rem; opacity: .25; display: block; margin-bottom: 14px; }
+  .empty-menu p { font-size: .9rem; }
 </style>
 
-<section class="container mb-5">
+<div class="page-wrap">
 
-  <!-- VOLTAR -->
-  <nav class="mb-4">
-    <a href="{% url 'restaurantes' %}" class="text-decoration-none d-inline-flex align-items-center gap-2 text-muted fw-medium">
-      <i class="bi bi-arrow-left-circle fs-4 text-danger"></i> Voltar para restaurantes
-    </a>
-  </nav>
+  <!-- Back -->
+  <a href="{% url 'restaurantes' %}" class="back-link">
+    <i class="bi bi-arrow-left"></i> Voltar para restaurantes
+  </a>
 
-  <!-- HEADER RESTAURANTE -->
-  <div class="restaurant-header row align-items-center g-4">
-    <div class="col-lg-8">
-      <h1 class="restaurant-title">{{ restaurante.nome }}</h1>
-      <p class="restaurant-description">{{ restaurante.descricao }}</p>
-      <div class="restaurant-meta">
-        <span><i class="bi bi-clock text-danger"></i> {{ restaurante.tempo }}</span>
-        <span><i class="bi bi-bicycle text-danger"></i> Entrega Grátis</span>
-      </div>
-      {% if restaurante.cupom %}
-        <span class="btn-cupom">CUPOM: {{ restaurante.cupom }}</span>
+  <!-- Hero -->
+  <div class="rest-hero">
+    <div class="hero-img-wrap">
+      {% if restaurante.imagem %}
+        <img src="{% static restaurante.imagem %}" class="hero-img" alt="{{ restaurante.nome }}">
+      {% else %}
+        <div class="hero-img" style="background:linear-gradient(135deg,#e8e4dc,#d5cfc3);"></div>
       {% endif %}
-    </div>
-    <div class="col-lg-4 text-lg-end">
-      <a href="{% url 'reserva' %}?restaurante_id={{ restaurante.id }}" class="btn btn-reserva">RESERVAR AGORA</a>
-    </div>
-  </div>
 
-  <!-- FILTROS -->
-  <div class="d-flex justify-content-between align-items-center mt-5 mb-4">
-    <h3 class="fw-bold mb-0 border-start border-danger border-4 ps-3">MENU</h3>
-    <div class="d-flex gap-2 overflow-auto">
-      <button class="btn-filter active">Todos</button>
-      <button class="btn-filter">Mais Pedidos</button>
-      <button class="btn-filter">Promoções</button>
-    </div>
-  </div>
-
-  <!-- CARDS DE PRATOS -->
-  <div class="row g-4">
-    {% for prato in restaurante.pratos %}
-    <div class="col-12 col-md-6 col-lg-4">
-      <div class="dish-card">
-        <div class="dish-img-wrapper">
-          {% if prato.imagem %}
-            <img src="{% static prato.imagem %}" alt="{{ prato.nome }}">
-          {% else %}
-            <div class="w-100 h-100 bg-light d-flex align-items-center justify-content-center">
-              <i class="bi bi-egg fs-1 text-muted"></i>
-            </div>
-          {% endif %}
-          <div class="dish-price-tag">R$ {{ prato.preco }}</div>
-        </div>
-        <div class="dish-info">
-          <h5 class="dish-name">{{ prato.nome }}</h5>
-          <p class="dish-desc">{{ prato.descricao|truncatechars:100 }}</p>
-          <a href="{% url 'prato' %}?restaurante_id={{ restaurante.id }}&id={{ prato.id }}" class="btn-vermais">Ver Mais</a>
-        </div>
+      <div class="hero-overlay">
+        <h1 class="hero-name">{{ restaurante.nome }}</h1>
+        {% if restaurante.avaliacao %}
+        <span class="hero-rating">
+          <i class="bi bi-star-fill"></i> {{ restaurante.avaliacao }}
+        </span>
+        {% endif %}
       </div>
+    </div>
+
+    <div class="hero-info">
+      <div class="info-pills">
+        <span class="info-pill">
+          <i class="bi bi-clock"></i> {{ restaurante.tempo }}
+        </span>
+        <span class="info-pill free">
+          <i class="bi bi-bicycle"></i> Entrega grátis
+        </span>
+        {% if restaurante.cupom %}
+        <span class="cupom-chip">
+          <i class="bi bi-ticket-perforated-fill"></i> {{ restaurante.cupom }}
+        </span>
+        {% endif %}
+      </div>
+
+      <a href="{% url 'reserva' %}?restaurante_id={{ restaurante.id_restaurante }}" class="btn-reservar">
+        <i class="bi bi-calendar-check"></i> Reservar mesa
+      </a>
+    </div>
+
+    {% if restaurante.descricao %}
+    <p style="padding: 0 28px 22px; font-size:.88rem; color:var(--muted); line-height:1.6; border-top:1px solid var(--stone); padding-top:16px; margin:0;">
+      {{ restaurante.descricao }}
+    </p>
+    {% endif %}
+  </div>
+
+  <!-- Menu -->
+  <div class="menu-bar">
+    <h2 class="menu-title">Cardápio</h2>
+    <div class="filters">
+      <button class="filter-btn active">Todos</button>
+      <button class="filter-btn">Mais pedidos</button>
+      <button class="filter-btn">Promoções</button>
+    </div>
+  </div>
+
+  <div class="dish-grid">
+    {% for prato in pratos %}
+    <div class="dish-card">
+
+      <div class="dish-img-wrap">
+        {% if prato.imagem %}
+          <img src="{% static prato.imagem %}" alt="{{ prato.nome_produto }}">
+        {% else %}
+          <div class="dish-no-img"><i class="bi bi-egg-fried"></i></div>
+        {% endif %}
+        <span class="price-tag">R$ {{ prato.preco }}</span>
+      </div>
+
+      <div class="dish-body">
+        <h5 class="dish-name">{{ prato.nome_produto }}</h5>
+        <p class="dish-desc">{{ prato.descricao|truncatechars:110 }}</p>
+        <a href="{% url 'prato' %}?restaurante_id={{ restaurante.id_restaurante }}&produto_id={{ prato.id_produto }}"
+           class="btn-ver">
+          Ver prato <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+
     </div>
     {% empty %}
-    <div class="col-12 text-center py-5">
-      <p class="text-muted fs-5">Nenhum item cadastrado no momento.</p>
+    <div class="empty-menu">
+      <i class="bi bi-egg"></i>
+      <p>Nenhum item no cardápio ainda.</p>
     </div>
     {% endfor %}
   </div>
 
-</section>
+</div>
 
 {% include "pages/pagePrincipal/footer.html" %}
 {% endblock %}
