@@ -1,7 +1,6 @@
 package com.senac.food.verse;
 
 import java.awt.CardLayout;
-import java.awt.Container;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -17,11 +16,13 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
     String role;
     String phone;
     String status;
+    int restauranteId;
 
     // Construtor
-    public Funcionario(String name, String role, String phone, String userName, String email,
+    public Funcionario(int restauranteId, String name, String role, String phone, String userName, String email,
             String password, Boolean isLogin, String registrationDate, String status) {
         super(userName, email, password, isLogin, registrationDate);
+        this.restauranteId = restauranteId;
         this.name = name;
         this.role = role;
         this.phone = phone;
@@ -39,33 +40,29 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
 
         try {
             conn = banco.abrirConexao();
-            
+
             if (conn == null) {
-                System.out.println("⚠️ AVISO: Banco de dados não encontrado.");
-                System.out.println("✅ MODO SIMULAÇÃO: Funcionário cadastrado virtualmente.");
-                return true; 
+                return false;
             }
 
-            String query = "INSERT INTO tb_funcionarios (name, userName, email, role, phone, password, registrationDate, status) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            String query = "INSERT INTO tb_funcionarios (ID_restaurante, nome, username, email, cargo, telefone, senha, data_cadastro, status) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE(), ?)";
 
             stmt = conn.prepareStatement(query);
-            stmt.setString(1, this.name);
-            stmt.setString(2, this.userName);
-            stmt.setString(3, this.email);
-            stmt.setString(4, this.role);
-            stmt.setString(5, telefoneFormatado);
-            stmt.setString(6, this.password);
-            stmt.setString(7, this.registrationDate);
+            stmt.setInt(1, this.restauranteId);
+            stmt.setString(2, this.name);
+            stmt.setString(3, this.userName);
+            stmt.setString(4, this.email);
+            stmt.setString(5, this.role);
+            stmt.setString(6, telefoneFormatado);
+            stmt.setString(7, this.password);
             stmt.setString(8, this.status);
 
             int linhasAfetadas = stmt.executeUpdate();
             cadastroEfetuado = (linhasAfetadas > 0);
 
         } catch (SQLException ex) {
-            Logger.getLogger(Funcionario.class.getName()).log(Level.SEVERE, "Erro ao inserir o funcionário (Banco Offline): ", ex);
-            System.out.println("Simulando cadastro com sucesso para teste...");
-            return true; 
+            Logger.getLogger(Funcionario.class.getName()).log(Level.SEVERE, "Erro ao inserir o funcionário: ", ex);
         } finally {
             try {
                 if (stmt != null) stmt.close();
@@ -80,40 +77,27 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
     // --- MÉTODOS ESTÁTICOS ---
 
     public static String loginFuncionario(String email, String senha) {
-        
-        // --- BYPASS / MODO DE TESTE SEM BANCO ---
-        if ("admin".equals(email) && "admin".equals(senha)) {
-            System.out.println("🔓 MODO DEBUG: Login realizado sem banco de dados.");
-            return "admin"; 
-        }
-        if ("user".equals(email) && "123".equals(senha)) {
-             System.out.println("🔓 MODO DEBUG: Login realizado sem banco de dados (Funcionário).");
-            return "funcionario";
-        }
-        // ----------------------------------------
-
         ConexaoBanco banco = new ConexaoBanco();
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet resultSet = null;
-        String role = null;
+        String cargo = null;
 
         try {
             conn = banco.abrirConexao();
-            
+
             if (conn == null) {
-                System.out.println("❌ Erro: Não foi possível conectar ao banco.");
                 return null;
             }
 
-            String query = "SELECT role FROM tb_funcionarios WHERE email = ? AND password = ?";
+            String query = "SELECT cargo FROM tb_funcionarios WHERE email = ? AND senha = ?";
             stmt = conn.prepareStatement(query);
             stmt.setString(1, email);
             stmt.setString(2, senha);
             resultSet = stmt.executeQuery();
 
             if (resultSet.next()) {
-                role = resultSet.getString("role");
+                cargo = resultSet.getString("cargo");
             }
 
         } catch (SQLException ex) {
@@ -127,7 +111,7 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
                 System.err.println("Erro ao fechar recursos: " + e.getMessage());
             }
         }
-        return role;
+        return cargo;
     }
 
     public static void permissaoFunc(String userRole, javax.swing.JFrame frame) {
@@ -156,7 +140,7 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
 
         try {
             conn = banco.abrirConexao();
-            if (conn == null) return "Simulação"; 
+            if (conn == null) return null;
 
             String query = "SELECT " + colunaDesejada + " FROM tb_funcionarios WHERE " + colunaFiltro + " = ?";
             stmt = conn.prepareStatement(query);
@@ -169,7 +153,6 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
 
         } catch (SQLException ex) {
             System.err.println("Erro ao consultar valor: " + ex.getMessage());
-            return "ErroBD"; 
         } finally {
             try {
                 if (resultSet != null) resultSet.close();

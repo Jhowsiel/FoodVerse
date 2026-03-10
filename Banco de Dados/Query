@@ -198,6 +198,7 @@ CREATE TABLE tb_fidelidade (
 -- FUNCIONÁRIOS
 CREATE TABLE tb_funcionarios (
     ID_funcionario INT IDENTITY PRIMARY KEY,
+    ID_restaurante INT,
     nome VARCHAR(100),
     username VARCHAR(50),
     email VARCHAR(100),
@@ -205,5 +206,9 @@ CREATE TABLE tb_funcionarios (
     telefone VARCHAR(20),
     senha VARCHAR(255),
     status VARCHAR(20),
-    data_cadastro DATETIME DEFAULT GETDATE()
+    data_cadastro DATETIME DEFAULT GETDATE(),
+
+    FOREIGN KEY (ID_restaurante)
+    REFERENCES tb_restaurantes(ID_restaurante)
+    ON DELETE SET NULL
 );
