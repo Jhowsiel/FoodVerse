@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -109,21 +108,14 @@ public class EstoqueDAO {
     }
 
     public List<Unidade> listarUnidades() { 
-        List<Unidade> unidades = new ArrayList<>();
-        String sql = "SELECT codigo_unidade, base, fator_base FROM tb_unidades_medida";
-        ConexaoBanco cb = new ConexaoBanco();
-        try(Connection conn = cb.abrirConexao()) {
-            if(conn == null) return UNIDADES_MOCK;
-            try(Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(sql)) {
-                while(rs.next()) unidades.add(new Unidade(rs.getString("codigo_unidade"), rs.getString("base"), rs.getDouble("fator_base")));
-            }
-        } catch(Exception e) { e.printStackTrace(); }
-        return unidades.isEmpty() ? UNIDADES_MOCK : unidades;
+        return UNIDADES_MOCK;
     }
 
     public List<String> categoriasNomes() {
         List<String> categorias = new ArrayList<>();
-        String sql = "SELECT DISTINCT categoria FROM tb_itens_estoque WHERE categoria IS NOT NULL";
+        String sql = "SELECT DISTINCT p.categoria FROM tb_produtos p " +
+                     "JOIN tb_estoque e ON e.ID_produto = p.ID_produto " +
+                     "WHERE p.categoria IS NOT NULL";
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) return ITENS_MOCK.stream().map(ItemEstoque::getCategoria).distinct().collect(Collectors.toList());
@@ -139,7 +131,6 @@ public class EstoqueDAO {
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) {
-                // Filtro em memória
                 String t = termo == null ? "" : termo.toLowerCase();
                 boolean fCat = categoria != null && !categoria.equalsIgnoreCase("Todas");
                 return ITENS_MOCK.stream().filter(i -> i.getNome().toLowerCase().contains(t))
@@ -148,10 +139,15 @@ public class EstoqueDAO {
                     .collect(Collectors.toList());
             }
 
-            StringBuilder sql = new StringBuilder("SELECT * FROM tb_itens_estoque WHERE nome LIKE ?");
-            if(categoria != null && !categoria.equalsIgnoreCase("Todas")) sql.append(" AND categoria = ?");
-            if("Ativos".equalsIgnoreCase(status)) sql.append(" AND ativo = 1");
-            if("Inativos".equalsIgnoreCase(status)) sql.append(" AND ativo = 0");
+            StringBuilder sql = new StringBuilder(
+                "SELECT e.ID_estoque, p.nome_produto AS nome, p.categoria, " +
+                "e.quantidade AS estoque_atual, e.estoque_minimo, p.disponivel AS ativo " +
+                "FROM tb_estoque e JOIN tb_produtos p ON e.ID_produto = p.ID_produto " +
+                "WHERE p.nome_produto LIKE ?"
+            );
+            if(categoria != null && !categoria.equalsIgnoreCase("Todas")) sql.append(" AND p.categoria = ?");
+            if("Ativos".equalsIgnoreCase(status)) sql.append(" AND p.disponivel = 1");
+            if("Inativos".equalsIgnoreCase(status)) sql.append(" AND p.disponivel = 0");
 
             try(PreparedStatement ps = conn.prepareStatement(sql.toString())) {
                 ps.setString(1, "%" + (termo==null?"":termo) + "%");
@@ -159,9 +155,8 @@ public class EstoqueDAO {
                 
                 try(ResultSet rs = ps.executeQuery()) {
                     while(rs.next()) {
-                        ItemEstoque i = new ItemEstoque(rs.getLong("ID_item_estoque"), rs.getString("nome"), 
-                                rs.getString("categoria"), rs.getString("unidade_padrao"), 
-                                rs.getDouble("estoque_atual"), rs.getDouble("custo_medio"));
+                        ItemEstoque i = new ItemEstoque(rs.getLong("ID_estoque"), rs.getString("nome"), 
+                                rs.getString("categoria"), null, rs.getDouble("estoque_atual"), 0.0);
                         i.setEstoqueMinimo(rs.getDouble("estoque_minimo"));
                         i.setAtivo(rs.getBoolean("ativo"));
                         itens.add(i);
@@ -177,14 +172,16 @@ public class EstoqueDAO {
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) return ITENS_MOCK.stream().filter(i -> i.getId().equals(id)).findFirst().orElse(null);
             
-            String sql = "SELECT * FROM tb_itens_estoque WHERE ID_item_estoque = ?";
+            String sql = "SELECT e.ID_estoque, p.nome_produto AS nome, p.categoria, " +
+                         "e.quantidade AS estoque_atual, e.estoque_minimo, p.disponivel AS ativo " +
+                         "FROM tb_estoque e JOIN tb_produtos p ON e.ID_produto = p.ID_produto " +
+                         "WHERE e.ID_estoque = ?";
             try(PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setLong(1, id);
                 try(ResultSet rs = ps.executeQuery()) {
                     if(rs.next()) {
-                        ItemEstoque i = new ItemEstoque(rs.getLong("ID_item_estoque"), rs.getString("nome"), 
-                                rs.getString("categoria"), rs.getString("unidade_padrao"), 
-                                rs.getDouble("estoque_atual"), rs.getDouble("custo_medio"));
+                        ItemEstoque i = new ItemEstoque(rs.getLong("ID_estoque"), rs.getString("nome"), 
+                                rs.getString("categoria"), null, rs.getDouble("estoque_atual"), 0.0);
                         i.setEstoqueMinimo(rs.getDouble("estoque_minimo"));
                         i.setAtivo(rs.getBoolean("ativo"));
                         return i;
@@ -201,18 +198,33 @@ public class EstoqueDAO {
             if(conn == null) {
                 item.setId(SEQ_ITEM.getAndIncrement()); ITENS_MOCK.add(item); return;
             }
-            String sql = "INSERT INTO tb_itens_estoque (nome, categoria, unidade_padrao, estoque_atual, estoque_minimo, custo_medio, ativo) VALUES (?, ?, ?, ?, ?, ?, ?)";
-            try(PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, item.getNome()); ps.setString(2, item.getCategoria());
-                ps.setString(3, item.getUnidadePadrao()); ps.setDouble(4, item.getEstoqueAtual());
-                ps.setDouble(5, item.getEstoqueMinimo()); ps.setDouble(6, item.getCustoMedio());
-                ps.setBoolean(7, item.isAtivo());
-                ps.executeUpdate();
+            String sqlProd = "INSERT INTO tb_produtos (nome_produto, categoria, disponivel) VALUES (?, ?, ?)";
+            try(PreparedStatement psProd = conn.prepareStatement(sqlProd, Statement.RETURN_GENERATED_KEYS)) {
+                psProd.setString(1, item.getNome());
+                psProd.setString(2, item.getCategoria());
+                psProd.setBoolean(3, item.isAtivo());
+                psProd.executeUpdate();
+                try(ResultSet gk = psProd.getGeneratedKeys()) {
+                    if(gk.next()) {
+                        long idProduto = gk.getLong(1);
+                        String sqlEst = "INSERT INTO tb_estoque (ID_produto, quantidade, estoque_minimo, ultima_atualizacao) VALUES (?, ?, ?, GETDATE())";
+                        try(PreparedStatement psEst = conn.prepareStatement(sqlEst, Statement.RETURN_GENERATED_KEYS)) {
+                            psEst.setLong(1, idProduto);
+                            psEst.setDouble(2, item.getEstoqueAtual());
+                            psEst.setDouble(3, item.getEstoqueMinimo());
+                            psEst.executeUpdate();
+                            try(ResultSet gkEst = psEst.getGeneratedKeys()) {
+                                if(gkEst.next()) item.setId(gkEst.getLong(1));
+                            }
+                        }
+                    }
+                }
             }
         } catch(Exception e) { e.printStackTrace(); }
     }
 
     public void atualizarItem(ItemEstoque item) {
+        if(item.getId() == null) return;
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) {
@@ -221,12 +233,19 @@ public class EstoqueDAO {
                 }
                 return;
             }
-            String sql = "UPDATE tb_itens_estoque SET nome=?, categoria=?, unidade_padrao=?, estoque_minimo=?, custo_medio=?, ativo=? WHERE ID_item_estoque=?";
-            try(PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, item.getNome()); ps.setString(2, item.getCategoria());
-                ps.setString(3, item.getUnidadePadrao()); ps.setDouble(4, item.getEstoqueMinimo());
-                ps.setDouble(5, item.getCustoMedio()); ps.setBoolean(6, item.isAtivo());
-                ps.setLong(7, item.getId());
+            String sqlEst = "UPDATE tb_estoque SET estoque_minimo=?, ultima_atualizacao=GETDATE() WHERE ID_estoque=?";
+            try(PreparedStatement ps = conn.prepareStatement(sqlEst)) {
+                ps.setDouble(1, item.getEstoqueMinimo());
+                ps.setLong(2, item.getId());
+                ps.executeUpdate();
+            }
+            String sqlProd = "UPDATE tb_produtos SET nome_produto=?, categoria=?, disponivel=? " +
+                             "WHERE ID_produto = (SELECT ID_produto FROM tb_estoque WHERE ID_estoque=?)";
+            try(PreparedStatement ps = conn.prepareStatement(sqlProd)) {
+                ps.setString(1, item.getNome());
+                ps.setString(2, item.getCategoria());
+                ps.setBoolean(3, item.isAtivo());
+                ps.setLong(4, item.getId());
                 ps.executeUpdate();
             }
         } catch(Exception e) { e.printStackTrace(); }
@@ -236,7 +255,6 @@ public class EstoqueDAO {
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) {
-                // Lógica Offline
                 ItemEstoque item = buscarItemPorId(mov.getItemId());
                 if(item != null) {
                     mov.setNomeItemSnapshot(item.getNome());
@@ -245,17 +263,8 @@ public class EstoqueDAO {
                 MOVS_MOCK.add(0, mov); return;
             }
             
-            // Grava Movimentação
-            String sqlMov = "INSERT INTO tb_movimentacoes_estoque (ID_item_estoque, nome_item_snapshot, tipo, quantidade, observacao, data_movimento) VALUES (?, ?, ?, ?, ?, GETDATE())";
-            try(PreparedStatement ps = conn.prepareStatement(sqlMov)) {
-                ps.setLong(1, mov.getItemId()); ps.setString(2, mov.getNomeItemSnapshot() != null ? mov.getNomeItemSnapshot() : "");
-                ps.setString(3, mov.getTipo()); ps.setDouble(4, mov.getQuantidade()); ps.setString(5, mov.getObservacao());
-                ps.executeUpdate();
-            }
-            
-            // Atualiza Saldo no Estoque
             String op = "ENTRADA".equals(mov.getTipo()) ? "+" : "-";
-            String sqlUpd = "UPDATE tb_itens_estoque SET estoque_atual = estoque_atual " + op + " ? WHERE ID_item_estoque = ?";
+            String sqlUpd = "UPDATE tb_estoque SET quantidade = quantidade " + op + " ?, ultima_atualizacao = GETDATE() WHERE ID_estoque = ?";
             try(PreparedStatement ps = conn.prepareStatement(sqlUpd)) {
                 ps.setDouble(1, mov.getQuantidade()); ps.setLong(2, mov.getItemId());
                 ps.executeUpdate();
@@ -264,27 +273,6 @@ public class EstoqueDAO {
     }
 
     public List<MovimentacaoEstoque> listarUltimasMovimentacoes() {
-        List<MovimentacaoEstoque> movs = new ArrayList<>();
-        ConexaoBanco cb = new ConexaoBanco();
-        try(Connection conn = cb.abrirConexao()) {
-            if(conn == null) return MOVS_MOCK.stream().limit(100).collect(Collectors.toList());
-            
-            String sql = "SELECT TOP 100 * FROM tb_movimentacoes_estoque ORDER BY data_movimento DESC";
-            try(Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(sql)) {
-                while(rs.next()) {
-                    MovimentacaoEstoque m = new MovimentacaoEstoque();
-                    m.setId(rs.getLong("ID_movimentacao"));
-                    m.setItemId(rs.getLong("ID_item_estoque"));
-                    m.setNomeItemSnapshot(rs.getString("nome_item_snapshot"));
-                    m.setTipo(rs.getString("tipo"));
-                    m.setQuantidade(rs.getDouble("quantidade"));
-                    m.setObservacao(rs.getString("observacao"));
-                    Timestamp ts = rs.getTimestamp("data_movimento");
-                    if(ts != null) m.setDataMovimento(ts.toLocalDateTime());
-                    movs.add(m);
-                }
-            }
-        } catch(Exception e) { e.printStackTrace(); }
-        return movs;
+        return MOVS_MOCK.stream().limit(100).collect(Collectors.toList());
     }
 }
