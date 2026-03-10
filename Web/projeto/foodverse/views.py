@@ -131,7 +131,7 @@ def cadastro_view(request):
                 data_cadastro=timezone.now()
             )
             messages.success(request, 'Cadastro realizado com sucesso! Faça login.')
-            return redirect('login')
+            # return redirect('login')
         except Exception:
             messages.error(request, 'Ocorreu um erro ao criar a conta.')
 
@@ -284,8 +284,12 @@ def adicionar_carrinho(request):
     existente = next((i for i in itens if i['id'] == p_id), None)
 
     if existente:
-        if (existente['quantidade'] + 1) * Decimal(existente['preco']) > produto.preco * 10:
-            messages.error(request, 'Limite de 10 unidades por produto.')
+        if existente['quantidade'] + 1 > 10:
+            return JsonResponse({
+            'quantidade': existente['quantidade'],
+            'erro': 'Limite de 10 unidades'
+        })
+
         else:
             existente['quantidade'] += 1
     else:

@@ -739,6 +739,12 @@
     fetch(url)
       .then(r => r.json())
       .then(data => {
+
+      if (data.erro) {
+        alert(data.erro)
+        return
+      }
+  
         const input = btn.parentElement.querySelector('.qty-val');
         if (data.quantidade === 0) {
           // remove o item da tela
