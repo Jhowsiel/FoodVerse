@@ -25,7 +25,10 @@ SECRET_KEY = 'django-insecure-%8x2ck7cm5yar5u%&)w!uf7@4d4wj$yx07^6@5f17!mbq!lez1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1'
+]
 
 
 # Application definition
@@ -82,7 +85,7 @@ DATABASES = {
         'ENGINE': 'mssql',
         'NAME': 'FoodVerseDB',
         'USER': 'sa',
-        'PASSWORD': 'pw_user_app',
+        'PASSWORD': 'SenhaForte#2026',
         'HOST': 'localhost',
         'PORT': '1433',
         'OPTIONS': {
@@ -114,9 +117,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'pt-br'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Sao_Paulo'
 
 USE_I18N = True
 

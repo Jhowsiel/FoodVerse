@@ -10,23 +10,23 @@
   :root {
     --red:     #C41017;
     --red-dk:  #a00d13;
-    --red-lt:  #fdf2f2;
-    --ink:     #111010;
-    --warm:    #f8f6f1;
-    --stone:   #e8e4dc;
-    --muted:   #7a7570;
+    --red-lt:  rgba(196,16,23,.18);
+    --ink:     #0d0c0c;
+    --card:    rgba(255,255,255,.05);
+    --stone:   rgba(255,255,255,.08);
+    --muted:   rgba(255,255,255,.45);
     --white:   #ffffff;
     --radius:  18px;
-    --shadow:  0 2px 12px rgba(17,16,16,.07);
+    --shadow:  0 12px 30px rgba(0,0,0,.4);
   }
 
   *, *::before, *::after { box-sizing: border-box; }
 
   body {
     padding-top: 90px;
-    background: var(--warm);
+    background: var(--ink);
     font-family: 'Instrument Sans', sans-serif;
-    color: var(--ink);
+    color: var(--white);
     -webkit-font-smoothing: antialiased;
   }
 
@@ -49,7 +49,7 @@
 
   /* ── HERO RESTAURANTE ── */
   .rest-hero {
-    background: var(--white);
+    background: var(--card);
     border-radius: 24px;
     border: 1px solid var(--stone);
     overflow: hidden;
@@ -81,7 +81,7 @@
   .hero-img-wrap::after {
     content: '';
     position: absolute; inset: 0;
-    background: linear-gradient(to top, rgba(17,16,16,.55) 0%, transparent 55%);
+    background: linear-gradient(to top, rgba(13,12,12,.85) 0%, transparent 55%);
   }
 
   .hero-overlay {
@@ -101,20 +101,21 @@
     font-weight: 900;
     color: white;
     line-height: 1.05;
-    text-shadow: 0 2px 8px rgba(0,0,0,.3);
+    text-shadow: 0 2px 8px rgba(0,0,0,.6);
   }
 
   .hero-rating {
     display: flex;
     align-items: center;
     gap: 5px;
-    background: rgba(255,255,255,.92);
+    background: rgba(13,12,12,.8);
     backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,.1);
     border-radius: 100px;
     padding: 6px 14px;
     font-size: .82rem;
     font-weight: 700;
-    color: var(--ink);
+    color: white;
     white-space: nowrap;
   }
 
@@ -145,17 +146,17 @@
     color: var(--muted);
   }
 
-  .info-pill i { color: var(--red); font-size: .9rem; }
-  .info-pill.free { color: #16a34a; }
-  .info-pill.free i { color: #16a34a; }
+  .info-pill i { color: #ff6b6b; font-size: .9rem; }
+  .info-pill.free { color: #4ade80; }
+  .info-pill.free i { color: #4ade80; }
 
   .cupom-chip {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: #f0fdf4;
-    border: 1.5px solid #86efac;
-    color: #15803d;
+    background: rgba(22,163,74,.15);
+    border: 1.5px solid rgba(22,163,74,.3);
+    color: #4ade80;
     font-size: .75rem;
     font-weight: 700;
     border-radius: 100px;
@@ -167,7 +168,7 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: var(--red);
+    background: #E01E1E;
     color: white;
     border-radius: 100px;
     padding: 11px 24px;
@@ -208,7 +209,7 @@
   .menu-title::before {
     content: '';
     width: 4px; height: 28px;
-    background: var(--red);
+    background: #E01E1E;
     border-radius: 2px;
   }
 
@@ -228,15 +229,15 @@
     font-weight: 600;
     white-space: nowrap;
     border: 1.5px solid var(--stone);
-    background: var(--white);
-    color: var(--ink);
+    background: var(--card);
+    color: rgba(255,255,255,.7);
     cursor: pointer;
     transition: all .2s;
     font-family: inherit;
   }
 
-  .filter-btn:hover { border-color: var(--red); color: var(--red); }
-  .filter-btn.active { background: var(--ink); border-color: var(--ink); color: white; }
+  .filter-btn:hover { border-color: rgba(196,16,23,.5); color: white; }
+  .filter-btn.active { background: #E01E1E; border-color: #E01E1E; color: white; }
 
   /* ── DISH GRID ── */
   .dish-grid {
@@ -250,13 +251,13 @@
 
   /* ── DISH CARD ── */
   .dish-card {
-    background: var(--white);
+    background: var(--card);
     border-radius: var(--radius);
     border: 1px solid var(--stone);
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    transition: transform .28s, box-shadow .28s;
+    transition: transform .28s, box-shadow .28s, border-color .28s;
     animation: fadeUp .45s ease both;
   }
 
@@ -269,7 +270,8 @@
 
   .dish-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 18px 40px rgba(17,16,16,.1);
+    box-shadow: 0 18px 40px rgba(0,0,0,.5);
+    border-color: rgba(196,16,23,.4);
   }
 
   .dish-img-wrap {
@@ -291,14 +293,14 @@
   .dish-no-img {
     width: 100%; height: 100%;
     display: flex; align-items: center; justify-content: center;
-    color: #c5bfb6; font-size: 2.4rem;
-    background: linear-gradient(135deg, #f0ede6, #e8e4dc);
+    color: rgba(255,255,255,.2); font-size: 2.4rem;
+    background: linear-gradient(135deg, #1a1a1a, #0d0c0c);
   }
 
   .price-tag {
     position: absolute;
     bottom: 12px; right: 12px;
-    background: var(--red);
+    background: #E01E1E;
     color: white;
     font-weight: 700;
     font-size: .8rem;
@@ -320,7 +322,7 @@
     font-weight: 700;
     margin-bottom: 6px;
     line-height: 1.25;
-    color: var(--ink);
+    color: white;
   }
 
   .dish-desc {
@@ -340,9 +342,9 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    background: var(--red-lt);
-    color: var(--red);
-    border: 1.5px solid #fca5a5;
+    background: rgba(255,255,255,.05);
+    color: rgba(255,255,255,.8);
+    border: 1.5px solid var(--stone);
     border-radius: 100px;
     padding: 9px 18px;
     font-size: .8rem;
@@ -353,9 +355,9 @@
   }
 
   .btn-ver:hover {
-    background: var(--red);
+    background: #E01E1E;
     color: white;
-    border-color: var(--red);
+    border-color: #E01E1E;
     gap: 9px;
   }
 
@@ -373,25 +375,23 @@
 
 <div class="page-wrap">
 
-  <!-- Back -->
   <a href="{% url 'restaurantes' %}" class="back-link">
-    <i class="bi bi-arrow-left"></i> Voltar para restaurantes
+    <i class="fa-solid fa-arrow-left"></i> Voltar para restaurantes
   </a>
 
-  <!-- Hero -->
   <div class="rest-hero">
     <div class="hero-img-wrap">
       {% if restaurante.imagem %}
         <img src="{% static restaurante.imagem %}" class="hero-img" alt="{{ restaurante.nome }}">
       {% else %}
-        <div class="hero-img" style="background:linear-gradient(135deg,#e8e4dc,#d5cfc3);"></div>
+        <div class="hero-img" style="background:linear-gradient(135deg,#1a1a1a,#0d0c0c);"></div>
       {% endif %}
 
       <div class="hero-overlay">
         <h1 class="hero-name">{{ restaurante.nome }}</h1>
         {% if restaurante.avaliacao %}
         <span class="hero-rating">
-          <i class="bi bi-star-fill"></i> {{ restaurante.avaliacao }}
+          <i class="fa-solid fa-star"></i> {{ restaurante.avaliacao }}
         </span>
         {% endif %}
       </div>
@@ -400,20 +400,20 @@
     <div class="hero-info">
       <div class="info-pills">
         <span class="info-pill">
-          <i class="bi bi-clock"></i> {{ restaurante.tempo }}
+          <i class="fa-solid fa-clock"></i> {{ restaurante.tempo }}
         </span>
         <span class="info-pill free">
-          <i class="bi bi-bicycle"></i> Entrega grátis
+          <i class="fa-solid fa-bicycle"></i> Entrega grátis
         </span>
         {% if restaurante.cupom %}
         <span class="cupom-chip">
-          <i class="bi bi-ticket-perforated-fill"></i> {{ restaurante.cupom }}
+          <i class="fa-solid fa-ticket"></i> {{ restaurante.cupom }}
         </span>
         {% endif %}
       </div>
 
       <a href="{% url 'reserva' %}?restaurante_id={{ restaurante.id_restaurante }}" class="btn-reservar">
-        <i class="bi bi-calendar-check"></i> Reservar mesa
+        <i class="fa-solid fa-calendar-check"></i> Reservar mesa
       </a>
     </div>
 
@@ -424,7 +424,6 @@
     {% endif %}
   </div>
 
-  <!-- Menu -->
   <div class="menu-bar">
     <h2 class="menu-title">Cardápio</h2>
     <div class="filters">
@@ -442,7 +441,7 @@
         {% if prato.imagem %}
           <img src="{% static prato.imagem %}" alt="{{ prato.nome_produto }}">
         {% else %}
-          <div class="dish-no-img"><i class="bi bi-egg-fried"></i></div>
+          <div class="dish-no-img"><i class="fa-solid fa-utensils"></i></div>
         {% endif %}
         <span class="price-tag">R$ {{ prato.preco }}</span>
       </div>
@@ -452,14 +451,14 @@
         <p class="dish-desc">{{ prato.descricao|truncatechars:110 }}</p>
         <a href="{% url 'prato' %}?restaurante_id={{ restaurante.id_restaurante }}&produto_id={{ prato.id_produto }}"
            class="btn-ver">
-          Ver prato <i class="bi bi-arrow-right"></i>
+          Ver prato <i class="fa-solid fa-arrow-right"></i>
         </a>
       </div>
 
     </div>
     {% empty %}
     <div class="empty-menu">
-      <i class="bi bi-egg"></i>
+      <i class="fa-solid fa-egg"></i>
       <p>Nenhum item no cardápio ainda.</p>
     </div>
     {% endfor %}
