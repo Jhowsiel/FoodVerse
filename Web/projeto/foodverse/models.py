@@ -205,6 +205,13 @@ class TbFidelidade(models.Model):
 
 class TbFuncionarios(models.Model):
     id_funcionario = models.AutoField(primary_key=True)
+    restaurante = models.ForeignKey(
+        TbRestaurantes,
+        on_delete=models.SET_NULL,
+        db_column="ID_restaurante",
+        null=True,
+        blank=True
+    )
     nome = models.CharField(max_length=100, null=True, blank=True)
     username = models.CharField(max_length=50, null=True, blank=True)
     email = models.CharField(max_length=100, null=True, blank=True)

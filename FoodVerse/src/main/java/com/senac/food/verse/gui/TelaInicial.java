@@ -493,17 +493,11 @@ public class TelaInicial extends JFrame {
                 ConexaoBanco cb = new ConexaoBanco();
                 try (Connection conn = cb.abrirConexao()) {
                     if (conn == null) {
-                        // BACKDOOR PARA TESTES
-                        if(email.equals("admin") && senha.equals("admin")) {
-                            dbNome = "Administrador";
-                            dbCargo = "Gerente";
-                            return null;
-                        }
                         erroMsg = "Erro de conexão com o banco.";
                         return null;
                     }
 
-                    String sql = "SELECT name, role, status FROM tb_funcionarios WHERE (email = ? OR userName = ?) AND password = ?";
+                    String sql = "SELECT nome, cargo, status FROM tb_funcionarios WHERE (email = ? OR username = ?) AND senha = ?";
                     PreparedStatement ps = conn.prepareStatement(sql);
                     ps.setString(1, email);
                     ps.setString(2, email);
@@ -517,8 +511,8 @@ public class TelaInicial extends JFrame {
                         } else if ("pendente".equalsIgnoreCase(status)) {
                             erroMsg = "Seu cadastro ainda está em análise.";
                         } else {
-                            dbNome = rs.getString("name");
-                            dbCargo = rs.getString("role");
+                            dbNome = rs.getString("nome");
+                            dbCargo = rs.getString("cargo");
                         }
                     } else {
                         erroMsg = "Credenciais inválidas.";
@@ -614,7 +608,7 @@ public class TelaInicial extends JFrame {
                 try (Connection conn = cb.abrirConexao()) {
                     if(conn == null) throw new Exception("Sem conexão");
                     
-                    String checkSql = "SELECT id FROM tb_funcionarios WHERE email = ? OR userName = ?";
+                    String checkSql = "SELECT ID_funcionario FROM tb_funcionarios WHERE email = ? OR username = ?";
                     PreparedStatement checkPs = conn.prepareStatement(checkSql);
                     checkPs.setString(1, email);
                     checkPs.setString(2, user);
@@ -623,7 +617,7 @@ public class TelaInicial extends JFrame {
                         return null;
                     }
                     
-                    String sql = "INSERT INTO tb_funcionarios (name, userName, email, role, phone, password, registrationDate, status) VALUES (?, ?, ?, ?, ?, ?, GETDATE(), 'pendente')";
+                    String sql = "INSERT INTO tb_funcionarios (nome, username, email, cargo, telefone, senha, data_cadastro, status) VALUES (?, ?, ?, ?, ?, ?, GETDATE(), 'pendente')";
                     PreparedStatement ps = conn.prepareStatement(sql);
                     ps.setString(1, nome);
                     ps.setString(2, user);
