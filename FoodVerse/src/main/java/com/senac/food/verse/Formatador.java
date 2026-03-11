@@ -2,6 +2,10 @@ package com.senac.food.verse;
 
 public class Formatador {
     public static String formatarTelefone(String phone) {
+        if (phone == null || phone.isBlank()) {
+            return "";
+        }
+
         // Remove caracteres não numéricos
         phone = phone.replaceAll("[^0-9]", "");
 

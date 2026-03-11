@@ -36,6 +36,15 @@ public class ValidarCadastroTest {
     }
 
     @Test
+    public void testValidarNomeNulo() {
+        ValidarCadastro validator = new ValidarCadastro();
+        JLabel label = new JLabel();
+        assertFalse(validator.validarNome(null, label));
+        assertEquals("Este campo é obrigatório", label.getText());
+        assertEquals(Color.RED, label.getForeground());
+    }
+
+    @Test
     public void testSenhasNaoCoincidem() {
         ValidarCadastro validator = new ValidarCadastro();
         JLabel labelSenha = new JLabel();
@@ -53,5 +62,21 @@ public class ValidarCadastroTest {
         assertFalse(validator.validarAsSenhas("senhafraca", "senhafraca", labelSenha, labelConfirmacao));
         assertEquals("A senha deve conter mín: 8 chars, 1 Maiús, 1 Minús, 1 Num, 1 Especial.", labelSenha.getText());
         assertEquals(Color.WHITE, labelConfirmacao.getForeground());
+    }
+
+    @Test
+    public void testConfirmacaoNula() {
+        ValidarCadastro validator = new ValidarCadastro();
+        JLabel labelSenha = new JLabel();
+        JLabel labelConfirmacao = new JLabel();
+        assertFalse(validator.validarAsSenhas("Senha@123", null, labelSenha, labelConfirmacao));
+        assertEquals("Este campo é obrigatório", labelConfirmacao.getText());
+        assertEquals(Color.RED, labelConfirmacao.getForeground());
+    }
+
+    @Test
+    public void testLimparCamposToleraCamposNulos() {
+        ValidarCadastro validator = new ValidarCadastro();
+        assertDoesNotThrow(() -> validator.limparCampos(null, null, null, null, null, null));
     }
 }

@@ -12,7 +12,7 @@ import javax.swing.JTextField;
 public class ValidarCadastro {
 
     public Boolean validarUsername(String username, JLabel label) {
-        if (username.isEmpty()) {
+        if (isBlank(username)) {
             showError(label, "Este campo é obrigatório");
             return false;
         }
@@ -21,7 +21,7 @@ public class ValidarCadastro {
     }
 
     public Boolean validarEmail(String email, JLabel label) {
-        if (email.isEmpty()) {
+        if (isBlank(email)) {
             showError(label, "Este campo é obrigatório");
             return false;
         }
@@ -38,7 +38,7 @@ public class ValidarCadastro {
     }
 
     public Boolean validarTelefone(String phone, JLabel label) {
-        if (phone.isEmpty()) {
+        if (isBlank(phone)) {
             showError(label, "Este campo é obrigatório");
             return false;
         }
@@ -47,6 +47,11 @@ public class ValidarCadastro {
     }
 
     private Boolean verificarDisponibilidade(String coluna, String valor, JLabel label) {
+        if (!isColunaPermitida(coluna)) {
+            showError(label, "Validação indisponível no momento");
+            return false;
+        }
+
         ConexaoBanco banco = new ConexaoBanco();
         Boolean disponivel = false;
 
@@ -79,7 +84,7 @@ public class ValidarCadastro {
     }
 
     public boolean validarNome(String name, JLabel label) {
-        if (name.isEmpty()) {
+        if (isBlank(name)) {
             showError(label, "Este campo é obrigatório");
             return false;
         }
@@ -90,10 +95,10 @@ public class ValidarCadastro {
     public boolean validarAsSenhas(String senha, String confirmationSenha, JLabel labelSenha, JLabel labelConfirmation) {
         String regex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
 
-        if (senha.isEmpty()) {
+        if (isBlank(senha)) {
             showError(labelSenha, "Este campo é obrigatório");
             return false;
-        } else if (confirmationSenha.isEmpty()) {
+        } else if (isBlank(confirmationSenha)) {
             showError(labelConfirmation, "Este campo é obrigatório");
             return false;
         } else if (!senha.equals(confirmationSenha)) {
@@ -111,7 +116,7 @@ public class ValidarCadastro {
     }
 
     public boolean validarCargos(String cargo, JLabel label) {
-        if (cargo.isEmpty()) {
+        if (isBlank(cargo)) {
             showError(label, "Por favor, preencha um cargo");
             return false;
         } else {
@@ -131,11 +136,25 @@ public class ValidarCadastro {
     }
 
     public void limparCampos(JTextField username, JTextField nome, JTextField email, JTextField phone, JTextField senha, JTextField confirmarSenha) {
-        username.setText("");
-        nome.setText("");
-        email.setText("");
-        phone.setText("");
-        senha.setText("");
-        confirmarSenha.setText("");
+        limparCampo(username);
+        limparCampo(nome);
+        limparCampo(email);
+        limparCampo(phone);
+        limparCampo(senha);
+        limparCampo(confirmarSenha);
+    }
+
+    private boolean isBlank(String valor) {
+        return valor == null || valor.isBlank();
+    }
+
+    private boolean isColunaPermitida(String coluna) {
+        return "username".equals(coluna) || "email".equals(coluna) || "telefone".equals(coluna);
+    }
+
+    private void limparCampo(JTextField campo) {
+        if (campo != null) {
+            campo.setText("");
+        }
     }
 }
