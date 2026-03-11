@@ -72,6 +72,8 @@ public class ValidarCadastroTest {
         assertFalse(validator.validarAsSenhas("Senha@123", null, labelSenha, labelConfirmacao));
         assertEquals("Este campo é obrigatório", labelConfirmacao.getText());
         assertEquals(Color.RED, labelConfirmacao.getForeground());
+        assertEquals("", labelSenha.getText());
+        assertEquals(Color.WHITE, labelSenha.getForeground());
     }
 
     @Test

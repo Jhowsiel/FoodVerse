@@ -94,6 +94,8 @@ public class ValidarCadastro {
 
     public boolean validarAsSenhas(String senha, String confirmationSenha, JLabel labelSenha, JLabel labelConfirmation) {
         String regex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
+        clearError(labelSenha);
+        clearError(labelConfirmation);
 
         if (isBlank(senha)) {
             showError(labelSenha, "Este campo é obrigatório");
@@ -106,11 +108,8 @@ public class ValidarCadastro {
             return false;
         } else if (!senha.matches(regex)) {
             showError(labelSenha, "A senha deve conter mín: 8 chars, 1 Maiús, 1 Minús, 1 Num, 1 Especial.");
-            clearError(labelConfirmation);
             return false;
         } else {
-            clearError(labelSenha);
-            clearError(labelConfirmation);
             return true;
         }
     }
