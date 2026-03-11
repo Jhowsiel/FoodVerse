@@ -52,6 +52,18 @@ GO
 
 IF NOT EXISTS (
     SELECT 1 FROM sys.columns
+    WHERE object_id = OBJECT_ID('tb_restaurantes') AND name = 'banner'
+)
+BEGIN
+    ALTER TABLE tb_restaurantes ADD banner VARCHAR(255) NULL;
+    PRINT 'Coluna banner adicionada em tb_restaurantes.';
+END
+ELSE
+    PRINT 'Coluna banner já existe em tb_restaurantes.';
+GO
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.columns
     WHERE object_id = OBJECT_ID('tb_produtos') AND name = 'imagem'
 )
 BEGIN

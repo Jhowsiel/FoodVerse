@@ -43,7 +43,20 @@ class SchemaMigrationScriptTest {
         assertSqlMatches(sql, "WHERE\\s+object_id\\s*=\\s*OBJECT_ID\\('tb_restaurantes'\\)\\s+AND\\s+name\\s*=\\s*'aberto'");
         assertSqlMatches(sql, "ALTER\\s+TABLE\\s+tb_restaurantes\\s+ADD\\s+aberto\\s+BIT\\s+NOT\\s+NULL\\s+DEFAULT\\s+1\\s*;");
         assertSqlMatches(sql, "ALTER\\s+TABLE\\s+tb_restaurantes\\s+ADD\\s+imagem\\s+VARCHAR\\(255\\)\\s+NULL\\s*;");
+        assertSqlMatches(sql, "ALTER\\s+TABLE\\s+tb_restaurantes\\s+ADD\\s+banner\\s+VARCHAR\\(255\\)\\s+NULL\\s*;");
         assertSqlMatches(sql, "ALTER\\s+TABLE\\s+tb_produtos\\s+ADD\\s+imagem\\s+VARCHAR\\(255\\)\\s+NULL\\s*;");
+    }
+
+    @Test
+    void deveGarantirColunasBannerEImagemComGuardaIdempotente() throws IOException {
+        String sql = readMigration();
+
+        assertSqlMatches(sql,
+                "WHERE\\s+object_id\\s*=\\s*OBJECT_ID\\('tb_restaurantes'\\)\\s+AND\\s+name\\s*=\\s*'banner'");
+        assertSqlMatches(sql,
+                "ALTER\\s+TABLE\\s+tb_restaurantes\\s+ADD\\s+banner\\s+VARCHAR\\(255\\)\\s+NULL\\s*;");
+        assertSqlMatches(sql,
+                "WHERE\\s+object_id\\s*=\\s*OBJECT_ID\\('tb_restaurantes'\\)\\s+AND\\s+name\\s*=\\s*'imagem'");
     }
 
     @Test
