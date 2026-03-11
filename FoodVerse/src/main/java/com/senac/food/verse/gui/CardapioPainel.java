@@ -13,9 +13,14 @@ import jiconfont.swing.IconFontSwing;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.*;
@@ -23,6 +28,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class CardapioPainel extends JPanel {
+
+    private static final String PRODUTO_IMAGES_DIR = "imagens" + File.separator + "produtos";
 
     private final CardapioDAO dao = new CardapioDAO();
     private final EstoqueDAO estoqueDAO = new EstoqueDAO();
@@ -429,14 +436,11 @@ public class CardapioPainel extends JPanel {
             return;
         }
         Long id = (Long) tblProdutos.getValueAt(row, 0);
-        String nome = (String) tblProdutos.getValueAt(row, 1);
-        String cat = (String) tblProdutos.getValueAt(row, 2);
-        boolean ativo = "Ativo".equals(tblProdutos.getValueAt(row, 4));
-        
-        double preco = 0;
-        try { preco = NumberFormat.getCurrencyInstance(new Locale("pt","BR")).parse(tblProdutos.getValueAt(row, 3).toString()).doubleValue(); } catch(Exception e){}
-
-        ProdutoVenda p = new ProdutoVenda(id, nome, cat, ativo, preco);
+        ProdutoVenda p = dao.buscarProdutoPorId(id);
+        if(p == null) {
+            Toast.show(this, "Produto não encontrado.", Toast.Type.ERROR);
+            return;
+        }
         
         ProdutoDialog d = new ProdutoDialog(SwingUtilities.getWindowAncestor(this), p);
         d.setVisible(true);
@@ -468,16 +472,19 @@ public class CardapioPainel extends JPanel {
     // --- DIALOG PRATO ---
     private class PratoDialog extends JDialog {
         private JTextField txtNome;
+        private JTextArea txtDescricao;
         private JComboBox<String> cbCategoria;
         private JSpinner spPreco;
+        private JSpinner spTempoPreparo;
         private JCheckBox chkAtivo;
+        private JTextField txtImagem;
         private DefaultTableModel ingModel;
         private JTable tblIng;
         private Prato resultado;
 
         public PratoDialog(Window owner, Prato base) {
             super(owner, base == null ? "Novo Prato" : "Editar Prato", ModalityType.APPLICATION_MODAL);
-            setSize(700, 600);
+            setSize(720, 680);
             setLocationRelativeTo(owner);
             getContentPane().setBackground(UIConstants.BG_DARK);
             setLayout(new BorderLayout());
@@ -489,46 +496,84 @@ public class CardapioPainel extends JPanel {
             gc.fill = GridBagConstraints.HORIZONTAL;
             gc.insets = new Insets(5, 5, 5, 5);
 
-            // Linha 1
-            gc.gridx=0; gc.gridy=0; form.add(criarLabel("Nome do Prato:"), gc);
-            gc.gridx=1; gc.weightx=1.0; 
+            // Nome
+            gc.gridx=0; gc.gridy=0; gc.weightx=0; form.add(criarLabel("Nome do Prato:"), gc);
+            gc.gridx=1; gc.weightx=1.0;
             txtNome = new JTextField(); UIConstants.styleField(txtNome);
             form.add(txtNome, gc);
 
-            // Linha 2
+            // Categoria
             gc.gridx=0; gc.gridy=1; gc.weightx=0; form.add(criarLabel("Categoria:"), gc);
-            gc.gridx=1; 
+            gc.gridx=1;
             cbCategoria = new JComboBox<>(); UIConstants.styleCombo(cbCategoria);
             for(String s : CATEGORIAS_PRATOS_PADRAO) cbCategoria.addItem(s);
             for(String s : dao.categoriasPratos()) if(((DefaultComboBoxModel)cbCategoria.getModel()).getIndexOf(s) == -1) cbCategoria.addItem(s);
             form.add(cbCategoria, gc);
 
-            // Linha 3
-            gc.gridx=0; gc.gridy=2; form.add(criarLabel("Preço (R$):"), gc);
-            gc.gridx=1; 
+            // Descrição
+            gc.gridx=0; gc.gridy=2; gc.weightx=0; form.add(criarLabel("Descrição:"), gc);
+            gc.gridx=1;
+            txtDescricao = new JTextArea(2, 20);
+            txtDescricao.setLineWrap(true);
+            txtDescricao.setWrapStyleWord(true);
+            txtDescricao.setBackground(UIConstants.BG_DARK_ALT);
+            txtDescricao.setForeground(UIConstants.FG_LIGHT);
+            txtDescricao.setFont(UIConstants.ARIAL_12);
+            txtDescricao.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(UIConstants.GRID_DARK),
+                new EmptyBorder(5, 8, 5, 8)));
+            form.add(new JScrollPane(txtDescricao), gc);
+
+            // Preço e Tempo Preparo
+            gc.gridx=0; gc.gridy=3; gc.weightx=0; form.add(criarLabel("Preço (R$):"), gc);
+            gc.gridx=1;
             JPanel pPreco = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0)); pPreco.setOpaque(false);
             spPreco = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 10000.0, 0.5));
             UIConstants.styleSpinner(spPreco);
             spPreco.setPreferredSize(new Dimension(120, 35));
             pPreco.add(spPreco);
-            
-            chkAtivo = new JCheckBox("Disponível para venda");
+
+            pPreco.add(Box.createHorizontalStrut(30));
+            JLabel lblTempo = criarLabel("Preparo (min):");
+            pPreco.add(lblTempo);
+            pPreco.add(Box.createHorizontalStrut(8));
+            spTempoPreparo = new JSpinner(new SpinnerNumberModel(0, 0, 180, 1));
+            UIConstants.styleSpinner(spTempoPreparo);
+            spTempoPreparo.setPreferredSize(new Dimension(70, 35));
+            pPreco.add(spTempoPreparo);
+
+            pPreco.add(Box.createHorizontalStrut(20));
+            chkAtivo = new JCheckBox("Disponível");
             chkAtivo.setForeground(UIConstants.FG_LIGHT);
             chkAtivo.setOpaque(false);
             chkAtivo.setSelected(true);
-            pPreco.add(Box.createHorizontalStrut(20));
             pPreco.add(chkAtivo);
-            
             form.add(pPreco, gc);
 
+            // Imagem
+            gc.gridx=0; gc.gridy=4; gc.weightx=0; form.add(criarLabel("Imagem:"), gc);
+            gc.gridx=1;
+            txtImagem = new JTextField(); UIConstants.styleField(txtImagem);
+            txtImagem.setEditable(false);
+            txtImagem.putClientProperty("JTextField.placeholderText", "Nenhuma imagem selecionada");
+            JPanel pImg = new JPanel(new BorderLayout(8, 0));
+            pImg.setOpaque(false);
+            pImg.add(txtImagem, BorderLayout.CENTER);
+            JButton btnEscolherImg = new JButton("Escolher...");
+            UIConstants.styleSecondary(btnEscolherImg);
+            btnEscolherImg.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.FOLDER_OPEN, 16, UIConstants.FG_LIGHT));
+            btnEscolherImg.addActionListener(e -> selecionarImagem(txtImagem));
+            pImg.add(btnEscolherImg, BorderLayout.EAST);
+            form.add(pImg, gc);
+
             // Tabela Ingredientes
-            gc.gridx=0; gc.gridy=3; gc.gridwidth=2; gc.insets = new Insets(20, 5, 5, 5);
+            gc.gridx=0; gc.gridy=5; gc.gridwidth=2; gc.insets = new Insets(20, 5, 5, 5);
             JLabel lblIng = new JLabel("Ficha Técnica (Ingredientes)");
             lblIng.setFont(UIConstants.FONT_BOLD);
             lblIng.setForeground(UIConstants.FG_LIGHT);
             form.add(lblIng, gc);
 
-            gc.gridy=4; gc.weighty=1.0; gc.fill = GridBagConstraints.BOTH;
+            gc.gridy=6; gc.weighty=1.0; gc.fill = GridBagConstraints.BOTH;
             String[] iCols = {"ID Estoque", "Item", "Un.", "Qtd"};
             ingModel = new DefaultTableModel(iCols, 0) {
                 @Override public boolean isCellEditable(int r, int c) { return false; }
@@ -541,7 +586,7 @@ public class CardapioPainel extends JPanel {
             form.add(scrollIng, gc);
 
             // Botões Ingredientes
-            gc.gridy=5; gc.weighty=0; gc.fill = GridBagConstraints.HORIZONTAL;
+            gc.gridy=7; gc.weighty=0; gc.fill = GridBagConstraints.HORIZONTAL;
             JPanel pIngBtns = new JPanel(new FlowLayout(FlowLayout.RIGHT));
             pIngBtns.setOpaque(false);
             
@@ -562,7 +607,11 @@ public class CardapioPainel extends JPanel {
             pIngBtns.add(btnRemIng);
             form.add(pIngBtns, gc);
 
-            add(form, BorderLayout.CENTER);
+            JScrollPane scrollForm = new JScrollPane(form);
+            scrollForm.setBorder(null);
+            scrollForm.setOpaque(false);
+            scrollForm.getViewport().setOpaque(false);
+            add(scrollForm, BorderLayout.CENTER);
 
             // Footer (Salvar/Cancelar)
             JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -637,22 +686,29 @@ public class CardapioPainel extends JPanel {
 
         private void carregarDados(Prato p) {
             txtNome.setText(p.getNome());
+            if(p.getDescricao() != null) txtDescricao.setText(p.getDescricao());
             cbCategoria.setSelectedItem(p.getCategoria());
             spPreco.setValue(p.getPreco());
+            spTempoPreparo.setValue(p.getTempoPreparo());
             chkAtivo.setSelected(p.isAtivo());
+            if(p.getImagem() != null) txtImagem.setText(p.getImagem());
             for(ReceitaItem ri : p.getIngredientes()) {
                 ingModel.addRow(new Object[]{ri.getItemEstoqueId(), ri.getItemNome(), ri.getUnidade(), ri.getQuantidade()});
             }
         }
 
         private void salvar() {
-            if(txtNome.getText().isEmpty()) { Toast.show(this, "Nome obrigatório", Toast.Type.WARNING); return; }
+            if(txtNome.getText().trim().isEmpty()) { Toast.show(this, "Nome obrigatório", Toast.Type.WARNING); return; }
             
             resultado = new Prato();
-            resultado.setNome(txtNome.getText());
+            resultado.setNome(txtNome.getText().trim());
+            resultado.setDescricao(txtDescricao.getText().trim());
             resultado.setCategoria(cbCategoria.getSelectedItem().toString());
             resultado.setPreco((Double)spPreco.getValue());
+            resultado.setTempoPreparo((Integer)spTempoPreparo.getValue());
             resultado.setAtivo(chkAtivo.isSelected());
+            String imgPath = txtImagem.getText().trim();
+            resultado.setImagem(imgPath.isEmpty() ? null : imgPath);
             
             for(int i=0; i<ingModel.getRowCount(); i++) {
                 Long id = (Long) ingModel.getValueAt(i, 0);
@@ -670,14 +726,16 @@ public class CardapioPainel extends JPanel {
     // --- DIALOG PRODUTO ---
     private class ProdutoDialog extends JDialog {
         private JTextField txtNome;
+        private JTextArea txtDescricao;
         private JComboBox<String> cbCategoria;
         private JSpinner spPreco;
         private JCheckBox chkAtivo;
+        private JTextField txtImagem;
         private ProdutoVenda resultado;
 
         public ProdutoDialog(Window owner, ProdutoVenda base) {
             super(owner, base == null ? "Novo Produto" : "Editar Produto", ModalityType.APPLICATION_MODAL);
-            setSize(450, 400);
+            setSize(500, 460);
             setLocationRelativeTo(owner);
             getContentPane().setBackground(UIConstants.BG_DARK);
             setLayout(new BorderLayout());
@@ -687,41 +745,76 @@ public class CardapioPainel extends JPanel {
             form.setBorder(new EmptyBorder(20, 20, 20, 20));
             GridBagConstraints gc = new GridBagConstraints();
             gc.fill = GridBagConstraints.HORIZONTAL;
-            gc.insets = new Insets(10, 0, 10, 0);
+            gc.weightx = 1.0;
+            gc.insets = new Insets(6, 0, 4, 0);
             gc.gridx = 0; gc.gridy = 0;
 
             form.add(criarLabel("Nome do Produto:"), gc);
-            gc.gridy++; 
+            gc.gridy++;
             txtNome = new JTextField(); UIConstants.styleField(txtNome);
             form.add(txtNome, gc);
 
-            gc.gridy++; 
+            gc.gridy++;
             form.add(criarLabel("Categoria:"), gc);
-            gc.gridy++; 
+            gc.gridy++;
             cbCategoria = new JComboBox<>(CATEGORIAS_PRODUTOS_PADRAO);
             UIConstants.styleCombo(cbCategoria);
-            cbCategoria.setEditable(true); // Permite nova categoria
+            cbCategoria.setEditable(true);
             form.add(cbCategoria, gc);
 
-            gc.gridy++; 
+            gc.gridy++;
+            form.add(criarLabel("Descrição:"), gc);
+            gc.gridy++;
+            txtDescricao = new JTextArea(2, 20);
+            txtDescricao.setLineWrap(true);
+            txtDescricao.setWrapStyleWord(true);
+            txtDescricao.setBackground(UIConstants.BG_DARK_ALT);
+            txtDescricao.setForeground(UIConstants.FG_LIGHT);
+            txtDescricao.setFont(UIConstants.ARIAL_12);
+            txtDescricao.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(UIConstants.GRID_DARK),
+                new EmptyBorder(5, 8, 5, 8)));
+            form.add(new JScrollPane(txtDescricao), gc);
+
+            gc.gridy++;
             form.add(criarLabel("Preço de Venda:"), gc);
-            gc.gridy++; 
+            gc.gridy++;
+            JPanel pRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+            pRow.setOpaque(false);
             spPreco = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 10000.0, 0.5));
             UIConstants.styleSpinner(spPreco);
-            form.add(spPreco, gc);
-
-            gc.gridy++; 
+            spPreco.setPreferredSize(new Dimension(120, 35));
+            pRow.add(spPreco);
+            pRow.add(Box.createHorizontalStrut(20));
             chkAtivo = new JCheckBox("Produto Ativo");
             chkAtivo.setForeground(UIConstants.FG_LIGHT);
             chkAtivo.setOpaque(false);
             chkAtivo.setSelected(true);
-            form.add(chkAtivo, gc);
+            pRow.add(chkAtivo);
+            form.add(pRow, gc);
+
+            gc.gridy++;
+            form.add(criarLabel("Imagem:"), gc);
+            gc.gridy++;
+            txtImagem = new JTextField(); UIConstants.styleField(txtImagem);
+            txtImagem.setEditable(false);
+            txtImagem.putClientProperty("JTextField.placeholderText", "Nenhuma imagem selecionada");
+            JPanel pImg = new JPanel(new BorderLayout(8, 0));
+            pImg.setOpaque(false);
+            pImg.add(txtImagem, BorderLayout.CENTER);
+            JButton btnEscolherImg = new JButton("Escolher...");
+            UIConstants.styleSecondary(btnEscolherImg);
+            btnEscolherImg.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.FOLDER_OPEN, 16, UIConstants.FG_LIGHT));
+            btnEscolherImg.addActionListener(e -> selecionarImagem(txtImagem));
+            pImg.add(btnEscolherImg, BorderLayout.EAST);
+            form.add(pImg, gc);
 
             add(form, BorderLayout.CENTER);
 
             JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
             footer.setBackground(UIConstants.BG_DARK);
-            
+            footer.setBorder(new EmptyBorder(10, 20, 15, 20));
+
             JButton btnCancel = new JButton("Cancelar");
             UIConstants.styleSecondary(btnCancel);
             btnCancel.addActionListener(e -> dispose());
@@ -729,10 +822,13 @@ public class CardapioPainel extends JPanel {
             JButton btnSave = new JButton("Salvar");
             UIConstants.styleSuccess(btnSave);
             btnSave.addActionListener(e -> {
-                if(txtNome.getText().isEmpty()) { Toast.show(this, "Nome é obrigatório", Toast.Type.WARNING); return; }
-                resultado = new ProdutoVenda(null, txtNome.getText(), 
-                        cbCategoria.getSelectedItem().toString(), 
+                if(txtNome.getText().trim().isEmpty()) { Toast.show(this, "Nome é obrigatório", Toast.Type.WARNING); return; }
+                resultado = new ProdutoVenda(null, txtNome.getText().trim(),
+                        cbCategoria.getSelectedItem().toString(),
                         chkAtivo.isSelected(), (Double)spPreco.getValue());
+                resultado.setDescricao(txtDescricao.getText().trim());
+                String imgPath = txtImagem.getText().trim();
+                resultado.setImagem(imgPath.isEmpty() ? null : imgPath);
                 dispose();
             });
 
@@ -745,6 +841,8 @@ public class CardapioPainel extends JPanel {
                 cbCategoria.setSelectedItem(base.getCategoria());
                 spPreco.setValue(base.getPreco());
                 chkAtivo.setSelected(base.isAtivo());
+                if(base.getDescricao() != null) txtDescricao.setText(base.getDescricao());
+                if(base.getImagem() != null) txtImagem.setText(base.getImagem());
             }
         }
         public ProdutoVenda getResultado() { return resultado; }
@@ -756,6 +854,29 @@ public class CardapioPainel extends JPanel {
         l.setForeground(UIConstants.FG_MUTED);
         l.setFont(UIConstants.FONT_BOLD);
         return l;
+    }
+
+    private void selecionarImagem(JTextField campo) {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Selecionar imagem do produto");
+        chooser.setFileFilter(new FileNameExtensionFilter(
+                "Imagens (JPG, PNG, GIF, WEBP)", "jpg", "jpeg", "png", "gif", "webp"));
+        chooser.setAcceptAllFileFilterUsed(false);
+        if(chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
+        File origem = chooser.getSelectedFile();
+        try {
+            // Use only the filename component to prevent path traversal
+            String nomeArquivo = origem.toPath().getFileName().toString();
+            // Prefix with timestamp to avoid collisions and silent overwrites
+            String nomeFinal = System.currentTimeMillis() + "_" + nomeArquivo;
+            Path dir = Path.of(PRODUTO_IMAGES_DIR);
+            Files.createDirectories(dir);
+            Path destino = dir.resolve(nomeFinal);
+            Files.copy(origem.toPath(), destino);
+            campo.setText(PRODUTO_IMAGES_DIR + File.separator + nomeFinal);
+        } catch(IOException ex) {
+            Toast.show(this, "Erro ao copiar imagem: " + ex.getMessage(), Toast.Type.ERROR);
+        }
     }
 
     private JButton criarBotaoIcone(GoogleMaterialDesignIcons icone, Color bg, String tooltip) {
