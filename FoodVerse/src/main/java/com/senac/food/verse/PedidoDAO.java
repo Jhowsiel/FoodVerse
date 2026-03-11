@@ -60,8 +60,12 @@ public class PedidoDAO {
                     + "JOIN tb_clientes c ON p.ID_cliente = c.id_cliente "
                     + "JOIN tb_status_pedido s ON p.status_id = s.ID_status "
                     + "LEFT JOIN tb_pagamentos pg ON p.ID_pedido = pg.ID_pedido";
+            int rid = SessionContext.getInstance().getRestauranteEfetivo();
+            if (rid > 0) sql += " WHERE p.ID_restaurante = ?";
 
-            ResultSet rs = conexao.stmt.executeQuery(sql);
+            PreparedStatement psFresh = conexao.conn.prepareStatement(sql);
+            if (rid > 0) psFresh.setInt(1, rid);
+            ResultSet rs = psFresh.executeQuery();
 
             while (rs.next()) {
                 String idPedido = rs.getString("ID_pedido");
@@ -118,8 +122,12 @@ public class PedidoDAO {
                     + "JOIN tb_clientes c ON p.ID_cliente = c.id_cliente "
                     + "JOIN tb_status_pedido s ON p.status_id = s.ID_status "
                     + "LEFT JOIN tb_pagamentos pg ON p.ID_pedido = pg.ID_pedido";
+            int rid2 = SessionContext.getInstance().getRestauranteEfetivo();
+            if (rid2 > 0) sql += " WHERE p.ID_restaurante = ?";
 
-            ResultSet rs = conexao.stmt.executeQuery(sql);
+            PreparedStatement psAll = conexao.conn.prepareStatement(sql);
+            if (rid2 > 0) psAll.setInt(1, rid2);
+            ResultSet rs = psAll.executeQuery();
 
             while (rs.next()) {
                 String idPedido = rs.getString("ID_pedido");
@@ -178,8 +186,12 @@ public class PedidoDAO {
             conexao.abrirConexao();
             if (conexao.conn == null) return false;
 
-            String sql = "SELECT MAX(ID_pedido) AS ultimo_id FROM tb_pedidos";
-            ResultSet rs = conexao.stmt.executeQuery(sql);
+            int rid3 = SessionContext.getInstance().getRestauranteEfetivo();
+            String sql = "SELECT MAX(ID_pedido) AS ultimo_id FROM tb_pedidos"
+                    + (rid3 > 0 ? " WHERE ID_restaurante = ?" : "");
+            PreparedStatement psCheck = conexao.conn.prepareStatement(sql);
+            if (rid3 > 0) psCheck.setInt(1, rid3);
+            ResultSet rs = psCheck.executeQuery();
 
             if (rs.next()) {
                 String novoUltimoId = rs.getString("ultimo_id");

@@ -35,7 +35,9 @@ CREATE TABLE tb_restaurantes (
     tempo_entrega VARCHAR(20),
     taxa_entrega DECIMAL(10,2),
     cupom VARCHAR(50),
-    imagem VARCHAR(255)
+    imagem VARCHAR(255),
+    ativo BIT DEFAULT 1 NOT NULL,    -- Controlado pelo Admin: restaurante existe na plataforma
+    aberto BIT DEFAULT 1 NOT NULL    -- Controlado pelo Gerente: restaurante está aceitando pedidos agora
 );
 
 

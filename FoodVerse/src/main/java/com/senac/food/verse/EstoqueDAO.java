@@ -145,13 +145,17 @@ public class EstoqueDAO {
                 "FROM tb_estoque e JOIN tb_produtos p ON e.ID_produto = p.ID_produto " +
                 "WHERE p.nome_produto LIKE ?"
             );
+            int rid = SessionContext.getInstance().getRestauranteEfetivo();
+            if (rid > 0) sql.append(" AND p.ID_restaurante = ?");
             if(categoria != null && !categoria.equalsIgnoreCase("Todas")) sql.append(" AND p.categoria = ?");
             if("Ativos".equalsIgnoreCase(status)) sql.append(" AND p.disponivel = 1");
             if("Inativos".equalsIgnoreCase(status)) sql.append(" AND p.disponivel = 0");
 
             try(PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-                ps.setString(1, "%" + (termo==null?"":termo) + "%");
-                if(categoria != null && !categoria.equalsIgnoreCase("Todas")) ps.setString(2, categoria);
+                int p = 1;
+                ps.setString(p++, "%" + (termo==null?"":termo) + "%");
+                if (rid > 0) ps.setInt(p++, rid);
+                if(categoria != null && !categoria.equalsIgnoreCase("Todas")) ps.setString(p, categoria);
                 
                 try(ResultSet rs = ps.executeQuery()) {
                     while(rs.next()) {
