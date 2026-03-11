@@ -31,6 +31,16 @@ def get_cliente_logado(request):
         return TbClientes.objects.filter(id_cliente=cliente_id).first()
     return None
 
+
+def _restaurantes_marketplace():
+    """Retorna apenas restaurantes ativos na plataforma."""
+    return TbRestaurantes.objects.filter(ativo=True)
+
+
+def _get_restaurante_marketplace_or_404(**filtros):
+    """Busca restaurante ativo na plataforma ou retorna 404."""
+    return get_object_or_404(_restaurantes_marketplace(), **filtros)
+
 # -------------------------------------------------------------------------
 # PÁGINA INICIAL
 # -------------------------------------------------------------------------
@@ -50,8 +60,8 @@ def home(request):
             except requests.RequestException:
                 endereco = None
 
-    restaurantes = TbRestaurantes.objects.all()
-    categorias = TbRestaurantes.objects.values_list('categoria', flat=True).distinct()
+    restaurantes = _restaurantes_marketplace()
+    categorias = restaurantes.values_list('categoria', flat=True).distinct()
 
     context = {
         'endereco': endereco,
@@ -169,12 +179,12 @@ def editar_perfil_view(request):
 # -------------------------------------------------------------------------
 def restaurante_view(request):
     categoria = request.GET.get('categoria')
-    restaurantes = TbRestaurantes.objects.all()
+    restaurantes = _restaurantes_marketplace()
     
     if categoria:
         restaurantes = restaurantes.filter(categoria=categoria)
 
-    categorias = TbRestaurantes.objects.values_list('categoria', flat=True).distinct()
+    categorias = _restaurantes_marketplace().values_list('categoria', flat=True).distinct()
 
     return render(request, 'pages/catalogo/restaurante.html', {
         'restaurantes': restaurantes,
@@ -184,7 +194,7 @@ def restaurante_view(request):
     })
 
 def restaurante_detalhe_view(request, id):
-    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=id)
+    restaurante = _get_restaurante_marketplace_or_404(id_restaurante=id)
     # Filtra produtos usando a instância do restaurante
     pratos = TbProdutos.objects.filter(restaurante=restaurante, disponivel=True)
 
@@ -199,7 +209,7 @@ def prato_view(request):
 
     print(f"Recebendo restaurante_id={rest_id} e produto_id={p_id}")  # Debug
     
-    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=rest_id)
+    restaurante = _get_restaurante_marketplace_or_404(id_restaurante=rest_id)
     prato = get_object_or_404(TbProdutos, id_produto=p_id, restaurante=restaurante)
     # O campo na model TbNutricao chama-se 'produto'
     nutricao = TbNutricao.objects.filter(produto=prato).first()
@@ -213,14 +223,14 @@ def prato_view(request):
 def buscar_prato_restaurante(request):
     query = request.GET.get('q', '').strip()
     if query:
-        resultados = TbRestaurantes.objects.filter(
+        resultados = _restaurantes_marketplace().filter(
             Q(nome__icontains=query) | 
             Q(tbprodutos__nome_produto__icontains=query)
         ).distinct()
     else:
-        resultados = TbRestaurantes.objects.all()
+        resultados = _restaurantes_marketplace()
 
-    categorias = TbRestaurantes.objects.values_list('categoria', flat=True).distinct()
+    categorias = _restaurantes_marketplace().values_list('categoria', flat=True).distinct()
 
     return render(request, 'pages/catalogo/restaurante.html', {
         'restaurantes': resultados,
@@ -232,7 +242,7 @@ def buscar_prato_restaurante(request):
 # -------------------------------------------------------------------------
 def reserva_view(request):
     r_id = _int_param(request.GET.get('restaurante_id'), 1)
-    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
+    restaurante = _get_restaurante_marketplace_or_404(id_restaurante=r_id)
 
     return render(request, 'pages/pedido/reserva.html', {
         'restaurante': restaurante,
@@ -244,7 +254,7 @@ def reserva_pagamento(request):
     """Processa a visualização de pagamento da reserva."""
     if request.method == 'POST':
         r_id = _int_param(request.POST.get('restaurante_id'), 1)
-        restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
+        restaurante = _get_restaurante_marketplace_or_404(id_restaurante=r_id)
 
         return render(request, 'pages/pedido/reserva_pagamento.html', {
             'restaurante': restaurante,
@@ -260,10 +270,10 @@ def pedido_view(request):
     r_id = request.GET.get('restaurante_id')
     
     if r_id:
-        restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
+        restaurante = _get_restaurante_marketplace_or_404(id_restaurante=r_id)
     else:
-        # Se NÃO veio ID na URL, pega o primeiro restaurante que existir no banco
-        restaurante = TbRestaurantes.objects.first()
+        # Se NÃO veio ID na URL, pega o primeiro restaurante ativo que existir no banco
+        restaurante = _restaurantes_marketplace().first()
         
         # Se o banco estiver totalmente vazio (nem o seed rodou), manda para a home
         if not restaurante:
@@ -295,7 +305,7 @@ def adicionar_carrinho(request):
     # -----------------------------------------------
 
     # Se passou da trava, agora sim buscamos os dados no banco
-    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
+    restaurante = _get_restaurante_marketplace_or_404(id_restaurante=r_id)
     produto = get_object_or_404(TbProdutos, id_produto=p_id, restaurante=restaurante)
 
     # Cria a estrutura do restaurante se for o primeiro item dele
@@ -411,7 +421,7 @@ def finalizacao_view(request):
 
     cliente_id = request.session.get('cliente_id', 1)
     cliente_instancia = get_object_or_404(TbClientes, id_cliente=cliente_id)
-    restaurante_instancia = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
+    restaurante_instancia = _get_restaurante_marketplace_or_404(id_restaurante=r_id)
     dados_venda = carrinho[r_id]
     
     # --- CÁLCULOS PARA O RESUMO (P1) ---
@@ -493,7 +503,7 @@ def finalizacao_view(request):
 # -------------------------------------------------------------------------
 def feedback_view(request):
     r_id = _int_param(request.GET.get('restaurante_id'), 1)
-    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
+    restaurante = _get_restaurante_marketplace_or_404(id_restaurante=r_id)
     cliente = get_cliente_logado(request)
 
     if request.method == 'POST':
