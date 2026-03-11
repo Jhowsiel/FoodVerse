@@ -349,6 +349,9 @@ public class AdminRestaurantesPanel extends JPanel {
 
     private void entrarNoContexto(int idRestaurante, String nomeRestaurante) {
         SessionContext.getInstance().setRestauranteSelecionadoId(idRestaurante);
+        if (parentFrame instanceof TelaInicial telaInicial) {
+            telaInicial.atualizarContextoSessao();
+        }
         Toast.show(this, "Contexto: " + nomeRestaurante, Toast.Type.INFO);
     }
 

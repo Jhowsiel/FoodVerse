@@ -41,6 +41,9 @@ public class TelaInicial extends JFrame {
     private JPanel panelBody;
     private JLabel lblNomeUsuario;
     private JLabel lblCargoUsuario;
+    private JLabel lblTituloContexto;
+    private JLabel lblDescricaoContexto;
+    private JButton btnLimparContexto;
     
     private final List<JButton> botoesMenu = new ArrayList<>();
 
@@ -311,6 +314,21 @@ public class TelaInicial extends JFrame {
         header.setPreferredSize(new Dimension(0, 70));
         header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UIConstants.GRID_DARK));
 
+        JPanel contextPanel = new JPanel(new GridLayout(2, 1));
+        contextPanel.setOpaque(false);
+        contextPanel.setBorder(new EmptyBorder(12, 20, 12, 20));
+
+        lblTituloContexto = new JLabel("Painel FoodVerse");
+        lblTituloContexto.setFont(UIConstants.FONT_BOLD);
+        lblTituloContexto.setForeground(UIConstants.FG_LIGHT);
+        contextPanel.add(lblTituloContexto);
+
+        lblDescricaoContexto = new JLabel("Faça login para continuar");
+        lblDescricaoContexto.setFont(UIConstants.ARIAL_12);
+        lblDescricaoContexto.setForeground(UIConstants.FG_MUTED);
+        contextPanel.add(lblDescricaoContexto);
+        header.add(contextPanel, BorderLayout.WEST);
+
         JPanel userPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 12));
         userPanel.setOpaque(false);
         
@@ -327,8 +345,14 @@ public class TelaInicial extends JFrame {
         textInfo.add(lblNomeUsuario);
         textInfo.add(lblCargoUsuario);
 
+        btnLimparContexto = new JButton("Modo Global");
+        UIConstants.styleSecondary(btnLimparContexto);
+        btnLimparContexto.setVisible(false);
+        btnLimparContexto.addActionListener(e -> limparContextoRestaurante());
+
         JLabel lblAvatar = new JLabel(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ACCOUNT_CIRCLE, 44, UIConstants.FG_MUTED));
         
+        userPanel.add(btnLimparContexto);
         userPanel.add(textInfo);
         userPanel.add(lblAvatar);
         header.add(userPanel, BorderLayout.EAST);
@@ -351,9 +375,11 @@ public class TelaInicial extends JFrame {
         sidebarContainer.removeAll();
         botoesMenu.clear();
         panelBody.removeAll();
+
+        SessionContext ctx = SessionContext.getInstance();
         
         try {
-            panelBody.add(new HomePanel(), "HOME");
+            panelBody.add(new HomePanel(this::abrirModulo), "HOME");
             adicionarModulo("Início", GoogleMaterialDesignIcons.HOME, "HOME");
         } catch (Exception e) { e.printStackTrace(); }
 
@@ -363,6 +389,7 @@ public class TelaInicial extends JFrame {
         boolean isCozinha = role.contains("cozinheiro") || role.contains("chef");
         boolean isAtend   = role.contains("atendente") || role.contains("garçom");
         boolean isEntreg  = role.contains("entregador");
+        boolean adminComContexto = !isAdmin || ctx.adminTemContextoRestaurante();
 
         if (isAdmin) {
             // Admin Global: gerencia restaurantes + pode entrar no contexto de um deles
@@ -371,7 +398,7 @@ public class TelaInicial extends JFrame {
             adicionarPainelSeguro("Equipe", GoogleMaterialDesignIcons.SUPERVISOR_ACCOUNT, "USUARIOS", new AprovacaoCadastrosPanel());
         }
 
-        if (isAdmin || isGerente) {
+        if (adminComContexto && (isAdmin || isGerente)) {
             addTituloSecao("MEU RESTAURANTE");
             adicionarPainelSeguro("Perfil do Restaurante", GoogleMaterialDesignIcons.BUSINESS, "MEU_RESTAURANTE", new MeuRestaurantePanel());
             adicionarPainelSeguro("Cardápio", GoogleMaterialDesignIcons.RESTAURANT, "CARDAPIO", new CardapioPainel());
@@ -381,13 +408,13 @@ public class TelaInicial extends JFrame {
             }
         }
 
-        if (isAdmin || isGerente || isAtend) {
+        if ((adminComContexto && isAdmin) || isGerente || isAtend) {
             addTituloSecao("SALÃO & PEDIDOS");
             adicionarPainelSeguro("Mesas", GoogleMaterialDesignIcons.EVENT_SEAT, "MESAS", new GestaoMesasPanel());
             adicionarPainelSeguro("Novo Pedido", GoogleMaterialDesignIcons.ADD_SHOPPING_CART, "PEDIDOS", new PedidosPanel());
         }
 
-        if (isAdmin || isGerente || isCozinha) {
+        if ((adminComContexto && isAdmin) || isGerente || isCozinha) {
             addTituloSecao("COZINHA");
             adicionarPainelSeguro("KDS / Produção", GoogleMaterialDesignIcons.KITCHEN, "KDS", new GestaoCozinhaPanel());
             if (isCozinha) {
@@ -395,7 +422,7 @@ public class TelaInicial extends JFrame {
             }
         }
 
-        if (isAdmin || isGerente || isEntreg || isAtend) {
+        if ((adminComContexto && isAdmin) || isGerente || isEntreg || isAtend) {
             addTituloSecao("DELIVERY");
             adicionarPainelSeguro("Entregas", GoogleMaterialDesignIcons.MOTORCYCLE, "ENTREGAS", new EntregasPainel());
         }
@@ -406,6 +433,12 @@ public class TelaInicial extends JFrame {
         CardLayout cl = (CardLayout) panelBody.getLayout();
         cl.show(panelBody, "HOME");
         resetarBotoesMenu("HOME");
+    }
+
+    private void abrirModulo(String cardName) {
+        resetarBotoesMenu(cardName);
+        CardLayout cl = (CardLayout) panelBody.getLayout();
+        cl.show(panelBody, cardName);
     }
     
     private void adicionarPainelSeguro(String nome, GoogleMaterialDesignIcons icone, String cardName, JPanel painelInstancia) {
@@ -521,6 +554,7 @@ public class TelaInicial extends JFrame {
     private void loginSucesso(String nome, String cargo) {
         lblNomeUsuario.setText(nome);
         lblCargoUsuario.setText(cargo);
+        atualizarCabecalhoContexto();
         
         construirMenuPorCargo(cargo);
         
@@ -533,7 +567,74 @@ public class TelaInicial extends JFrame {
     private void logout() {
         SessionContext.getInstance().limpar();
         panelBody.removeAll();
+        lblNomeUsuario.setText("Usuário");
+        lblCargoUsuario.setText("Cargo");
+        atualizarCabecalhoContexto();
         cardLayout.show(mainContainer, "LOGIN");
+    }
+
+    public void atualizarContextoSessao() {
+        SessionContext ctx = SessionContext.getInstance();
+        lblCargoUsuario.setText(ctx.getCargo() != null ? ctx.getCargo() : "Cargo");
+        lblNomeUsuario.setText(ctx.getNome() != null ? ctx.getNome() : "Usuário");
+        atualizarCabecalhoContexto();
+        if (ctx.getCargo() != null) {
+            construirMenuPorCargo(ctx.getCargo());
+        }
+    }
+
+    private void limparContextoRestaurante() {
+        SessionContext ctx = SessionContext.getInstance();
+        if (!ctx.adminTemContextoRestaurante()) {
+            return;
+        }
+        ctx.setRestauranteSelecionadoId(0);
+        atualizarContextoSessao();
+        Toast.show(this, "Você voltou ao modo global.", Toast.Type.INFO);
+    }
+
+    private void atualizarCabecalhoContexto() {
+        SessionContext ctx = SessionContext.getInstance();
+        lblTituloContexto.setText(buildRestaurantContextText(ctx));
+        lblDescricaoContexto.setText(buildOperationalModeText(ctx));
+        btnLimparContexto.setVisible(ctx.adminTemContextoRestaurante());
+    }
+
+    /**
+     * Monta o título curto do contexto exibido no cabeçalho principal do dashboard.
+     * Retorna estado neutro sem sessão, modo global para Admin sem seleção e o restaurante
+     * efetivo quando a operação já está associada a um restaurante específico.
+     */
+    static String buildRestaurantContextText(SessionContext ctx) {
+        if (ctx.getCargo() == null) {
+            return "Painel FoodVerse";
+        }
+        if (ctx.isAdmin()) {
+            int restauranteId = ctx.getRestauranteEfetivo();
+            if (restauranteId > 0) {
+                return "Restaurante em contexto: #" + restauranteId;
+            }
+            return "Admin global sem restaurante selecionado";
+        }
+        int restauranteId = ctx.getRestauranteEfetivo();
+        return restauranteId > 0
+                ? "Restaurante em contexto: #" + restauranteId
+                : "Restaurante vinculado não definido";
+    }
+
+    /**
+     * Monta a descrição operacional resumida do cabeçalho do dashboard.
+     * O texto orienta o Admin global sem contexto e, nos demais casos,
+     * informa o cargo e o restaurante efetivo em operação.
+     */
+    static String buildOperationalModeText(SessionContext ctx) {
+        if (ctx.getCargo() == null) {
+            return "Faça login para continuar";
+        }
+        if (ctx.isAdmin() && !ctx.adminTemContextoRestaurante()) {
+            return "Modo global ativo. Selecione um restaurante para operar.";
+        }
+        return "Operando como " + ctx.getCargo() + " no restaurante #" + ctx.getRestauranteEfetivo() + ".";
     }
 
     private void cadastrar() {
