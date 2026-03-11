@@ -2,6 +2,8 @@ package com.senac.food.verse.gui;
 
 import com.senac.food.verse.SessionContext;
 
+import java.text.Normalizer;
+
 final class PermissionChecker {
 
     private PermissionChecker() {
@@ -10,7 +12,7 @@ final class PermissionChecker {
     static boolean hasRole(SessionContext ctx, String role) {
         return ctx != null
                 && ctx.getCargo() != null
-                && ctx.getCargo().toLowerCase().contains(role.toLowerCase());
+                && normalizeRole(ctx.getCargo()).equals(normalizeRole(role));
     }
 
     static boolean hasOperationalRestaurantContext(SessionContext ctx) {
@@ -90,5 +92,10 @@ final class PermissionChecker {
             return "Selecione um restaurante antes de acessar este módulo.";
         }
         return "Seu perfil não possui permissão para acessar este módulo.";
+    }
+
+    private static String normalizeRole(String role) {
+        String normalized = Normalizer.normalize(role == null ? "" : role, Normalizer.Form.NFD);
+        return normalized.replaceAll("\\p{M}+", "").trim().toLowerCase();
     }
 }

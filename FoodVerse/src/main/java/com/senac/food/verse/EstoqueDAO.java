@@ -11,6 +11,9 @@ import java.util.stream.Collectors;
 
 public class EstoqueDAO {
 
+    // Mantém na aba de histórico apenas os 100 ajustes mais recentes realizados nesta sessão local.
+    private static final int MAX_HISTORY_SIZE = 100;
+
     public static class Unidade {
         private final String codigo;
         private final String base;
@@ -133,7 +136,7 @@ public class EstoqueDAO {
         mov.setNomeItemSnapshot(item != null ? item.getNome() : mov.getNomeItemSnapshot());
         mov.setDataMovimento(LocalDateTime.now());
         MOVS_MOCK.add(0, mov);
-        while (MOVS_MOCK.size() > 100) {
+        while (MOVS_MOCK.size() > MAX_HISTORY_SIZE) {
             MOVS_MOCK.remove(MOVS_MOCK.size() - 1);
         }
     }

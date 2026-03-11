@@ -23,6 +23,9 @@ public class GestaoMesasPanel extends JPanel {
 
     private static final DateTimeFormatter HORA_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
     private static final DateTimeFormatter DATA_HORA_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private static final int CHECK_IN_WINDOW_MINUTES = 15;
+    private static final int TOLERANCIA_RESERVA_PASSADA_MINUTES = 10;
+    private static final ZoneId APP_ZONE_ID = ZoneId.of("America/Sao_Paulo");
 
     private final ReservaDAO dao = new ReservaDAO();
     private final SessionContext sessionContext = SessionContext.getInstance();
@@ -146,15 +149,23 @@ public class GestaoMesasPanel extends JPanel {
 
     private void atualizarResumo() {
         int reservadas = reservasHoje.size();
+        int ocupadasAgora = (int) reservasHoje.stream()
+                .filter(r -> {
+                    String status = classifyReservationStatus(r, nowInAppZone());
+                    return "CHECK_IN".equals(status) || "ATRASADA".equals(status);
+                })
+                .map(Reserva::getMesa)
+                .distinct()
+                .count();
         int prontas = (int) reservasHoje.stream()
-                .filter(r -> "CHECK_IN".equals(classifyReservationStatus(r, LocalDateTime.now())))
+                .filter(r -> "CHECK_IN".equals(classifyReservationStatus(r, nowInAppZone())))
                 .count();
         int atrasadas = (int) reservasHoje.stream()
-                .filter(r -> "ATRASADA".equals(classifyReservationStatus(r, LocalDateTime.now())))
+                .filter(r -> "ATRASADA".equals(classifyReservationStatus(r, nowInAppZone())))
                 .count();
-        int livres = Math.max(0, dao.getListaMesas().size() - reservadas);
-        lblResumo.setText(String.format("Hoje: %d livres • %d reservas • %d em check-in • %d atrasadas",
-                livres, reservadas, prontas, atrasadas));
+        int livresAgora = Math.max(0, dao.getListaMesas().size() - ocupadasAgora);
+        lblResumo.setText(String.format("Agora: %d livres • %d reservas hoje • %d em check-in • %d atrasadas",
+                livresAgora, reservadas, prontas, atrasadas));
     }
 
     private void atualizarListaReservas() {
@@ -185,7 +196,7 @@ public class GestaoMesasPanel extends JPanel {
     }
 
     private JPanel criarCardMesa(String nomeMesa, Reserva reserva) {
-        String status = classifyReservationStatus(reserva, LocalDateTime.now());
+        String status = classifyReservationStatus(reserva, nowInAppZone());
         Color corStatus = resolveStatusColor(status);
 
         UIConstants.RoundedPanel card = new UIConstants.RoundedPanel(18, UIConstants.CARD_DARK);
@@ -237,7 +248,7 @@ public class GestaoMesasPanel extends JPanel {
     }
 
     private JPanel criarCardReserva(Reserva reserva) {
-        String status = classifyReservationStatus(reserva, LocalDateTime.now());
+        String status = classifyReservationStatus(reserva, nowInAppZone());
         Color cor = resolveStatusColor(status);
 
         UIConstants.RoundedPanel card = new UIConstants.RoundedPanel(16, UIConstants.BG_DARK_ALT);
@@ -299,7 +310,7 @@ public class GestaoMesasPanel extends JPanel {
         content.setBorder(new EmptyBorder(20, 20, 10, 20));
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 
-        String status = classifyReservationStatus(reserva, LocalDateTime.now());
+        String status = classifyReservationStatus(reserva, nowInAppZone());
 
         content.add(infoLabel("Cliente", reserva.getNomeCliente()));
         content.add(infoLabel("Mesa", reserva.getMesa()));
@@ -390,7 +401,11 @@ public class GestaoMesasPanel extends JPanel {
         JComboBox<String> comboClientes = new JComboBox<>(dao.listarClientesSimples().toArray(new String[0]));
         UIConstants.styleCombo(comboClientes);
 
-        SpinnerDateModel dateModel = new SpinnerDateModel(new Date(System.currentTimeMillis() + 3_600_000L), null, null, java.util.Calendar.MINUTE);
+        SpinnerDateModel dateModel = new SpinnerDateModel(
+                Date.from(nowInAppZone().plusHours(1).atZone(APP_ZONE_ID).toInstant()),
+                null,
+                null,
+                java.util.Calendar.MINUTE);
         JSpinner spDataHora = new JSpinner(dateModel);
         spDataHora.setEditor(new JSpinner.DateEditor(spDataHora, "dd/MM/yyyy HH:mm"));
         UIConstants.styleSpinner(spDataHora);
@@ -437,11 +452,11 @@ public class GestaoMesasPanel extends JPanel {
                 }
                 r.setIdCliente(Integer.parseInt(clienteStr.split(" - ")[0]));
                 r.setIdRestaurante(sessionContext.getRestauranteEfetivo());
-                r.setDataReserva(LocalDateTime.ofInstant(((Date) spDataHora.getValue()).toInstant(), ZoneId.systemDefault()));
+                r.setDataReserva(LocalDateTime.ofInstant(((Date) spDataHora.getValue()).toInstant(), APP_ZONE_ID));
                 r.setNumPessoas(((Number) spPessoas.getValue()).intValue());
                 r.setMesa((String) comboMesas.getSelectedItem());
 
-                if (r.getDataReserva().isBefore(LocalDateTime.now().minusMinutes(10))) {
+                if (r.getDataReserva().isBefore(nowInAppZone().minusMinutes(TOLERANCIA_RESERVA_PASSADA_MINUTES))) {
                     Toast.show(modal, "Escolha um horário atual ou futuro para a reserva.", Toast.Type.WARNING);
                     return;
                 }
@@ -515,10 +530,10 @@ public class GestaoMesasPanel extends JPanel {
             return "LIVRE";
         }
         LocalDateTime dataReserva = reserva.getDataReserva();
-        if (dataReserva.isBefore(now.minusMinutes(15))) {
+        if (dataReserva.isBefore(now.minusMinutes(CHECK_IN_WINDOW_MINUTES))) {
             return "ATRASADA";
         }
-        if (!dataReserva.isAfter(now.plusMinutes(15))) {
+        if (!dataReserva.isAfter(now.plusMinutes(CHECK_IN_WINDOW_MINUTES))) {
             return "CHECK_IN";
         }
         return "PROXIMA";
@@ -551,5 +566,9 @@ public class GestaoMesasPanel extends JPanel {
             case "ATRASADA" -> "Reserva das " + reserva.getDataReserva().format(HORA_FORMATTER);
             default -> "Reservada às " + reserva.getDataReserva().format(HORA_FORMATTER);
         };
+    }
+
+    private static LocalDateTime nowInAppZone() {
+        return LocalDateTime.now(APP_ZONE_ID);
     }
 }

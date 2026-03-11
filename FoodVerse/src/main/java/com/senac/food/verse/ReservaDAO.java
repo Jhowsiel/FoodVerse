@@ -7,6 +7,9 @@ import java.util.List;
 
 public class ReservaDAO {
 
+    // Janela de 90 minutos para evitar sobreposição da mesma mesa durante um ciclo típico de refeição.
+    private static final int RESERVA_CONFLITO_MINUTOS = 90;
+
     private boolean semContextoOperacional() {
         SessionContext ctx = SessionContext.getInstance();
         return ctx.isAdmin() && ctx.getRestauranteEfetivo() <= 0;
@@ -169,14 +172,15 @@ public class ReservaDAO {
     private boolean existeConflitoReserva(Connection conn, int restauranteId, String mesa, LocalDateTime dataReserva, int idReservaAtual)
             throws SQLException {
         String sql = "SELECT COUNT(*) FROM tb_reservas " +
-                "WHERE ID_restaurante = ? AND mesa = ? AND ABS(DATEDIFF(MINUTE, data_reserva, ?)) < 90" +
+                "WHERE ID_restaurante = ? AND mesa = ? AND ABS(DATEDIFF(MINUTE, data_reserva, ?)) < ?" +
                 (idReservaAtual > 0 ? " AND ID_reserva <> ?" : "");
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, restauranteId);
             ps.setString(2, mesa);
             ps.setTimestamp(3, Timestamp.valueOf(dataReserva));
+            ps.setInt(4, RESERVA_CONFLITO_MINUTOS);
             if (idReservaAtual > 0) {
-                ps.setInt(4, idReservaAtual);
+                ps.setInt(5, idReservaAtual);
             }
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() && rs.getInt(1) > 0;

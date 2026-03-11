@@ -3,6 +3,7 @@ package com.senac.food.verse.gui;
 import com.senac.food.verse.EstoqueDAO;
 import com.senac.food.verse.EstoqueDAO.ItemEstoque;
 import com.senac.food.verse.EstoqueDAO.MovimentacaoEstoque;
+import com.senac.food.verse.EstoqueDAO.Unidade;
 import com.senac.food.verse.SessionContext;
 
 import jiconfont.icons.google_material_design_icons.GoogleMaterialDesignIcons;
@@ -489,7 +490,7 @@ public class EstoquePainel extends JPanel {
             resultado = new ItemEstoque();
             resultado.setNome(txtNome.getText().trim());
             resultado.setCategoria(cbCat.getSelectedItem().toString().trim());
-            resultado.setUnidadePadrao("un");
+            resultado.setUnidadePadrao(resolveUnidadePadrao());
             resultado.setEstoqueAtual(base == null ? ((Number)spEstoqueInicial.getValue()).doubleValue() : base.getEstoqueAtual());
             resultado.setEstoqueMinimo(((Number)spEstoqueMin.getValue()).doubleValue());
             resultado.setAtivo(chkAtivo.isSelected());
@@ -497,6 +498,14 @@ public class EstoquePainel extends JPanel {
         }
 
         public ItemEstoque getResultado() { return resultado; }
+
+        private String resolveUnidadePadrao() {
+            return dao.listarUnidades().stream()
+                    .map(Unidade::getCodigo)
+                    .filter("un"::equalsIgnoreCase)
+                    .findFirst()
+                    .orElse("un");
+        }
     }
 
     private class MovimentacaoDialog extends JDialog {
