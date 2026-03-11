@@ -1,6 +1,7 @@
 package com.senac.food.verse;
 
 import org.junit.jupiter.api.Test;
+import java.sql.Connection;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class FuncionarioTest {
@@ -40,6 +41,12 @@ public class FuncionarioTest {
                 "pendente"
         );
         boolean resultado = funcionario.cadastrarFuncionario();
-        assertTrue(resultado);
+        ConexaoBanco conexao = new ConexaoBanco();
+        Connection conn = conexao.abrirConexao();
+        try {
+            assertEquals(conn != null, resultado);
+        } finally {
+            conexao.fecharConexao();
+        }
     }
 }

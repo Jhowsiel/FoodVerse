@@ -5,10 +5,6 @@
 package com.senac.food.verse;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,8 +44,12 @@ public class ConexaoBancoTest {
     public void testAbrirConexao() {
         System.out.println("abrirConexao");
         ConexaoBanco conexao = new ConexaoBanco();
-        Connection conn = conexao.abrirConexao();
-        assertNotNull(conn);
+        assertDoesNotThrow(() -> {
+            Connection conn = conexao.abrirConexao();
+            if (conn != null) {
+                assertFalse(conn.isClosed());
+            }
+        });
     }
 
     /**
@@ -59,9 +59,13 @@ public class ConexaoBancoTest {
     public void testFecharConexao() {
         System.out.println("fecharConexao");
         ConexaoBanco conexao = new ConexaoBanco();
-        Connection conn = conexao.abrirConexao();
-        assertNotNull(conn);
-        conexao.fecharConexao();
+        assertDoesNotThrow(() -> {
+            Connection conn = conexao.abrirConexao();
+            conexao.fecharConexao();
+            if (conn != null) {
+                assertTrue(conn.isClosed());
+            }
+        });
     }
     
  

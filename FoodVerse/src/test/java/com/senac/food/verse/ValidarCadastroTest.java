@@ -44,4 +44,14 @@ public class ValidarCadastroTest {
         assertEquals("As senhas não coincidem", labelConfirmacao.getText());
         assertEquals(Color.RED, labelConfirmacao.getForeground());
     }
+
+    @Test
+    public void testSenhaFracaMesmoQuandoCoincide() {
+        ValidarCadastro validator = new ValidarCadastro();
+        JLabel labelSenha = new JLabel();
+        JLabel labelConfirmacao = new JLabel();
+        assertFalse(validator.validarAsSenhas("senhafraca", "senhafraca", labelSenha, labelConfirmacao));
+        assertEquals("A senha deve conter mín: 8 chars, 1 Maiús, 1 Minús, 1 Num, 1 Especial.", labelSenha.getText());
+        assertEquals(Color.WHITE, labelConfirmacao.getForeground());
+    }
 }

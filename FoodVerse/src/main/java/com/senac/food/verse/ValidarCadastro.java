@@ -93,11 +93,15 @@ public class ValidarCadastro {
         if (senha.isEmpty()) {
             showError(labelSenha, "Este campo é obrigatório");
             return false;
-        } else if (!senha.matches(regex)) {
-            showError(labelSenha, "A senha deve conter mín: 8 chars, 1 Maiús, 1 Minús, 1 Num, 1 Especial.");
+        } else if (confirmationSenha.isEmpty()) {
+            showError(labelConfirmation, "Este campo é obrigatório");
             return false;
         } else if (!senha.equals(confirmationSenha)) {
             showError(labelConfirmation, "As senhas não coincidem");
+            return false;
+        } else if (!senha.matches(regex)) {
+            showError(labelSenha, "A senha deve conter mín: 8 chars, 1 Maiús, 1 Minús, 1 Num, 1 Especial.");
+            clearError(labelConfirmation);
             return false;
         } else {
             clearError(labelSenha);
