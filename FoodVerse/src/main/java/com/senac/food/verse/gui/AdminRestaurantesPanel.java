@@ -7,15 +7,21 @@ import jiconfont.swing.IconFontSwing;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Sprint 3 — Painel de Gestão de Restaurantes (Admin Global).
+ * Sprint 3 — Painel de Gestao de Restaurantes (Admin Global).
  * Permite listar, criar, editar, ativar/inativar (ativo) e ver status operacional (aberto)
  * de todos os restaurantes na plataforma.
  */
@@ -27,43 +33,34 @@ public class AdminRestaurantesPanel extends JPanel {
     private DefaultTableModel modeloTabela;
     private JTextField txtBusca;
 
-    // Colunas da tabela
     private static final String[] COLUNAS = {
-        "ID", "Nome", "Categoria", "Avaliação", "Plataforma", "Status", "Ações"
+        "ID", "Nome", "Categoria", "Avalia\u00e7\u00e3o", "Plataforma", "Status", "A\u00e7\u00f5es"
     };
 
     public AdminRestaurantesPanel(JFrame parentFrame) {
         this.parentFrame = parentFrame;
         setLayout(new BorderLayout());
         UIConstants.stylePanel(this);
-
         add(criarHeader(), BorderLayout.NORTH);
-
         JPanel corpo = new JPanel(new BorderLayout(0, 20));
         corpo.setBackground(UIConstants.BG_DARK);
         corpo.setBorder(new EmptyBorder(10, 20, 10, 20));
         corpo.add(criarToolbar(), BorderLayout.NORTH);
         corpo.add(criarTabela(), BorderLayout.CENTER);
         add(corpo, BorderLayout.CENTER);
-
         carregarDados("");
     }
 
-    // -------------------------------------------------------------------------
-    // Header
-    // -------------------------------------------------------------------------
     private JPanel criarHeader() {
         JPanel p = new JPanel(new BorderLayout());
         p.setBackground(UIConstants.BG_DARK);
         p.setBorder(new EmptyBorder(15, 10, 15, 10));
-
-        JLabel titulo = new JLabel("Gestão de Restaurantes");
+        JLabel titulo = new JLabel("Gest\u00e3o de Restaurantes");
         titulo.setFont(UIConstants.FONT_TITLE);
         titulo.setForeground(UIConstants.FG_LIGHT);
         titulo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.STORE_MALL_DIRECTORY, 32, UIConstants.PRIMARY_RED));
         titulo.setIconTextGap(15);
         p.add(titulo, BorderLayout.WEST);
-
         JButton btnNovo = new JButton("Novo Restaurante");
         UIConstants.stylePrimary(btnNovo);
         btnNovo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ADD, 18, Color.WHITE));
@@ -72,18 +69,13 @@ public class AdminRestaurantesPanel extends JPanel {
         btnPanel.setOpaque(false);
         btnPanel.add(btnNovo);
         p.add(btnPanel, BorderLayout.EAST);
-
         return p;
     }
 
-    // -------------------------------------------------------------------------
-    // Toolbar de busca
-    // -------------------------------------------------------------------------
     private JPanel criarToolbar() {
         JPanel p = new JPanel(new BorderLayout(15, 0));
         p.setOpaque(false);
         p.setBorder(new EmptyBorder(0, 0, 10, 0));
-
         txtBusca = new JTextField();
         txtBusca.setPreferredSize(new Dimension(300, 38));
         UIConstants.styleField(txtBusca);
@@ -93,20 +85,15 @@ public class AdminRestaurantesPanel extends JPanel {
             public void removeUpdate(javax.swing.event.DocumentEvent e) { carregarDados(txtBusca.getText().trim()); }
             public void changedUpdate(javax.swing.event.DocumentEvent e) { carregarDados(txtBusca.getText().trim()); }
         });
-
         JButton btnAtualizar = new JButton("Atualizar");
         UIConstants.styleSecondary(btnAtualizar);
         btnAtualizar.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.REFRESH, 18, UIConstants.FG_LIGHT));
         btnAtualizar.addActionListener(e -> carregarDados(txtBusca.getText().trim()));
-
         p.add(txtBusca, BorderLayout.WEST);
         p.add(btnAtualizar, BorderLayout.EAST);
         return p;
     }
 
-    // -------------------------------------------------------------------------
-    // Tabela
-    // -------------------------------------------------------------------------
     private JScrollPane criarTabela() {
         modeloTabela = new DefaultTableModel(COLUNAS, 0) {
             @Override public boolean isCellEditable(int r, int c) { return c == 6; }
@@ -116,23 +103,17 @@ public class AdminRestaurantesPanel extends JPanel {
         tabela.getColumnModel().getColumn(0).setMaxWidth(50);
         tabela.getColumnModel().getColumn(4).setMaxWidth(100);
         tabela.getColumnModel().getColumn(5).setMaxWidth(100);
-        tabela.getColumnModel().getColumn(6).setMinWidth(200);
-
+        tabela.getColumnModel().getColumn(6).setMinWidth(220);
         tabela.getColumnModel().getColumn(4).setCellRenderer(new StatusRenderer());
         tabela.getColumnModel().getColumn(5).setCellRenderer(new StatusRenderer());
         tabela.getColumnModel().getColumn(6).setCellRenderer(new AcoesRenderer());
         tabela.getColumnModel().getColumn(6).setCellEditor(new AcoesEditor());
-
         tabela.setRowHeight(46);
-
         JScrollPane scroll = new JScrollPane(tabela);
         UIConstants.styleScrollPane(scroll);
         return scroll;
     }
 
-    // -------------------------------------------------------------------------
-    // Carregar dados
-    // -------------------------------------------------------------------------
     private void carregarDados(String filtro) {
         new SwingWorker<List<Object[]>, Void>() {
             @Override
@@ -181,12 +162,10 @@ public class AdminRestaurantesPanel extends JPanel {
         }.execute();
     }
 
-    // -------------------------------------------------------------------------
-    // Diálogo de criação/edição de restaurante
-    // -------------------------------------------------------------------------
     private void abrirDialogRestaurante(Integer idRestaurante) {
-        JDialog dialog = new JDialog(parentFrame, idRestaurante == null ? "Novo Restaurante" : "Editar Restaurante", true);
-        dialog.setSize(500, 480);
+        JDialog dialog = new JDialog(parentFrame,
+                idRestaurante == null ? "Novo Restaurante" : "Editar Restaurante", true);
+        dialog.setSize(520, 620);
         dialog.setLocationRelativeTo(parentFrame);
         dialog.setResizable(false);
 
@@ -198,33 +177,36 @@ public class AdminRestaurantesPanel extends JPanel {
         gc.insets = new Insets(6, 0, 6, 0);
         gc.weightx = 1.0;
 
-        JTextField txtNome        = new JTextField(); UIConstants.styleField(txtNome);
-        JTextField txtCategoria   = new JTextField(); UIConstants.styleField(txtCategoria);
-        JTextField txtDescricao   = new JTextField(); UIConstants.styleField(txtDescricao);
-        JTextField txtTempo       = new JTextField(); UIConstants.styleField(txtTempo);
-        JTextField txtTaxa        = new JTextField(); UIConstants.styleField(txtTaxa);
-        JCheckBox  chkAtivo       = new JCheckBox("Ativo na Plataforma");
+        JTextField txtNome      = new JTextField(); UIConstants.styleField(txtNome);
+        JTextField txtCategoria = new JTextField(); UIConstants.styleField(txtCategoria);
+        JTextField txtDescricao = new JTextField(); UIConstants.styleField(txtDescricao);
+        JTextField txtTempo     = new JTextField(); UIConstants.styleField(txtTempo);
+        JTextField txtTaxa      = new JTextField(); UIConstants.styleField(txtTaxa);
+        JTextField txtImagem    = new JTextField(); UIConstants.styleField(txtImagem);
+        JTextField txtBanner    = new JTextField(); UIConstants.styleField(txtBanner);
+        JCheckBox  chkAtivo     = new JCheckBox("Ativo na Plataforma");
         chkAtivo.setForeground(UIConstants.FG_LIGHT);
         chkAtivo.setBackground(UIConstants.BG_DARK_ALT);
         chkAtivo.setFont(UIConstants.FONT_REGULAR);
         chkAtivo.setSelected(true);
 
-        // Se editando, carregar dados
         if (idRestaurante != null) {
-            carregarDadosRestaurante(idRestaurante, txtNome, txtCategoria, txtDescricao, txtTempo, txtTaxa, chkAtivo);
+            carregarDadosRestaurante(idRestaurante, txtNome, txtCategoria, txtDescricao,
+                    txtTempo, txtTaxa, txtImagem, txtBanner, chkAtivo);
         }
 
         int gridy = 0;
         gc.gridx = 0; gc.gridy = gridy++;
         JLabel lbl = new JLabel(idRestaurante == null ? "Novo Restaurante" : "Editar Restaurante");
-        lbl.setFont(UIConstants.FONT_TITLE); lbl.setForeground(UIConstants.FG_LIGHT);
+        lbl.setFont(UIConstants.FONT_TITLE);
+        lbl.setForeground(UIConstants.FG_LIGHT);
         panel.add(lbl, gc);
 
         gc.gridy = gridy++; panel.add(criarLabelForm("Nome *"), gc);
         gc.gridy = gridy++; panel.add(txtNome, gc);
         gc.gridy = gridy++; panel.add(criarLabelForm("Categoria"), gc);
         gc.gridy = gridy++; panel.add(txtCategoria, gc);
-        gc.gridy = gridy++; panel.add(criarLabelForm("Descrição"), gc);
+        gc.gridy = gridy++; panel.add(criarLabelForm("Descri\u00e7\u00e3o"), gc);
         gc.gridy = gridy++; panel.add(txtDescricao, gc);
 
         JPanel rowTempoTaxa = new JPanel(new GridLayout(1, 2, 10, 0));
@@ -237,9 +219,14 @@ public class AdminRestaurantesPanel extends JPanel {
         colTaxa.setOpaque(false);
         colTaxa.add(criarLabelForm("Taxa Entrega (R$)"), BorderLayout.NORTH);
         colTaxa.add(txtTaxa, BorderLayout.CENTER);
-        rowTempoTaxa.add(colTempo); rowTempoTaxa.add(colTaxa);
+        rowTempoTaxa.add(colTempo);
+        rowTempoTaxa.add(colTaxa);
         gc.gridy = gridy++; panel.add(rowTempoTaxa, gc);
 
+        gc.gridy = gridy++; panel.add(criarLabelForm("Imagem do Restaurante"), gc);
+        gc.gridy = gridy++; panel.add(criarCampoArquivo(dialog, txtImagem, "Escolher Imagem"), gc);
+        gc.gridy = gridy++; panel.add(criarLabelForm("Banner do Restaurante"), gc);
+        gc.gridy = gridy++; panel.add(criarCampoArquivo(dialog, txtBanner, "Escolher Banner"), gc);
         gc.gridy = gridy++; panel.add(chkAtivo, gc);
 
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
@@ -252,74 +239,157 @@ public class AdminRestaurantesPanel extends JPanel {
         btnSalvar.addActionListener(e -> {
             String nome = txtNome.getText().trim();
             if (nome.isEmpty()) {
-                Toast.show(dialog, "O nome do restaurante é obrigatório.", Toast.Type.WARNING);
+                Toast.show(dialog, "O nome do restaurante \u00e9 obrigat\u00f3rio.", Toast.Type.WARNING);
                 return;
             }
             salvarRestaurante(idRestaurante, nome, txtCategoria.getText().trim(),
                     txtDescricao.getText().trim(), txtTempo.getText().trim(),
-                    txtTaxa.getText().trim(), chkAtivo.isSelected());
+                    txtTaxa.getText().trim(), txtImagem.getText().trim(),
+                    txtBanner.getText().trim(), chkAtivo.isSelected());
             dialog.dispose();
             carregarDados(txtBusca.getText().trim());
         });
-        btnPanel.add(btnCancelar); btnPanel.add(btnSalvar);
-        gc.gridy = gridy++; gc.insets = new Insets(15, 0, 0, 0);
+        btnPanel.add(btnCancelar);
+        btnPanel.add(btnSalvar);
+        gc.gridy = gridy++;
+        gc.insets = new Insets(15, 0, 0, 0);
         panel.add(btnPanel, gc);
 
-        dialog.setContentPane(panel);
+        JScrollPane scroll = new JScrollPane(panel);
+        scroll.setBorder(null);
+        scroll.getViewport().setBackground(UIConstants.BG_DARK_ALT);
+        dialog.setContentPane(scroll);
         dialog.setVisible(true);
     }
 
-    private void carregarDadosRestaurante(int id, JTextField nome, JTextField cat, JTextField desc,
-                                          JTextField tempo, JTextField taxa, JCheckBox chkAtivo) {
-        ConexaoBanco cb = new ConexaoBanco();
-        try (Connection conn = cb.abrirConexao()) {
-            if (conn == null) return;
-            String sql = "SELECT * FROM tb_restaurantes WHERE ID_restaurante = ?";
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setInt(1, id);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        nome.setText(rs.getString("nome"));
-                        cat.setText(rs.getString("categoria"));
-                        desc.setText(rs.getString("descricao"));
-                        tempo.setText(rs.getString("tempo_entrega"));
-                        taxa.setText(rs.getString("taxa_entrega") != null ? rs.getString("taxa_entrega") : "");
-                        chkAtivo.setSelected(rs.getBoolean("ativo"));
-                    }
-                }
-            }
-        } catch (SQLException ex) {
-            System.err.println("Erro ao carregar restaurante: " + ex.getMessage());
+    private JPanel criarCampoArquivo(JDialog owner, JTextField campo, String labelBotao) {
+        JPanel p = new JPanel(new BorderLayout(8, 0));
+        p.setOpaque(false);
+        p.add(campo, BorderLayout.CENTER);
+        JButton btnEscolher = new JButton(labelBotao);
+        UIConstants.styleSecondary(btnEscolher);
+        btnEscolher.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.FOLDER_OPEN, 16, UIConstants.FG_LIGHT));
+        btnEscolher.addActionListener(e -> selecionarArquivoImagem(owner, campo));
+        p.add(btnEscolher, BorderLayout.EAST);
+        return p;
+    }
+
+    private void selecionarArquivoImagem(JDialog owner, JTextField campo) {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Selecionar imagem");
+        chooser.setFileFilter(new FileNameExtensionFilter(
+                "Imagens (JPG, PNG, GIF, WEBP)", "jpg", "jpeg", "png", "gif", "webp"));
+        chooser.setAcceptAllFileFilterUsed(false);
+        int resultado = chooser.showOpenDialog(owner);
+        if (resultado != JFileChooser.APPROVE_OPTION) return;
+        File arquivoOrigem = chooser.getSelectedFile();
+        try {
+            Path dirDestino = Path.of(MeuRestaurantePanel.IMAGES_DIR);
+            Files.createDirectories(dirDestino);
+            Path arquivoDestino = dirDestino.resolve(arquivoOrigem.getName());
+            Files.copy(arquivoOrigem.toPath(), arquivoDestino, StandardCopyOption.REPLACE_EXISTING);
+            campo.setText(MeuRestaurantePanel.IMAGES_DIR + File.separator + arquivoOrigem.getName());
+        } catch (IOException ex) {
+            Toast.show(owner, "Erro ao copiar imagem: " + ex.getMessage(), Toast.Type.ERROR);
         }
     }
 
+    private void carregarDadosRestaurante(int id, JTextField nome, JTextField cat, JTextField desc,
+                                          JTextField tempo, JTextField taxa, JTextField imagem,
+                                          JTextField banner, JCheckBox chkAtivo) {
+        new SwingWorker<Void, Void>() {
+            String vNome, vCat, vDesc, vTempo, vTaxa, vImagem, vBanner;
+            boolean vAtivo;
+
+            @Override
+            protected Void doInBackground() {
+                ConexaoBanco cb = new ConexaoBanco();
+                try (Connection conn = cb.abrirConexao()) {
+                    if (conn == null) return null;
+                    String sql = "SELECT nome, categoria, descricao, tempo_entrega, taxa_entrega, "
+                               + "imagem, banner, ativo FROM tb_restaurantes WHERE ID_restaurante = ?";
+                    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                        ps.setInt(1, id);
+                        try (ResultSet rs = ps.executeQuery()) {
+                            if (rs.next()) {
+                                vNome   = rs.getString("nome");
+                                vCat    = rs.getString("categoria");
+                                vDesc   = rs.getString("descricao");
+                                vTempo  = rs.getString("tempo_entrega");
+                                vTaxa   = rs.getString("taxa_entrega") != null
+                                          ? rs.getString("taxa_entrega") : "";
+                                vImagem = rs.getString("imagem");
+                                vBanner = rs.getString("banner");
+                                vAtivo  = rs.getBoolean("ativo");
+                            }
+                        }
+                    }
+                } catch (SQLException ex) {
+                    System.err.println("Erro ao carregar restaurante: " + ex.getMessage());
+                }
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                if (vNome != null) {
+                    nome.setText(vNome);
+                    cat.setText(vCat != null ? vCat : "");
+                    desc.setText(vDesc != null ? vDesc : "");
+                    tempo.setText(vTempo != null ? vTempo : "");
+                    taxa.setText(vTaxa);
+                    imagem.setText(vImagem != null ? vImagem : "");
+                    banner.setText(vBanner != null ? vBanner : "");
+                    chkAtivo.setSelected(vAtivo);
+                }
+            }
+        }.execute();
+    }
+
     private void salvarRestaurante(Integer id, String nome, String categoria, String descricao,
-                                   String tempo, String taxaStr, boolean ativo) {
+                                   String tempo, String taxaStr, String imagem, String banner,
+                                   boolean ativo) {
         ConexaoBanco cb = new ConexaoBanco();
         try (Connection conn = cb.abrirConexao()) {
             if (conn == null) {
-                Toast.show(this, "Erro de conexão.", Toast.Type.ERROR);
+                Toast.show(this, "Erro de conex\u00e3o.", Toast.Type.ERROR);
                 return;
             }
             double taxa = 0.0;
-            try { taxa = Double.parseDouble(taxaStr.replace(",", ".")); } catch (NumberFormatException ignored) {}
+            try {
+                taxa = Double.parseDouble(taxaStr.replace(",", "."));
+            } catch (NumberFormatException ignored) {}
 
             if (id == null) {
-                String sql = "INSERT INTO tb_restaurantes (nome, categoria, descricao, tempo_entrega, taxa_entrega, ativo, aberto) "
-                           + "VALUES (?, ?, ?, ?, ?, ?, 1)";
+                String sql = "INSERT INTO tb_restaurantes "
+                           + "(nome, categoria, descricao, tempo_entrega, taxa_entrega, imagem, banner, ativo, aberto) "
+                           + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)";
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setString(1, nome); ps.setString(2, categoria); ps.setString(3, descricao);
-                    ps.setString(4, tempo); ps.setDouble(5, taxa); ps.setBoolean(6, ativo);
+                    ps.setString(1, nome);
+                    ps.setString(2, categoria);
+                    ps.setString(3, descricao);
+                    ps.setString(4, tempo);
+                    ps.setDouble(5, taxa);
+                    ps.setString(6, imagem.isEmpty() ? null : imagem);
+                    ps.setString(7, banner.isEmpty() ? null : banner);
+                    ps.setBoolean(8, ativo);
                     ps.executeUpdate();
                 }
                 Toast.show(this, "Restaurante criado com sucesso!", Toast.Type.SUCCESS);
             } else {
-                String sql = "UPDATE tb_restaurantes SET nome=?, categoria=?, descricao=?, tempo_entrega=?, taxa_entrega=?, ativo=? "
+                String sql = "UPDATE tb_restaurantes SET nome=?, categoria=?, descricao=?, "
+                           + "tempo_entrega=?, taxa_entrega=?, imagem=?, banner=?, ativo=? "
                            + "WHERE ID_restaurante=?";
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setString(1, nome); ps.setString(2, categoria); ps.setString(3, descricao);
-                    ps.setString(4, tempo); ps.setDouble(5, taxa); ps.setBoolean(6, ativo);
-                    ps.setInt(7, id);
+                    ps.setString(1, nome);
+                    ps.setString(2, categoria);
+                    ps.setString(3, descricao);
+                    ps.setString(4, tempo);
+                    ps.setDouble(5, taxa);
+                    ps.setString(6, imagem.isEmpty() ? null : imagem);
+                    ps.setString(7, banner.isEmpty() ? null : banner);
+                    ps.setBoolean(8, ativo);
+                    ps.setInt(9, id);
                     ps.executeUpdate();
                 }
                 Toast.show(this, "Restaurante atualizado!", Toast.Type.SUCCESS);
@@ -330,6 +400,14 @@ public class AdminRestaurantesPanel extends JPanel {
     }
 
     private void alternarAtivo(int idRestaurante, boolean novoAtivo) {
+        String acao = novoAtivo ? "ativar" : "desativar";
+        UIConstants.showConfirmDialog(this,
+                "Confirmar",
+                "Deseja " + acao + " este restaurante na plataforma?",
+                () -> executarAlternarAtivo(idRestaurante, novoAtivo));
+    }
+
+    private void executarAlternarAtivo(int idRestaurante, boolean novoAtivo) {
         ConexaoBanco cb = new ConexaoBanco();
         try (Connection conn = cb.abrirConexao()) {
             if (conn == null) return;
@@ -339,7 +417,9 @@ public class AdminRestaurantesPanel extends JPanel {
                 ps.setInt(2, idRestaurante);
                 ps.executeUpdate();
             }
-            String msg = novoAtivo ? "Restaurante ativado na plataforma." : "Restaurante desativado da plataforma.";
+            String msg = novoAtivo
+                    ? "Restaurante ativado na plataforma."
+                    : "Restaurante desativado da plataforma.";
             Toast.show(this, msg, novoAtivo ? Toast.Type.SUCCESS : Toast.Type.WARNING);
             carregarDados(txtBusca.getText().trim());
         } catch (SQLException ex) {
@@ -355,19 +435,12 @@ public class AdminRestaurantesPanel extends JPanel {
         Toast.show(this, "Contexto: " + nomeRestaurante, Toast.Type.INFO);
     }
 
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
     private JLabel criarLabelForm(String texto) {
         JLabel l = new JLabel(texto);
         l.setFont(UIConstants.ARIAL_12);
         l.setForeground(UIConstants.FG_MUTED);
         return l;
     }
-
-    // -------------------------------------------------------------------------
-    // Cell Renderers / Editors
-    // -------------------------------------------------------------------------
 
     private class StatusRenderer extends DefaultTableCellRenderer {
         @Override
@@ -398,7 +471,9 @@ public class AdminRestaurantesPanel extends JPanel {
             btnToggle.setFont(UIConstants.ARIAL_12);
             UIConstants.stylePrimary(btnContexto);
             btnContexto.setFont(UIConstants.ARIAL_12);
-            panel.add(btnEditar); panel.add(btnToggle); panel.add(btnContexto);
+            panel.add(btnEditar);
+            panel.add(btnToggle);
+            panel.add(btnContexto);
         }
 
         @Override
@@ -420,7 +495,6 @@ public class AdminRestaurantesPanel extends JPanel {
         AcoesEditor() {
             panel.setOpaque(true);
             panel.setBackground(UIConstants.SEL_BG);
-
             UIConstants.styleSecondary(btnEditar);
             btnEditar.setFont(UIConstants.ARIAL_12);
             UIConstants.styleSecondary(btnToggle);
@@ -446,7 +520,9 @@ public class AdminRestaurantesPanel extends JPanel {
                 entrarNoContexto(id, nom);
             });
 
-            panel.add(btnEditar); panel.add(btnToggle); panel.add(btnContexto);
+            panel.add(btnEditar);
+            panel.add(btnToggle);
+            panel.add(btnContexto);
         }
 
         @Override
