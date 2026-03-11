@@ -6,6 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ReservaDAO {
+
+    private boolean semContextoOperacional() {
+        SessionContext ctx = SessionContext.getInstance();
+        return ctx.isAdmin() && ctx.getRestauranteEfetivo() <= 0;
+    }
     
     // Lista fixa de mesas para o mapa do restaurante
     public List<String> getListaMesas() {
@@ -19,6 +24,9 @@ public class ReservaDAO {
     // Busca reservas ativas para hoje
     public List<Reserva> listarReservasDoDia() {
         List<Reserva> lista = new ArrayList<>();
+        if (semContextoOperacional()) {
+            return lista;
+        }
         int rid = SessionContext.getInstance().getRestauranteEfetivo();
         String sql = "SELECT r.ID_reserva, r.ID_cliente, c.username, r.data_reserva, r.numero_pessoas, r.mesa " +
                      "FROM tb_reservas r " +
@@ -42,7 +50,8 @@ public class ReservaDAO {
                     Reserva r = new Reserva();
                     r.setIdReserva(rs.getInt("ID_reserva"));
                     r.setIdCliente(rs.getInt("ID_cliente"));
-                    r.setNomeCliente(rs.getString("username"));
+                    String nomeCliente = rs.getString("username");
+                    r.setNomeCliente(nomeCliente != null ? nomeCliente : "Cliente #" + rs.getInt("ID_cliente"));
                     
                     Timestamp ts = rs.getTimestamp("data_reserva");
                     if (ts != null) r.setDataReserva(ts.toLocalDateTime());
@@ -62,6 +71,9 @@ public class ReservaDAO {
     }
 
     public boolean criarReserva(Reserva r) {
+        if (r == null || semContextoOperacional()) {
+            return false;
+        }
         String sql = "INSERT INTO tb_reservas (ID_cliente, ID_restaurante, data_reserva, numero_pessoas, mesa) VALUES (?, ?, ?, ?, ?)";
         ConexaoBanco cb = new ConexaoBanco();
         Connection conn = cb.abrirConexao();
@@ -71,21 +83,54 @@ public class ReservaDAO {
             return false;
         }
         
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, r.getIdCliente());
-            if (r.getIdRestaurante() != null && r.getIdRestaurante() > 0) {
-                ps.setInt(2, r.getIdRestaurante());
-            } else {
-                int rid = SessionContext.getInstance().getRestauranteEfetivo();
-                if (rid > 0) ps.setInt(2, rid);
-                else ps.setNull(2, java.sql.Types.INTEGER);
+        try {
+            Integer restauranteId = r.getIdRestaurante();
+            if (restauranteId == null || restauranteId <= 0) {
+                restauranteId = SessionContext.getInstance().getRestauranteEfetivo();
             }
+            if (restauranteId == null || restauranteId <= 0 || r.getDataReserva() == null
+                    || r.getMesa() == null || r.getMesa().isBlank()) {
+                return false;
+            }
+            if (existeConflitoReserva(conn, restauranteId, r.getMesa(), r.getDataReserva(), r.getIdReserva())) {
+                return false;
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, r.getIdCliente());
+            ps.setInt(2, restauranteId);
             ps.setTimestamp(3, Timestamp.valueOf(r.getDataReserva()));
             ps.setInt(4, r.getNumPessoas());
             ps.setString(5, r.getMesa());
             
             return ps.executeUpdate() > 0;
-            
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            cb.fecharConexao();
+        }
+    }
+
+    public boolean cancelarReserva(int idReserva) {
+        if (idReserva <= 0 || semContextoOperacional()) {
+            return false;
+        }
+        int rid = SessionContext.getInstance().getRestauranteEfetivo();
+        String sql = "DELETE FROM tb_reservas WHERE ID_reserva = ?" + (rid > 0 ? " AND ID_restaurante = ?" : "");
+        ConexaoBanco cb = new ConexaoBanco();
+        Connection conn = cb.abrirConexao();
+        if (conn == null) {
+            System.out.println(">> [ReservaDAO] Offline: Não é possível cancelar reserva no momento.");
+            return false;
+        }
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, idReserva);
+            if (rid > 0) {
+                ps.setInt(2, rid);
+            }
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -119,5 +164,23 @@ public class ReservaDAO {
             cb.fecharConexao();
         }
         return clientes;
+    }
+
+    private boolean existeConflitoReserva(Connection conn, int restauranteId, String mesa, LocalDateTime dataReserva, int idReservaAtual)
+            throws SQLException {
+        String sql = "SELECT COUNT(*) FROM tb_reservas " +
+                "WHERE ID_restaurante = ? AND mesa = ? AND ABS(DATEDIFF(MINUTE, data_reserva, ?)) < 90" +
+                (idReservaAtual > 0 ? " AND ID_reserva <> ?" : "");
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, restauranteId);
+            ps.setString(2, mesa);
+            ps.setTimestamp(3, Timestamp.valueOf(dataReserva));
+            if (idReservaAtual > 0) {
+                ps.setInt(4, idReservaAtual);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        }
     }
 }
