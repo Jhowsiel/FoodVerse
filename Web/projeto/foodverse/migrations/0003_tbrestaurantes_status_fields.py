@@ -8,19 +8,26 @@ def _colunas_tabela(schema_editor, tabela):
 
 
 def adicionar_campos_status_restaurante(apps, schema_editor):
-    tb_restaurantes = apps.get_model('foodverse', 'TbRestaurantes')
-    tabela = tb_restaurantes._meta.db_table
+    tabela = apps.get_model('foodverse', 'TbRestaurantes')._meta.db_table
     colunas = _colunas_tabela(schema_editor, tabela)
+    vendor = schema_editor.connection.vendor
 
-    if 'ativo' not in colunas:
-        campo_ativo = models.BooleanField(default=True)
-        campo_ativo.set_attributes_from_name('ativo')
-        schema_editor.add_field(tb_restaurantes, campo_ativo)
+    with schema_editor.connection.cursor() as cursor:
+        if 'ativo' not in colunas:
+            if vendor == 'sqlite':
+                cursor.execute(f'ALTER TABLE {tabela} ADD COLUMN ativo bool NOT NULL DEFAULT 1')
+            else:
+                cursor.execute(
+                    f'ALTER TABLE {tabela} ADD ativo BIT NOT NULL CONSTRAINT DF_{tabela}_ativo DEFAULT 1'
+                )
 
-    if 'aberto' not in colunas:
-        campo_aberto = models.BooleanField(default=True)
-        campo_aberto.set_attributes_from_name('aberto')
-        schema_editor.add_field(tb_restaurantes, campo_aberto)
+        if 'aberto' not in colunas:
+            if vendor == 'sqlite':
+                cursor.execute(f'ALTER TABLE {tabela} ADD COLUMN aberto bool NOT NULL DEFAULT 1')
+            else:
+                cursor.execute(
+                    f'ALTER TABLE {tabela} ADD aberto BIT NOT NULL CONSTRAINT DF_{tabela}_aberto DEFAULT 1'
+                )
 
 
 class Migration(migrations.Migration):
