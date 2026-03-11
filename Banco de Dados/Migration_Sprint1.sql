@@ -37,9 +37,6 @@ ELSE
     PRINT 'FK de tb_funcionarios para tb_restaurantes já existe.';
 GO
 
-ALTER TABLE tb_funcionarios ALTER COLUMN ID_restaurante INT NULL;
-GO
-
 -- 2. Garantir campos de imagem compatíveis com Java e Django
 IF NOT EXISTS (
     SELECT 1 FROM sys.columns
@@ -93,12 +90,51 @@ ELSE
     PRINT 'Coluna aberto já existe em tb_restaurantes.';
 GO
 
-UPDATE tb_restaurantes SET ativo = 1 WHERE ativo IS NULL;
-UPDATE tb_restaurantes SET aberto = 1 WHERE aberto IS NULL;
+-- 4. Migração de dados: normaliza apenas valores NULL de ativo/aberto para 1
+IF EXISTS (
+    SELECT 1
+    FROM tb_restaurantes
+    WHERE ativo IS NULL OR aberto IS NULL
+)
+BEGIN
+    UPDATE tb_restaurantes
+       SET ativo = COALESCE(ativo, 1),
+           aberto = COALESCE(aberto, 1)
+     WHERE ativo IS NULL OR aberto IS NULL;
+    PRINT 'Dados legados de ativo/aberto normalizados.';
+END
+ELSE
+    PRINT 'Nenhum dado legado de ativo/aberto precisava de normalização.';
 GO
 
-ALTER TABLE tb_restaurantes ALTER COLUMN ativo BIT NOT NULL;
-ALTER TABLE tb_restaurantes ALTER COLUMN aberto BIT NOT NULL;
+IF EXISTS (
+    SELECT 1
+    FROM sys.columns
+    WHERE object_id = OBJECT_ID('tb_restaurantes')
+      AND name = 'ativo'
+      AND is_nullable = 1
+)
+BEGIN
+    ALTER TABLE tb_restaurantes ALTER COLUMN ativo BIT NOT NULL;
+    PRINT 'Coluna ativo ajustada para NOT NULL.';
+END
+ELSE
+    PRINT 'Coluna ativo já está como NOT NULL.';
+GO
+
+IF EXISTS (
+    SELECT 1
+    FROM sys.columns
+    WHERE object_id = OBJECT_ID('tb_restaurantes')
+      AND name = 'aberto'
+      AND is_nullable = 1
+)
+BEGIN
+    ALTER TABLE tb_restaurantes ALTER COLUMN aberto BIT NOT NULL;
+    PRINT 'Coluna aberto ajustada para NOT NULL.';
+END
+ELSE
+    PRINT 'Coluna aberto já está como NOT NULL.';
 GO
 
 IF NOT EXISTS (
@@ -135,10 +171,6 @@ BEGIN
 END
 ELSE
     PRINT 'Default de aberto já existe.';
-GO
-
--- 4. Migração de dados: todos os restaurantes existentes ficam ativo=1, aberto=1
-UPDATE tb_restaurantes SET ativo = 1, aberto = 1 WHERE ativo IS NULL OR aberto IS NULL;
 GO
 
 -- 5. Compatibilidade operacional
