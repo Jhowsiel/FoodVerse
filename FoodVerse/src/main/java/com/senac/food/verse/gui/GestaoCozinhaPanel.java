@@ -82,8 +82,7 @@ public class GestaoCozinhaPanel extends JPanel {
         new SwingWorker<List<Pedidos>, Void>() {
             @Override
             protected List<Pedidos> doInBackground() {
-                // Força atualização
-                if(!silencioso) dao.recarregarPedidos(); 
+                dao.recarregarPedidos();
                 
                 ArrayList<Pedidos> todos = dao.buscarTodosPedidos();
                 List<Pedidos> filaCozinha = new ArrayList<>();

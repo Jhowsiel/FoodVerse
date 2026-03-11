@@ -181,7 +181,7 @@ public class EntregasPainel extends JPanel {
                     Connection conn = banco.abrirConexao();
                     if(conn != null) {
                         banco.fecharConexao();
-                        if(!silencioso) dao.recarregarPedidos();
+                        dao.recarregarPedidos();
                         
                         // Filtra apenas os que estão em rota
                         for(Pedidos p : dao.buscarTodosPedidos()) {
