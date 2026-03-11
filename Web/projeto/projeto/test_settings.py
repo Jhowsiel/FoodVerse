@@ -9,5 +9,6 @@ DATABASES = {
 }
 
 PASSWORD_HASHERS = [
+    # Apenas para acelerar a suíte de testes local.
     'django.contrib.auth.hashers.MD5PasswordHasher',
 ]

@@ -8,25 +8,27 @@ def _colunas_tabela(schema_editor, tabela):
 
 
 def adicionar_campos_status_restaurante(apps, schema_editor):
-    tabela = apps.get_model('foodverse', 'TbRestaurantes')._meta.db_table
+    tabela = 'tb_restaurantes'
     colunas = _colunas_tabela(schema_editor, tabela)
     vendor = schema_editor.connection.vendor
 
     with schema_editor.connection.cursor() as cursor:
         if 'ativo' not in colunas:
             if vendor == 'sqlite':
-                cursor.execute(f'ALTER TABLE {tabela} ADD COLUMN ativo bool NOT NULL DEFAULT 1')
+                cursor.execute('ALTER TABLE "tb_restaurantes" ADD COLUMN ativo bool NOT NULL DEFAULT 1')
             else:
                 cursor.execute(
-                    f'ALTER TABLE {tabela} ADD ativo BIT NOT NULL CONSTRAINT DF_{tabela}_ativo DEFAULT 1'
+                    'ALTER TABLE [tb_restaurantes] '
+                    'ADD ativo BIT NOT NULL CONSTRAINT DF_tb_restaurantes_ativo DEFAULT 1'
                 )
 
         if 'aberto' not in colunas:
             if vendor == 'sqlite':
-                cursor.execute(f'ALTER TABLE {tabela} ADD COLUMN aberto bool NOT NULL DEFAULT 1')
+                cursor.execute('ALTER TABLE "tb_restaurantes" ADD COLUMN aberto bool NOT NULL DEFAULT 1')
             else:
                 cursor.execute(
-                    f'ALTER TABLE {tabela} ADD aberto BIT NOT NULL CONSTRAINT DF_{tabela}_aberto DEFAULT 1'
+                    'ALTER TABLE [tb_restaurantes] '
+                    'ADD aberto BIT NOT NULL CONSTRAINT DF_tb_restaurantes_aberto DEFAULT 1'
                 )
 
 
