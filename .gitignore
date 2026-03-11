@@ -1,4 +1,5 @@
 **/__pycache__/
 **/*.pyc
 Web/projeto/db.sqlite3
+Web/projeto/test_db.sqlite3
 FoodVerse/target/
