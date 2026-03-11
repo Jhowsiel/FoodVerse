@@ -44,7 +44,11 @@ public class FuncionarioTest {
         ConexaoBanco conexao = new ConexaoBanco();
         Connection conn = conexao.abrirConexao();
         try {
-            assertEquals(conn != null, resultado);
+            if (conn != null) {
+                assertTrue(resultado);
+            } else {
+                assertFalse(resultado);
+            }
         } finally {
             conexao.fecharConexao();
         }

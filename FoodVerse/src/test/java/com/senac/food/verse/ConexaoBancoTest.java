@@ -48,6 +48,8 @@ public class ConexaoBancoTest {
             Connection conn = conexao.abrirConexao();
             if (conn != null) {
                 assertFalse(conn.isClosed());
+            } else {
+                assertNull(conn);
             }
         });
     }
@@ -66,6 +68,12 @@ public class ConexaoBancoTest {
                 assertTrue(conn.isClosed());
             }
         });
+    }
+
+    @Test
+    public void testFecharConexaoSemAbrir() {
+        ConexaoBanco conexao = new ConexaoBanco();
+        assertDoesNotThrow(conexao::fecharConexao);
     }
     
  
