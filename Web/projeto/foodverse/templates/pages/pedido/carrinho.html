@@ -4,6 +4,18 @@
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
 
+{% if messages %}
+  <div class="messages-container" style="max-width: 1180px; margin: 20px auto 0; padding: 0 24px;">
+    {% for message in messages %}
+      <div class="alert {{ message.tags }}" style="padding: 16px; border-radius: var(--radius-md); margin-bottom: 10px; display: flex; align-items: center; gap: 12px; 
+           {% if message.tags == 'error' %} background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; {% endif %}">
+        <i class="bi bi-exclamation-triangle-fill"></i> 
+        <span style="font-weight: 600; font-size: 0.9rem;">{{ message }}</span>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
 <link
   href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
   rel="stylesheet">
@@ -702,9 +714,11 @@
           <div class="total-num">{{ total }}</div>
         </div>
 
-        <a href="{% url 'finalizacao' %}" class="btn-pay">
-          <i class="bi bi-shield-lock-fill"></i> Finalizar Pedido
+       {% for r_id, dados in carrinho.items %}
+        <a href="{% url 'finalizacao' %}?restaurante_id={{ r_id }}" class="btn-pay">
+        Finalizar Pedido em {{ dados.restaurante }}
         </a>
+        {% endfor %}
         <a href="{% url 'restaurantes' %}" class="btn-back">
           <i class="bi bi-arrow-left"></i> Continuar comprando
         </a>
@@ -720,6 +734,21 @@
 </div>
 
 <script>
+
+
+setTimeout(function() {
+    const containerMensagens = document.querySelector('.messages-container');
+    if (containerMensagens) {
+        // Cria uma transição suave de desaparecimento
+        containerMensagens.style.transition = "opacity 0.6s ease";
+        containerMensagens.style.opacity = "0";
+        
+        // Remove do HTML de vez após a animação terminar (mais 600ms)
+        setTimeout(() => {
+            containerMensagens.remove();
+        }, 600);
+    }
+}, 5000);
 
   function removerRestaurante(r_id) {
     fetch(`/remover-restaurante/${r_id}/`)

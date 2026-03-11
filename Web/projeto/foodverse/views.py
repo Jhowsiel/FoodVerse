@@ -256,27 +256,49 @@ def reserva_pagamento(request):
     return redirect('reserva')
 
 def pedido_view(request):
-    r_id = _int_param(request.GET.get('restaurante_id'), 1)
-    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
+    # Tenta pegar o ID da URL
+    r_id = request.GET.get('restaurante_id')
+    
+    if r_id:
+        restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
+    else:
+        # Se NÃO veio ID na URL, pega o primeiro restaurante que existir no banco
+        restaurante = TbRestaurantes.objects.first()
+        
+        # Se o banco estiver totalmente vazio (nem o seed rodou), manda para a home
+        if not restaurante:
+            return redirect('restaurantes')
+
+    # Busca o primeiro produto desse restaurante
     item = TbProdutos.objects.filter(restaurante=restaurante).first()
 
     return render(request, 'pages/pedido/pedido.html', {
         'restaurante': restaurante,
         'item': item,
         'subtotal': item.preco if item else 0,
-        'entrega': restaurante.taxa_entrega,
+        'entrega': restaurante.taxa_entrega or 0,
     })
 
 # View 1 — só ADICIONA e redireciona
 def adicionar_carrinho(request):
     r_id = _int_param(request.GET.get('restaurante_id'), 1)
-    p_id = _int_param(request.GET.get('produto_id'), 1)
+    p_id = _int_param(request.GET.get('produto_id'), 1) 
 
+    # 1. Pega o carrinho atual
+    carrinho = request.session.get('carrinho', {})
+
+    # Se o carrinho tem algo E o restaurante novo NÃO é o que já está no carrinho
+    if carrinho and str(r_id) not in carrinho:
+        from django.contrib import messages
+        messages.error(request, "Você já tem itens de outro restaurante. Finalize ou limpe o carrinho primeiro.")
+        return redirect('carrinho')
+    # -----------------------------------------------
+
+    # Se passou da trava, agora sim buscamos os dados no banco
     restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
     produto = get_object_or_404(TbProdutos, id_produto=p_id, restaurante=restaurante)
 
-    carrinho = request.session.get('carrinho', {})
-
+    # Cria a estrutura do restaurante se for o primeiro item dele
     if str(r_id) not in carrinho:
         carrinho[str(r_id)] = {'restaurante': restaurante.nome, 'itens': []}
 
@@ -286,10 +308,9 @@ def adicionar_carrinho(request):
     if existente:
         if existente['quantidade'] + 1 > 10:
             return JsonResponse({
-            'quantidade': existente['quantidade'],
-            'erro': 'Limite de 10 unidades'
-        })
-
+                'quantidade': existente['quantidade'],
+                'erro': 'Limite de 10 unidades'
+            })
         else:
             existente['quantidade'] += 1
     else:
@@ -303,8 +324,7 @@ def adicionar_carrinho(request):
     request.session['carrinho'] = carrinho
     request.session.modified = True
 
-    return redirect('carrinho')  
-        
+    return redirect('carrinho')
 # View 2 — só EXIBE o carrinho, nunca modifica
 def carrinho_view(request):
     carrinho = request.session.get('carrinho', {})
@@ -327,9 +347,14 @@ def aumentar_item(request, r_id, produto_id):
     itens = carrinho.get(str(r_id), {}).get('itens', [])
     item = next((i for i in itens if i['id'] == produto_id), None)
     if item:
-        if (item['quantidade'] + 1) * Decimal(item['preco']) > Decimal(item['preco']) * 10:
-            return JsonResponse({'error': 'Limite de 10 unidades por produto.'}, status=400)
-        item['quantidade'] += 1
+        nova_quantidade = item['quantidade'] + 1
+        if (nova_quantidade > 10):
+            return JsonResponse({
+                'status': 'erro',
+                'mensagem': 'Limite máximo de 10 unidades por produto atingido.',
+                'quantidade_atual': item['quantidade']
+            }, status=400) # Status 400 indica erro do cliente
+        item['quantidade'] = nova_quantidade
     request.session['carrinho'] = carrinho
     request.session.modified = True
     return JsonResponse({'quantidade': item['quantidade'] if item else 0})
@@ -362,9 +387,107 @@ def remover_restaurante(request, r_id):
 
 
 
-def finalizacao_view(request):
-    return render(request, 'pages/pedido/finalizacao.html')
+from django.shortcuts import render, redirect, get_object_or_404
+from django.db import transaction
+from django.utils import timezone
+from decimal import Decimal
+from .models import TbPedidos, TbPedidosProdutos, TbStatusPedido, TbEstoque, TbProdutos
 
+from django.db import transaction
+from django.utils import timezone
+from decimal import Decimal
+from django.shortcuts import render, redirect, get_object_or_404
+# Importe seus modelos exatamente como estão no arquivo que você mandou
+from .models import TbPedidos, TbPedidosProdutos, TbStatusPedido, TbEstoque, TbProdutos, TbClientes, TbRestaurantes
+
+from .models import TbPagamentos # Certifique-se de importar
+
+def finalizacao_view(request):
+    r_id = request.GET.get('restaurante_id') or request.POST.get('restaurante_id')
+    carrinho = request.session.get('carrinho', {})
+
+    if not r_id or r_id not in carrinho:
+        return redirect('carrinho')
+
+    cliente_id = request.session.get('cliente_id', 1)
+    cliente_instancia = get_object_or_404(TbClientes, id_cliente=cliente_id)
+    restaurante_instancia = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
+    dados_venda = carrinho[r_id]
+    
+    # --- CÁLCULOS PARA O RESUMO (P1) ---
+    subtotal = sum(Decimal(str(i['preco'])) * i['quantidade'] for i in dados_venda['itens'])
+    
+    # Valores fictícios 
+    entrega = Decimal('5.00') 
+    desconto = Decimal('10.00') if subtotal > 50 else Decimal('0.00')
+    
+    total_final = subtotal + entrega - desconto
+
+    # SE O USUÁRIO ESTIVER APENAS ACESSANDO A PÁGINA (GET)
+    if request.method == 'GET':
+        return render(request, 'pages/pedido/finalizacao.html', {
+            'carrinho': dados_venda,
+            'restaurante': restaurante_instancia,
+            'cliente': cliente_instancia,
+            'subtotal': subtotal,
+            'entrega': entrega,
+            'desconto': desconto,
+            'total': total_final,
+        })
+
+    # SE O USUÁRIO CLICOU EM "CONFIRMAR PEDIDO" (POST)
+    if request.method == 'POST':
+        endereco = request.POST.get('endereco')
+        metodo_pagamento = request.POST.get('pagamento') # Ex: 'Cartão', 'Pix'
+
+        try:
+            with transaction.atomic():
+                status_instancia = get_object_or_404(TbStatusPedido, id_status=1)
+
+                # 1. Criar o Pedido com o endereço vindo do formulário
+                pedido = TbPedidos.objects.create(
+                    cliente=cliente_instancia,      
+                    restaurante=restaurante_instancia, 
+                    status=status_instancia,        
+                    valor_total=total_final,
+                    data_pedido=timezone.now(),
+                    endereco_entrega=endereco  # PEGO DO FORMULÁRIO
+                )
+
+                # 2. Criar o registro de Pagamento (usando seu Model TbPagamentos)
+                TbPagamentos.objects.create(
+                    pedido=pedido,
+                    metodo_pagamento=metodo_pagamento,
+                    valor=total_final,
+                    data_pagamento=timezone.now()
+                )
+
+                # 3. Criar Itens e Baixar Estoque
+                for item in dados_venda['itens']:
+                    produto_instancia = get_object_or_404(TbProdutos, id_produto=item['id'])
+                    TbPedidosProdutos.objects.create(
+                        pedido=pedido,
+                        produto=produto_instancia,
+                        quantidade=item['quantidade']
+                    )
+
+                    estoque = TbEstoque.objects.filter(produto=produto_instancia).first()
+                    if estoque:
+                        if estoque.quantidade >= item['quantidade']:
+                            estoque.quantidade -= item['quantidade']
+                            estoque.save()
+                        else:
+                            raise ValueError(f"Estoque insuficiente: {produto_instancia.nome_produto}")
+
+                # 4. Limpar o carrinho
+                del request.session['carrinho'][r_id]
+                request.session.modified = True
+
+                return render(request, 'pages/pedido/pedido.html', {'pedido': pedido})
+
+        except Exception as e:
+            print(f"ERRO: {e}")
+            return redirect('carrinho')
 # -------------------------------------------------------------------------
 # FEEDBACK
 # -------------------------------------------------------------------------

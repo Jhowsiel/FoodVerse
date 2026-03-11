@@ -294,149 +294,143 @@
 </style>
 
 <div class="page-wrap">
+  <form method="POST" action="{% url 'finalizacao' %}">
+    {% csrf_token %}
+    
+    <input type="hidden" name="restaurante_id" value="{{ restaurante.id_restaurante }}">
 
-  <!-- Header -->
-  <div class="page-header">
-    <p class="page-eyebrow"><i class="bi bi-bag-check"></i> Quase lá</p>
-    <h1 class="page-title">Finalizar Pedido</h1>
-  </div>
-
-  <!-- Steps -->
-  <div class="steps">
-    <div class="step done">
-      <span class="step-num"><i class="bi bi-check2"></i></span> Carrinho
+    <div class="page-header">
+      <p class="page-eyebrow"><i class="bi bi-bag-check"></i> Quase lá</p>
+      <h1 class="page-title">Finalizar Pedido</h1>
     </div>
-    <div class="step-line"></div>
-    <div class="step active">
-      <span class="step-num">2</span> Entrega
-    </div>
-    <div class="step-line"></div>
-    <div class="step">
-      <span class="step-num">3</span> Confirmação
-    </div>
-  </div>
 
-  <div class="checkout-layout">
-
-    <!-- LEFT -->
-    <div>
-
-      <!-- Endereço -->
-      <div class="co-card">
-        <div class="card-section-title">
-          <i class="bi bi-geo-alt-fill"></i> Endereço de entrega
-        </div>
-
-        <div class="field">
-          <label class="field-label">Endereço completo</label>
-          <div class="field-input-wrap">
-            <i class="bi bi-search field-icon"></i>
-            <input type="text" class="field-input"
-                   placeholder="Rua, número, bairro..."
-                   value="Rua Exemplo, 123 - Taboão da Serra">
-          </div>
-          <p class="field-hint">Confirme ou altere o endereço de entrega acima.</p>
-        </div>
-
-        <div class="field">
-          <label class="field-label">Complemento</label>
-          <div class="field-input-wrap">
-            <i class="bi bi-building field-icon"></i>
-            <input type="text" class="field-input" placeholder="Apto, bloco, referência...">
-          </div>
-        </div>
+    <div class="steps">
+      <div class="step done">
+        <span class="step-num"><i class="bi bi-check2"></i></span> Carrinho
       </div>
-
-      <!-- Pagamento -->
-      <div class="co-card">
-        <div class="card-section-title">
-          <i class="bi bi-credit-card-fill"></i> Forma de pagamento
-        </div>
-
-        <div class="pay-options">
-          <input type="radio" name="pagamento" class="pay-opt-input" id="pix" checked>
-          <label class="pay-opt-label" for="pix">
-            <i class="bi bi-qr-code"></i> Pix
-          </label>
-
-          <input type="radio" name="pagamento" class="pay-opt-input" id="credito">
-          <label class="pay-opt-label" for="credito">
-            <i class="bi bi-credit-card"></i> Crédito
-          </label>
-
-          <input type="radio" name="pagamento" class="pay-opt-input" id="debito">
-          <label class="pay-opt-label" for="debito">
-            <i class="bi bi-bank"></i> Débito
-          </label>
-
-          <input type="radio" name="pagamento" class="pay-opt-input" id="dinheiro">
-          <label class="pay-opt-label" for="dinheiro">
-            <i class="bi bi-cash-coin"></i> Dinheiro
-          </label>
-        </div>
+      <div class="step-line"></div>
+      <div class="step active">
+        <span class="step-num">2</span> Entrega
       </div>
+      <div class="step-line"></div>
+      <div class="step">
+        <span class="step-num">3</span> Confirmação
+      </div>
+    </div>
 
-      <!-- Cupom -->
-      <div class="co-card">
-        <div class="card-section-title">
-          <i class="bi bi-ticket-perforated-fill"></i> Cupom de desconto
-        </div>
+    <div class="checkout-layout">
 
-        <div class="field">
-          <div class="coupon-row">
-            <input type="text" class="field-input no-icon" placeholder="Código do cupom" value="FOOD10">
-            <button class="btn-apply">Aplicar</button>
+      <div>
+        <div class="co-card">
+          <div class="card-section-title">
+            <i class="bi bi-geo-alt-fill"></i> Endereço de entrega
+          </div>
+
+          <div class="field">
+            <label class="field-label">Endereço completo</label>
+            <div class="field-input-wrap">
+              <i class="bi bi-search field-icon"></i>
+              <input type="text" name="endereco" class="field-input"
+                     placeholder="Rua, número, bairro..."
+                     value="{{ cliente.endereco|default:'' }}" required>
+            </div>
+            <p class="field-hint">Confirme ou altere o endereço de entrega acima.</p>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Complemento</label>
+            <div class="field-input-wrap">
+              <i class="bi bi-building field-icon"></i>
+              <input type="text" name="complemento" class="field-input" placeholder="Apto, bloco, referência...">
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Info -->
-      <div class="info-note">
-        <i class="bi bi-info-circle-fill"></i>
-        <span>Você poderá acompanhar o status do seu pedido em tempo real após a confirmação.</span>
-      </div>
-
-    </div>
-
-    <!-- RIGHT -->
-    <div>
-      <div class="summary-card">
-        <div class="summary-title">Resumo do Pedido</div>
-
-        <div class="s-row">
-          <span>Subtotal</span>
-          <span class="val">{{ subtotal }}</span>
-        </div>
-        <div class="s-row">
-          <span>Entrega</span>
-          <span class="val green">{{ entrega }}</span>
-        </div>
-        <div class="s-row">
-          <span>Cupom FOOD10</span>
-          <span class="val red">− {{ desconto }}</span>
-        </div>
-
-        <hr class="s-divider">
-
-        <div class="total-row">
-          <div>
-            <div class="total-label">Total</div>
-            <div class="total-sub">em até 2x s/ juros</div>
+        <div class="co-card">
+          <div class="card-section-title">
+            <i class="bi bi-credit-card-fill"></i> Forma de pagamento
           </div>
-          <div class="total-num">{{ total }}</div>
+
+          <div class="pay-options">
+            <input type="radio" name="pagamento" value="Pix" class="pay-opt-input" id="pix" checked>
+            <label class="pay-opt-label" for="pix">
+              <i class="bi bi-qr-code"></i> Pix
+            </label>
+
+            <input type="radio" name="pagamento" value="Crédito" class="pay-opt-input" id="credito">
+            <label class="pay-opt-label" for="credito">
+              <i class="bi bi-credit-card"></i> Crédito
+            </label>
+
+            <input type="radio" name="pagamento" value="Débito" class="pay-opt-input" id="debito">
+            <label class="pay-opt-label" for="debito">
+              <i class="bi bi-bank"></i> Débito
+            </label>
+
+            <input type="radio" name="pagamento" value="Dinheiro" class="pay-opt-input" id="dinheiro">
+            <label class="pay-opt-label" for="dinheiro">
+              <i class="bi bi-cash-coin"></i> Dinheiro
+            </label>
+          </div>
         </div>
 
-        <a href="{% url 'pedido' %}" class="btn-confirm">
-          <i class="bi bi-shield-lock-fill"></i> Confirmar Pedido
-        </a>
+        <div class="co-card">
+          <div class="card-section-title">
+            <i class="bi bi-ticket-perforated-fill"></i> Cupom de desconto
+          </div>
 
-        <div class="secure-note">
-          <i class="bi bi-lock-fill"></i> Pagamento 100% seguro e criptografado
+          <div class="field">
+            <div class="coupon-row">
+              <input type="text" name="cupom_codigo" class="field-input no-icon" placeholder="Código do cupom" value="FOOD10">
+              <button type="button" class="btn-apply">Aplicar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-note">
+          <i class="bi bi-info-circle-fill"></i>
+          <span>Você poderá acompanhar o status do seu pedido em tempo real após a confirmação.</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="summary-card">
+          <div class="summary-title">Resumo do Pedido</div>
+
+          <div class="s-row">
+            <span>Subtotal</span>
+            <span class="val">R$ {{ subtotal|floatformat:2 }}</span>
+          </div>
+          <div class="s-row">
+            <span>Entrega</span>
+            <span class="val green">R$ {{ entrega|floatformat:2 }}</span>
+          </div>
+          <div class="s-row">
+            <span>Cupom</span>
+            <span class="val red">− R$ {{ desconto|floatformat:2 }}</span>
+          </div>
+
+          <hr class="s-divider">
+
+          <div class="total-row">
+            <div>
+              <div class="total-label">Total</div>
+              <div class="total-sub">em até 2x s/ juros</div>
+            </div>
+            <div class="total-num">R$ {{ total|floatformat:2 }}</div>
+          </div>
+
+          <button type="submit" class="btn-confirm">
+            <i class="bi bi-shield-lock-fill"></i> Confirmar Pedido
+          </button>
+
+          <div class="secure-note">
+            <i class="bi bi-lock-fill"></i> Pagamento 100% seguro e criptografado
+          </div>
         </div>
       </div>
     </div>
-
-  </div>
+  </form>
 </div>
 
 {% include "pages/pagePrincipal/footer.html" %}
