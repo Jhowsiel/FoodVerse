@@ -104,10 +104,10 @@ public class CardapioDAO {
                     .collect(Collectors.toList());
             }
 
-            StringBuilder sql = new StringBuilder("SELECT * FROM tb_produtos WHERE is_prato = 1 AND nome_produto LIKE ?");
+            StringBuilder sql = new StringBuilder("SELECT * FROM tb_produtos WHERE nome_produto LIKE ?");
             if(categoria != null && !categoria.equalsIgnoreCase("Todas")) sql.append(" AND categoria = ?");
-            if("Ativos".equalsIgnoreCase(status)) sql.append(" AND ativo = 1");
-            if("Inativos".equalsIgnoreCase(status)) sql.append(" AND ativo = 0");
+            if("Ativos".equalsIgnoreCase(status)) sql.append(" AND disponivel = 1");
+            if("Inativos".equalsIgnoreCase(status)) sql.append(" AND disponivel = 0");
 
             try(PreparedStatement ps = conn.prepareStatement(sql.toString())) {
                 ps.setString(1, "%" + (termo==null?"":termo) + "%");
@@ -116,7 +116,7 @@ public class CardapioDAO {
                 try(ResultSet rs = ps.executeQuery()) {
                     while(rs.next()) {
                         Prato p = new Prato(rs.getLong("ID_produto"), rs.getString("nome_produto"),
-                                rs.getString("categoria"), rs.getBoolean("ativo"), rs.getDouble("preco_produto"));
+                                rs.getString("categoria"), rs.getBoolean("disponivel"), rs.getDouble("preco"));
                         pratos.add(p);
                     }
                 }
@@ -130,7 +130,7 @@ public class CardapioDAO {
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) { prato.setId(SEQ_ID.getAndIncrement()); PRATOS_MOCK.add(prato); return prato; }
 
-            String sql = "INSERT INTO tb_produtos (nome_produto, categoria, preco_produto, ativo, is_prato) VALUES (?, ?, ?, ?, 1)";
+            String sql = "INSERT INTO tb_produtos (nome_produto, categoria, preco, disponivel) VALUES (?, ?, ?, ?)";
             try(PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, prato.getNome()); ps.setString(2, prato.getCategoria());
                 ps.setDouble(3, prato.getPreco()); ps.setBoolean(4, prato.isAtivo());
@@ -153,7 +153,7 @@ public class CardapioDAO {
                 for(int i=0; i<PRATOS_MOCK.size(); i++) if(PRATOS_MOCK.get(i).getId().equals(prato.getId())) { PRATOS_MOCK.set(i, prato); break; }
                 return;
             }
-            String sql = "UPDATE tb_produtos SET nome_produto=?, categoria=?, preco_produto=?, ativo=? WHERE ID_produto=? AND is_prato=1";
+            String sql = "UPDATE tb_produtos SET nome_produto=?, categoria=?, preco=?, disponivel=? WHERE ID_produto=?";
             try(PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, prato.getNome()); ps.setString(2, prato.getCategoria());
                 ps.setDouble(3, prato.getPreco()); ps.setBoolean(4, prato.isAtivo());
@@ -167,7 +167,7 @@ public class CardapioDAO {
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) { PRATOS_MOCK.removeIf(p -> p.getId().equals(id)); return; }
-            try(PreparedStatement ps = conn.prepareStatement("DELETE FROM tb_produtos WHERE ID_produto=? AND is_prato=1")) {
+            try(PreparedStatement ps = conn.prepareStatement("DELETE FROM tb_produtos WHERE ID_produto=?")) {
                 ps.setLong(1, id); ps.executeUpdate();
             }
         } catch(Exception e) { e.printStackTrace(); }
@@ -178,12 +178,12 @@ public class CardapioDAO {
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) return PRATOS_MOCK.stream().filter(p -> p.getId().equals(id)).findFirst().orElse(null);
             
-            String sql = "SELECT * FROM tb_produtos WHERE ID_produto=? AND is_prato=1";
+            String sql = "SELECT * FROM tb_produtos WHERE ID_produto=?";
             try(PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setLong(1, id);
                 try(ResultSet rs = ps.executeQuery()) {
                     if(rs.next()) return new Prato(rs.getLong("ID_produto"), rs.getString("nome_produto"),
-                                rs.getString("categoria"), rs.getBoolean("ativo"), rs.getDouble("preco_produto"));
+                                rs.getString("categoria"), rs.getBoolean("disponivel"), rs.getDouble("preco"));
                 }
             }
         } catch(Exception e) { e.printStackTrace(); }
@@ -195,7 +195,7 @@ public class CardapioDAO {
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) return PRATOS_MOCK.stream().map(Prato::getCategoria).distinct().collect(Collectors.toList());
-            try(Statement st = conn.createStatement(); ResultSet rs = st.executeQuery("SELECT DISTINCT categoria FROM tb_produtos WHERE is_prato=1 AND categoria IS NOT NULL")) {
+            try(Statement st = conn.createStatement(); ResultSet rs = st.executeQuery("SELECT DISTINCT categoria FROM tb_produtos WHERE categoria IS NOT NULL")) {
                 while(rs.next()) cat.add(rs.getString(1));
             }
         } catch(Exception e) { e.printStackTrace(); }
@@ -215,10 +215,10 @@ public class CardapioDAO {
                     .collect(Collectors.toList());
             }
 
-            StringBuilder sql = new StringBuilder("SELECT * FROM tb_produtos WHERE is_prato = 0 AND nome_produto LIKE ?");
+            StringBuilder sql = new StringBuilder("SELECT * FROM tb_produtos WHERE nome_produto LIKE ?");
             if(categoria != null && !categoria.equalsIgnoreCase("Todas")) sql.append(" AND categoria = ?");
-            if("Ativos".equalsIgnoreCase(status)) sql.append(" AND ativo = 1");
-            if("Inativos".equalsIgnoreCase(status)) sql.append(" AND ativo = 0");
+            if("Ativos".equalsIgnoreCase(status)) sql.append(" AND disponivel = 1");
+            if("Inativos".equalsIgnoreCase(status)) sql.append(" AND disponivel = 0");
 
             try(PreparedStatement ps = conn.prepareStatement(sql.toString())) {
                 ps.setString(1, "%" + (termo==null?"":termo) + "%");
@@ -227,7 +227,7 @@ public class CardapioDAO {
                 try(ResultSet rs = ps.executeQuery()) {
                     while(rs.next()) {
                         prods.add(new ProdutoVenda(rs.getLong("ID_produto"), rs.getString("nome_produto"),
-                                rs.getString("categoria"), rs.getBoolean("ativo"), rs.getDouble("preco_produto")));
+                                rs.getString("categoria"), rs.getBoolean("disponivel"), rs.getDouble("preco")));
                     }
                 }
             }
@@ -240,7 +240,7 @@ public class CardapioDAO {
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) { p.setId(SEQ_ID.getAndIncrement()); PRODUTOS_MOCK.add(p); return p; }
 
-            String sql = "INSERT INTO tb_produtos (nome_produto, categoria, preco_produto, ativo, is_prato) VALUES (?, ?, ?, ?, 0)";
+            String sql = "INSERT INTO tb_produtos (nome_produto, categoria, preco, disponivel) VALUES (?, ?, ?, ?)";
             try(PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, p.getNome()); ps.setString(2, p.getCategoria());
                 ps.setDouble(3, p.getPreco()); ps.setBoolean(4, p.isAtivo());
@@ -259,7 +259,7 @@ public class CardapioDAO {
                 for(int i=0; i<PRODUTOS_MOCK.size(); i++) if(PRODUTOS_MOCK.get(i).getId().equals(p.getId())) { PRODUTOS_MOCK.set(i, p); break; }
                 return;
             }
-            String sql = "UPDATE tb_produtos SET nome_produto=?, categoria=?, preco_produto=?, ativo=? WHERE ID_produto=? AND is_prato=0";
+            String sql = "UPDATE tb_produtos SET nome_produto=?, categoria=?, preco=?, disponivel=? WHERE ID_produto=?";
             try(PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, p.getNome()); ps.setString(2, p.getCategoria());
                 ps.setDouble(3, p.getPreco()); ps.setBoolean(4, p.isAtivo()); ps.setLong(5, p.getId());
@@ -272,7 +272,7 @@ public class CardapioDAO {
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) { PRODUTOS_MOCK.removeIf(p -> p.getId().equals(id)); return; }
-            try(PreparedStatement ps = conn.prepareStatement("DELETE FROM tb_produtos WHERE ID_produto=? AND is_prato=0")) {
+            try(PreparedStatement ps = conn.prepareStatement("DELETE FROM tb_produtos WHERE ID_produto=?")) {
                 ps.setLong(1, id); ps.executeUpdate();
             }
         } catch(Exception e) { e.printStackTrace(); }
@@ -283,7 +283,7 @@ public class CardapioDAO {
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) return PRODUTOS_MOCK.stream().map(ProdutoVenda::getCategoria).distinct().collect(Collectors.toList());
-            try(Statement st = conn.createStatement(); ResultSet rs = st.executeQuery("SELECT DISTINCT categoria FROM tb_produtos WHERE is_prato=0 AND categoria IS NOT NULL")) {
+            try(Statement st = conn.createStatement(); ResultSet rs = st.executeQuery("SELECT DISTINCT categoria FROM tb_produtos WHERE categoria IS NOT NULL")) {
                 while(rs.next()) cat.add(rs.getString(1));
             }
         } catch(Exception e) { e.printStackTrace(); }

@@ -17,7 +17,7 @@ public class ValidarCadastro {
             return false;
         }
         clearError(label);
-        return verificarDisponibilidade("userName", username, label);
+        return verificarDisponibilidade("username", username, label);
     }
 
     public Boolean validarEmail(String email, JLabel label) {
@@ -43,7 +43,7 @@ public class ValidarCadastro {
             return false;
         }
         clearError(label);
-        return verificarDisponibilidade("phone", phone, label);
+        return verificarDisponibilidade("telefone", phone, label);
     }
 
     private Boolean verificarDisponibilidade(String coluna, String valor, JLabel label) {

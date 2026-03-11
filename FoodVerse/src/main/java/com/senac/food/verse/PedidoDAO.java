@@ -47,28 +47,18 @@ public class PedidoDAO {
                 return gerarPedidosSimulados();
             }
 
-            // ATUALIZADO: JOIN com auth_user do Django
             String sql = "SELECT "
                     + "p.ID_pedido, "
-                    + "u.username AS nome_cliente, "
+                    + "c.username AS nome_cliente, "
+                    + "c.telefone AS telefone_cliente, "
                     + "p.data_pedido AS hora_pedido, "
-                    + "p.hora_entrega, "
-                    + "p.codigo_localizador, "
-                    + "p.endereco_completo, "
-                    + "p.nome_entregador, "
-                    + "p.telefone_entregador, "
-                    + "p.modo_consumo, "
-                    + "p.observacoes, "
-                    + "s.status_nome, "
-                    + "t.tipo_nome, "
+                    + "p.endereco_entrega, "
+                    + "s.nome_status, "
                     + "pg.metodo_pagamento AS forma_pagamento, "
-                    + "pg.valor_total AS subtotal, "
-                    + "r.mesa "
+                    + "COALESCE(pg.valor, p.valor_total) AS subtotal "
                     + "FROM tb_pedidos p "
-                    + "JOIN auth_user u ON p.ID_cliente = u.id "
-                    + "JOIN tb_status_pedido s ON p.status_id = s.status_id "
-                    + "JOIN tb_tipo_pedido t ON p.tipo_id = t.tipo_id "
-                    + "LEFT JOIN tb_reservas r ON p.ID_reserva = r.ID_reserva "
+                    + "JOIN tb_clientes c ON p.ID_cliente = c.id_cliente "
+                    + "JOIN tb_status_pedido s ON p.status_id = s.ID_status "
                     + "LEFT JOIN tb_pagamentos pg ON p.ID_pedido = pg.ID_pedido";
 
             ResultSet rs = conexao.stmt.executeQuery(sql);
@@ -76,11 +66,13 @@ public class PedidoDAO {
             while (rs.next()) {
                 String idPedido = rs.getString("ID_pedido");
                 List<ItemPedido> itens = buscarItensDoPedido(idPedido);
+                String enderecoEntrega = rs.getString("endereco_entrega");
+                String modoEntrega = (enderecoEntrega != null && !enderecoEntrega.isEmpty()) ? "Delivery" : "Salão";
 
-                Pedidos pedido = new Pedidos(idPedido, rs.getString("nome_cliente"), rs.getString("hora_pedido"), rs.getString("hora_entrega"),
-                        rs.getString("codigo_localizador"), rs.getString("endereco_completo"), rs.getString("nome_entregador"),
-                        rs.getString("telefone_entregador"), rs.getString("modo_consumo"), rs.getString("observacoes"),
-                        itens, rs.getString("status_nome"), rs.getString("tipo_nome"), rs.getString("forma_pagamento"), rs.getDouble("subtotal"), rs.getString("mesa"));
+                Pedidos pedido = new Pedidos(idPedido, rs.getString("nome_cliente"), rs.getString("hora_pedido"), null,
+                        null, enderecoEntrega, null,
+                        rs.getString("telefone_cliente"), modoEntrega, null,
+                        itens, rs.getString("nome_status"), null, rs.getString("forma_pagamento"), rs.getDouble("subtotal"), null);
 
                 pedidosFresh.add(pedido);
 
@@ -113,28 +105,18 @@ public class PedidoDAO {
                 return listaPedidos;
             }
 
-            // ATUALIZADO: JOIN com auth_user do Django
             String sql = "SELECT "
                     + "p.ID_pedido, "
-                    + "u.username AS nome_cliente, "
+                    + "c.username AS nome_cliente, "
+                    + "c.telefone AS telefone_cliente, "
                     + "p.data_pedido AS hora_pedido, "
-                    + "p.hora_entrega, "
-                    + "p.codigo_localizador, "
-                    + "p.endereco_completo, "
-                    + "p.nome_entregador, "
-                    + "p.telefone_entregador, "
-                    + "p.modo_consumo, "
-                    + "p.observacoes, "
-                    + "s.status_nome, "
-                    + "t.tipo_nome, "
+                    + "p.endereco_entrega, "
+                    + "s.nome_status, "
                     + "pg.metodo_pagamento AS forma_pagamento, "
-                    + "pg.valor_total AS subtotal, "
-                    + "r.mesa "
+                    + "COALESCE(pg.valor, p.valor_total) AS subtotal "
                     + "FROM tb_pedidos p "
-                    + "JOIN auth_user u ON p.ID_cliente = u.id "
-                    + "JOIN tb_status_pedido s ON p.status_id = s.status_id "
-                    + "JOIN tb_tipo_pedido t ON p.tipo_id = t.tipo_id "
-                    + "LEFT JOIN tb_reservas r ON p.ID_reserva = r.ID_reserva "
+                    + "JOIN tb_clientes c ON p.ID_cliente = c.id_cliente "
+                    + "JOIN tb_status_pedido s ON p.status_id = s.ID_status "
                     + "LEFT JOIN tb_pagamentos pg ON p.ID_pedido = pg.ID_pedido";
 
             ResultSet rs = conexao.stmt.executeQuery(sql);
@@ -142,11 +124,13 @@ public class PedidoDAO {
             while (rs.next()) {
                 String idPedido = rs.getString("ID_pedido");
                 List<ItemPedido> itens = buscarItensDoPedido(idPedido);
+                String enderecoEntrega = rs.getString("endereco_entrega");
+                String modoEntrega = (enderecoEntrega != null && !enderecoEntrega.isEmpty()) ? "Delivery" : "Salão";
 
-                Pedidos pedido = new Pedidos(idPedido, rs.getString("nome_cliente"), rs.getString("hora_pedido"), rs.getString("hora_entrega"),
-                        rs.getString("codigo_localizador"), rs.getString("endereco_completo"), rs.getString("nome_entregador"),
-                        rs.getString("telefone_entregador"), rs.getString("modo_consumo"), rs.getString("observacoes"),
-                        itens, rs.getString("status_nome"), rs.getString("tipo_nome"), rs.getString("forma_pagamento"), rs.getDouble("subtotal"), rs.getString("mesa"));
+                Pedidos pedido = new Pedidos(idPedido, rs.getString("nome_cliente"), rs.getString("hora_pedido"), null,
+                        null, enderecoEntrega, null,
+                        rs.getString("telefone_cliente"), modoEntrega, null,
+                        itens, rs.getString("nome_status"), null, rs.getString("forma_pagamento"), rs.getDouble("subtotal"), null);
 
                 listaPedidos.add(pedido);
 
@@ -242,28 +226,18 @@ public class PedidoDAO {
                 return null;
             }
 
-            // ATUALIZADO: JOIN com auth_user do Django
             String sql = "SELECT "
                     + "p.ID_pedido, "
-                    + "u.username AS nome_cliente, "
+                    + "c.username AS nome_cliente, "
+                    + "c.telefone AS telefone_cliente, "
                     + "p.data_pedido AS hora_pedido, "
-                    + "p.hora_entrega, "
-                    + "p.codigo_localizador, "
-                    + "p.endereco_completo, "
-                    + "p.nome_entregador, "
-                    + "p.telefone_entregador, "
-                    + "p.modo_consumo, "
-                    + "p.observacoes, "
-                    + "s.status_nome, "
-                    + "t.tipo_nome, "
+                    + "p.endereco_entrega, "
+                    + "s.nome_status, "
                     + "pg.metodo_pagamento AS forma_pagamento, "
-                    + "pg.valor_total AS subtotal, "
-                    + "r.mesa "
+                    + "COALESCE(pg.valor, p.valor_total) AS subtotal "
                     + "FROM tb_pedidos p "
-                    + "JOIN auth_user u ON p.ID_cliente = u.id "
-                    + "JOIN tb_status_pedido s ON p.status_id = s.status_id "
-                    + "JOIN tb_tipo_pedido t ON p.tipo_id = t.tipo_id "
-                    + "LEFT JOIN tb_reservas r ON p.ID_reserva = r.ID_reserva "
+                    + "JOIN tb_clientes c ON p.ID_cliente = c.id_cliente "
+                    + "JOIN tb_status_pedido s ON p.status_id = s.ID_status "
                     + "LEFT JOIN tb_pagamentos pg ON p.ID_pedido = pg.ID_pedido "
                     + "WHERE p.ID_pedido = ?";
 
@@ -274,11 +248,13 @@ public class PedidoDAO {
             if (rs.next()) {
                 String idPedido = rs.getString("ID_pedido");
                 List<ItemPedido> itens = buscarItensDoPedido(idPedido);
+                String enderecoEntrega = rs.getString("endereco_entrega");
+                String modoEntrega = (enderecoEntrega != null && !enderecoEntrega.isEmpty()) ? "Delivery" : "Salão";
 
-                pedido = new Pedidos(idPedido, rs.getString("nome_cliente"), rs.getString("hora_pedido"), rs.getString("hora_entrega"),
-                        rs.getString("codigo_localizador"), rs.getString("endereco_completo"), rs.getString("nome_entregador"),
-                        rs.getString("telefone_entregador"), rs.getString("modo_consumo"), rs.getString("observacoes"),
-                        itens, rs.getString("status_nome"), rs.getString("tipo_nome"), rs.getString("forma_pagamento"), rs.getDouble("subtotal"), rs.getString("mesa"));
+                pedido = new Pedidos(idPedido, rs.getString("nome_cliente"), rs.getString("hora_pedido"), null,
+                        null, enderecoEntrega, null,
+                        rs.getString("telefone_cliente"), modoEntrega, null,
+                        itens, rs.getString("nome_status"), null, rs.getString("forma_pagamento"), rs.getDouble("subtotal"), null);
             }
 
             rs.close();
@@ -319,7 +295,7 @@ public class PedidoDAO {
             conexao.abrirConexao();
             if(conexao.conn == null) return itens;
 
-            String sql = "SELECT pp.ID_produto, pr.nome_produto, pr.preco_produto, pp.quantidade "
+            String sql = "SELECT pp.ID_produto, pr.nome_produto, pr.preco, pp.quantidade "
                        + "FROM tb_pedidos_produtos pp "
                        + "JOIN tb_produtos pr ON pp.ID_produto = pr.ID_produto "
                        + "WHERE pp.ID_pedido = ?";
@@ -332,7 +308,7 @@ public class PedidoDAO {
                     String idProduto = rs.getString("ID_produto");
                     String nomeProduto = rs.getString("nome_produto");
                     int quantidade = rs.getInt("quantidade");
-                    double precoUnitario = rs.getDouble("preco_produto");
+                    double precoUnitario = rs.getDouble("preco");
                     double precoTotal = precoUnitario * quantidade;
 
                     ItemPedido item = new ItemPedido(idProduto, nomeProduto, quantidade, precoTotal);
@@ -365,13 +341,13 @@ public class PedidoDAO {
                 return;
             }
 
-            String sqlBuscaStatus = "SELECT status_id FROM tb_status_pedido WHERE status_nome = ?";
+            String sqlBuscaStatus = "SELECT ID_status FROM tb_status_pedido WHERE nome_status = ?";
             PreparedStatement stmtBusca = conexao.conn.prepareStatement(sqlBuscaStatus);
             stmtBusca.setString(1, novoStatus);
             ResultSet rs = stmtBusca.executeQuery();
 
             if (rs.next()) {
-                int statusId = rs.getInt("status_id");
+                int statusId = rs.getInt("ID_status");
 
                 String sqlUpdate = "UPDATE tb_pedidos SET status_id = ? WHERE ID_pedido = ?";
                 PreparedStatement stmtUpdate = conexao.conn.prepareStatement(sqlUpdate);

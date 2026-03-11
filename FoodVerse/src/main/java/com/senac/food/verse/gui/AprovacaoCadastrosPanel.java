@@ -177,11 +177,11 @@ public class AprovacaoCadastrosPanel extends JPanel {
         int pendentes = 0;
         int ativos = 0;
 
-        String sql = "SELECT userID, name, userName, email, role, status FROM tb_funcionarios";
+        String sql = "SELECT ID_funcionario, nome, username, email, cargo, status FROM tb_funcionarios";
         if (!filtro.isEmpty()) {
-            sql += " WHERE name LIKE ? OR email LIKE ? OR role LIKE ?";
+            sql += " WHERE nome LIKE ? OR email LIKE ? OR cargo LIKE ?";
         }
-        sql += " ORDER BY CASE WHEN status = 'pendente' THEN 0 ELSE 1 END, name ASC";
+        sql += " ORDER BY CASE WHEN status = 'pendente' THEN 0 ELSE 1 END, nome ASC";
 
         ConexaoBanco cb = new ConexaoBanco();
         Connection conn = null;
@@ -206,11 +206,11 @@ public class AprovacaoCadastrosPanel extends JPanel {
                 else if ("aprovado".equalsIgnoreCase(status)) ativos++;
 
                 modeloTabela.addRow(new Object[]{
-                        rs.getInt("userID"),
-                        rs.getString("name"),
-                        rs.getString("userName"),
+                        rs.getInt("ID_funcionario"),
+                        rs.getString("nome"),
+                        rs.getString("username"),
                         rs.getString("email"),
-                        rs.getString("role"),
+                        rs.getString("cargo"),
                         status,
                         "" 
                 });
@@ -229,7 +229,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
     }
 
     private void atualizarStatus(int id, String novoStatus) {
-        String sql = "UPDATE tb_funcionarios SET status = ? WHERE userID = ?";
+        String sql = "UPDATE tb_funcionarios SET status = ? WHERE ID_funcionario = ?";
         ConexaoBanco cb = new ConexaoBanco();
         try {
             Connection conn = cb.abrirConexao();
