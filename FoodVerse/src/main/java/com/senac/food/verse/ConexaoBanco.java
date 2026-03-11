@@ -15,7 +15,7 @@ public class ConexaoBanco {
     // Configurações do Banco
     final String SERVIDOR = "jdbc:sqlserver://127.0.0.1:1433;databaseName=FoodVerseDB;encrypt=false;trustServerCertificate=true";
     final String USUARIO = "sa";
-    private final String SENHA = "pw_user_app";
+    private final String SENHA = "SenhaForte#2026";
     private final String DRIVER = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
     
     public Connection abrirConexao(){
