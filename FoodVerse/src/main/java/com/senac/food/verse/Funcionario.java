@@ -114,6 +114,83 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
         return cargo;
     }
 
+    /**
+     * Realiza o login e preenche o SessionContext com os dados completos do funcionário.
+     *
+     * @return mensagem de erro em caso de falha, ou null em caso de sucesso.
+     */
+    public static String loginComContexto(String emailOuUsername, String senha) {
+        ConexaoBanco banco = new ConexaoBanco();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = banco.abrirConexao();
+            if (conn == null) {
+                return "Erro de conexão com o banco.";
+            }
+
+            String query = "SELECT f.ID_funcionario, f.nome, f.cargo, f.status, "
+                    + "ISNULL(f.ID_restaurante, 0) AS ID_restaurante, "
+                    + "ISNULL(r.ativo, 1) AS restaurante_ativo "
+                    + "FROM tb_funcionarios f "
+                    + "LEFT JOIN tb_restaurantes r ON r.ID_restaurante = f.ID_restaurante "
+                    + "WHERE (f.email = ? OR f.username = ?) AND f.senha = ?";
+
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, emailOuUsername);
+            stmt.setString(2, emailOuUsername);
+            stmt.setString(3, senha);
+            rs = stmt.executeQuery();
+
+            if (!rs.next()) {
+                return "Credenciais inválidas.";
+            }
+
+            String status = rs.getString("status");
+            if ("bloqueado".equalsIgnoreCase(status)) {
+                return "Usuário bloqueado. Contate o administrador.";
+            }
+            if ("pendente".equalsIgnoreCase(status)) {
+                return "Seu cadastro ainda está em análise.";
+            }
+            if (!"ativo".equalsIgnoreCase(status)) {
+                return "Usuário inativo. Contate o administrador.";
+            }
+
+            String cargo     = rs.getString("cargo");
+            boolean isAdmin  = "Admin".equalsIgnoreCase(cargo);
+            int restauranteId = rs.getInt("ID_restaurante");
+            boolean restauranteAtivo = rs.getBoolean("restaurante_ativo");
+
+            if (!isAdmin && restauranteId == 0) {
+                return "Funcionário sem restaurante vinculado. Contate o administrador.";
+            }
+            if (!isAdmin && !restauranteAtivo) {
+                return "Restaurante inativo na plataforma. Operação não permitida.";
+            }
+
+            int id       = rs.getInt("ID_funcionario");
+            String nome  = rs.getString("nome");
+
+            SessionContext.getInstance().inicializar(id, nome, cargo, status, restauranteId);
+            return null; // sucesso
+
+        } catch (SQLException ex) {
+            System.err.println("Erro ao fazer login: " + ex.getMessage());
+            return "Erro interno: " + ex.getMessage();
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (stmt != null) stmt.close();
+                if (conn != null) banco.fecharConexao();
+            } catch (SQLException e) {
+                System.err.println("Erro ao fechar recursos: " + e.getMessage());
+            }
+        }
+    }
+
     public static void permissaoFunc(String userRole, javax.swing.JFrame frame) {
         if (userRole == null) {
             System.out.println("Erro: Cargo do usuário é inválido (null). Login falhou.");

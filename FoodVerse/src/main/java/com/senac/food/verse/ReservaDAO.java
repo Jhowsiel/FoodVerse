@@ -19,11 +19,13 @@ public class ReservaDAO {
     // Busca reservas ativas para hoje
     public List<Reserva> listarReservasDoDia() {
         List<Reserva> lista = new ArrayList<>();
+        int rid = SessionContext.getInstance().getRestauranteEfetivo();
         String sql = "SELECT r.ID_reserva, r.ID_cliente, c.username, r.data_reserva, r.numero_pessoas, r.mesa " +
                      "FROM tb_reservas r " +
                      "LEFT JOIN tb_clientes c ON r.ID_cliente = c.id_cliente " +
-                     "WHERE CAST(r.data_reserva AS DATE) = CAST(GETDATE() AS DATE) " +
-                     "ORDER BY r.data_reserva ASC";
+                     "WHERE CAST(r.data_reserva AS DATE) = CAST(GETDATE() AS DATE)" +
+                     (rid > 0 ? " AND r.ID_restaurante = ?" : "") +
+                     " ORDER BY r.data_reserva ASC";
 
         ConexaoBanco cb = new ConexaoBanco();
         Connection conn = cb.abrirConexao();
@@ -33,22 +35,23 @@ public class ReservaDAO {
             return lista; 
         }
 
-        try (PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-                Reserva r = new Reserva();
-                r.setIdReserva(rs.getInt("ID_reserva"));
-                r.setIdCliente(rs.getInt("ID_cliente"));
-                r.setNomeCliente(rs.getString("username"));
-                
-                Timestamp ts = rs.getTimestamp("data_reserva");
-                if (ts != null) r.setDataReserva(ts.toLocalDateTime());
-                
-                r.setNumPessoas(rs.getInt("numero_pessoas"));
-                r.setMesa(rs.getString("mesa"));
-                r.setStatus("RESERVADA");
-                lista.add(r);
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (rid > 0) ps.setInt(1, rid);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Reserva r = new Reserva();
+                    r.setIdReserva(rs.getInt("ID_reserva"));
+                    r.setIdCliente(rs.getInt("ID_cliente"));
+                    r.setNomeCliente(rs.getString("username"));
+                    
+                    Timestamp ts = rs.getTimestamp("data_reserva");
+                    if (ts != null) r.setDataReserva(ts.toLocalDateTime());
+                    
+                    r.setNumPessoas(rs.getInt("numero_pessoas"));
+                    r.setMesa(rs.getString("mesa"));
+                    r.setStatus("RESERVADA");
+                    lista.add(r);
+                }
             }
         } catch (SQLException e) {
             System.err.println("Erro ao listar reservas: " + e.getMessage());
@@ -70,10 +73,12 @@ public class ReservaDAO {
         
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, r.getIdCliente());
-            if (r.getIdRestaurante() != null) {
+            if (r.getIdRestaurante() != null && r.getIdRestaurante() > 0) {
                 ps.setInt(2, r.getIdRestaurante());
             } else {
-                ps.setNull(2, java.sql.Types.INTEGER);
+                int rid = SessionContext.getInstance().getRestauranteEfetivo();
+                if (rid > 0) ps.setInt(2, rid);
+                else ps.setNull(2, java.sql.Types.INTEGER);
             }
             ps.setTimestamp(3, Timestamp.valueOf(r.getDataReserva()));
             ps.setInt(4, r.getNumPessoas());

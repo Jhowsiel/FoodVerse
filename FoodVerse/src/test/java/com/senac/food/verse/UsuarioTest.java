@@ -16,13 +16,13 @@ public class UsuarioTest {
     @Test
     public void testUsuarioLogado() {
         Usuario usuario = new Usuario("logado", "logado@email.com", "senha", true, "2025-04-08");
-        assertTrue(usuario.chechLogin());
+        assertTrue(usuario.checkLogin());
     }
 
     @Test
     public void testUsuarioNaoLogado() {
         Usuario usuario = new Usuario("naologado", "naologado@email.com", "senha", false, "2025-04-09");
-        assertFalse(usuario.chechLogin());
+        assertFalse(usuario.checkLogin());
     }
 
     @Test

@@ -105,19 +105,23 @@ public class CardapioDAO {
             }
 
             StringBuilder sql = new StringBuilder("SELECT * FROM tb_produtos WHERE nome_produto LIKE ?");
+            int rid = SessionContext.getInstance().getRestauranteEfetivo();
+            if (rid > 0) sql.append(" AND ID_restaurante = ?");
             if(categoria != null && !categoria.equalsIgnoreCase("Todas")) sql.append(" AND categoria = ?");
             if("Ativos".equalsIgnoreCase(status)) sql.append(" AND disponivel = 1");
             if("Inativos".equalsIgnoreCase(status)) sql.append(" AND disponivel = 0");
 
             try(PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-                ps.setString(1, "%" + (termo==null?"":termo) + "%");
-                if(categoria != null && !categoria.equalsIgnoreCase("Todas")) ps.setString(2, categoria);
+                int p = 1;
+                ps.setString(p++, "%" + (termo==null?"":termo) + "%");
+                if (rid > 0) ps.setInt(p++, rid);
+                if(categoria != null && !categoria.equalsIgnoreCase("Todas")) ps.setString(p, categoria);
                 
                 try(ResultSet rs = ps.executeQuery()) {
                     while(rs.next()) {
-                        Prato p = new Prato(rs.getLong("ID_produto"), rs.getString("nome_produto"),
+                        Prato pr = new Prato(rs.getLong("ID_produto"), rs.getString("nome_produto"),
                                 rs.getString("categoria"), rs.getBoolean("disponivel"), rs.getDouble("preco"));
-                        pratos.add(p);
+                        pratos.add(pr);
                     }
                 }
             }
@@ -216,13 +220,17 @@ public class CardapioDAO {
             }
 
             StringBuilder sql = new StringBuilder("SELECT * FROM tb_produtos WHERE nome_produto LIKE ?");
+            int rid = SessionContext.getInstance().getRestauranteEfetivo();
+            if (rid > 0) sql.append(" AND ID_restaurante = ?");
             if(categoria != null && !categoria.equalsIgnoreCase("Todas")) sql.append(" AND categoria = ?");
             if("Ativos".equalsIgnoreCase(status)) sql.append(" AND disponivel = 1");
             if("Inativos".equalsIgnoreCase(status)) sql.append(" AND disponivel = 0");
 
             try(PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-                ps.setString(1, "%" + (termo==null?"":termo) + "%");
-                if(categoria != null && !categoria.equalsIgnoreCase("Todas")) ps.setString(2, categoria);
+                int p = 1;
+                ps.setString(p++, "%" + (termo==null?"":termo) + "%");
+                if (rid > 0) ps.setInt(p++, rid);
+                if(categoria != null && !categoria.equalsIgnoreCase("Todas")) ps.setString(p, categoria);
                 
                 try(ResultSet rs = ps.executeQuery()) {
                     while(rs.next()) {

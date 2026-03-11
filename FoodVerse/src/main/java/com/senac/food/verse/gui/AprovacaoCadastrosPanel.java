@@ -1,6 +1,7 @@
 package com.senac.food.verse.gui;
 
 import com.senac.food.verse.ConexaoBanco;
+import com.senac.food.verse.SessionContext;
 import jiconfont.icons.google_material_design_icons.GoogleMaterialDesignIcons;
 import jiconfont.swing.IconFontSwing;
 
@@ -141,12 +142,12 @@ public class AprovacaoCadastrosPanel extends JPanel {
 
     // --- SEÇÃO 3: TABELA ---
     private JScrollPane criarTabela() {
-        String[] colunas = {"ID", "Nome", "Usuário", "E-mail", "Cargo", "Status", "Ações"};
+        String[] colunas = {"ID", "Nome", "Usuário", "E-mail", "Cargo", "Status", "Restaurante", "Ações"};
         
         modeloTabela = new DefaultTableModel(colunas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return column == 6; // Só a coluna de ações é editável
+                return column == 7; // Só a coluna de ações é editável
             }
         };
 
@@ -155,15 +156,16 @@ public class AprovacaoCadastrosPanel extends JPanel {
 
         // Renderizadores
         tabela.getColumnModel().getColumn(5).setCellRenderer(new StatusRenderer());
-        tabela.getColumnModel().getColumn(6).setCellRenderer(new ActionRenderer());
-        tabela.getColumnModel().getColumn(6).setCellEditor(new ActionEditor());
+        tabela.getColumnModel().getColumn(7).setCellRenderer(new ActionRenderer());
+        tabela.getColumnModel().getColumn(7).setCellEditor(new ActionEditor());
 
         // Tamanhos
         tabela.getColumnModel().getColumn(0).setMaxWidth(60); // ID
         tabela.getColumnModel().getColumn(4).setMaxWidth(120); // Cargo
         tabela.getColumnModel().getColumn(5).setMaxWidth(110); // Status
-        tabela.getColumnModel().getColumn(6).setMinWidth(140); // Ações
-        tabela.getColumnModel().getColumn(6).setMaxWidth(160);
+        tabela.getColumnModel().getColumn(6).setMaxWidth(150); // Restaurante
+        tabela.getColumnModel().getColumn(7).setMinWidth(140); // Ações
+        tabela.getColumnModel().getColumn(7).setMaxWidth(160);
 
         JScrollPane scroll = new JScrollPane(tabela);
         UIConstants.styleScrollPane(scroll); // ESTILIZAÇÃO CENTRALIZADA
@@ -177,11 +179,30 @@ public class AprovacaoCadastrosPanel extends JPanel {
         int pendentes = 0;
         int ativos = 0;
 
-        String sql = "SELECT ID_funcionario, nome, username, email, cargo, status FROM tb_funcionarios";
-        if (!filtro.isEmpty()) {
-            sql += " WHERE nome LIKE ? OR email LIKE ? OR cargo LIKE ?";
+        SessionContext ctx = SessionContext.getInstance();
+        boolean isAdmin = ctx.isAdmin();
+        int restauranteId = ctx.getRestauranteEfetivo();
+
+        StringBuilder sql = new StringBuilder(
+            "SELECT f.ID_funcionario, f.nome, f.username, f.email, f.cargo, f.status, "
+            + "ISNULL(r.nome, '-') AS nome_restaurante "
+            + "FROM tb_funcionarios f "
+            + "LEFT JOIN tb_restaurantes r ON r.ID_restaurante = f.ID_restaurante ");
+
+        boolean hasFiltroTexto = !filtro.isEmpty();
+        boolean hasFiltroRest  = !isAdmin && restauranteId > 0;
+
+        if (hasFiltroRest || hasFiltroTexto) {
+            sql.append("WHERE ");
+            if (hasFiltroRest) {
+                sql.append("f.ID_restaurante = ? ");
+                if (hasFiltroTexto) sql.append("AND ");
+            }
+            if (hasFiltroTexto) {
+                sql.append("(f.nome LIKE ? OR f.email LIKE ? OR f.cargo LIKE ?) ");
+            }
         }
-        sql += " ORDER BY CASE WHEN status = 'pendente' THEN 0 ELSE 1 END, nome ASC";
+        sql.append("ORDER BY CASE WHEN f.status = 'pendente' THEN 0 ELSE 1 END, f.nome ASC");
 
         ConexaoBanco cb = new ConexaoBanco();
         Connection conn = null;
@@ -189,12 +210,16 @@ public class AprovacaoCadastrosPanel extends JPanel {
             conn = cb.abrirConexao();
             if (conn == null) throw new SQLException("Modo Offline");
 
-            PreparedStatement ps = conn.prepareStatement(sql);
-            if (!filtro.isEmpty()) {
+            PreparedStatement ps = conn.prepareStatement(sql.toString());
+            int paramIdx = 1;
+            if (hasFiltroRest) {
+                ps.setInt(paramIdx++, restauranteId);
+            }
+            if (hasFiltroTexto) {
                 String f = "%" + filtro + "%";
-                ps.setString(1, f);
-                ps.setString(2, f);
-                ps.setString(3, f);
+                ps.setString(paramIdx++, f);
+                ps.setString(paramIdx++, f);
+                ps.setString(paramIdx,   f);
             }
 
             ResultSet rs = ps.executeQuery();
@@ -203,7 +228,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
                 if (status == null) status = "pendente";
 
                 if ("pendente".equalsIgnoreCase(status)) pendentes++;
-                else if ("aprovado".equalsIgnoreCase(status)) ativos++;
+                else if ("ativo".equalsIgnoreCase(status) || "aprovado".equalsIgnoreCase(status)) ativos++;
 
                 modeloTabela.addRow(new Object[]{
                         rs.getInt("ID_funcionario"),
@@ -212,7 +237,8 @@ public class AprovacaoCadastrosPanel extends JPanel {
                         rs.getString("email"),
                         rs.getString("cargo"),
                         status,
-                        "" 
+                        isAdmin ? rs.getString("nome_restaurante") : "",
+                        ""
                 });
             }
 
@@ -222,7 +248,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
 
         } catch (Exception e) {
             // Fallback visual
-            modeloTabela.addRow(new Object[]{0, "Sistema Offline", "-", "-", "Admin", "erro", ""});
+            modeloTabela.addRow(new Object[]{0, "Sistema Offline", "-", "-", "Admin", "erro", "-", ""});
         } finally {
             cb.fecharConexao();
         }
@@ -431,8 +457,8 @@ public class AprovacaoCadastrosPanel extends JPanel {
                 fireEditingStopped();
             });
             panel.btnEditar.addActionListener(e -> {
-                Object[] dados = new Object[6];
-                for(int i=0; i<6; i++) dados[i] = tabela.getValueAt(currentRow, i);
+                Object[] dados = new Object[7];
+                for(int i=0; i<7; i++) dados[i] = tabela.getValueAt(currentRow, i);
                 abrirModalEdicao(dados);
                 fireEditingStopped();
             });

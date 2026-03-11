@@ -40,6 +40,6 @@ public class FuncionarioTest {
                 "pendente"
         );
         boolean resultado = funcionario.cadastrarFuncionario();
-        assertTrue(resultado instanceof Boolean);
+        assertTrue(resultado);
     }
 }

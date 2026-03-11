@@ -1,6 +1,8 @@
 package com.senac.food.verse.gui;
 
 import com.senac.food.verse.ConexaoBanco;
+import com.senac.food.verse.Funcionario;
+import com.senac.food.verse.SessionContext;
 import jiconfont.icons.google_material_design_icons.GoogleMaterialDesignIcons;
 import jiconfont.swing.IconFontSwing;
 
@@ -356,33 +358,44 @@ public class TelaInicial extends JFrame {
         } catch (Exception e) { e.printStackTrace(); }
 
         String role = cargo.toLowerCase();
-        boolean isAdmin = role.contains("admin") || role.contains("gerente");
+        boolean isAdmin   = role.contains("admin");
+        boolean isGerente = role.contains("gerente");
         boolean isCozinha = role.contains("cozinheiro") || role.contains("chef");
-        boolean isAtend = role.contains("atendente") || role.contains("garçom");
-        boolean isEntreg = role.contains("entregador");
+        boolean isAtend   = role.contains("atendente") || role.contains("garçom");
+        boolean isEntreg  = role.contains("entregador");
 
         if (isAdmin) {
-            addTituloSecao("ADMINISTRAÇÃO");
+            // Admin Global: gerencia restaurantes + pode entrar no contexto de um deles
+            addTituloSecao("ADMIN GLOBAL");
+            adicionarPainelSeguro("Restaurantes", GoogleMaterialDesignIcons.STORE_MALL_DIRECTORY, "RESTAURANTES", new AdminRestaurantesPanel(this));
             adicionarPainelSeguro("Equipe", GoogleMaterialDesignIcons.SUPERVISOR_ACCOUNT, "USUARIOS", new AprovacaoCadastrosPanel());
-            adicionarPainelSeguro("Cardápio", GoogleMaterialDesignIcons.RESTAURANT, "CARDAPIO", new CardapioPainel());
-            adicionarPainelSeguro("Estoque", GoogleMaterialDesignIcons.STORE, "ESTOQUE", new EstoquePainel());
         }
 
-        if (isAdmin || isAtend) {
+        if (isAdmin || isGerente) {
+            addTituloSecao("MEU RESTAURANTE");
+            adicionarPainelSeguro("Perfil do Restaurante", GoogleMaterialDesignIcons.BUSINESS, "MEU_RESTAURANTE", new MeuRestaurantePanel());
+            adicionarPainelSeguro("Cardápio", GoogleMaterialDesignIcons.RESTAURANT, "CARDAPIO", new CardapioPainel());
+            adicionarPainelSeguro("Estoque", GoogleMaterialDesignIcons.STORE, "ESTOQUE", new EstoquePainel());
+            if (!isAdmin) {
+                adicionarPainelSeguro("Equipe", GoogleMaterialDesignIcons.SUPERVISOR_ACCOUNT, "USUARIOS", new AprovacaoCadastrosPanel());
+            }
+        }
+
+        if (isAdmin || isGerente || isAtend) {
             addTituloSecao("SALÃO & PEDIDOS");
             adicionarPainelSeguro("Mesas", GoogleMaterialDesignIcons.EVENT_SEAT, "MESAS", new GestaoMesasPanel());
             adicionarPainelSeguro("Novo Pedido", GoogleMaterialDesignIcons.ADD_SHOPPING_CART, "PEDIDOS", new PedidosPanel());
         }
 
-        if (isAdmin || isCozinha) {
+        if (isAdmin || isGerente || isCozinha) {
             addTituloSecao("COZINHA");
             adicionarPainelSeguro("KDS / Produção", GoogleMaterialDesignIcons.KITCHEN, "KDS", new GestaoCozinhaPanel());
-            if(isCozinha) { 
-                adicionarPainelSeguro("Ver Estoque", GoogleMaterialDesignIcons.STORE, "ESTOQUE", new EstoquePainel());
+            if (isCozinha) {
+                adicionarPainelSeguro("Ver Estoque", GoogleMaterialDesignIcons.STORE, "ESTOQUE_COZ", new EstoquePainel());
             }
         }
 
-        if (isAdmin || isEntreg || isAtend) {
+        if (isAdmin || isGerente || isEntreg || isAtend) {
             addTituloSecao("DELIVERY");
             adicionarPainelSeguro("Entregas", GoogleMaterialDesignIcons.MOTORCYCLE, "ENTREGAS", new EntregasPainel());
         }
@@ -484,52 +497,22 @@ public class TelaInicial extends JFrame {
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
         new SwingWorker<Void, Void>() {
-            String dbNome = null;
-            String dbCargo = null;
             String erroMsg = null;
             
             @Override
             protected Void doInBackground() {
-                ConexaoBanco cb = new ConexaoBanco();
-                try (Connection conn = cb.abrirConexao()) {
-                    if (conn == null) {
-                        erroMsg = "Erro de conexão com o banco.";
-                        return null;
-                    }
-
-                    String sql = "SELECT nome, cargo, status FROM tb_funcionarios WHERE (email = ? OR username = ?) AND senha = ?";
-                    PreparedStatement ps = conn.prepareStatement(sql);
-                    ps.setString(1, email);
-                    ps.setString(2, email);
-                    ps.setString(3, senha);
-                    
-                    ResultSet rs = ps.executeQuery();
-                    if (rs.next()) {
-                        String status = rs.getString("status");
-                        if ("bloqueado".equalsIgnoreCase(status)) {
-                            erroMsg = "Usuário bloqueado.";
-                        } else if ("pendente".equalsIgnoreCase(status)) {
-                            erroMsg = "Seu cadastro ainda está em análise.";
-                        } else {
-                            dbNome = rs.getString("nome");
-                            dbCargo = rs.getString("cargo");
-                        }
-                    } else {
-                        erroMsg = "Credenciais inválidas.";
-                    }
-                } catch (Exception ex) {
-                    erroMsg = "Erro: " + ex.getMessage();
-                }
+                erroMsg = Funcionario.loginComContexto(email, senha);
                 return null;
             }
 
             @Override
             protected void done() {
                 setCursor(Cursor.getDefaultCursor());
-                if(erroMsg != null) {
-                    UIConstants.showError(TelaInicial.this, erroMsg);
-                } else if (dbNome != null) {
-                    loginSucesso(dbNome, dbCargo);
+                if (erroMsg != null) {
+                    Toast.show(TelaInicial.this, erroMsg, Toast.Type.ERROR);
+                } else {
+                    SessionContext ctx = SessionContext.getInstance();
+                    loginSucesso(ctx.getNome(), ctx.getCargo());
                 }
             }
         }.execute();
@@ -548,7 +531,7 @@ public class TelaInicial extends JFrame {
     }
 
     private void logout() {
-        UIConstants.showSuccess(this, "Saindo do sistema...");
+        SessionContext.getInstance().limpar();
         panelBody.removeAll();
         cardLayout.show(mainContainer, "LOGIN");
     }
