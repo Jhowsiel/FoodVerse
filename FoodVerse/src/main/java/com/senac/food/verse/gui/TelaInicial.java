@@ -395,7 +395,7 @@ public class TelaInicial extends JFrame {
             // Admin Global: gerencia restaurantes + pode entrar no contexto de um deles
             addTituloSecao("ADMIN GLOBAL");
             adicionarPainelSeguro("Restaurantes", GoogleMaterialDesignIcons.STORE_MALL_DIRECTORY, "RESTAURANTES", new AdminRestaurantesPanel(this));
-            adicionarPainelSeguro("Equipe", GoogleMaterialDesignIcons.SUPERVISOR_ACCOUNT, "USUARIOS", new AprovacaoCadastrosPanel());
+            adicionarPainelSeguro("Gerentes", GoogleMaterialDesignIcons.SUPERVISOR_ACCOUNT, "USUARIOS", new AprovacaoCadastrosPanel());
         }
 
         if (adminComContexto && (isAdmin || isGerente)) {

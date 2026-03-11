@@ -236,11 +236,11 @@ public class HomePanel extends JPanel {
         pActions.add(Box.createVerticalStrut(15));
 
         pActions.add(criarBotaoAtalho(
-                adminSemContexto ? "Gerenciar Equipe" : "Entregas",
+                adminSemContexto ? "Gerenciar Gerentes" : "Entregas",
                 adminSemContexto ? GoogleMaterialDesignIcons.SUPERVISOR_ACCOUNT : GoogleMaterialDesignIcons.MOTORCYCLE,
                 adminSemContexto ? "USUARIOS" : "ENTREGAS",
                 adminSemContexto || gerenteOuAdminContexto || atendente || entrega,
-                adminSemContexto ? "Abrir aprovações e equipe global." : "Abrir painel de entregas."));
+                adminSemContexto ? "Abrir a gestão global de gerentes." : "Abrir painel de entregas."));
     }
 
     private boolean hasRole(SessionContext ctx, String role) {
