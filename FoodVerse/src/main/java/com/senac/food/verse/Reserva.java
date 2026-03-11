@@ -5,11 +5,12 @@ import java.time.LocalDateTime;
 public class Reserva {
     private int idReserva;
     private int idCliente;
-    private String nomeCliente; // Campo auxiliar para exibição
+    private Integer idRestaurante;
+    private String nomeCliente;
     private LocalDateTime dataReserva;
     private int numPessoas;
     private String mesa;
-    private String status; // "LIVRE", "OCUPADA", "RESERVADA"
+    private String status;
 
     public Reserva() {}
 
@@ -23,11 +24,12 @@ public class Reserva {
         this.status = status;
     }
 
-    // Getters e Setters
     public int getIdReserva() { return idReserva; }
     public void setIdReserva(int idReserva) { this.idReserva = idReserva; }
     public int getIdCliente() { return idCliente; }
     public void setIdCliente(int idCliente) { this.idCliente = idCliente; }
+    public Integer getIdRestaurante() { return idRestaurante; }
+    public void setIdRestaurante(Integer idRestaurante) { this.idRestaurante = idRestaurante; }
     public String getNomeCliente() { return nomeCliente; }
     public void setNomeCliente(String nomeCliente) { this.nomeCliente = nomeCliente; }
     public LocalDateTime getDataReserva() { return dataReserva; }

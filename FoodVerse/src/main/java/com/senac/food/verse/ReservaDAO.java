@@ -19,10 +19,9 @@ public class ReservaDAO {
     // Busca reservas ativas para hoje
     public List<Reserva> listarReservasDoDia() {
         List<Reserva> lista = new ArrayList<>();
-        // ATUALIZADO: JOIN com auth_user do Django
-        String sql = "SELECT r.ID_reserva, r.ID_cliente, u.username AS name, r.data_reserva, r.num_pessoas, r.mesa " +
+        String sql = "SELECT r.ID_reserva, r.ID_cliente, c.username, r.data_reserva, r.numero_pessoas, r.mesa " +
                      "FROM tb_reservas r " +
-                     "LEFT JOIN auth_user u ON r.ID_cliente = u.id " +
+                     "LEFT JOIN tb_clientes c ON r.ID_cliente = c.id_cliente " +
                      "WHERE CAST(r.data_reserva AS DATE) = CAST(GETDATE() AS DATE) " +
                      "ORDER BY r.data_reserva ASC";
 
@@ -41,12 +40,12 @@ public class ReservaDAO {
                 Reserva r = new Reserva();
                 r.setIdReserva(rs.getInt("ID_reserva"));
                 r.setIdCliente(rs.getInt("ID_cliente"));
-                r.setNomeCliente(rs.getString("name"));
+                r.setNomeCliente(rs.getString("username"));
                 
                 Timestamp ts = rs.getTimestamp("data_reserva");
                 if (ts != null) r.setDataReserva(ts.toLocalDateTime());
                 
-                r.setNumPessoas(rs.getInt("num_pessoas"));
+                r.setNumPessoas(rs.getInt("numero_pessoas"));
                 r.setMesa(rs.getString("mesa"));
                 r.setStatus("RESERVADA");
                 lista.add(r);
@@ -60,7 +59,7 @@ public class ReservaDAO {
     }
 
     public boolean criarReserva(Reserva r) {
-        String sql = "INSERT INTO tb_reservas (ID_cliente, data_reserva, num_pessoas, mesa) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO tb_reservas (ID_cliente, ID_restaurante, data_reserva, numero_pessoas, mesa) VALUES (?, ?, ?, ?, ?)";
         ConexaoBanco cb = new ConexaoBanco();
         Connection conn = cb.abrirConexao();
         
@@ -71,9 +70,14 @@ public class ReservaDAO {
         
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, r.getIdCliente());
-            ps.setTimestamp(2, Timestamp.valueOf(r.getDataReserva()));
-            ps.setInt(3, r.getNumPessoas());
-            ps.setString(4, r.getMesa());
+            if (r.getIdRestaurante() != null) {
+                ps.setInt(2, r.getIdRestaurante());
+            } else {
+                ps.setNull(2, java.sql.Types.INTEGER);
+            }
+            ps.setTimestamp(3, Timestamp.valueOf(r.getDataReserva()));
+            ps.setInt(4, r.getNumPessoas());
+            ps.setString(5, r.getMesa());
             
             return ps.executeUpdate() > 0;
             
@@ -88,8 +92,7 @@ public class ReservaDAO {
     // Método auxiliar para buscar clientes para o combobox
     public List<String> listarClientesSimples() {
         List<String> clientes = new ArrayList<>();
-        // ATUALIZADO: Busca na auth_user do Django
-        String sql = "SELECT id, username FROM auth_user ORDER BY username";
+        String sql = "SELECT id_cliente AS id, username FROM tb_clientes ORDER BY username";
         ConexaoBanco cb = new ConexaoBanco();
         Connection conn = cb.abrirConexao();
         

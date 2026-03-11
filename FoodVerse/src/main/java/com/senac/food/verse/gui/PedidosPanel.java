@@ -787,25 +787,16 @@ public class PedidosPanel extends JPanel {
                     if (conn == null) return false;
                     
                     int statusId = 1; 
-                    try (PreparedStatement ps = conn.prepareStatement("SELECT status_id FROM tb_status_pedido WHERE status_nome = ?")) {
+                    try (PreparedStatement ps = conn.prepareStatement("SELECT ID_status FROM tb_status_pedido WHERE nome_status = ?")) {
                         ps.setString(1, novoStatus);
                         try (var rs = ps.executeQuery()) {
                             if(rs.next()) statusId = rs.getInt(1);
                         }
                     }
                     
-                    String sql = (nomeEntregador != null) 
-                        ? "UPDATE tb_pedidos SET status_id = ?, nome_entregador = ? WHERE ID_pedido = ?"
-                        : "UPDATE tb_pedidos SET status_id = ? WHERE ID_pedido = ?";
-                        
-                    try (PreparedStatement up = conn.prepareStatement(sql)) {
+                    try (PreparedStatement up = conn.prepareStatement("UPDATE tb_pedidos SET status_id = ? WHERE ID_pedido = ?")) {
                         up.setInt(1, statusId);
-                        if (nomeEntregador != null) {
-                            up.setString(2, nomeEntregador);
-                            up.setString(3, p.getIdPedido());
-                        } else {
-                            up.setString(2, p.getIdPedido());
-                        }
+                        up.setString(2, p.getIdPedido());
                         up.executeUpdate();
                     }
                     
