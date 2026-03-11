@@ -12,6 +12,21 @@ import java.util.function.Consumer;
 
 public class HomePanel extends JPanel {
 
+    private static final java.time.format.DateTimeFormatter DATA_FORMATTER =
+            java.time.format.DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy", new Locale("pt", "BR"));
+
+    private static final String[] LINHAS_ADMIN_GLOBAL = {
+            "Você está vendo apenas os módulos globais de administração da plataforma.",
+            "Os painéis operacionais do restaurante ficam disponíveis depois que um contexto é selecionado.",
+            "Use a gestão de restaurantes para entrar no contexto correto antes de editar cardápio, estoque ou pedidos."
+    };
+
+    private static final String[] LINHAS_CONTEXTO_RESTAURANTE = {
+            "As permissões e os dados exibidos respeitam o cargo do usuário logado.",
+            "O escopo atual impede que informações de outros restaurantes sejam exibidas por engano.",
+            "Use os atalhos rápidos ao lado para continuar o fluxo operacional do restaurante atual."
+    };
+
     private final Consumer<String> onNavigate;
 
     public HomePanel(Consumer<String> onNavigate) {
@@ -31,8 +46,7 @@ public class HomePanel extends JPanel {
         lblTitulo.setForeground(UIConstants.FG_LIGHT);
         header.add(lblTitulo, BorderLayout.WEST);
         
-        JLabel lblData = new JLabel("Hoje, " + java.time.LocalDate.now().format(
-                java.time.format.DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy", new Locale("pt", "BR"))));
+        JLabel lblData = new JLabel("Hoje, " + java.time.LocalDate.now().format(DATA_FORMATTER));
         lblData.setFont(UIConstants.ARIAL_14);
         lblData.setForeground(UIConstants.FG_MUTED);
         header.add(lblData, BorderLayout.EAST);
@@ -233,6 +247,11 @@ public class HomePanel extends JPanel {
         return ctx.getCargo() != null && ctx.getCargo().toLowerCase().contains(role);
     }
 
+    /**
+     * Retorna a mensagem principal exibida no banner da Home com base no estado atual da sessão.
+     * Para Admin sem restaurante selecionado, orienta a escolher um contexto antes de operar.
+     * Para perfis já vinculados a um restaurante efetivo, informa o escopo filtrado da operação.
+     */
     static String buildHomeSummaryText(SessionContext ctx) {
         if (ctx.getCargo() == null) {
             return "Sua sessão ainda não foi carregada.";
@@ -245,17 +264,9 @@ public class HomePanel extends JPanel {
 
     private static String[] buildOperationalLines(SessionContext ctx) {
         if (ctx.isAdmin() && !ctx.adminTemContextoRestaurante()) {
-            return new String[]{
-                    "Você está vendo apenas os módulos globais de administração da plataforma.",
-                    "Os painéis operacionais do restaurante ficam disponíveis depois que um contexto é selecionado.",
-                    "Use a gestão de restaurantes para entrar no contexto correto antes de editar cardápio, estoque ou pedidos."
-            };
+            return LINHAS_ADMIN_GLOBAL;
         }
-        return new String[]{
-                "As permissões e os dados exibidos respeitam o cargo do usuário logado.",
-                "O escopo atual impede que informações de outros restaurantes sejam exibidas por engano.",
-                "Use os atalhos rápidos ao lado para continuar o fluxo operacional do restaurante atual."
-        };
+        return LINHAS_CONTEXTO_RESTAURANTE;
     }
 
     private static String buildScopeLabel(SessionContext ctx) {

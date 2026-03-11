@@ -600,20 +600,33 @@ public class TelaInicial extends JFrame {
         btnLimparContexto.setVisible(ctx.adminTemContextoRestaurante());
     }
 
+    /**
+     * Monta o título curto do contexto exibido no cabeçalho principal do dashboard.
+     * Retorna estado neutro sem sessão, modo global para Admin sem seleção e o restaurante
+     * efetivo quando a operação já está associada a um restaurante específico.
+     */
     static String buildRestaurantContextText(SessionContext ctx) {
         if (ctx.getCargo() == null) {
             return "Painel FoodVerse";
         }
-        int restauranteId = ctx.getRestauranteEfetivo();
-        if (restauranteId > 0) {
-            return "Restaurante em contexto: #" + restauranteId;
-        }
         if (ctx.isAdmin()) {
+            int restauranteId = ctx.getRestauranteEfetivo();
+            if (restauranteId > 0) {
+                return "Restaurante em contexto: #" + restauranteId;
+            }
             return "Admin global sem restaurante selecionado";
         }
-        return "Restaurante vinculado: #" + ctx.getRestauranteId();
+        int restauranteId = ctx.getRestauranteEfetivo();
+        return restauranteId > 0
+                ? "Restaurante em contexto: #" + restauranteId
+                : "Restaurante vinculado não definido";
     }
 
+    /**
+     * Monta a descrição operacional resumida do cabeçalho do dashboard.
+     * O texto orienta o Admin global sem contexto e, nos demais casos,
+     * informa o cargo e o restaurante efetivo em operação.
+     */
     static String buildOperationalModeText(SessionContext ctx) {
         if (ctx.getCargo() == null) {
             return "Faça login para continuar";
