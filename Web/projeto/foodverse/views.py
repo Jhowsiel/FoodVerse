@@ -92,34 +92,87 @@ def logout_view(request):
     list(messages.get_messages(request))  # limpa todas as mensagens pendentes
     return redirect('login')
 
+import re
+from django.contrib import messages
+from django.contrib.auth.hashers import make_password
+from django.utils import timezone
+from django.shortcuts import render, redirect
+
 def cadastro_view(request):
     if get_cliente_logado(request):
         return redirect('home')
 
     if request.method == 'POST':
-        nome = request.POST.get('name')
-        username = request.POST.get('username')
-        cpf = request.POST.get('cpf')
-        telefone = request.POST.get('telefone')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        confirm_password = request.POST.get('confirm_password')
+        nome             = request.POST.get('name', '').strip()
+        username         = request.POST.get('username', '').strip()
+        cpf              = re.sub(r'\D', '', request.POST.get('cpf', ''))
+        telefone         = re.sub(r'\D', '', request.POST.get('telefone', ''))
+        email            = request.POST.get('email', '').strip().lower()
+        password         = request.POST.get('password', '')
+        confirm_password = request.POST.get('confirm_password', '')
 
         erros = []
 
+        # ── Campos obrigatórios ──────────────────────────────────────────
         if not all([nome, username, cpf, telefone, email, password, confirm_password]):
-            erros.append("• Todos os campos são obrigatórios.")
-        
-        if TbClientes.objects.filter(username=username).exists():
-            erros.append("• Este nome de usuário já está em uso.")
-        if TbClientes.objects.filter(cpf=cpf).exists():
-            erros.append("• Este CPF já está cadastrado.")
+            erros.append("Todos os campos são obrigatórios.")
 
+        # ── Nome ─────────────────────────────────────────────────────────
+        if nome and len(nome) < 3:
+            erros.append("O nome deve ter pelo menos 3 caracteres.")
+        if nome and not re.match(r'^[A-Za-zÀ-ÿ\s]+$', nome):
+            erros.append("O nome deve conter apenas letras.")
+
+        # ── Username ─────────────────────────────────────────────────────
+        if username and len(username) < 3:
+            erros.append("O nome de usuário deve ter pelo menos 3 caracteres.")
+        if username and not re.match(r'^[a-zA-Z0-9_]+$', username):
+            erros.append("O usuário só pode conter letras, números e underscore (_).")
+        if username and TbClientes.objects.filter(username=username).exists():
+            erros.append("Este nome de usuário já está em uso.")
+
+        # ── CPF ───────────────────────────────────────────────────────────
+        if cpf and len(cpf) != 11:
+            erros.append("CPF inválido. Informe os 11 dígitos.")
+        elif cpf and not _cpf_valido(cpf):
+            erros.append("CPF inválido (dígitos verificadores incorretos).")
+        elif cpf and TbClientes.objects.filter(cpf=cpf).exists():
+            erros.append("Este CPF já está cadastrado.")
+
+        # ── Telefone ──────────────────────────────────────────────────────
+        if telefone and len(telefone) not in (10, 11):
+            erros.append("Telefone inválido. Informe DDD + número (10 ou 11 dígitos).")
+        elif telefone and TbClientes.objects.filter(telefone=telefone).exists():
+            erros.append("Este telefone já está cadastrado.")
+
+        # ── E-mail ────────────────────────────────────────────────────────
+        if email and not re.match(r'^[\w\.\+\-]+@[\w\-]+\.[a-z]{2,}$', email):
+            erros.append("E-mail inválido.")
+        elif email and TbClientes.objects.filter(email=email).exists():
+            erros.append("Este e-mail já está cadastrado.")
+
+        # ── Senha ─────────────────────────────────────────────────────────
+        if password:
+            if len(password) < 8:
+                erros.append("A senha deve ter pelo menos 8 caracteres.")
+            if not re.search(r'[A-Z]', password):
+                erros.append("A senha deve conter pelo menos uma letra maiúscula.")
+            if not re.search(r'[a-z]', password):
+                erros.append("A senha deve conter pelo menos uma letra minúscula.")
+            if not re.search(r'\d', password):
+                erros.append("A senha deve conter pelo menos um número.")
+            if not re.search(r'[!@#$%^&*(),.?\":{}|<>]', password):
+                erros.append("A senha deve conter pelo menos um caractere especial.")
+        if password and confirm_password and password != confirm_password:
+            erros.append("As senhas não coincidem.")
+
+        # ── Retorna erros ─────────────────────────────────────────────────
         if erros:
             for erro in erros:
                 messages.error(request, erro)
             return render(request, 'pages/Autentificacao/cadastro.html')
 
+        # ── Criação ───────────────────────────────────────────────────────
         try:
             TbClientes.objects.create(
                 nome=nome,
@@ -132,10 +185,22 @@ def cadastro_view(request):
             )
             messages.success(request, 'Cadastro realizado com sucesso! Faça login.')
             # return redirect('login')
-        except Exception:
-            messages.error(request, 'Ocorreu um erro ao criar a conta.')
+        except Exception as e:
+            messages.error(request, 'Ocorreu um erro ao criar a conta. Tente novamente.')
 
     return render(request, 'pages/Autentificacao/cadastro.html')
+
+
+# ── Validação de CPF (algoritmo oficial) ──────────────────────────────────────
+def _cpf_valido(cpf: str) -> bool:
+    if len(set(cpf)) == 1:         
+        return False
+    for i in range(9, 11):
+        soma = sum(int(cpf[j]) * (i + 1 - j) for j in range(i))
+        digito = (soma * 10 % 11) % 10
+        if digito != int(cpf[i]):
+            return False
+    return True
 
 # -------------------------------------------------------------------------
 # PERFIL DO CLIENTE
@@ -154,16 +219,42 @@ def editar_perfil_view(request):
         return redirect('login')
 
     if request.method == 'POST':
-        cliente.username = request.POST.get('username')
-        cliente.email = request.POST.get('email')
-        cliente.telefone = request.POST.get('telefone')
-        cliente.endereco = request.POST.get('endereco')
+        username = request.POST.get('username', '').strip()
+        email    = request.POST.get('email', '').strip().lower()
+        telefone = request.POST.get('telefone', '').strip()
+        endereco = request.POST.get('endereco', '').strip()
+
+        outros = TbClientes.objects.exclude(pk=cliente.pk)
+        erros = []
+
+        if username and outros.filter(username=username).exists():
+            erros.append("Este nome de usuário já está cadastrado.")
+        if email and outros.filter(email=email).exists():
+            erros.append("Este e-mail já está cadastrado.")
+        if telefone and outros.filter(telefone=telefone).exists():
+            erros.append("Este telefone já está cadastrado.")
+
+        if erros:
+            return render(request, 'pages/perfil/editar/editar.html', {
+                'perfil': cliente,
+                'erros': erros,
+                'form_data': {        # devolve o que o usuário digitou
+                    'username': username,
+                    'email':    email,
+                    'telefone': telefone,
+                    'endereco': endereco,
+                }
+            })
+
+        cliente.username = username
+        cliente.email    = email
+        cliente.telefone = telefone
+        cliente.endereco = endereco
         cliente.save()
         messages.success(request, 'Perfil atualizado!')
         return redirect('perfil')
 
     return render(request, 'pages/perfil/editar/editar.html', {'perfil': cliente})
-
 # -------------------------------------------------------------------------
 # CATÁLOGO: RESTAURANTES E PRATOS
 # -------------------------------------------------------------------------

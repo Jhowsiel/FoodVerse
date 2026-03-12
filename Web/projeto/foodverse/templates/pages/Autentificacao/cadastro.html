@@ -4,147 +4,498 @@
 {% block title %}Cadastro - FoodVerse{% endblock %}
 
 {% block content %}
-<section class="auth-container">
-    <div class="auth-row">
-        
-        <!-- Lado do Formulário -->
-        <div class="auth-form-side">
-            <div class="form-wrapper">
-                <img src="{% static 'img/logobc.svg' %}" alt="FoodVerse" class="auth-logo">
-                
-                <div class="auth-header">
-                    <h1>Crie sua conta</h1>
-                    <p>Preencha os dados abaixo para começar.</p>
-                </div>
 
-                <!-- Mensagens Django Personalizadas -->
-                {% if messages %}
-                    <div class="messages-container">
-                        {% for message in messages %}
-                            <div class="custom-alert
-                                {% if message.tags == 'success' %}alert-success-custom{% endif %}
-                                {% if message.tags == 'error' %}alert-error-custom{% endif %}
-                                {% if message.tags == 'warning' %}alert-warning-custom{% endif %}
-                                {% if message.tags == 'info' %}alert-info-custom{% endif %}
-                            ">
-                                {{ message }}
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-                <!-- Formulário de Cadastro -->
-                <form method="POST" action="{% url 'cadastro' %}">
-                    {% csrf_token %}
-                      <div class="input-group-custom">
-                        <input type="text" name="name" placeholder="Nome completo" required
-                               value="{{ request.POST.username }}">
-                    </div>
-                    <div class="input-group-custom">
-                        <input type="text" name="username" placeholder="Nome de usuário" required
-                               value="{{ request.POST.username }}">
-                    </div>
-                    <div class="input-group-custom">
-                        <input type="text" name="cpf" id="cpf" placeholder="CPF" required
-                               value="{{ request.POST.cpf }}">
-                    </div>
-                    <div class="input-group-custom">
-                        <input type="text" name="telefone" id="telefone" placeholder="Telefone" required
-                               value="{{ request.POST.telefone }}">
-                    </div>
-                    <div class="input-group-custom">
-                        <input type="email" name="email" placeholder="E-mail" required
-                               value="{{ request.POST.email }}">
-                    </div>
-                    <div class="input-group-custom">
-                        <input type="password" name="password" placeholder="Senha" required>
-                    </div>  
-                    <div class="input-group-custom">
-                        <input type="password" name="confirm_password" placeholder="Confirmar Senha" required>
-                    </div>
+<style>
+  :root {
+    --red:      #C41017;
+    --red-dark: #9b0c12;
+    --red-lt:   #fff5f5;
+    --ink:      #0f0e0e;
+    --warm:     #f5f2ed;
+    --stone:    #e3ded6;
+    --muted:    #908880;
+    --white:    #ffffff;
+    --surface:  #faf8f4;
+  }
 
-                    <button type="submit" class="btn-login mt-2">CRIAR CONTA</button>
-                </form>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-                <!-- Rodapé do Formulário -->
-                <div class="auth-footer">
-                    <p class="signup-text mt-4">
-                        Já possui uma conta? <a href="{% url 'login' %}">Faça Login</a>
-                    </p>
-                </div>
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--warm);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ── Layout ── */
+  .auth-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+  }
+
+  /* ── Form side ── */
+  .form-side {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 40px;
+    background: var(--warm);
+    overflow-y: auto;
+  }
+
+  .form-inner {
+    width: 100%;
+    max-width: 420px;
+    animation: fadeUp .5s ease both;
+  }
+
+  .auth-logo { height: 36px; margin-bottom: 36px; display: block; }
+
+  .auth-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.7rem, 3vw, 2.2rem);
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+
+  .auth-sub { font-size: .88rem; color: var(--muted); margin-bottom: 28px; }
+
+  /* ── Alerts ── */
+  .alerts { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
+
+  .alert-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 11px 14px;
+    border-radius: 12px;
+    font-size: .82rem;
+    font-weight: 600;
+  }
+  .alert-item > i { flex-shrink: 0; margin-top: 1px; }
+
+  .alert-error   { background: var(--red-lt); color: var(--red); border: 1px solid rgba(196,16,23,.18); }
+  .alert-success { background: #f0fdf4; color: #16a34a; border: 1px solid rgba(22,163,74,.2); }
+  .alert-warning { background: #fffbeb; color: #d97706; border: 1px solid rgba(217,119,6,.2); }
+  .alert-info    { background: #eff6ff; color: #2563eb; border: 1px solid rgba(37,99,235,.2); }
+
+  /* ── Form grid ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+  .field-full { grid-column: 1 / -1; }
+  .field { margin-bottom: 14px; }
+
+  .field label {
+    display: block;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .field-inner { position: relative; display: flex; align-items: center; }
+
+  /* ícone esquerdo — nunca clicável */
+  .field-icon {
+    position: absolute;
+    left: 13px;
+    color: var(--muted);
+    font-size: .9rem;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .field input {
+    width: 100%;
+    padding: 12px 14px 12px 38px;
+    border: 1.5px solid var(--stone);
+    border-radius: 12px;
+    background: var(--surface);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .88rem;
+    font-weight: 500;
+    color: var(--ink);
+    transition: border-color .18s, box-shadow .18s, background .18s;
+    outline: none;
+  }
+  /* campo com botão de toggle precisa de espaço à direita */
+  .field input.has-toggle { padding-right: 44px; }
+
+  .field input:focus {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px rgba(196,16,23,.1);
+    background: var(--white);
+  }
+  .field input::placeholder { color: #c5bfb8; font-weight: 400; }
+
+  /* ── Toggle senha — botão clicável, ocupa a borda direita do input ── */
+  .toggle-pw {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 44px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: .95rem;
+    border-radius: 0 12px 12px 0;
+    transition: color .18s;
+    z-index: 2;
+  }
+  .toggle-pw:hover { color: var(--red); }
+  /* bloqueia o <i> de capturar o click, garantindo que chegue ao botão */
+  .toggle-pw i { pointer-events: none; }
+
+  /* ── Medidor de força ── */
+  .pw-bars { display: flex; gap: 4px; margin-top: 7px; }
+  .pw-bars span {
+    flex: 1; height: 3px; border-radius: 100px;
+    background: var(--stone);
+    transition: background .25s;
+  }
+  .pw-hint { font-size: .69rem; color: var(--muted); margin-top: 4px; min-height: 14px; }
+
+  /* ── Submit ── */
+  .btn-submit {
+    width: 100%;
+    background: var(--red);
+    color: #fff;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem;
+    font-weight: 700;
+    padding: 14px;
+    border-radius: 14px;
+    cursor: pointer;
+    margin-top: 8px;
+    box-shadow: 0 4px 16px rgba(196,16,23,.3);
+    transition: background .18s, transform .18s, box-shadow .18s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-submit:hover {
+    background: var(--red-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(196,16,23,.4);
+  }
+
+  .auth-footer { text-align: center; margin-top: 20px; font-size: .85rem; color: var(--muted); }
+  .auth-footer a { color: var(--red); font-weight: 700; text-decoration: none; }
+  .auth-footer a:hover { text-decoration: underline; }
+
+  /* ── Painel direito ── */
+  .image-side {
+    position: relative;
+    background: var(--ink);
+    display: flex;
+    align-items: flex-end;
+    padding: 56px 48px;
+    overflow: hidden;
+  }
+
+  .image-side::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 28% 15%, rgba(196,16,23,.4) 0%, transparent 55%),
+      radial-gradient(ellipse at 78% 85%, rgba(196,16,23,.22) 0%, transparent 50%);
+    z-index: 0;
+  }
+
+  .deco { position: absolute; border-radius: 50%; background: rgba(255,255,255,.045); }
+  .deco-1 { width: 440px; height: 440px; top: -130px; right: -140px; }
+  .deco-2 { width: 280px; height: 280px; bottom: 40px;  left: -90px; }
+  .deco-3 { width: 150px; height: 150px; top: 38%;     right: 30px; }
+  .deco-4 { width: 70px;  height: 70px;  top: 22%;     left: 30px; }
+
+  .image-text { position: relative; z-index: 1; }
+
+  .image-text h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.9rem, 2.8vw, 2.7rem);
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.15;
+    margin-bottom: 14px;
+  }
+  .image-text h2 span { color: #ff6b6b; }
+
+  .image-text p {
+    font-size: .88rem;
+    color: rgba(255,255,255,.5);
+    line-height: 1.7;
+    max-width: 340px;
+    margin-bottom: 32px;
+  }
+
+  .perks { display: flex; flex-direction: column; gap: 12px; }
+  .perk { display: flex; align-items: center; gap: 12px; font-size: .83rem; font-weight: 600; color: rgba(255,255,255,.82); }
+  .perk-icon {
+    width: 32px; height: 32px;
+    background: rgba(196,16,23,.25);
+    border: 1px solid rgba(196,16,23,.35);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: #ff8585; font-size: .8rem; flex-shrink: 0;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 800px) {
+    .auth-wrap { grid-template-columns: 1fr; }
+    .image-side { display: none; }
+    .form-side { padding: 40px 24px; min-height: 100vh; }
+  }
+  @media (max-width: 440px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .field-full { grid-column: 1; }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
+<div class="auth-wrap">
+
+  <!-- ── Formulário ── -->
+  <div class="form-side">
+    <div class="form-inner">
+
+      <img src="{% static 'img/logobc.svg' %}" alt="FoodVerse" class="auth-logo">
+      <h1 class="auth-title">Crie sua conta</h1>
+      <p class="auth-sub">Preencha os dados abaixo para começar.</p>
+
+      {% if messages %}
+      <div class="alerts">
+        {% for message in messages %}
+        <div class="alert-item
+          {% if message.tags == 'success' %}alert-success
+          {% elif message.tags == 'error' %}alert-error
+          {% elif message.tags == 'warning' %}alert-warning
+          {% else %}alert-info{% endif %}">
+          <i class="bi
+            {% if message.tags == 'success' %}bi-check-circle-fill
+            {% elif message.tags == 'error' %}bi-exclamation-circle-fill
+            {% elif message.tags == 'warning' %}bi-exclamation-triangle-fill
+            {% else %}bi-info-circle-fill{% endif %}"></i>
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <form method="POST" action="{% url 'cadastro' %}">
+        {% csrf_token %}
+        <div class="form-grid">
+
+          <div class="field field-full">
+            <label>Nome Completo</label>
+            <div class="field-inner">
+              <i class="bi bi-person field-icon"></i>
+              <input type="text" name="name" placeholder="Seu nome completo" required value="{{ request.POST.name }}">
             </div>
+          </div>
+
+          <div class="field">
+            <label>Usuário</label>
+            <div class="field-inner">
+              <i class="bi bi-at field-icon"></i>
+              <input type="text" name="username" placeholder="nome_usuario" required value="{{ request.POST.username }}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>CPF</label>
+            <div class="field-inner">
+              <i class="bi bi-card-text field-icon"></i>
+              <input type="text" name="cpf" id="cpf" placeholder="000.000.000-00" required value="{{ request.POST.cpf }}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Telefone</label>
+            <div class="field-inner">
+              <i class="bi bi-phone field-icon"></i>
+              <input type="text" name="telefone" id="telefone" placeholder="(00) 00000-0000" required value="{{ request.POST.telefone }}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>E-mail</label>
+            <div class="field-inner">
+              <i class="bi bi-envelope field-icon"></i>
+              <input type="email" name="email" placeholder="seu@email.com" required value="{{ request.POST.email }}">
+            </div>
+          </div>
+
+          <!-- Senha + medidor de força -->
+          <div class="field field-full">
+            <label>Senha</label>
+            <div class="field-inner">
+              <i class="bi bi-lock field-icon"></i>
+              <input type="password" name="password" id="password"
+                     placeholder="Mínimo 8 caracteres" required class="has-toggle">
+              <button type="button" class="toggle-pw" data-target="password" aria-label="Mostrar senha">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+            <div class="pw-bars">
+              <span id="b1"></span><span id="b2"></span>
+              <span id="b3"></span><span id="b4"></span>
+            </div>
+            <div class="pw-hint" id="pw-hint"></div>
+          </div>
+
+          <!-- Confirmar senha -->
+          <div class="field field-full">
+            <label>Confirmar Senha</label>
+            <div class="field-inner">
+              <i class="bi bi-lock-fill field-icon"></i>
+              <input type="password" name="confirm_password" id="confirm_password"
+                     placeholder="Repita a senha" required class="has-toggle">
+              <button type="button" class="toggle-pw" data-target="confirm_password" aria-label="Mostrar confirmação">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+          </div>
+
         </div>
 
-        <!-- Lado da Imagem -->
-        <div class="auth-image-side">
-            <div class="overlay"></div>
-            <div class="image-content">
-                <h2>Junte-se ao <span>FoodVerse</span> e explore sabores incríveis.</h2>
-            </div>
-        </div>
+        <button type="submit" class="btn-submit">
+          <i class="bi bi-person-check"></i> Criar Conta
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Já possui uma conta? <a href="{% url 'login' %}">Faça Login</a>
+      </div>
 
     </div>
-</section>
+  </div>
 
-{% comment %} Formatar  {% endcomment %}
+  <!-- ── Painel direito ── -->
+  <div class="image-side">
+    <div class="deco deco-1"></div>
+    <div class="deco deco-2"></div>
+    <div class="deco deco-3"></div>
+    <div class="deco deco-4"></div>
+    <div class="image-text">
+      <h2>Junte-se ao <span>FoodVerse</span> e explore sabores incríveis.</h2>
+      <p>Milhares de restaurantes na palma da sua mão. Peça, acompanhe e saboreie sem sair de casa.</p>
+      <div class="perks">
+        <div class="perk">
+          <div class="perk-icon"><i class="bi bi-lightning-fill"></i></div>
+          Entrega rápida e rastreada em tempo real
+        </div>
+        <div class="perk">
+          <div class="perk-icon"><i class="bi bi-star-fill"></i></div>
+          Avalie restaurantes e descubra novos favoritos
+        </div>
+        <div class="perk">
+          <div class="perk-icon"><i class="bi bi-shield-check"></i></div>
+          Pagamento 100% seguro e protegido
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
 
 <script>
-document.getElementById('cpf').addEventListener('input', function (e) {
-    let value = e.target.value.replace(/\D/g, ''); // remove tudo que não é número
+  /* ── Toggle de senha ─────────────────────────────────────────────────────
+     Usa data-target para identificar o input alvo.
+     O botão tem z-index:2 e pointer-events normais.
+     O <i> do ícone decorativo tem pointer-events:none (classe .field-icon).
+     O <i> dentro do botão também tem pointer-events:none para o click
+     subir corretamente ao <button>.
+  ── */
+  document.querySelectorAll('.toggle-pw').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var input = document.getElementById(this.dataset.target);
+      var icon  = this.querySelector('i');
 
-    if (value.length > 11) value = value.slice(0, 11);
-
-    value = value.replace(/(\d{3})(\d)/, '$1.$2');
-    value = value.replace(/(\d{3})(\d)/, '$1.$2');
-    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-
-    e.target.value = value;
-});
-</script>
-
-{% comment %} formatar {% endcomment %}
-
-<script>
-const telefoneInput = document.getElementById('telefone');
-
-if (telefoneInput) {
-    telefoneInput.addEventListener('input', function (e) {
-        let value = e.target.value.replace(/\D/g, '');
-
-        if (value.length > 11) value = value.slice(0, 11);
-
-        if (value.length > 10) {
-            // Celular: (00) 00000-0000
-            value = value.replace(/(\d{2})(\d)/, '($1) $2');
-            value = value.replace(/(\d{5})(\d)/, '$1-$2');
-        } else {
-            // Fixo: (00) 0000-0000
-            value = value.replace(/(\d{2})(\d)/, '($1) $2');
-            value = value.replace(/(\d{4})(\d)/, '$1-$2');
-        }
-
-        e.target.value = value;
+      if (input.type === 'password') {
+        input.type     = 'text';
+        icon.className = 'bi bi-eye-slash';
+        this.setAttribute('aria-label', 'Ocultar senha');
+      } else {
+        input.type     = 'password';
+        icon.className = 'bi bi-eye';
+        this.setAttribute('aria-label', 'Mostrar senha');
+      }
     });
-}
-</script>
+  });
 
-<!-- JS para desaparecer as mensagens após 4s -->
-<script>
-    const successMessage = document.querySelectorAll('.alert-success-custom');
+  /* ── Medidor de força da senha ────────────────────────────────────────── */
+  var bars  = [document.getElementById('b1'), document.getElementById('b2'),
+               document.getElementById('b3'), document.getElementById('b4')];
+  var hint  = document.getElementById('pw-hint');
+  var cores = ['#ef4444', '#f97316', '#eab308', '#22c55e'];
+  var nomes = ['Muito fraca', 'Fraca', 'Média', 'Forte'];
 
-    if (successMessage.length > 0) {
-        setTimeout(() => {
-            window.location.href = "{% url 'login' %}";
-        }, 2000);
-    }
-    
-    setTimeout(() => {
-        document.querySelectorAll('.custom-alert').forEach(alert => {
-            alert.style.opacity = '0';
-            alert.style.transform = 'translateX(40px)';
-            setTimeout(() => alert.remove(), 400);
-        });
-    }, 4000);
+  document.getElementById('password').addEventListener('input', function() {
+    var v = this.value, score = 0;
+    if (v.length >= 8)                        score++;
+    if (/[A-Z]/.test(v) && /[a-z]/.test(v)) score++;
+    if (/\d/.test(v))                         score++;
+    if (/[!@#$%^&*()\-_=+,.?":{}|<>]/.test(v)) score++;
+
+    bars.forEach(function(b, i) {
+      b.style.background = i < score ? cores[score - 1] : 'var(--stone)';
+    });
+
+    hint.textContent = v.length ? nomes[score - 1] : '';
+    hint.style.color = v.length ? cores[score - 1] : 'var(--muted)';
+  });
+
+  /* ── Máscara CPF ─────────────────────────────────────────────────────── */
+  document.getElementById('cpf').addEventListener('input', function() {
+    var v = this.value.replace(/\D/g, '').slice(0, 11);
+    v = v.replace(/(\d{3})(\d)/, '$1.$2');
+    v = v.replace(/(\d{3})(\d)/, '$1.$2');
+    v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    this.value = v;
+  });
+
+  /* ── Máscara Telefone ────────────────────────────────────────────────── */
+  document.getElementById('telefone').addEventListener('input', function() {
+    var v = this.value.replace(/\D/g, '').slice(0, 11);
+    if      (v.length > 10) v = '(' + v.slice(0,2) + ') ' + v.slice(2,7) + '-' + v.slice(7);
+    else if (v.length > 6)  v = '(' + v.slice(0,2) + ') ' + v.slice(2,6) + '-' + v.slice(6);
+    else if (v.length > 2)  v = '(' + v.slice(0,2) + ') ' + v.slice(2);
+    else if (v.length > 0)  v = '(' + v;
+    this.value = v;
+  });
+
+  /* ── Redirect automático no sucesso ──────────────────────────────────── */
+  if (document.querySelectorAll('.alert-success').length > 0) {
+    setTimeout(function() { window.location.href = "{% url 'login' %}"; }, 2000);
+  }
+
+  /* ── Fade-out dos alertas após 8s ────────────────────────────────────── */
+  setTimeout(function() {
+    document.querySelectorAll('.alert-item').forEach(function(el) {
+      el.style.transition = 'opacity .4s, transform .4s';
+      el.style.opacity    = '0';
+      el.style.transform  = 'translateX(20px)';
+      setTimeout(function() { el.remove(); }, 420);
+    });
+  }, 8000);
 </script>
 
 {% endblock %}

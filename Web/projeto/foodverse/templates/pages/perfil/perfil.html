@@ -4,207 +4,328 @@
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
 
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
 <style>
-    :root {
-        --ifood-red: #ea1d2c;
-        --ifood-gray-text: #717171;
-        --ifood-bg: #f7f7f7;
-    }
+  :root {
+    --red:      #C41017;
+    --red-dark: #9b0c12;
+    --red-lt:   #fff5f5;
+    --ink:      #0f0e0e;
+    --warm:     #f5f2ed;
+    --stone:    #e3ded6;
+    --muted:    #908880;
+    --white:    #ffffff;
+    --radius:   20px;
+  }
 
-    body { 
-        background-color: var(--ifood-bg); 
-        /* Ajuste este padding se o seu header for mais alto ou mais baixo */
-        padding-top: 110px; 
-    }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    .profile-container {
-        max-width: 600px;
-        margin-bottom: 60px;
-    }
+  body {
+    padding-top: 90px;
+    background: var(--warm);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+  }
 
-    .profile-card {
-        border: none;
-        border-radius: 12px;
-        background: #fff;
-        overflow: hidden;
-    }
+  /* ── Layout ── */
+  .pg {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 48px 20px 100px;
+  }
 
-    /* Efeito de linha clicável/selecionável */
-    .info-item {
-        display: flex;
-        align-items: center;
-        padding: 18px 25px;
-        border-bottom: 1px solid #f2f2f2;
-        transition: background-color 0.2s ease;
-    }
+  /* ── Hero / Avatar ── */
+  .hero {
+    text-align: center;
+    margin-bottom: 28px;
+    animation: fadeUp .5s ease both;
+  }
 
-    .info-item:hover {
-        background-color: #fafafa;
-    }
+  .avatar-ring {
+    width: 108px;
+    height: 108px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--red), #ff6b6b);
+    padding: 3px;
+    margin: 0 auto 16px;
+    display: inline-block;
+  }
 
-    .info-item:last-child { 
-        border-bottom: none; 
-    }
+  .avatar-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
 
-    .info-icon {
-        font-size: 1.4rem;
-        color: var(--ifood-red);
-        margin-right: 20px;
-        width: 25px;
-        text-align: center;
-    }
+  .avatar-inner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
 
-    .info-content label {
-        display: block;
-        font-size: 0.75rem;
-        color: var(--ifood-gray-text);
-        margin-bottom: 2px;
-        text-transform: uppercase;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-    }
+  .avatar-initials {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem;
+    font-weight: 900;
+    color: var(--red);
+  }
 
-    .info-content span {
-        font-size: 1rem;
-        color: #3e3e3e;
-        font-weight: 500;
-    }
+  .hero-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
 
-    .avatar-wrapper {
-        padding: 30px 0;
-        background: #fff;
-        border-bottom: 1px solid #f2f2f2;
-    }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--white);
+    border: 1px solid var(--stone);
+    padding: 4px 12px;
+    border-radius: 100px;
+  }
+  .hero-badge i { color: var(--red); }
 
-    .profile-avatar {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        object-fit: cover;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    }
+  /* ── Info card ── */
+  .info-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid var(--stone);
+    box-shadow: 0 1px 4px rgba(15,14,14,.04), 0 8px 28px rgba(15,14,14,.06);
+    overflow: hidden;
+    margin-bottom: 16px;
+    animation: fadeUp .5s .08s ease both;
+  }
 
-    .initials-avatar {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        background-color: #eee;
-        color: var(--ifood-gray-text);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2.5rem;
-        font-weight: bold;
-        margin: 0 auto;
-    }
+  .info-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--stone);
+    transition: background .15s;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-row:hover { background: var(--warm); }
 
-    .btn-ifood {
-        background-color: var(--ifood-red);
-        color: white;
-        border: none;
-        font-weight: 600;
-        padding: 14px;
-        border-radius: 8px;
-        transition: 0.3s;
-    }
+  .info-icon-wrap {
+    width: 36px;
+    height: 36px;
+    background: var(--red-lt);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--red);
+    font-size: .95rem;
+    flex-shrink: 0;
+  }
 
-    .btn-ifood:hover {
-        background-color: #d91a27;
-        color: white;
-        transform: translateY(-2px);
-    }
+  .info-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
 
-    .btn-logout {
-        color: var(--ifood-gray-text);
-        font-weight: 600;
-        text-decoration: none;
-        font-size: 0.9rem;
-    }
+  .info-value {
+    font-size: .92rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .info-value.empty { color: var(--muted); font-weight: 400; font-style: italic; }
 
-    .btn-logout:hover {
-        color: var(--ifood-red);
-    }
+  /* ── Actions ── */
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    animation: fadeUp .5s .16s ease both;
+  }
+
+  .btn-edit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    background: var(--red);
+    color: #fff;
+    text-decoration: none;
+    font-size: .9rem;
+    font-weight: 700;
+    padding: 14px;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(196,16,23,.28);
+    transition: background .18s, transform .18s, box-shadow .18s;
+  }
+  .btn-edit:hover {
+    background: var(--red-dark);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(196,16,23,.38);
+  }
+
+  .btn-logout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: transparent;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: .85rem;
+    font-weight: 600;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid var(--stone);
+    transition: color .18s, border-color .18s, background .18s;
+  }
+  .btn-logout:hover {
+    color: var(--red);
+    border-color: var(--red);
+    background: var(--red-lt);
+  }
+
+  /* ── Footer note ── */
+  .security-note {
+    text-align: center;
+    margin-top: 24px;
+    font-size: .72rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    animation: fadeUp .5s .22s ease both;
+  }
+  .security-note i { color: var(--red); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 </style>
 
-<div class="container profile-container px-3">
-    <div class="card shadow-sm profile-card">
-        
-        <div class="avatar-wrapper text-center">
-            <div class="mb-3">
-                {% if perfil.foto %}
-                    <img src="{{ perfil.foto.url }}" class="profile-avatar">
-                {% else %}
-                    <div class="initials-avatar">
-                        {{ perfil.username|slice:":1"|upper }}
-                    </div>
-                {% endif %}
-            </div>
-            <h4 class="fw-bold mb-1 text-dark">{{ perfil.nome|default:perfil.username }}</h4>
-            <span class="badge rounded-pill bg-light text-muted border px-3">Cliente FoodVerse</span>
-        </div>
+<div class="pg">
 
-        <div class="profile-details">
-            
-            <div class="info-item">
-                <i class="bi bi-person info-icon"></i>
-                <div class="info-content">
-                    <label>Nome Completo</label>
-                    <span>{{ perfil.nome|default:perfil.username }}</span>
-                </div>
-            </div>
-
-            <div class="info-item">
-                <i class="bi bi-envelope info-icon"></i>
-                <div class="info-content">
-                    <label>E-mail</label>
-                    <span>{{ perfil.email }}</span>
-                </div>
-            </div>
-
-            <div class="info-item">
-                <i class="bi bi-card-text info-icon"></i>
-                <div class="info-content">
-                    <label>CPF</label>
-                    <span>{{ perfil.cpf|default:"Não cadastrado" }}</span>
-                </div>
-            </div>
-
-            <div class="info-item">
-                <i class="bi bi-phone info-icon"></i>
-                <div class="info-content">
-                    <label>Celular / WhatsApp</label>
-                    <span>{{ perfil.telefone|default:"(00) 00000-0000" }}</span>
-                </div>
-            </div>
-            
-            <div class="info-item">
-                <i class="bi bi-geo-alt info-icon"></i>
-                <div class="info-content">
-                    <label>Endereço de Entrega</label>
-                    <span>{{ perfil.endereco|default:"Nenhum endereço salvo" }}</span>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="p-4 bg-light text-center border-top">
-            <div class="d-grid gap-3">
-                <a href="{% url 'editar_perfil' %}" class="btn btn-ifood shadow-sm">
-                    <i class="bi bi-pencil-square me-2"></i>Editar Dados da Conta
-                </a>
-                <a href="{% url 'logout' %}" class="btn-logout">
-                    <i class="bi bi-box-arrow-right me-1"></i> Sair da conta
-                </a>
-            </div>
-        </div>
-
+  <!-- Avatar + nome -->
+  <div class="hero">
+    <div class="avatar-ring">
+      <div class="avatar-inner">
+        {% if perfil.foto %}
+          <img src="{{ perfil.foto.url }}" alt="{{ perfil.nome }}">
+        {% else %}
+          <span class="avatar-initials">{{ perfil.username|slice:":1"|upper }}</span>
+        {% endif %}
+      </div>
     </div>
-    
-    <p class="text-center text-muted mt-4 small">
-        Sua conta FoodVerse está segura. <i class="bi bi-shield-check"></i>
-    </p>
+
+    <h1 class="hero-name">{{ perfil.nome|default:perfil.username }}</h1>
+    <span class="hero-badge">
+      <i class="bi bi-patch-check-fill"></i>
+      Cliente FoodVerse
+    </span>
+  </div>
+
+  <!-- Dados -->
+  <div class="info-card">
+
+    <div class="info-row">
+      <div class="info-icon-wrap"><i class="bi bi-person-fill"></i></div>
+      <div>
+        <div class="info-label">Nome Completo</div>
+        <div class="info-value {% if not perfil.nome %}empty{% endif %}">
+          {{ perfil.nome|default:"Não informado" }}
+        </div>
+      </div>
+    </div>
+
+    <div class="info-row">
+      <div class="info-icon-wrap"><i class="bi bi-at"></i></div>
+      <div>
+        <div class="info-label">Usuário</div>
+        <div class="info-value {% if not perfil.username %}empty{% endif %}">
+          {{ perfil.username|default:"Não informado" }}
+        </div>
+      </div>
+    </div>
+
+    <div class="info-row">
+      <div class="info-icon-wrap"><i class="bi bi-envelope-fill"></i></div>
+      <div>
+        <div class="info-label">E-mail</div>
+        <div class="info-value {% if not perfil.email %}empty{% endif %}">
+          {{ perfil.email|default:"Não informado" }}
+        </div>
+      </div>
+    </div>
+
+    <div class="info-row">
+      <div class="info-icon-wrap"><i class="bi bi-phone-fill"></i></div>
+      <div>
+        <div class="info-label">Celular / WhatsApp</div>
+        <div class="info-value {% if not perfil.telefone %}empty{% endif %}">
+          {{ perfil.telefone|default:"Não informado" }}
+        </div>
+      </div>
+    </div>
+
+    <div class="info-row">
+      <div class="info-icon-wrap"><i class="bi bi-shield-lock-fill"></i></div>
+      <div>
+        <div class="info-label">CPF</div>
+        <div class="info-value {% if not perfil.cpf %}empty{% endif %}">
+          {{ perfil.cpf|default:"Não informado" }}
+        </div>
+      </div>
+    </div>
+
+    <div class="info-row">
+      <div class="info-icon-wrap"><i class="bi bi-geo-alt-fill"></i></div>
+      <div>
+        <div class="info-label">Endereço de Entrega</div>
+        <div class="info-value {% if not perfil.endereco %}empty{% endif %}">
+          {{ perfil.endereco|default:"Nenhum endereço salvo" }}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Botões -->
+  <div class="actions">
+    <a href="{% url 'editar_perfil' %}" class="btn-edit">
+      <i class="bi bi-pencil-square"></i> Editar Dados da Conta
+    </a>
+    <a href="{% url 'logout' %}" class="btn-logout">
+      <i class="bi bi-box-arrow-right"></i> Sair da conta
+    </a>
+  </div>
+
+  <p class="security-note">
+    <i class="bi bi-shield-check"></i>
+    Sua conta FoodVerse está segura.
+  </p>
+
 </div>
 
 {% include "pages/pagePrincipal/footer.html" %}
