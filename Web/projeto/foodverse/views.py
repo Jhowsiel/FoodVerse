@@ -50,8 +50,8 @@ def home(request):
             except requests.RequestException:
                 endereco = None
 
-    restaurantes = TbRestaurantes.objects.all()
-    categorias = TbRestaurantes.objects.values_list('categoria', flat=True).distinct()
+    restaurantes = TbRestaurantes.objects.filter(ativo=True)
+    categorias = TbRestaurantes.objects.filter(ativo=True).values_list('categoria', flat=True).distinct()
 
     context = {
         'endereco': endereco,
@@ -80,7 +80,7 @@ def login_view(request):
             request.session['cliente_id'] = cliente.id_cliente
             request.session.set_expiry(1209600 if remember_me else 0)
             messages.success(request, 'Login realizado com sucesso!')
-            # return render(request, 'index.html')
+            return redirect('home')
         else:
             messages.error(request, 'Usuário ou senha incorretos.')
 
@@ -184,9 +184,9 @@ def cadastro_view(request):
                 data_cadastro=timezone.now()
             )
             messages.success(request, 'Cadastro realizado com sucesso! Faça login.')
-            # return redirect('login')
-        except Exception as e:
-            messages.error(request, 'Ocorreu um erro ao criar a conta. Tente novamente.')
+            return redirect('login')
+        except Exception:
+            messages.error(request, 'Ocorreu um erro ao criar a conta.')
 
     return render(request, 'pages/Autentificacao/cadastro.html')
 
@@ -260,12 +260,12 @@ def editar_perfil_view(request):
 # -------------------------------------------------------------------------
 def restaurante_view(request):
     categoria = request.GET.get('categoria')
-    restaurantes = TbRestaurantes.objects.all()
+    restaurantes = TbRestaurantes.objects.filter(ativo=True)
     
     if categoria:
         restaurantes = restaurantes.filter(categoria=categoria)
 
-    categorias = TbRestaurantes.objects.values_list('categoria', flat=True).distinct()
+    categorias = TbRestaurantes.objects.filter(ativo=True).values_list('categoria', flat=True).distinct()
 
     return render(request, 'pages/catalogo/restaurante.html', {
         'restaurantes': restaurantes,
@@ -306,12 +306,13 @@ def buscar_prato_restaurante(request):
     if query:
         resultados = TbRestaurantes.objects.filter(
             Q(nome__icontains=query) | 
-            Q(tbprodutos__nome_produto__icontains=query)
+            Q(tbprodutos__nome_produto__icontains=query),
+            ativo=True
         ).distinct()
     else:
-        resultados = TbRestaurantes.objects.all()
+        resultados = TbRestaurantes.objects.filter(ativo=True)
 
-    categorias = TbRestaurantes.objects.values_list('categoria', flat=True).distinct()
+    categorias = TbRestaurantes.objects.filter(ativo=True).values_list('categoria', flat=True).distinct()
 
     return render(request, 'pages/catalogo/restaurante.html', {
         'restaurantes': resultados,
