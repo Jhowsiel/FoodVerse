@@ -24,6 +24,7 @@ class TbRestaurantes(models.Model):
     taxa_entrega = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     cupom = models.CharField(max_length=50, null=True, blank=True)
     imagem = models.CharField(max_length=255, null=True, blank=True)
+    banner = models.CharField(max_length=255, null=True, blank=True)
     ativo = models.BooleanField(default=True)    # Admin: controla se existe na plataforma
     aberto = models.BooleanField(default=True)   # Gerente: controla se aceita pedidos agora
 
