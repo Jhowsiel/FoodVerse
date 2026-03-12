@@ -114,7 +114,7 @@ class TbPedidos(models.Model):
         db_table = "tb_pedidos"
 
 class TbPedidosProdutos(models.Model):
-    id = models.AutoField(primary_key=True)
+    id_pedido_produto = models.AutoField(primary_key=True, db_column='id')
     pedido = models.ForeignKey(
         TbPedidos,
         on_delete=models.CASCADE,
@@ -129,6 +129,7 @@ class TbPedidosProdutos(models.Model):
 
     class Meta:
         db_table = "tb_pedidos_produtos"
+        managed = False
         unique_together = ("pedido", "produto")
 
 class TbReservas(models.Model):

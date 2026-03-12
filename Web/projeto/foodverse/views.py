@@ -230,20 +230,40 @@ def buscar_prato_restaurante(request):
 # -------------------------------------------------------------------------
 # PEDIDOS E RESERVAS
 # -------------------------------------------------------------------------
+
+from .models import TbReservas  # Certifique-se de importar o model correto para reservas
+
 def reserva_view(request):
     r_id = _int_param(request.GET.get('restaurante_id'), 1)
+    p_id = _int_param(request.GET.get('produto_id'), 0) # Pega o prato da URL
+    
     restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
+
+    reservas_do_banco = TbReservas.objects.filter(
+        restaurante=restaurante,
+        data_reserva__gte=timezone.now()
+    ).order_by('data_reserva')
+    
+    datas_list = []
+    horarios_list = []
+
+    for reserva in reservas_do_banco:
+        d = reserva.data_reserva.strftime('%Y-%m-%d')
+        h = reserva.data_reserva.strftime('%H:%M')
+        
+        if d not in datas_list: datas_list.append(d)
+        if h not in horarios_list: horarios_list.append(h)
 
     return render(request, 'pages/pedido/reserva.html', {
         'restaurante': restaurante,
-        'horarios': ['19:00', '20:00', '21:00'],
-        'datas': ['2026-03-07', '2026-03-08'],
+        'datas': datas_list,     # Datas que existem no banco
+        'horarios': horarios_list, # Horários que existem no banco
     })
 
 def reserva_pagamento(request):
-    """Processa a visualização de pagamento da reserva."""
     if request.method == 'POST':
-        r_id = _int_param(request.POST.get('restaurante_id'), 1)
+        r_id = _int_param(request.POST.get('restaurante_id'), 1) 
+
         restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
 
         return render(request, 'pages/pedido/reserva_pagamento.html', {
@@ -251,32 +271,36 @@ def reserva_pagamento(request):
             'horario': request.POST.get('horario'),
             'data': request.POST.get('data'),
             'pessoas': request.POST.get('pessoas'),
-            'total': 'R$ 38,31', 
+            'total': 'R$ 20,00', 
         })
     return redirect('reserva')
 
 def pedido_view(request):
-    # Tenta pegar o ID da URL
-    r_id = request.GET.get('restaurante_id')
+    cliente_id = request.session.get('cliente_id')
+    print(f"DEBUG: Tentando buscar pedidos para o Cliente ID: {cliente_id}") # Veja isso no terminal
+
+    if not cliente_id:
+        return redirect('login')
+
+    # Tenta buscar o cliente para validar se ele existe no novo banco
+    try:
+        cliente = TbClientes.objects.get(id_cliente=cliente_id)
+    except TbClientes.DoesNotExist:
+        print("DEBUG: Cliente da sessão não existe no banco de dados!")
+        return redirect('login') 
+
+    pedidos = TbPedidos.objects.filter(cliente_id=cliente_id).order_by('-data_pedido').prefetch_related('tbpedidosprodutos_set__produto')
     
+    print(f"DEBUG: Quantidade de pedidos encontrados: {pedidos.count()}") # Veja isso no terminal
+
+    r_id = request.GET.get('restaurante_id')
+    restaurante = None
     if r_id:
         restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
-    else:
-        # Se NÃO veio ID na URL, pega o primeiro restaurante que existir no banco
-        restaurante = TbRestaurantes.objects.first()
-        
-        # Se o banco estiver totalmente vazio (nem o seed rodou), manda para a home
-        if not restaurante:
-            return redirect('restaurantes')
-
-    # Busca o primeiro produto desse restaurante
-    item = TbProdutos.objects.filter(restaurante=restaurante).first()
 
     return render(request, 'pages/pedido/pedido.html', {
-        'restaurante': restaurante,
-        'item': item,
-        'subtotal': item.preco if item else 0,
-        'entrega': restaurante.taxa_entrega or 0,
+        'pedidos': pedidos,
+        'restaurante_atual': restaurante,
     })
 
 # View 1 — só ADICIONA e redireciona
@@ -488,6 +512,8 @@ def finalizacao_view(request):
         except Exception as e:
             print(f"ERRO: {e}")
             return redirect('carrinho')
+        
+
 # -------------------------------------------------------------------------
 # FEEDBACK
 # -------------------------------------------------------------------------

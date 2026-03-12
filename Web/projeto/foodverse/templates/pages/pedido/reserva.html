@@ -120,8 +120,10 @@
 
         <form method="POST" action="{% url 'reserva_pagamento' %}">
           {% csrf_token %}
-          <input type="hidden" name="restaurante_id" value="{{ restaurante.id }}" />
+          <input type="hidden" name="restaurante_id" value="{{ restaurante.id_restaurante }}" />
 
+          <input type="hidden" name="produto_id" value="{{ prato.id_produto }}" />
+          
           <!-- DATA -->
           <div class="mb-4">
             <label class="form-label fw-bold"><i class="bi bi-calendar-event me-2"></i>Selecione a Data</label>

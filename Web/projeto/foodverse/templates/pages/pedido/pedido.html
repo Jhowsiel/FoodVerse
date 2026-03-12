@@ -8,67 +8,51 @@
 
 <style>
   :root {
-    --red:    #C41017;
-    --red-lt: #fdf2f2;
-    --ink:    #111010;
-    --warm:   #f8f6f1;
-    --stone:  #e8e4dc;
-    --muted:  #7a7570;
-    --white:  #ffffff;
-    --green:  #16a34a;
-    --radius: 20px;
-    --shadow: 0 2px 16px rgba(17,16,16,.07);
+    --red:     #C41017;
+    --red-lt:  #fdf2f2;
+    --ink:     #111010;
+    --warm:    #f8f6f1;
+    --stone:   #e8e4dc;
+    --muted:   #7a7570;
+    --white:   #ffffff;
+    --green:   #16a34a;
+    --radius:  20px;
+    --shadow:  0 2px 16px rgba(17,16,16,.07);
   }
-
-  *, *::before, *::after { box-sizing: border-box; }
 
   body {
     padding-top: 90px;
     background: var(--warm);
     font-family: 'Instrument Sans', sans-serif;
     color: var(--ink);
-    -webkit-font-smoothing: antialiased;
   }
 
   .page-wrap { max-width: 1120px; margin: 0 auto; padding: 32px 20px 80px; }
 
-  /* ── HEADER ── */
   .page-top {
     display: flex; align-items: flex-end; justify-content: space-between;
     margin-bottom: 32px; flex-wrap: wrap; gap: 14px;
   }
 
-  .page-eyebrow {
-    font-size: .72rem; font-weight: 700; letter-spacing: .8px;
-    text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
-    display: flex; align-items: center; gap: 6px;
-  }
-
   .page-title {
     font-family: 'Fraunces', serif;
     font-size: clamp(1.8rem, 3.5vw, 2.5rem);
-    font-weight: 900; line-height: 1.05; letter-spacing: -0.5px;
+    font-weight: 900;
   }
 
-  .btn-continuar {
-    display: inline-flex; align-items: center; gap: 7px;
-    border: 1.5px solid var(--stone); background: var(--white);
-    color: var(--muted); border-radius: 100px; padding: 10px 20px;
-    font-size: .82rem; font-weight: 600; text-decoration: none; transition: all .2s;
-  }
-
-  .btn-continuar:hover { border-color: var(--ink); color: var(--ink); }
-
-  /* ── LAYOUT ── */
-  .order-layout {
+  .order-block {
     display: grid;
     grid-template-columns: 1fr 340px;
     gap: 20px; align-items: start;
+    margin-bottom: 60px;
+    border-bottom: 2px dashed var(--stone);
+    padding-bottom: 40px;
   }
 
-  @media (max-width: 860px) { .order-layout { grid-template-columns: 1fr; } }
+  .order-block:last-child { border-bottom: none; }
 
-  /* ── CARDS ── */
+  @media (max-width: 860px) { .order-block { grid-template-columns: 1fr; } }
+
   .o-card {
     background: var(--white);
     border-radius: var(--radius);
@@ -76,339 +60,138 @@
     box-shadow: var(--shadow);
     padding: 26px 28px;
     margin-bottom: 18px;
-    animation: fadeUp .4s ease both;
   }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(14px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .o-card:nth-child(1) { animation-delay: .04s; }
-  .o-card:nth-child(2) { animation-delay: .1s; }
 
   .card-title {
-    font-family: 'Fraunces', serif;
-    font-size: 1.05rem; font-weight: 700;
-    margin-bottom: 20px; padding-bottom: 16px;
-    border-bottom: 1px solid var(--stone);
+    font-family: 'Fraunces', serif; font-size: 1.05rem; font-weight: 700;
+    margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--stone);
     display: flex; align-items: center; gap: 9px;
   }
 
-  .card-title i { color: var(--red); }
-
-  /* ── ITEMS ── */
   .order-item {
-    display: flex; align-items: center;
-    justify-content: space-between; gap: 16px;
-    padding: 16px 0;
-    border-bottom: 1px solid var(--stone);
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 12px 0; border-bottom: 1px solid var(--stone);
   }
+  .order-item:last-child { border-bottom: none; }
 
-  .order-item:last-child { border-bottom: none; padding-bottom: 0; }
-  .order-item:first-child { padding-top: 0; }
-
-  .item-left { display: flex; align-items: center; gap: 14px; }
-
-  .item-dot {
-    width: 42px; height: 42px; border-radius: 12px;
-    background: var(--warm); border: 1px solid var(--stone);
-    display: flex; align-items: center; justify-content: center;
-    color: var(--muted); font-size: 1.1rem; flex-shrink: 0;
-  }
-
-  .item-name {
-    font-weight: 700; font-size: .95rem; margin-bottom: 3px; line-height: 1.2;
-  }
-
-  .item-meta {
-    font-size: .75rem; color: var(--muted); font-weight: 500;
-  }
-
-  .item-right { text-align: right; flex-shrink: 0; }
-
-  .item-price {
-    font-family: 'Fraunces', serif;
-    font-size: 1rem; font-weight: 700; display: block;
-  }
-
-  .item-qty {
-    font-size: .75rem; color: var(--muted); margin-top: 2px;
-  }
-
-  /* Empty */
-  .empty-order {
-    text-align: center; padding: 48px 20px; color: var(--muted);
-  }
-
-  .empty-order i { font-size: 2.5rem; opacity: .25; display: block; margin-bottom: 12px; }
-  .empty-order p { font-size: .88rem; }
-
-  /* ── TRACKING ── */
-  .tracking-status {
-    display: inline-flex; align-items: center; gap: 7px;
-    background: var(--warm); border: 1px solid var(--stone);
-    border-radius: 100px; padding: 6px 14px;
-    font-size: .8rem; font-weight: 700; color: var(--ink);
-    margin-bottom: 16px;
-  }
-
-  .status-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--red); animation: blink 1.5s infinite;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: .3; }
-  }
-
-  .track-bar-wrap {
-    background: var(--stone); border-radius: 100px;
-    height: 8px; overflow: hidden; margin-bottom: 10px;
-  }
-
-  .track-bar {
-    height: 100%; border-radius: 100px;
-    background: linear-gradient(90deg, var(--red), #e85d60);
-    transition: width .6s ease;
-  }
-
-  .track-steps {
-    display: flex; justify-content: space-between;
-    margin-top: 14px;
-  }
-
-  .track-step {
-    display: flex; flex-direction: column; align-items: center; gap: 5px;
-    font-size: .68rem; font-weight: 600; color: var(--muted); text-align: center;
-    flex: 1;
-  }
-
-  .track-step-icon {
-    width: 32px; height: 32px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--stone); color: var(--muted); font-size: .8rem;
-    transition: all .3s;
-  }
-
-  .track-step.done .track-step-icon  { background: var(--green); color: white; }
-  .track-step.active .track-step-icon { background: var(--red); color: white; }
-
-  .track-hint {
-    font-size: .75rem; color: var(--muted); margin-top: 14px;
-    display: flex; align-items: center; gap: 6px;
-  }
-
-  /* ── SUMMARY ── */
+  .track-bar-wrap { background: var(--stone); border-radius: 100px; height: 8px; overflow: hidden; margin: 15px 0; }
+  .track-bar { height: 100%; background: var(--red); transition: width .6s ease; }
+  
+  .track-steps { display: flex; justify-content: space-between; }
+  .track-step { font-size: .65rem; font-weight: 600; color: var(--muted); text-align: center; flex: 1; }
+  
   .summary-card {
-    background: var(--white);
-    border-radius: var(--radius);
-    border: 1px solid var(--stone);
-    box-shadow: var(--shadow);
-    padding: 26px;
-    position: sticky; top: 106px;
-    animation: fadeUp .4s ease .06s both;
+    background: var(--white); border-radius: var(--radius); border: 1px solid var(--stone);
+    box-shadow: var(--shadow); padding: 26px; position: sticky; top: 106px;
   }
 
-  .summary-title {
-    font-family: 'Fraunces', serif;
-    font-size: 1.05rem; font-weight: 800;
-    margin-bottom: 18px; padding-bottom: 14px;
-    border-bottom: 1px solid var(--stone);
+  .total-num { font-family: 'Fraunces', serif; font-size: 1.8rem; font-weight: 900; color: var(--red); }
+  
+  .delivery-info { background: var(--warm); border-radius: 14px; padding: 14px; margin-bottom: 15px; border: 1px solid var(--stone); }
+  .delivery-row { display: flex; align-items: center; gap: 8px; font-size: .8rem; margin-bottom: 6px; font-weight: 500; }
+  .delivery-row i { color: var(--red); width: 15px; }
+
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 8px; 
+    background: var(--red-lt); color: var(--red); 
+    padding: 5px 12px; border-radius: 100px; 
+    font-size: .75rem; font-weight: 800; margin-bottom: 15px;
   }
-
-  .s-row {
-    display: flex; justify-content: space-between;
-    font-size: .88rem; margin-bottom: 11px; color: var(--muted);
-  }
-
-  .s-row .val { font-weight: 600; color: var(--ink); }
-  .s-row .val.green { color: var(--green); }
-  .s-row .val.red   { color: var(--red); }
-
-  .s-divider { border: none; border-top: 1px solid var(--stone); margin: 16px 0; }
-
-  .total-block {
-    display: flex; justify-content: space-between;
-    align-items: flex-end; margin-bottom: 22px;
-  }
-
-  .total-label { font-weight: 700; font-size: .95rem; }
-
-  .total-num {
-    font-family: 'Fraunces', serif;
-    font-size: 2rem; font-weight: 900; color: var(--red); line-height: 1;
-  }
-
-  /* Delivery info */
-  .delivery-info {
-    background: var(--warm); border-radius: 14px;
-    border: 1px solid var(--stone); padding: 14px 16px;
-    margin-bottom: 18px;
-  }
-
-  .delivery-row {
-    display: flex; align-items: center; gap: 9px;
-    font-size: .8rem; font-weight: 600; color: var(--muted);
-    margin-bottom: 8px;
-  }
-
-  .delivery-row:last-child { margin-bottom: 0; }
-  .delivery-row i { color: var(--red); font-size: .85rem; width: 14px; text-align: center; }
-  .delivery-row span { color: var(--ink); }
-
-  .btn-track {
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    background: var(--ink); color: white; border-radius: 14px;
-    padding: 15px; font-size: .88rem; font-weight: 700;
-    text-decoration: none; width: 100%; transition: all .22s;
-    border: none; cursor: pointer; font-family: inherit;
-  }
-
-  .btn-track:hover { background: #2a2828; color: white; transform: translateY(-1px); }
 </style>
 
 <div class="page-wrap">
 
-  <!-- Header -->
   <div class="page-top">
     <div>
-      <p class="page-eyebrow"><i class="bi bi-bag-check-fill"></i> Pedido confirmado</p>
-      <h1 class="page-title">Meu Pedido</h1>
+      <p style="font-size: .75rem; font-weight: 700; color: var(--muted); text-transform: uppercase;">Acompanhe suas delícias</p>
+      <h1 class="page-title">Meus Pedidos</h1>
     </div>
-    <a href="{% url 'restaurantes' %}" class="btn-continuar">
-      <i class="bi bi-grid"></i> Continuar comprando
+    <a href="{% url 'restaurantes' %}" style="text-decoration: none; color: var(--red); font-weight: 700; font-size: .9rem;">
+      <i class="bi bi-plus-circle"></i> Novo Pedido
     </a>
   </div>
 
-  <div class="order-layout">
-
-    <!-- LEFT -->
+  {% for pedido in pedidos %}
+  <div class="order-block">
+    
     <div>
-
-      <!-- Itens -->
       <div class="o-card">
         <div class="card-title">
-          <i class="bi bi-receipt"></i> Itens do pedido
+          <i class="bi bi-shop"></i> {{ pedido.restaurante.nome }} 
+          <span style="margin-left: auto; font-size: .7rem; color: var(--muted);">#{{ pedido.id_pedido }}</span>
         </div>
 
-        {% for item in itens %}
+        {% for item in pedido.tbpedidosprodutos_set.all %}
         <div class="order-item">
-          <div class="item-left">
-            <div class="item-dot"><i class="bi bi-egg-fried"></i></div>
-            <div>
-              <div class="item-name">{{ item.nome }}</div>
-              <div class="item-meta">
-                {{ item.restaurante.nome }}
-                {% if item.porcao %} · {{ item.porcao }}{% endif %}
-                {% if item.restricoes %} · {{ item.restricoes }}{% endif %}
-              </div>
-            </div>
+          <div style="display: flex; flex-direction: column;">
+            <span style="font-weight: 700; font-size: .95rem;">{{ item.quantidade }}x {{ item.produto.nome_produto }}</span>
+            <span style="font-size: .75rem; color: var(--muted);">{{ item.produto.categoria }}</span>
           </div>
-          <div class="item-right">
-            <span class="item-price">R$ {{ item.preco }}</span>
-            <div class="item-qty">× {{ item.quantidade }}</div>
-          </div>
-        </div>
-        {% empty %}
-        <div class="empty-order">
-          <i class="bi bi-bag-x"></i>
-          <p>Nenhum item no pedido.</p>
+          <span style="font-family: 'Fraunces', serif; font-weight: 700;">R$ {{ item.produto.preco }}</span>
         </div>
         {% endfor %}
       </div>
 
-      <!-- Tracking -->
       <div class="o-card">
-        <div class="card-title">
-          <i class="bi bi-lightning-charge-fill"></i> Acompanhamento em tempo real
-        </div>
-
-        <div class="tracking-status">
-          <span class="status-dot"></span>
-          {{ pedido.status_texto|default:"Aguardando preparo" }}
+        <div class="card-title"><i class="bi bi-truck"></i> Status do Pedido</div>
+        
+        <div class="status-badge">
+          <span style="width: 6px; height: 6px; background: var(--red); border-radius: 50%;"></span>
+          {{ pedido.status.nome_status }}
         </div>
 
         <div class="track-bar-wrap">
-          <div class="track-bar" style="width: {{ pedido_progress|default:25 }}%"></div>
+          <div class="track-bar" style="width: {% if pedido.status.id_status <= 1 %}25%{% elif pedido.status.id_status == 2 %}60%{% else %}100%{% endif %}"></div>
         </div>
-
         <div class="track-steps">
-          <div class="track-step done">
-            <div class="track-step-icon"><i class="bi bi-check2"></i></div>
-            Confirmado
-          </div>
-          <div class="track-step {% if pedido_progress >= 40 %}done{% elif pedido_progress >= 25 %}active{% endif %}">
-            <div class="track-step-icon"><i class="bi bi-fire"></i></div>
-            Preparando
-          </div>
-          <div class="track-step {% if pedido_progress >= 75 %}done{% elif pedido_progress >= 60 %}active{% endif %}">
-            <div class="track-step-icon"><i class="bi bi-bicycle"></i></div>
-            A caminho
-          </div>
-          <div class="track-step {% if pedido_progress >= 100 %}done{% endif %}">
-            <div class="track-step-icon"><i class="bi bi-house-check"></i></div>
-            Entregue
-          </div>
+          <div class="track-step">Confirmado</div>
+          <div class="track-step">Preparando</div>
+          <div class="track-step">A caminho</div>
+          <div class="track-step">Entregue</div>
         </div>
-
-        <p class="track-hint">
-          <i class="bi bi-info-circle"></i>
-          Você ainda pode editar o pedido antes do início do preparo.
-        </p>
       </div>
-
     </div>
 
-    <!-- RIGHT -->
     <div>
       <div class="summary-card">
-        <div class="summary-title">Resumo financeiro</div>
-
-        <div class="s-row">
-          <span>Subtotal</span>
-          <span class="val">R$ {{ subtotal }}</span>
-        </div>
-        <div class="s-row">
-          <span>Entrega</span>
-          <span class="val green">R$ {{ entrega }}</span>
-        </div>
-        <div class="s-row">
-          <span>Desconto cupom</span>
-          <span class="val red">− R$ {{ desconto }}</span>
+        <div style="font-size: .75rem; color: var(--muted); margin-bottom: 5px;">{{ pedido.data_pedido|date:"d M Y · H:i" }}</div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;">
+          <span style="font-weight: 700;">Total Pago</span>
+          <span class="total-num">R$ {{ pedido.valor_total }}</span>
         </div>
 
-        <hr class="s-divider">
-
-        <div class="total-block">
-          <div class="total-label">Total</div>
-          <div class="total-num">R$ {{ total }}</div>
-        </div>
-
-        <!-- Delivery info -->
         <div class="delivery-info">
           <div class="delivery-row">
             <i class="bi bi-geo-alt-fill"></i>
-            <span>Rua Exemplo, 123 - Taboão da Serra</span>
+            <span>{{ pedido.endereco_entrega|default:"Endereço não informado" }}</span>
           </div>
           <div class="delivery-row">
-            <i class="bi bi-clock"></i>
-            <span>Previsão: 30–45 minutos</span>
-          </div>
-          <div class="delivery-row">
-            <i class="bi bi-qr-code"></i>
-            <span>Pagamento via Pix</span>
+            <i class="bi bi-credit-card-fill"></i>
+            <span>
+              {% for pag in pedido.tbpagamentos_set.all %}
+                {{ pag.metodo_pagamento }}{% if not forloop.last %}, {% endif %}
+              {% empty %}
+                Não informado
+              {% endfor %}
+            </span>
           </div>
         </div>
 
-        <button class="btn-track">
-          <i class="bi bi-map"></i> Rastrear pedido
+        <button class="btn-track" style="width: 100%; background: var(--ink); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer;">
+          Ajuda com este pedido
         </button>
       </div>
     </div>
 
   </div>
+  {% empty %}
+  <div style="text-align: center; padding: 100px 0;">
+      <i class="bi bi-bag-x" style="font-size: 3rem; color: var(--stone);"></i>
+      <p style="color: var(--muted); margin-top: 15px;">Você ainda não fez nenhum pedido.</p>
+      <a href="{% url 'restaurantes' %}" style="color: var(--red); font-weight: 700; text-decoration: none;">Começar agora</a>
+  </div>
+  {% endfor %}
+
 </div>
 
 {% include "pages/pagePrincipal/footer.html" %}

@@ -425,10 +425,6 @@
           <span class="price-num">R$ {{ prato.preco }}</span>
         </div>
 
-        <a href="{% url 'reserva' %}?restaurante_id={{ restaurante.id_restaurante }}" class="btn-reservar">
-          <i class="bi bi-calendar-check"></i> Reservar Mesa
-        </a>
-
         <a href="{% url 'adicionar_carrinho' %}?restaurante_id={{ restaurante.id_restaurante }}&produto_id={{ prato.id_produto }}" class="btn-delivery">
           <i class="bi bi-bicycle"></i> Pedir Delivery
         </a>

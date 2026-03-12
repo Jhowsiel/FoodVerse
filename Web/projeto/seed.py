@@ -2,155 +2,164 @@ import os
 import django
 import random
 from decimal import Decimal
-from datetime import timedelta
+from datetime import datetime, time, timedelta
 
-# 1. CONFIGURAÇÃO DO AMBIENTE DJANGO
-# Certifique-se de que 'projeto' é o nome da pasta que contém seu settings.py
+# CONFIGURAÇÃO DO AMBIENTE
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'projeto.settings')
 django.setup()
 
-# 2. IMPORTAÇÃO DOS MODELOS
 from django.utils import timezone
 from foodverse.models import (
-    TbClientes, TbRestaurantes, TbProdutos, TbEstoque, TbNutricao,
-    TbStatusPedido, TbPedidos, TbPedidosProdutos, TbPagamentos,
-    TbAvaliacoes, TbCupons, TbFidelidade, TbFuncionarios
+    TbClientes, TbRestaurantes, TbProdutos, TbPedidos, 
+    TbPedidosProdutos, TbStatusPedido, TbPagamentos, 
+    TbAvaliacoes, TbReservas, TbNutricao, TbEstoque
 )
 
-def gerar_dados_em_massa():
-    print("🧹 Limpando dados antigos para evitar conflitos (opcional)...")
-    # Ordem reversa de dependência para evitar erros de Foreign Key
+def popular_banco():
+    print("🧹 Limpando dados antigos...")
+    # Ordem reversa de dependência para evitar erro de Foreign Key
     TbPagamentos.objects.all().delete()
     TbPedidosProdutos.objects.all().delete()
     TbPedidos.objects.all().delete()
+    TbStatusPedido.objects.all().delete()
     TbNutricao.objects.all().delete()
     TbEstoque.objects.all().delete()
     TbProdutos.objects.all().delete()
+    TbReservas.objects.all().delete()
+    TbAvaliacoes.objects.all().delete()
     TbRestaurantes.objects.all().delete()
-    TbFidelidade.objects.all().delete()
     TbClientes.objects.all().delete()
-    TbFuncionarios.objects.all().delete()
 
-    print("⏳ Iniciando inserção massiva de dados...")
-
-    # --- 1. Status de Pedido (Fixos) ---
-    status_nomes = ["Pendente", "Preparando", "Saiu para Entrega", "Entregue", "Cancelado"]
-    status_objs = []
+    print("🚀 Criando Status de Pedido...")
+    status_nomes = ['Pendente', 'Preparando', 'A caminho', 'Entregue', 'Cancelado']
+    status_objetos = []
     for i, nome in enumerate(status_nomes, 1):
-        obj, _ = TbStatusPedido.objects.get_or_create(id_status=i, defaults={'nome_status': nome})
-        status_objs.append(obj)
+        s = TbStatusPedido.objects.create(id_status=i, nome_status=nome)
+        status_objetos.append(s)
 
-    # --- 2. Clientes (50 registros) ---
+    print("👥 Criando Clientes...")
     clientes = []
-    for i in range(50):
+    for i in range(1, 6):
         c = TbClientes.objects.create(
-            username=f"user_{i}_{random.randint(100, 999)}",
-            nome=f"Cliente {i}",
+            username=f"user_{i}",
+            nome=f"Cliente Teste {i}",
             email=f"cliente{i}@foodverse.com",
-            telefone=f"119{random.randint(10000000, 99999999)}",
-            cpf=f"{random.randint(100,999)}.{random.randint(100,999)}.{random.randint(100,999)}-{random.randint(10,99)}",
-            data_cadastro=timezone.now() - timedelta(days=random.randint(1, 365))
+            telefone=f"1199999000{i}",
+            cpf=f"123.456.789-0{i}",
+            endereco=f"Rua das Flores, {10 * i}",
+            data_cadastro=timezone.now()
         )
         clientes.append(c)
-        # Tabela de Fidelidade vinculada
-        TbFidelidade.objects.create(
-            cliente=c, 
-            pontos=random.randint(0, 500), 
-            cashback=Decimal(random.uniform(0, 50)).quantize(Decimal('0.00'))
+
+    print("🍕 Criando Restaurantes e Produtos...")
+    restaurantes_dados = [
+        {"nome": "Burger King", "cat": "Fast Food"},
+        {"nome": "Sushiloko", "cat": "Japonesa"},
+        {"nome": "Cantina Italiana", "cat": "Massas"}
+    ]
+    
+    for dado in restaurantes_dados:
+        res = TbRestaurantes.objects.create(
+            nome=dado["nome"],
+            categoria=dado["cat"],
+            descricao=f"O melhor de {dado['cat']} da região.",
+            avaliacao=Decimal(random.uniform(3.5, 5.0)).quantize(Decimal('0.00')),
+            tempo_entrega="30-45 min",
+            taxa_entrega=Decimal('7.50'),
+            ativo=True,
+            aberto=True
         )
 
-    # --- 3. Restaurantes (10 registros) ---
-    categorias = ["Pizzaria", "Hambúrguer", "Japonesa", "Italiana", "Vegana"]
-    restaurantes = []
-    for i in range(10):
-        cat = random.choice(categorias)
-        r = TbRestaurantes.objects.create(
-            nome=f"{cat} do Chef {i}",
-            categoria=cat,
-            avaliacao=Decimal(random.uniform(3.5, 5.0)).quantize(Decimal('0.0')),
-            tempo_entrega=f"{random.randint(20, 60)} min",
-            taxa_entrega=Decimal(random.uniform(5, 18)).quantize(Decimal('0.00'))
-        )
-        restaurantes.append(r)
-
-    # --- 4. Produtos e Estoque (5 produtos por restaurante) ---
-    produtos = []
-    for rest in restaurantes:
-        for j in range(5):
-            p = TbProdutos.objects.create(
-                restaurante=rest,
-                nome_produto=f"Prato Especial {rest.id_restaurante}-{j}",
-                preco=Decimal(random.uniform(25, 95)).quantize(Decimal('0.00')),
-                categoria=rest.categoria,
+        # Criar 3 produtos para cada restaurante
+        for j in range(1, 4):
+            prod = TbProdutos.objects.create(
+                restaurante=res,
+                nome_produto=f"Prato {dado['nome']} {j}",
+                descricao="Ingredientes frescos e selecionados.",
+                preco=Decimal(random.uniform(20.0, 80.0)).quantize(Decimal('0.00')),
+                categoria=dado["cat"],
                 disponivel=True,
                 data_criacao=timezone.now()
             )
-            produtos.append(p)
-            
-            # Estoque
+
+            # Criar Estoque para o produto
             TbEstoque.objects.create(
-                produto=p, 
-                quantidade=random.randint(50, 200), 
+                produto=prod,
+                quantidade=random.randint(50, 100),
                 estoque_minimo=10,
                 ultima_atualizacao=timezone.now()
             )
-            
-            # Nutrição
+
+            # Criar Nutrição para o produto
             TbNutricao.objects.create(
-                produto=p, 
-                kcal=random.randint(300, 800), 
-                proteina=f"{random.randint(10, 30)}g", 
-                carbo=f"{random.randint(20, 60)}g", 
-                gordura=f"{random.randint(5, 25)}g"
+                produto=prod,
+                kcal=random.randint(200, 800),
+                proteina="20g",
+                carbo="50g",
+                gordura="15g"
             )
 
-    # --- 5. Pedidos e Pagamentos (100 registros) ---
-    for _ in range(100):
-        cli = random.choice(clientes)
-        res = random.choice(restaurantes)
-        ped = TbPedidos.objects.create(
-            cliente=cli,
-            restaurante=res,
-            status=random.choice(status_objs),
-            data_pedido=timezone.now() - timedelta(days=random.randint(0, 30)),
-            endereco_entrega=f"Rua das Palmeiras, {random.randint(10, 999)}",
-            valor_total=Decimal('0.00')
-        )
-        
-        # Itens do pedido
-        total_acumulado = Decimal('0.00')
-        prods_res = [p for p in produtos if p.restaurante == res]
-        
-        # Seleciona de 1 a 3 itens diferentes do mesmo restaurante
-        itens_selecionados = random.sample(prods_res, random.randint(1, 3))
-        for prod in itens_selecionados:
-            qtd = random.randint(1, 2)
-            TbPedidosProdutos.objects.create(pedido=ped, produto=prod, quantidade=qtd)
-            total_acumulado += (prod.preco * qtd)
-        
-        # Atualiza valor total do pedido (produtos + taxa)
-        ped.valor_total = total_acumulado + res.taxa_entrega
-        ped.save()
-
-        # Pagamento automático para o pedido
-        TbPagamentos.objects.create(
-            pedido=ped,
-            metodo_pagamento=random.choice(["Cartão", "Pix", "Dinheiro"]),
-            valor=ped.valor_total,
-            data_pagamento=ped.data_pedido
-        )
-
-    # --- 6. Funcionários e Cupons ---
-    for i in range(5):
-        TbFuncionarios.objects.create(
-            nome=f"Colaborador {i}",
-            cargo=random.choice(["Caixa", "Gerente", "Cozinha"]),
-            status="Ativo"
-        )
+    print("📦 Criando Pedidos e Itens...")
+    todos_produtos = list(TbProdutos.objects.all())
     
-    TbCupons.objects.get_or_create(codigo="FOO10", defaults={'desconto': 10.00, 'validade': '2026-12-31'})
+    for cliente in clientes:
+        # Criar 2 pedidos para cada cliente
+        for k in range(2):
+            res_aleatorio = random.choice(TbRestaurantes.objects.all())
+            pedido = TbPedidos.objects.create(
+                cliente=cliente,
+                restaurante=res_aleatorio,
+                status=random.choice(status_objetos),
+                data_pedido=timezone.now() - timedelta(days=random.randint(0, 5)),
+                endereco_entrega=cliente.endereco,
+                valor_total=Decimal('0.00')
+            )
 
-    print(f"✅ CONCLUÍDO: O banco de dados foi populado com sucesso!")
+            # Adicionar 2 produtos ao pedido
+            produtos_restaurante = [p for p in todos_produtos if p.restaurante == res_aleatorio]
+            total_pedido = Decimal('0.00')
+            
+            for p_pedido in random.sample(produtos_restaurante, 2):
+                qtd = random.randint(1, 3)
+                TbPedidosProdutos.objects.create(
+                    pedido=pedido,
+                    produto=p_pedido,
+                    quantidade=qtd
+                )
+                total_pedido += (p_pedido.preco * qtd)
+
+            # Atualiza o valor total do pedido e cria pagamento
+            pedido.valor_total = total_pedido + res_aleatorio.taxa_entrega
+            pedido.save()
+
+            TbPagamentos.objects.create(
+                pedido=pedido,
+                metodo_pagamento=random.choice(['Cartão de Crédito', 'Pix', 'Dinheiro']),
+                valor=pedido.valor_total,
+                data_pagamento=timezone.now()
+            )
+
+    print("⭐ Criando Avaliações...")
+    for _ in range(10):
+        TbAvaliacoes.objects.create(
+            cliente=random.choice(clientes),
+            restaurante=random.choice(TbRestaurantes.objects.all()),
+            comentario="Excelente comida e entrega rápida!",
+            nota=random.randint(4, 5),
+            data_avaliacao=timezone.now()
+        )
+
+    print("📅 Criando Reservas...")
+    for cliente in clientes:
+        TbReservas.objects.create(
+            cliente=cliente,
+            restaurante=random.choice(TbRestaurantes.objects.all()),
+            data_reserva=timezone.now() + timedelta(days=2),
+            numero_pessoas=random.randint(2, 6),
+            mesa=f"Mesa {random.randint(1, 20)}"
+        )
+
+    print("\n✅ SUCESSO! Banco de dados populado com dados de teste.")
 
 if __name__ == "__main__":
-    gerar_dados_em_massa()
+    popular_banco()
