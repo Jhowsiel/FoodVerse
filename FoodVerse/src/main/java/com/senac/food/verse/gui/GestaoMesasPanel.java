@@ -2,6 +2,7 @@ package com.senac.food.verse.gui;
 
 import com.senac.food.verse.Reserva;
 import com.senac.food.verse.ReservaDAO;
+import com.senac.food.verse.SessionContext;
 import jiconfont.icons.google_material_design_icons.GoogleMaterialDesignIcons;
 import jiconfont.swing.IconFontSwing;
 
@@ -10,123 +11,235 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.RoundRectangle2D;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 public class GestaoMesasPanel extends JPanel {
 
+    private static final DateTimeFormatter HORA_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+    private static final DateTimeFormatter DATA_HORA_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private static final int CHECK_IN_WINDOW_MINUTES = 15;
+    private static final int TOLERANCIA_RESERVA_PASSADA_MINUTES = 10;
+    private static final ZoneId APP_ZONE_ID = ZoneId.of("America/Sao_Paulo");
+
     private final ReservaDAO dao = new ReservaDAO();
+    private final SessionContext sessionContext = SessionContext.getInstance();
+    private final boolean podeCriarReserva = PermissionChecker.canCreateReservation(sessionContext);
+    private final boolean podeCancelarReserva = PermissionChecker.canCancelReservation(sessionContext);
+
     private JPanel containerMesas;
+    private JPanel listaReservasPanel;
+    private JLabel lblResumo;
+    private final List<Reserva> reservasHoje = new ArrayList<>();
 
     public GestaoMesasPanel() {
-        setLayout(new BorderLayout());
-        setBackground(UIConstants.BG_DARK);
+        setLayout(new BorderLayout(0, 15));
+        UIConstants.stylePanel(this);
 
-        // --- Header ---
-        JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(UIConstants.BG_DARK);
-        header.setBorder(new EmptyBorder(20, 20, 20, 20));
-
-        JLabel title = new JLabel("Mapa de Mesas & Reservas");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        title.setForeground(UIConstants.FG_LIGHT);
-        // EVENT_SEAT funcionou, então é seguro usar
-        title.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.EVENT_SEAT, 28, UIConstants.FG_LIGHT));
-        header.add(title, BorderLayout.WEST);
-
-        JButton btnNova = createButton("Nova Reserva", GoogleMaterialDesignIcons.ADD, UIConstants.PRIMARY_RED);
-        btnNova.addActionListener(e -> abrirModalNovaReserva());
-        
-        JButton btnRefresh = createButton("Atualizar", GoogleMaterialDesignIcons.REFRESH, UIConstants.BG_DARK_ALT);
-        btnRefresh.addActionListener(e -> carregarMesas());
-
-        JPanel botoes = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        botoes.setOpaque(false);
-        botoes.add(btnNova);
-        botoes.add(btnRefresh);
-        header.add(botoes, BorderLayout.EAST);
-        
-        add(header, BorderLayout.NORTH);
-
-        // --- Área das Mesas ---
-        containerMesas = new JPanel(new GridLayout(0, 5, 15, 15)); // Grid responsivo (5 colunas)
-        containerMesas.setBackground(UIConstants.BG_DARK);
-        containerMesas.setBorder(new EmptyBorder(10, 20, 20, 20));
-
-        JScrollPane scroll = new JScrollPane(containerMesas);
-        scroll.setBorder(null);
-        scroll.getVerticalScrollBar().setUnitIncrement(16);
-        add(scroll, BorderLayout.CENTER);
-
-        // --- Legenda ---
-        JPanel legenda = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
-        legenda.setBackground(UIConstants.BG_DARK_ALT);
-        legenda.add(criarItemLegenda("Livre", UIConstants.SUCCESS_GREEN));
-        legenda.add(criarItemLegenda("Reservada", Color.ORANGE));
-        legenda.add(criarItemLegenda("Ocupada", UIConstants.PRIMARY_RED));
-        add(legenda, BorderLayout.SOUTH);
+        add(criarHeader(), BorderLayout.NORTH);
+        add(criarConteudo(), BorderLayout.CENTER);
+        add(criarLegenda(), BorderLayout.SOUTH);
 
         carregarMesas();
     }
 
+    private JPanel criarHeader() {
+        JPanel header = new JPanel(new BorderLayout());
+        header.setOpaque(false);
+        header.setBorder(new EmptyBorder(10, 10, 0, 10));
+
+        JPanel textos = new JPanel();
+        textos.setOpaque(false);
+        textos.setLayout(new BoxLayout(textos, BoxLayout.Y_AXIS));
+
+        JLabel title = new JLabel("Mapa de Mesas & Reservas");
+        title.setFont(UIConstants.FONT_TITLE);
+        title.setForeground(UIConstants.FG_LIGHT);
+        title.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.EVENT_SEAT, 28, UIConstants.FG_LIGHT));
+        title.setIconTextGap(12);
+        textos.add(title);
+
+        lblResumo = new JLabel("Carregando reservas...");
+        lblResumo.setFont(UIConstants.FONT_REGULAR);
+        lblResumo.setForeground(UIConstants.FG_MUTED);
+        lblResumo.setBorder(new EmptyBorder(6, 0, 0, 0));
+        textos.add(lblResumo);
+
+        JPanel botoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        botoes.setOpaque(false);
+
+        JButton btnNova = createButton("Nova Reserva", GoogleMaterialDesignIcons.ADD, UIConstants.PRIMARY_RED);
+        btnNova.addActionListener(e -> abrirModalNovaReserva());
+        btnNova.setVisible(podeCriarReserva);
+
+        JButton btnRefresh = createButton("Atualizar", GoogleMaterialDesignIcons.REFRESH, UIConstants.BG_DARK_ALT);
+        btnRefresh.addActionListener(e -> carregarMesas());
+
+        botoes.add(btnNova);
+        botoes.add(btnRefresh);
+
+        header.add(textos, BorderLayout.WEST);
+        header.add(botoes, BorderLayout.EAST);
+        return header;
+    }
+
+    private JComponent criarConteudo() {
+        containerMesas = new JPanel(new GridLayout(0, 4, 15, 15));
+        containerMesas.setBackground(UIConstants.BG_DARK);
+        containerMesas.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        JScrollPane scrollMesas = new JScrollPane(containerMesas);
+        UIConstants.styleScrollPane(scrollMesas);
+        scrollMesas.getVerticalScrollBar().setUnitIncrement(16);
+
+        listaReservasPanel = new JPanel();
+        listaReservasPanel.setLayout(new BoxLayout(listaReservasPanel, BoxLayout.Y_AXIS));
+        listaReservasPanel.setBackground(UIConstants.BG_DARK);
+        listaReservasPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        JScrollPane scrollReservas = new JScrollPane(listaReservasPanel);
+        UIConstants.styleScrollPane(scrollReservas);
+        scrollReservas.setPreferredSize(new Dimension(320, 0));
+        scrollReservas.getVerticalScrollBar().setUnitIncrement(16);
+
+        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, scrollMesas, scrollReservas);
+        split.setResizeWeight(0.72);
+        split.setBorder(null);
+        split.setDividerSize(6);
+        split.setOpaque(false);
+        split.setBackground(UIConstants.BG_DARK);
+        return split;
+    }
+
+    private JPanel criarLegenda() {
+        JPanel legenda = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        legenda.setBackground(UIConstants.BG_DARK_ALT);
+        legenda.add(criarItemLegenda("Livre", UIConstants.SUCCESS_GREEN));
+        legenda.add(criarItemLegenda("Próxima", new Color(243, 156, 18)));
+        legenda.add(criarItemLegenda("Check-in agora", UIConstants.PRIMARY_RED));
+        legenda.add(criarItemLegenda("Atrasada", UIConstants.DANGER_RED));
+        return legenda;
+    }
+
     private void carregarMesas() {
+        reservasHoje.clear();
+        reservasHoje.addAll(dao.listarReservasDoDia());
+        reservasHoje.sort(Comparator.comparing(Reserva::getDataReserva, Comparator.nullsLast(LocalDateTime::compareTo)));
+
         containerMesas.removeAll();
-        
-        List<String> todasMesas = dao.getListaMesas();
-        List<Reserva> reservasHoje = dao.listarReservasDoDia();
-
-        for (String nomeMesa : todasMesas) {
-            // Verifica status
+        for (String nomeMesa : dao.getListaMesas()) {
             Reserva reservaDaMesa = reservasHoje.stream()
-                    .filter(r -> r.getMesa().equalsIgnoreCase(nomeMesa))
-                    .findFirst().orElse(null);
-
+                    .filter(r -> nomeMesa.equalsIgnoreCase(r.getMesa()))
+                    .findFirst()
+                    .orElse(null);
             containerMesas.add(criarCardMesa(nomeMesa, reservaDaMesa));
         }
-        
+
+        atualizarListaReservas();
+        atualizarResumo();
+
         containerMesas.revalidate();
         containerMesas.repaint();
     }
 
-    private JPanel criarCardMesa(String nomeMesa, Reserva reserva) {
-        boolean ocupada = (reserva != null);
-        Color corStatus = ocupada ? Color.ORANGE : UIConstants.SUCCESS_GREEN;
+    private void atualizarResumo() {
+        int reservadas = reservasHoje.size();
+        int ocupadasAgora = (int) reservasHoje.stream()
+                .filter(r -> {
+                    String status = classifyReservationStatus(r, nowInAppZone());
+                    return "CHECK_IN".equals(status) || "ATRASADA".equals(status);
+                })
+                .map(Reserva::getMesa)
+                .distinct()
+                .count();
+        int prontas = (int) reservasHoje.stream()
+                .filter(r -> "CHECK_IN".equals(classifyReservationStatus(r, nowInAppZone())))
+                .count();
+        int atrasadas = (int) reservasHoje.stream()
+                .filter(r -> "ATRASADA".equals(classifyReservationStatus(r, nowInAppZone())))
+                .count();
+        int livresAgora = Math.max(0, dao.getListaMesas().size() - ocupadasAgora);
+        lblResumo.setText(String.format("Agora: %d livres • %d reservas hoje • %d em check-in • %d atrasadas",
+                livresAgora, reservadas, prontas, atrasadas));
+    }
 
-        JPanel card = new RoundedPanel(15, UIConstants.CARD_DARK);
-        card.setLayout(new BorderLayout());
-        card.setBorder(new EmptyBorder(15, 15, 15, 15));
+    private void atualizarListaReservas() {
+        listaReservasPanel.removeAll();
+
+        JLabel titulo = new JLabel("Reservas de Hoje");
+        titulo.setFont(UIConstants.FONT_BOLD);
+        titulo.setForeground(UIConstants.FG_LIGHT);
+        titulo.setAlignmentX(Component.LEFT_ALIGNMENT);
+        listaReservasPanel.add(titulo);
+        listaReservasPanel.add(Box.createVerticalStrut(12));
+
+        if (reservasHoje.isEmpty()) {
+            JLabel vazio = new JLabel("Nenhuma reserva encontrada para o restaurante em contexto.");
+            vazio.setFont(UIConstants.FONT_REGULAR);
+            vazio.setForeground(UIConstants.FG_MUTED);
+            vazio.setAlignmentX(Component.LEFT_ALIGNMENT);
+            listaReservasPanel.add(vazio);
+        } else {
+            for (Reserva reserva : reservasHoje) {
+                listaReservasPanel.add(criarCardReserva(reserva));
+                listaReservasPanel.add(Box.createVerticalStrut(10));
+            }
+        }
+
+        listaReservasPanel.revalidate();
+        listaReservasPanel.repaint();
+    }
+
+    private JPanel criarCardMesa(String nomeMesa, Reserva reserva) {
+        String status = classifyReservationStatus(reserva, nowInAppZone());
+        Color corStatus = resolveStatusColor(status);
+
+        UIConstants.RoundedPanel card = new UIConstants.RoundedPanel(18, UIConstants.CARD_DARK);
+        card.setLayout(new BorderLayout(0, 10));
+        card.setBorder(new EmptyBorder(16, 16, 16, 16));
         card.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        JLabel lblIcon = new JLabel();
-        // CORREÇÃO 1: Trocado TABLE_RESTAURANT por EVENT_SEAT (que sabemos que existe) ou LOCAL_DINING
-        lblIcon.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.EVENT_SEAT, 40, corStatus));
-        lblIcon.setHorizontalAlignment(SwingConstants.CENTER);
-        
         JLabel lblNome = new JLabel(nomeMesa);
-        lblNome.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblNome.setFont(UIConstants.FONT_BOLD);
         lblNome.setForeground(UIConstants.FG_LIGHT);
-        lblNome.setHorizontalAlignment(SwingConstants.CENTER);
 
-        JLabel lblInfo = new JLabel(ocupada ? "Reservado (" + reserva.getDataReserva().format(DateTimeFormatter.ofPattern("HH:mm")) + ")" : "Livre");
-        lblInfo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblInfo.setForeground(ocupada ? Color.ORANGE : UIConstants.FG_MUTED);
+        JLabel lblIcon = new JLabel(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.EVENT_SEAT, 36, corStatus));
+        lblIcon.setHorizontalAlignment(SwingConstants.CENTER);
+
+        JLabel lblInfo = new JLabel(buildReservationSummary(reserva, status));
+        lblInfo.setFont(UIConstants.FONT_REGULAR);
+        lblInfo.setForeground("LIVRE".equals(status) ? UIConstants.FG_MUTED : corStatus);
         lblInfo.setHorizontalAlignment(SwingConstants.CENTER);
 
-        card.add(lblIcon, BorderLayout.CENTER);
-        card.add(lblNome, BorderLayout.NORTH);
-        card.add(lblInfo, BorderLayout.SOUTH);
+        JLabel badge = new JLabel(buildStatusLabel(status));
+        badge.setFont(UIConstants.ARIAL_12_B);
+        badge.setForeground(corStatus);
 
-        // Clique no card
+        card.add(lblNome, BorderLayout.NORTH);
+        card.add(lblIcon, BorderLayout.CENTER);
+
+        JPanel rodape = new JPanel(new BorderLayout());
+        rodape.setOpaque(false);
+        rodape.add(lblInfo, BorderLayout.CENTER);
+        rodape.add(badge, BorderLayout.SOUTH);
+        card.add(rodape, BorderLayout.SOUTH);
+
         card.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if(ocupada) {
-                    JOptionPane.showMessageDialog(GestaoMesasPanel.this, 
-                        "Reserva de: " + reserva.getNomeCliente() + "\nPessoas: " + reserva.getNumPessoas());
-                } else {
+                if (reserva == null) {
+                    if (!podeCriarReserva) {
+                        Toast.show(GestaoMesasPanel.this, "Seu perfil não pode criar reservas.", Toast.Type.WARNING);
+                        return;
+                    }
                     abrirModalNovaReserva(nomeMesa);
+                } else {
+                    abrirDetalhesReserva(reserva);
                 }
             }
         });
@@ -134,74 +247,265 @@ public class GestaoMesasPanel extends JPanel {
         return card;
     }
 
+    private JPanel criarCardReserva(Reserva reserva) {
+        String status = classifyReservationStatus(reserva, nowInAppZone());
+        Color cor = resolveStatusColor(status);
+
+        UIConstants.RoundedPanel card = new UIConstants.RoundedPanel(16, UIConstants.BG_DARK_ALT);
+        card.setLayout(new BorderLayout(0, 8));
+        card.setBorder(new EmptyBorder(14, 14, 14, 14));
+        card.setAlignmentX(Component.LEFT_ALIGNMENT);
+        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 140));
+
+        JLabel lblCliente = new JLabel(reserva.getNomeCliente());
+        lblCliente.setFont(UIConstants.FONT_BOLD);
+        lblCliente.setForeground(UIConstants.FG_LIGHT);
+
+        JLabel lblHorario = new JLabel(
+                reserva.getMesa() + " • " + reserva.getDataReserva().format(DATA_HORA_FORMATTER) + " • "
+                        + reserva.getNumPessoas() + " pessoas");
+        lblHorario.setFont(UIConstants.FONT_REGULAR);
+        lblHorario.setForeground(UIConstants.FG_MUTED);
+
+        JLabel lblStatus = new JLabel(buildStatusLabel(status));
+        lblStatus.setFont(UIConstants.ARIAL_12_B);
+        lblStatus.setForeground(cor);
+
+        JPanel centro = new JPanel();
+        centro.setOpaque(false);
+        centro.setLayout(new BoxLayout(centro, BoxLayout.Y_AXIS));
+        centro.add(lblCliente);
+        centro.add(Box.createVerticalStrut(6));
+        centro.add(lblHorario);
+        centro.add(Box.createVerticalStrut(6));
+        centro.add(lblStatus);
+
+        JButton btnDetalhes = createButton("Detalhes", GoogleMaterialDesignIcons.VISIBILITY, UIConstants.BG_DARK);
+        btnDetalhes.addActionListener(e -> abrirDetalhesReserva(reserva));
+
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        actions.setOpaque(false);
+        actions.add(btnDetalhes);
+
+        if (podeCancelarReserva) {
+            JButton btnCancelar = createButton("Cancelar", GoogleMaterialDesignIcons.CANCEL, UIConstants.DANGER_RED);
+            btnCancelar.addActionListener(e -> cancelarReserva(reserva));
+            actions.add(btnCancelar);
+        }
+
+        card.add(centro, BorderLayout.CENTER);
+        card.add(actions, BorderLayout.SOUTH);
+        return card;
+    }
+
+    private void abrirDetalhesReserva(Reserva reserva) {
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Detalhes da Reserva", true);
+        dialog.setLayout(new BorderLayout(0, 15));
+        dialog.setSize(420, 300);
+        dialog.setLocationRelativeTo(this);
+        dialog.getContentPane().setBackground(UIConstants.BG_DARK);
+
+        JPanel content = new JPanel();
+        content.setBackground(UIConstants.BG_DARK);
+        content.setBorder(new EmptyBorder(20, 20, 10, 20));
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+
+        String status = classifyReservationStatus(reserva, nowInAppZone());
+
+        content.add(infoLabel("Cliente", reserva.getNomeCliente()));
+        content.add(infoLabel("Mesa", reserva.getMesa()));
+        content.add(infoLabel("Horário", reserva.getDataReserva().format(DATA_HORA_FORMATTER)));
+        content.add(infoLabel("Pessoas", String.valueOf(reserva.getNumPessoas())));
+        content.add(infoLabel("Status operacional", buildStatusLabel(status)));
+
+        if ("CHECK_IN".equals(status)) {
+            JLabel dica = new JLabel("Janela ideal para check-in: confirme a chegada e siga para o pedido da mesa.");
+            dica.setForeground(UIConstants.SUCCESS_GREEN);
+            dica.setFont(UIConstants.FONT_REGULAR);
+            dica.setBorder(new EmptyBorder(12, 0, 0, 0));
+            content.add(dica);
+        } else if ("ATRASADA".equals(status)) {
+            JLabel dica = new JLabel("Reserva atrasada: avalie contato com o cliente ou cancelamento.");
+            dica.setForeground(UIConstants.DANGER_RED);
+            dica.setFont(UIConstants.FONT_REGULAR);
+            dica.setBorder(new EmptyBorder(12, 0, 0, 0));
+            content.add(dica);
+        }
+
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        footer.setBackground(UIConstants.BG_DARK);
+
+        JButton btnFechar = createButton("Fechar", GoogleMaterialDesignIcons.CLOSE, UIConstants.BG_DARK_ALT);
+        btnFechar.addActionListener(e -> dialog.dispose());
+        footer.add(btnFechar);
+
+        if (podeCancelarReserva) {
+            JButton btnCancelar = createButton("Cancelar Reserva", GoogleMaterialDesignIcons.CANCEL, UIConstants.DANGER_RED);
+            btnCancelar.addActionListener(e -> {
+                dialog.dispose();
+                cancelarReserva(reserva);
+            });
+            footer.add(btnCancelar);
+        }
+
+        dialog.add(content, BorderLayout.CENTER);
+        dialog.add(footer, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    private JPanel infoLabel(String titulo, String valor) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setOpaque(false);
+        panel.setBorder(new EmptyBorder(0, 0, 10, 0));
+
+        JLabel lblTitulo = new JLabel(titulo + ":");
+        lblTitulo.setFont(UIConstants.ARIAL_12_B);
+        lblTitulo.setForeground(UIConstants.FG_MUTED);
+
+        JLabel lblValor = new JLabel(valor);
+        lblValor.setFont(UIConstants.FONT_BOLD);
+        lblValor.setForeground(UIConstants.FG_LIGHT);
+
+        panel.add(lblTitulo, BorderLayout.NORTH);
+        panel.add(lblValor, BorderLayout.CENTER);
+        return panel;
+    }
+
     private void abrirModalNovaReserva() {
         abrirModalNovaReserva(null);
     }
 
     private void abrirModalNovaReserva(String mesaPreSelecionada) {
+        if (!podeCriarReserva) {
+            Toast.show(this, "Seu perfil não pode criar reservas.", Toast.Type.WARNING);
+            return;
+        }
+
         JDialog modal = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Nova Reserva", true);
-        modal.setLayout(new BorderLayout());
-        modal.setSize(400, 450);
+        modal.setLayout(new BorderLayout(0, 15));
+        modal.setSize(420, 360);
         modal.setLocationRelativeTo(this);
         modal.getContentPane().setBackground(UIConstants.BG_DARK);
 
-        JPanel form = new JPanel(new GridLayout(0, 1, 10, 10));
-        form.setBorder(new EmptyBorder(20, 20, 20, 20));
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBorder(new EmptyBorder(20, 20, 10, 20));
         form.setBackground(UIConstants.BG_DARK);
 
-        // Campos
+        GridBagConstraints gc = new GridBagConstraints();
+        gc.gridx = 0;
+        gc.gridy = 0;
+        gc.fill = GridBagConstraints.HORIZONTAL;
+        gc.weightx = 1.0;
+        gc.insets = new Insets(6, 0, 6, 0);
+
         JComboBox<String> comboClientes = new JComboBox<>(dao.listarClientesSimples().toArray(new String[0]));
-        JTextField txtData = new JTextField(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
-        JTextField txtPessoas = new JTextField("2");
+        UIConstants.styleCombo(comboClientes);
+
+        SpinnerDateModel dateModel = new SpinnerDateModel(
+                Date.from(nowInAppZone().plusHours(1).atZone(APP_ZONE_ID).toInstant()),
+                null,
+                null,
+                java.util.Calendar.MINUTE);
+        JSpinner spDataHora = new JSpinner(dateModel);
+        spDataHora.setEditor(new JSpinner.DateEditor(spDataHora, "dd/MM/yyyy HH:mm"));
+        UIConstants.styleSpinner(spDataHora);
+
+        JSpinner spPessoas = new JSpinner(new SpinnerNumberModel(2, 1, 20, 1));
+        UIConstants.styleSpinner(spPessoas);
+
         JComboBox<String> comboMesas = new JComboBox<>(dao.getListaMesas().toArray(new String[0]));
-        if(mesaPreSelecionada != null) comboMesas.setSelectedItem(mesaPreSelecionada);
+        UIConstants.styleCombo(comboMesas);
+        if (mesaPreSelecionada != null) {
+            comboMesas.setSelectedItem(mesaPreSelecionada);
+        }
 
-        UIConstants.styleField(txtData); 
-        UIConstants.styleField(txtPessoas);
+        form.add(label("Cliente"), gc);
+        gc.gridy++;
+        form.add(comboClientes, gc);
+        gc.gridy++;
+        form.add(label("Data e hora"), gc);
+        gc.gridy++;
+        form.add(spDataHora, gc);
+        gc.gridy++;
+        form.add(label("Número de pessoas"), gc);
+        gc.gridy++;
+        form.add(spPessoas, gc);
+        gc.gridy++;
+        form.add(label("Mesa"), gc);
+        gc.gridy++;
+        form.add(comboMesas, gc);
 
-        form.add(label("Cliente:")); form.add(comboClientes);
-        form.add(label("Data/Hora (aaaa-MM-dd HH:mm):")); form.add(txtData);
-        form.add(label("Nº Pessoas:")); form.add(txtPessoas);
-        form.add(label("Mesa:")); form.add(comboMesas);
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        footer.setBackground(UIConstants.BG_DARK);
 
-        JButton btnSalvar = createButton("CONFIRMAR RESERVA", GoogleMaterialDesignIcons.CHECK, UIConstants.SUCCESS_GREEN);
+        JButton btnCancelar = createButton("Cancelar", GoogleMaterialDesignIcons.CLOSE, UIConstants.BG_DARK_ALT);
+        btnCancelar.addActionListener(e -> modal.dispose());
+
+        JButton btnSalvar = createButton("Confirmar Reserva", GoogleMaterialDesignIcons.CHECK, UIConstants.SUCCESS_GREEN);
         btnSalvar.addActionListener(e -> {
             try {
                 Reserva r = new Reserva();
                 String clienteStr = (String) comboClientes.getSelectedItem();
-                if(clienteStr != null) r.setIdCliente(Integer.parseInt(clienteStr.split(" - ")[0]));
-                
-                r.setDataReserva(LocalDateTime.parse(txtData.getText(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
-                r.setNumPessoas(Integer.parseInt(txtPessoas.getText()));
+                if (clienteStr == null || clienteStr.isBlank()) {
+                    Toast.show(modal, "Selecione um cliente para continuar.", Toast.Type.WARNING);
+                    return;
+                }
+                r.setIdCliente(Integer.parseInt(clienteStr.split(" - ")[0]));
+                r.setIdRestaurante(sessionContext.getRestauranteEfetivo());
+                r.setDataReserva(LocalDateTime.ofInstant(((Date) spDataHora.getValue()).toInstant(), APP_ZONE_ID));
+                r.setNumPessoas(((Number) spPessoas.getValue()).intValue());
                 r.setMesa((String) comboMesas.getSelectedItem());
-                
-                if(dao.criarReserva(r)) {
-                    JOptionPane.showMessageDialog(modal, "Reserva criada com sucesso!");
+
+                if (r.getDataReserva().isBefore(nowInAppZone().minusMinutes(TOLERANCIA_RESERVA_PASSADA_MINUTES))) {
+                    Toast.show(modal, "Escolha um horário atual ou futuro para a reserva.", Toast.Type.WARNING);
+                    return;
+                }
+
+                if (dao.criarReserva(r)) {
+                    Toast.show(this, "Reserva criada com sucesso!", Toast.Type.SUCCESS);
                     modal.dispose();
                     carregarMesas();
                 } else {
-                    JOptionPane.showMessageDialog(modal, "Erro ao criar reserva no banco.");
+                    Toast.show(modal, "Não foi possível criar a reserva. Verifique conflito de mesa e contexto.", Toast.Type.ERROR);
                 }
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(modal, "Erro nos dados: " + ex.getMessage());
+                Toast.show(modal, "Erro ao validar os dados da reserva.", Toast.Type.ERROR);
             }
         });
 
+        footer.add(btnCancelar);
+        footer.add(btnSalvar);
+
         modal.add(form, BorderLayout.CENTER);
-        modal.add(btnSalvar, BorderLayout.SOUTH);
+        modal.add(footer, BorderLayout.SOUTH);
         modal.setVisible(true);
+    }
+
+    private void cancelarReserva(Reserva reserva) {
+        UIConstants.showConfirmDialog(this,
+                "Cancelar reserva",
+                "Deseja cancelar a reserva da " + reserva.getMesa() + " para " + reserva.getNomeCliente() + "?",
+                () -> {
+                    if (dao.cancelarReserva(reserva.getIdReserva())) {
+                        Toast.show(this, "Reserva cancelada.", Toast.Type.SUCCESS);
+                        carregarMesas();
+                    } else {
+                        Toast.show(this, "Não foi possível cancelar a reserva.", Toast.Type.ERROR);
+                    }
+                });
     }
 
     private JLabel label(String txt) {
         JLabel l = new JLabel(txt);
         l.setForeground(UIConstants.FG_LIGHT);
+        l.setFont(UIConstants.FONT_BOLD);
+        l.setBorder(new EmptyBorder(4, 0, 0, 0));
         return l;
     }
 
     private JLabel criarItemLegenda(String txt, Color cor) {
         JLabel l = new JLabel("  " + txt);
         l.setForeground(UIConstants.FG_LIGHT);
-        // CORREÇÃO 2: Trocado CIRCLE por FIBER_MANUAL_RECORD (nome padrão do círculo no Material Design)
         l.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.FIBER_MANUAL_RECORD, 12, cor));
         return l;
     }
@@ -209,26 +513,62 @@ public class GestaoMesasPanel extends JPanel {
     private JButton createButton(String text, GoogleMaterialDesignIcons icon, Color bg) {
         JButton btn = new JButton(text);
         btn.setIcon(IconFontSwing.buildIcon(icon, 18, Color.WHITE));
-        btn.setBackground(bg);
-        btn.setForeground(Color.WHITE);
-        btn.setFocusPainted(false);
+        if (UIConstants.SUCCESS_GREEN.equals(bg)) {
+            UIConstants.styleSuccess(btn);
+        } else if (UIConstants.DANGER_RED.equals(bg)) {
+            UIConstants.styleDanger(btn);
+        } else if (UIConstants.PRIMARY_RED.equals(bg)) {
+            UIConstants.stylePrimary(btn);
+        } else {
+            UIConstants.styleSecondary(btn);
+        }
         return btn;
     }
-    
-    private static class RoundedPanel extends JPanel {
-        private int radius; 
-        private Color bgColor;
-        public RoundedPanel(int radius, Color bgColor) { 
-            this.radius = radius; 
-            this.bgColor = bgColor; 
-            setOpaque(false); 
+
+    static String classifyReservationStatus(Reserva reserva, LocalDateTime now) {
+        if (reserva == null || reserva.getDataReserva() == null) {
+            return "LIVRE";
         }
-        @Override protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2 = (Graphics2D) g;
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(bgColor);
-            g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), radius, radius));
+        LocalDateTime dataReserva = reserva.getDataReserva();
+        if (dataReserva.isBefore(now.minusMinutes(CHECK_IN_WINDOW_MINUTES))) {
+            return "ATRASADA";
         }
+        if (!dataReserva.isAfter(now.plusMinutes(CHECK_IN_WINDOW_MINUTES))) {
+            return "CHECK_IN";
+        }
+        return "PROXIMA";
+    }
+
+    private static Color resolveStatusColor(String status) {
+        return switch (status) {
+            case "CHECK_IN" -> UIConstants.PRIMARY_RED;
+            case "ATRASADA" -> UIConstants.DANGER_RED;
+            case "PROXIMA" -> new Color(243, 156, 18);
+            default -> UIConstants.SUCCESS_GREEN;
+        };
+    }
+
+    private static String buildStatusLabel(String status) {
+        return switch (status) {
+            case "CHECK_IN" -> "Check-in agora";
+            case "ATRASADA" -> "Atrasada";
+            case "PROXIMA" -> "Próxima";
+            default -> "Livre";
+        };
+    }
+
+    private static String buildReservationSummary(Reserva reserva, String status) {
+        if (reserva == null) {
+            return "Livre";
+        }
+        return switch (status) {
+            case "CHECK_IN" -> "Chegada prevista às " + reserva.getDataReserva().format(HORA_FORMATTER);
+            case "ATRASADA" -> "Reserva das " + reserva.getDataReserva().format(HORA_FORMATTER);
+            default -> "Reservada às " + reserva.getDataReserva().format(HORA_FORMATTER);
+        };
+    }
+
+    private static LocalDateTime nowInAppZone() {
+        return LocalDateTime.now(APP_ZONE_ID);
     }
 }

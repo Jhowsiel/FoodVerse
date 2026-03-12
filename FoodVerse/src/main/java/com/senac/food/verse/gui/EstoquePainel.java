@@ -4,6 +4,7 @@ import com.senac.food.verse.EstoqueDAO;
 import com.senac.food.verse.EstoqueDAO.ItemEstoque;
 import com.senac.food.verse.EstoqueDAO.MovimentacaoEstoque;
 import com.senac.food.verse.EstoqueDAO.Unidade;
+import com.senac.food.verse.SessionContext;
 
 import jiconfont.icons.google_material_design_icons.GoogleMaterialDesignIcons;
 import jiconfont.swing.IconFontSwing;
@@ -13,16 +14,19 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.text.NumberFormat;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class EstoquePainel extends JPanel {
 
     private final EstoqueDAO dao = new EstoqueDAO();
-    private static final NumberFormat CURRENCY = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private final SessionContext sessionContext = SessionContext.getInstance();
+    private final boolean podeEditar = PermissionChecker.canEditInventory(sessionContext);
+    private final boolean possuiContextoRestaurante = PermissionChecker.hasOperationalRestaurantContext(sessionContext);
 
     private JTabbedPane tabs;
 
@@ -33,6 +37,10 @@ public class EstoquePainel extends JPanel {
     private JTable tblItens;
     private DefaultTableModel modelItens;
     private JLabel lblStatusGeral;
+    private JButton btnNovo;
+    private JButton btnMovimentar;
+    private JButton btnEditar;
+    private final Map<Long, ItemEstoque> itensVisiveis = new HashMap<>();
 
     // --- ABA 2: HISTÓRICO ---
     private JTable tblHistorico;
@@ -50,7 +58,7 @@ public class EstoquePainel extends JPanel {
         tabs.setBackground(UIConstants.BG_DARK);
 
         tabs.addTab("Inventário Atual", criarAbaItens());
-        tabs.addTab("Histórico de Movimentações", criarAbaHistorico());
+        tabs.addTab("Ajustes da Sessão", criarAbaHistorico());
 
         add(tabs, BorderLayout.CENTER);
 
@@ -118,20 +126,26 @@ public class EstoquePainel extends JPanel {
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         actionPanel.setOpaque(false);
 
-        JButton btnNovo = new JButton("Novo Item");
+        btnNovo = new JButton("Novo Item");
         btnNovo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ADD_BOX, 18, Color.WHITE));
         UIConstants.stylePrimary(btnNovo);
         btnNovo.addActionListener(e -> novoItem());
 
-        JButton btnMovimentar = new JButton("Ajuste Rápido"); 
+        btnMovimentar = new JButton("Ajuste Rápido"); 
         btnMovimentar.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.SWAP_VERT, 18, UIConstants.FG_LIGHT));
         UIConstants.styleSecondary(btnMovimentar);
         btnMovimentar.setToolTipText("Lançar entrada ou saída de estoque");
         btnMovimentar.addActionListener(e -> movimentarEstoqueSelecionado());
 
-        JButton btnEditar = new JButton("Editar");
+        btnEditar = new JButton("Editar");
         UIConstants.styleSecondary(btnEditar);
         btnEditar.addActionListener(e -> editarItem());
+
+        if (!podeEditar) {
+            btnNovo.setVisible(false);
+            btnMovimentar.setVisible(false);
+            btnEditar.setVisible(false);
+        }
 
         actionPanel.add(btnNovo);
         actionPanel.add(btnMovimentar);
@@ -142,11 +156,11 @@ public class EstoquePainel extends JPanel {
         topContainer.add(toolbar, BorderLayout.WEST);
         topContainer.add(actionPanel, BorderLayout.EAST);
 
-        String[] cols = {"ID", "Nome", "Categoria", "Un.", "Estoque Atual", "Custo Médio", "Status"};
+        String[] cols = {"ID", "Nome", "Categoria", "Atual", "Mínimo", "Status"};
         modelItens = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
             @Override public Class<?> getColumnClass(int c) {
-                return c == 0 ? Long.class : (c == 4 || c == 5 ? Double.class : String.class);
+                return c == 0 ? Long.class : (c == 3 || c == 4 ? Double.class : String.class);
             }
         };
 
@@ -156,7 +170,7 @@ public class EstoquePainel extends JPanel {
 
         tblItens.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) editarItem();
+                if (e.getClickCount() == 2 && podeEditar) editarItem();
             }
         });
 
@@ -175,7 +189,7 @@ public class EstoquePainel extends JPanel {
         
         JPanel headerHist = new JPanel(new FlowLayout(FlowLayout.LEFT));
         headerHist.setOpaque(false);
-        JLabel lblInfo = new JLabel("Últimas 100 movimentações do sistema");
+        JLabel lblInfo = new JLabel("Últimos ajustes registrados neste terminal");
         lblInfo.setForeground(UIConstants.FG_MUTED);
         lblInfo.setFont(UIConstants.FONT_REGULAR);
         JButton btnRefresh = criarBotaoIcone(GoogleMaterialDesignIcons.REFRESH, UIConstants.BG_DARK_ALT, "Atualizar Lista");
@@ -233,6 +247,14 @@ public class EstoquePainel extends JPanel {
     }
 
     private void atualizarTabelaItens() {
+        if (!possuiContextoRestaurante) {
+            itensVisiveis.clear();
+            modelItens.setRowCount(0);
+            lblStatusGeral.setText("Selecione um restaurante para operar o estoque");
+            lblStatusGeral.setForeground(UIConstants.FG_MUTED);
+            return;
+        }
+
         String termo = txtBusca.getText();
         String cat = (String) cbCategoria.getSelectedItem();
         String status = (String) cbStatus.getSelectedItem();
@@ -244,6 +266,7 @@ public class EstoquePainel extends JPanel {
         List<ItemEstoque> lista = dao.listarItens(termo, cat, statusDAO);
         
         modelItens.setRowCount(0);
+        itensVisiveis.clear();
         int criticos = 0;
 
         for (ItemEstoque item : lista) {
@@ -251,21 +274,24 @@ public class EstoquePainel extends JPanel {
             if ("Baixo Estoque".equals(status) && !isBaixo) continue;
             
             if(isBaixo && item.isAtivo()) criticos++;
+            itensVisiveis.put(item.getId(), item);
 
             modelItens.addRow(new Object[]{
                     item.getId(),
                     item.getNome(),
                     item.getCategoria(),
-                    item.getUnidadePadrao(),
                     item.getEstoqueAtual(),
-                    item.getCustoMedio(),
-                    item.isAtivo() ? "Ativo" : "Inativo"
+                    item.getEstoqueMinimo(),
+                    item.isAtivo() ? (isBaixo ? "Crítico" : "Ativo") : "Inativo"
             });
         }
         
         if(criticos > 0) {
             lblStatusGeral.setText("⚠ " + criticos + " itens com estoque crítico");
             lblStatusGeral.setForeground(UIConstants.DANGER_RED);
+        } else if (!podeEditar) {
+            lblStatusGeral.setText("Consulta liberada para este perfil");
+            lblStatusGeral.setForeground(UIConstants.FG_MUTED);
         } else {
             lblStatusGeral.setText("Estoque Saudável");
             lblStatusGeral.setForeground(UIConstants.SUCCESS_GREEN);
@@ -289,62 +315,88 @@ public class EstoquePainel extends JPanel {
     }
 
     private void novoItem() {
+        if (!podeEditar) {
+            Toast.show(this, "Seu perfil possui acesso somente leitura ao estoque.", Toast.Type.WARNING);
+            return;
+        }
         ItemDialog d = new ItemDialog(SwingUtilities.getWindowAncestor(this), null);
         d.setVisible(true);
         if (d.getResultado() != null) {
-            dao.salvarItem(d.getResultado());
-            carregarCombos();
-            atualizarTabelaItens();
-            Toast.show(this, "Item cadastrado com sucesso!", Toast.Type.SUCCESS);
+            if (dao.salvarItem(d.getResultado())) {
+                carregarCombos();
+                atualizarTabelaItens();
+                Toast.show(this, "Item cadastrado com sucesso!", Toast.Type.SUCCESS);
+            } else {
+                Toast.show(this, "Não foi possível cadastrar o item no restaurante atual.", Toast.Type.ERROR);
+            }
         }
     }
 
     private void editarItem() {
+        if (!podeEditar) {
+            Toast.show(this, "Seu perfil possui acesso somente leitura ao estoque.", Toast.Type.WARNING);
+            return;
+        }
         int row = tblItens.getSelectedRow();
-        if (row < 0) return;
+        if (row < 0) {
+            Toast.show(this, "Selecione um item para editar.", Toast.Type.WARNING);
+            return;
+        }
         Long id = (Long) tblItens.getValueAt(row, 0);
-        ItemEstoque item = dao.buscarItemPorId(id);
+        ItemEstoque item = itensVisiveis.getOrDefault(id, dao.buscarItemPorId(id));
 
         ItemDialog d = new ItemDialog(SwingUtilities.getWindowAncestor(this), item);
         d.setVisible(true);
         if (d.getResultado() != null) {
             d.getResultado().setId(id);
-            dao.atualizarItem(d.getResultado());
-            carregarCombos();
-            atualizarTabelaItens();
-            Toast.show(this, "Item atualizado!", Toast.Type.SUCCESS);
+            if (dao.atualizarItem(d.getResultado())) {
+                carregarCombos();
+                atualizarTabelaItens();
+                Toast.show(this, "Item atualizado!", Toast.Type.SUCCESS);
+            } else {
+                Toast.show(this, "Não foi possível salvar as alterações do item.", Toast.Type.ERROR);
+            }
         }
     }
 
     private void movimentarEstoqueSelecionado() {
+        if (!podeEditar) {
+            Toast.show(this, "Somente gerente ou admin em contexto podem ajustar o estoque.", Toast.Type.WARNING);
+            return;
+        }
         int row = tblItens.getSelectedRow();
         if (row < 0) {
             Toast.show(this, "Selecione um item para movimentar.", Toast.Type.WARNING);
             return;
         }
         Long id = (Long) tblItens.getValueAt(row, 0);
-        ItemEstoque item = dao.buscarItemPorId(id);
+        ItemEstoque item = itensVisiveis.getOrDefault(id, dao.buscarItemPorId(id));
         
         MovimentacaoDialog d = new MovimentacaoDialog(SwingUtilities.getWindowAncestor(this), item);
         d.setVisible(true);
         if(d.isConfirmado()) {
-            dao.registrarMovimentacao(d.getMovimentacao());
-            atualizarTabelaItens();
-            String tipo = d.getMovimentacao().getTipo(); 
-            Toast.show(this, (tipo.equals("ENTRADA") ? "Entrada" : "Saída") + " registrada!", Toast.Type.SUCCESS);
+            if (dao.registrarMovimentacao(d.getMovimentacao())) {
+                atualizarTabelas();
+                String tipo = d.getMovimentacao().getTipo(); 
+                Toast.show(this, (tipo.equals("ENTRADA") ? "Entrada" : "Saída") + " registrada!", Toast.Type.SUCCESS);
+            } else {
+                Toast.show(this, "Ajuste não realizado. Verifique o saldo e o restaurante em contexto.", Toast.Type.ERROR);
+            }
         }
     }
 
     private class ItemDialog extends JDialog {
         private JTextField txtNome;
         private JComboBox<String> cbCat;
-        private JComboBox<Unidade> cbUnidade;
-        private JSpinner spEstoqueMin, spCusto;
+        private JSpinner spEstoqueMin;
+        private JSpinner spEstoqueInicial;
         private JCheckBox chkAtivo;
         private ItemEstoque resultado;
+        private final ItemEstoque base;
 
         public ItemDialog(Window owner, ItemEstoque base) {
             super(owner, base == null ? "Novo Item de Estoque" : "Editar Item", ModalityType.APPLICATION_MODAL);
+            this.base = base;
             setSize(500, 520);
             setLocationRelativeTo(owner);
             getContentPane().setBackground(UIConstants.BG_DARK);
@@ -358,7 +410,7 @@ public class EstoquePainel extends JPanel {
             gc.insets = new Insets(8, 0, 8, 0);
             gc.gridx = 0; gc.gridy = 0;
 
-            form.add(criarLabel("Nome do Insumo:"), gc);
+            form.add(criarLabel("Nome do insumo:"), gc);
             gc.gridy++;
             txtNome = new JTextField(); UIConstants.styleField(txtNome);
             form.add(txtNome, gc);
@@ -372,30 +424,31 @@ public class EstoquePainel extends JPanel {
             form.add(cbCat, gc);
 
             gc.gridy++;
-            form.add(criarLabel("Unidade de Medida (Estoque):"), gc);
-            gc.gridy++;
-            cbUnidade = new JComboBox<>(); UIConstants.styleCombo(cbUnidade);
-            dao.listarUnidades().forEach(cbUnidade::addItem);
-            form.add(cbUnidade, gc);
-            
-            gc.gridy++;
             JPanel pNum = new JPanel(new GridLayout(1, 2, 20, 0));
             pNum.setOpaque(false);
+
+            JPanel pAtual = new JPanel(new BorderLayout());
+            pAtual.setOpaque(false);
+            pAtual.add(criarLabel(base == null ? "Estoque inicial:" : "Estoque atual:"), BorderLayout.NORTH);
+            if (base == null) {
+                spEstoqueInicial = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 10000.0, 1.0));
+                UIConstants.styleSpinner(spEstoqueInicial);
+                pAtual.add(spEstoqueInicial, BorderLayout.CENTER);
+            } else {
+                JLabel lblAtual = new JLabel(String.format(Locale.US, "%.0f unidades", base.getEstoqueAtual()));
+                lblAtual.setForeground(UIConstants.FG_LIGHT);
+                lblAtual.setFont(UIConstants.FONT_BOLD);
+                pAtual.add(lblAtual, BorderLayout.CENTER);
+            }
             
             JPanel pMin = new JPanel(new BorderLayout()); pMin.setOpaque(false);
             pMin.add(criarLabel("Estoque Mínimo:"), BorderLayout.NORTH);
             spEstoqueMin = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 10000.0, 1.0));
             UIConstants.styleSpinner(spEstoqueMin);
             pMin.add(spEstoqueMin, BorderLayout.CENTER);
-            
-            JPanel pCusto = new JPanel(new BorderLayout()); pCusto.setOpaque(false);
-            pCusto.add(criarLabel("Custo Unit. Médio (R$):"), BorderLayout.NORTH);
-            spCusto = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 10000.0, 0.01));
-            UIConstants.styleSpinner(spCusto);
-            pCusto.add(spCusto, BorderLayout.CENTER);
-            
+
+            pNum.add(pAtual);
             pNum.add(pMin);
-            pNum.add(pCusto);
             form.add(pNum, gc);
 
             gc.gridy++;
@@ -420,13 +473,7 @@ public class EstoquePainel extends JPanel {
             if (base != null) {
                 txtNome.setText(base.getNome());
                 cbCat.setSelectedItem(base.getCategoria());
-                for(int i=0; i<cbUnidade.getItemCount(); i++) {
-                    if(cbUnidade.getItemAt(i).getCodigo().equals(base.getUnidadePadrao())) {
-                        cbUnidade.setSelectedIndex(i); break;
-                    }
-                }
                 spEstoqueMin.setValue(base.getEstoqueMinimo());
-                spCusto.setValue(base.getCustoMedio());
                 chkAtivo.setSelected(base.isAtivo());
             }
         }
@@ -436,24 +483,36 @@ public class EstoquePainel extends JPanel {
                 Toast.show(this, "Nome é obrigatório", Toast.Type.WARNING);
                 return;
             }
+            if (cbCat.getSelectedItem() == null || cbCat.getSelectedItem().toString().trim().isEmpty()) {
+                Toast.show(this, "Informe uma categoria para facilitar a operação.", Toast.Type.WARNING);
+                return;
+            }
             resultado = new ItemEstoque();
-            resultado.setNome(txtNome.getText());
-            resultado.setCategoria((String) cbCat.getSelectedItem());
-            resultado.setUnidadePadrao(((Unidade)cbUnidade.getSelectedItem()).getCodigo());
+            resultado.setNome(txtNome.getText().trim());
+            resultado.setCategoria(cbCat.getSelectedItem().toString().trim());
+            resultado.setUnidadePadrao(resolveUnidadePadrao());
+            resultado.setEstoqueAtual(base == null ? ((Number)spEstoqueInicial.getValue()).doubleValue() : base.getEstoqueAtual());
             resultado.setEstoqueMinimo(((Number)spEstoqueMin.getValue()).doubleValue());
-            resultado.setCustoMedio(((Number)spCusto.getValue()).doubleValue());
             resultado.setAtivo(chkAtivo.isSelected());
             dispose();
         }
 
         public ItemEstoque getResultado() { return resultado; }
+
+        private String resolveUnidadePadrao() {
+            return dao.listarUnidades().stream()
+                    .map(Unidade::getCodigo)
+                    .filter("un"::equalsIgnoreCase)
+                    .findFirst()
+                    .orElse("un");
+        }
     }
 
     private class MovimentacaoDialog extends JDialog {
         private JRadioButton rbEntrada, rbSaida;
         private JSpinner spQtd;
         private JTextArea txtObs;
-        private JLabel lblItem, lblUnidade;
+        private JLabel lblItem, lblUnidade, lblPrevisaoSaldo;
         private MovimentacaoEstoque movimentacao;
         private ItemEstoque item;
         private boolean confirmado = false;
@@ -514,6 +573,11 @@ public class EstoquePainel extends JPanel {
             form.add(pQtd, gc);
 
             gc.gridy++;
+            lblPrevisaoSaldo = new JLabel();
+            lblPrevisaoSaldo.setFont(UIConstants.FONT_BOLD);
+            form.add(lblPrevisaoSaldo, gc);
+
+            gc.gridy++;
             form.add(criarLabel("Motivo / Observação:"), gc);
             
             gc.gridy++;
@@ -522,7 +586,9 @@ public class EstoquePainel extends JPanel {
             txtObs.setBackground(UIConstants.CARD_DARK);
             txtObs.setForeground(UIConstants.FG_LIGHT);
             txtObs.setBorder(BorderFactory.createLineBorder(UIConstants.GRID_DARK));
-            form.add(new JScrollPane(txtObs), gc);
+            JScrollPane scrollObs = new JScrollPane(txtObs);
+            UIConstants.styleScrollPane(scrollObs);
+            form.add(scrollObs, gc);
 
             add(form, BorderLayout.CENTER);
 
@@ -534,6 +600,11 @@ public class EstoquePainel extends JPanel {
             btnConfirm.addActionListener(e -> confirmar());
             footer.add(btnCancel); footer.add(btnConfirm);
             add(footer, BorderLayout.SOUTH);
+
+            rbEntrada.addActionListener(e -> atualizarPrevisaoSaldo());
+            rbSaida.addActionListener(e -> atualizarPrevisaoSaldo());
+            spQtd.addChangeListener(e -> atualizarPrevisaoSaldo());
+            atualizarPrevisaoSaldo();
         }
 
         private void styleRadio(JRadioButton rb) {
@@ -564,6 +635,14 @@ public class EstoquePainel extends JPanel {
             dispose();
         }
 
+        private void atualizarPrevisaoSaldo() {
+            double qtd = ((Number) spQtd.getValue()).doubleValue();
+            double saldoPrevisto = item.getEstoqueAtual() + (rbEntrada.isSelected() ? qtd : -qtd);
+            boolean negativo = saldoPrevisto < 0;
+            lblPrevisaoSaldo.setText(String.format(Locale.US, "Saldo após ajuste: %.2f %s", saldoPrevisto, item.getUnidadePadrao()));
+            lblPrevisaoSaldo.setForeground(negativo ? UIConstants.DANGER_RED : UIConstants.SUCCESS_GREEN);
+        }
+
         public boolean isConfirmado() { return confirmado; }
         public MovimentacaoEstoque getMovimentacao() { return movimentacao; }
     }
@@ -575,25 +654,24 @@ public class EstoquePainel extends JPanel {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 if (!isSelected) c.setBackground(row % 2 == 0 ? UIConstants.BG_DARK : UIConstants.ALT_ROW);
                 
-                setHorizontalAlignment(column >= 4 ? CENTER : LEFT); 
+                setHorizontalAlignment(column >= 3 ? CENTER : LEFT); 
 
-                Long id = (Long) table.getValueAt(row, 0);
-                ItemEstoque item = dao.buscarItemPorId(id);
-                
-                if (column == 4 && item != null) { 
-                    if (item.getEstoqueAtual() <= item.getEstoqueMinimo()) {
-                        setForeground(UIConstants.DANGER_RED);
-                        setFont(UIConstants.FONT_BOLD);
-                        setToolTipText("Abaixo do mínimo (" + item.getEstoqueMinimo() + ")");
-                    } else {
-                        setForeground(UIConstants.SUCCESS_GREEN);
-                        setToolTipText(null);
-                    }
+                double estoqueAtual = ((Number) table.getValueAt(row, 3)).doubleValue();
+                double estoqueMinimo = ((Number) table.getValueAt(row, 4)).doubleValue();
+                boolean critico = estoqueAtual <= estoqueMinimo;
+
+                if (column == 3 || column == 4) {
+                    setForeground(critico ? UIConstants.DANGER_RED : UIConstants.FG_LIGHT);
+                    setFont(critico ? UIConstants.FONT_BOLD : UIConstants.FONT_REGULAR);
+                    setToolTipText(critico ? "Abaixo do mínimo configurado" : null);
                 } else if (column == 5) { 
-                    setText(CURRENCY.format(value));
-                    setForeground(UIConstants.FG_LIGHT);
-                } else if (column == 6) { 
-                    setForeground("Ativo".equals(value) ? UIConstants.SUCCESS_GREEN : UIConstants.FG_MUTED);
+                    if ("Crítico".equals(value)) {
+                        setForeground(UIConstants.DANGER_RED);
+                    } else if ("Ativo".equals(value)) {
+                        setForeground(UIConstants.SUCCESS_GREEN);
+                    } else {
+                        setForeground(UIConstants.FG_MUTED);
+                    }
                 } else {
                     setForeground(UIConstants.FG_LIGHT);
                 }

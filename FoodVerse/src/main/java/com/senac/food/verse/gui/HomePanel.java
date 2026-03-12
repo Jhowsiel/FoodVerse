@@ -206,10 +206,6 @@ public class HomePanel extends JPanel {
 
     private void adicionarAtalhosRapidos(JPanel pActions, SessionContext ctx) {
         boolean adminSemContexto = ctx.isAdmin() && !ctx.adminTemContextoRestaurante();
-        boolean gerenteOuAdminContexto = (!ctx.isAdmin() && hasRole(ctx, "gerente")) || ctx.adminTemContextoRestaurante();
-        boolean atendente = hasRole(ctx, "atendente") || hasRole(ctx, "garçom");
-        boolean cozinha = hasRole(ctx, "cozinheiro") || hasRole(ctx, "chef");
-        boolean entrega = hasRole(ctx, "entregador");
 
         pActions.add(criarBotaoAtalho(
                 adminSemContexto ? "Selecionar Restaurante" : "Perfil do Restaurante",
@@ -223,28 +219,24 @@ public class HomePanel extends JPanel {
                 "Pedidos",
                 GoogleMaterialDesignIcons.ADD_SHOPPING_CART,
                 "PEDIDOS",
-                gerenteOuAdminContexto || atendente,
-                gerenteOuAdminContexto || atendente ? "Abrir fluxo de pedidos." : "Disponível apenas com restaurante em contexto."));
+                PermissionChecker.canAccessOrders(ctx),
+                PermissionChecker.canAccessOrders(ctx) ? "Abrir fluxo de pedidos." : "Disponível apenas com restaurante em contexto."));
         pActions.add(Box.createVerticalStrut(15));
 
         pActions.add(criarBotaoAtalho(
                 "Cozinha",
                 GoogleMaterialDesignIcons.KITCHEN,
                 "KDS",
-                gerenteOuAdminContexto || cozinha,
-                gerenteOuAdminContexto || cozinha ? "Abrir gestão da cozinha." : "Disponível apenas com restaurante em contexto."));
+                PermissionChecker.canAccessKitchen(ctx),
+                PermissionChecker.canAccessKitchen(ctx) ? "Abrir gestão da cozinha." : "Disponível apenas com restaurante em contexto."));
         pActions.add(Box.createVerticalStrut(15));
 
         pActions.add(criarBotaoAtalho(
                 adminSemContexto ? "Gerenciar Gerentes" : "Entregas",
                 adminSemContexto ? GoogleMaterialDesignIcons.SUPERVISOR_ACCOUNT : GoogleMaterialDesignIcons.MOTORCYCLE,
                 adminSemContexto ? "USUARIOS" : "ENTREGAS",
-                adminSemContexto || gerenteOuAdminContexto || atendente || entrega,
+                adminSemContexto || PermissionChecker.canAccessDeliveries(ctx),
                 adminSemContexto ? "Abrir a gestão global de gerentes." : "Abrir painel de entregas."));
-    }
-
-    private boolean hasRole(SessionContext ctx, String role) {
-        return ctx.getCargo() != null && ctx.getCargo().toLowerCase().contains(role);
     }
 
     /**

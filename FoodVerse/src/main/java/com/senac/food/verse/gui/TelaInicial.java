@@ -436,6 +436,11 @@ public class TelaInicial extends JFrame {
     }
 
     private void abrirModulo(String cardName) {
+        SessionContext ctx = SessionContext.getInstance();
+        if (!PermissionChecker.canAccessModule(ctx, cardName)) {
+            Toast.show(this, PermissionChecker.buildBlockedModuleMessage(ctx, cardName), Toast.Type.WARNING);
+            return;
+        }
         resetarBotoesMenu(cardName);
         CardLayout cl = (CardLayout) panelBody.getLayout();
         cl.show(panelBody, cardName);
