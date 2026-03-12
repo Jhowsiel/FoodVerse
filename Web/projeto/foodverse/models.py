@@ -115,23 +115,14 @@ class TbPedidos(models.Model):
         db_table = "tb_pedidos"
 
 class TbPedidosProdutos(models.Model):
-    id_pedido_produto = models.AutoField(primary_key=True, db_column='id')
-    pedido = models.ForeignKey(
-        TbPedidos,
-        on_delete=models.CASCADE,
-        db_column="ID_pedido"
-    )
-    produto = models.ForeignKey(
-        TbProdutos,
-        on_delete=models.CASCADE,
-        db_column="ID_produto"
-    )
-    quantidade = models.IntegerField(null=True, blank=True)
+    pedido = models.ForeignKey('TbPedidos', models.DO_NOTHING, db_column='ID_pedido', primary_key=True)
+    produto = models.ForeignKey('TbProdutos', models.DO_NOTHING, db_column='ID_produto')
+    quantidade = models.IntegerField(db_column='quantidade')
 
     class Meta:
-        db_table = "tb_pedidos_produtos"
         managed = False
-        unique_together = ("pedido", "produto")
+        db_table = 'tb_pedidos_produtos'
+        unique_together = (('pedido', 'produto'),)
 
 class TbReservas(models.Model):
     id_reserva = models.AutoField(primary_key=True)
