@@ -16,9 +16,12 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class GestaoCozinhaPanel extends JPanel {
 
+    private static final Logger LOGGER = Logger.getLogger(GestaoCozinhaPanel.class.getName());
     private final PedidoDAO dao = new PedidoDAO();
     private JPanel containerPedidos;
     private JLabel lblContador;
@@ -116,6 +119,7 @@ public class GestaoCozinhaPanel extends JPanel {
                     containerPedidos.revalidate();
                     containerPedidos.repaint();
                 } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, "Falha ao sincronizar pedidos da cozinha.", e);
                     UIConstants.showError(GestaoCozinhaPanel.this, "Não foi possível sincronizar a cozinha.");
                 }
             }
@@ -133,17 +137,17 @@ public class GestaoCozinhaPanel extends JPanel {
         
         boolean isAtrasado = minutosDecorridos > 25; // SLA da cozinha (25 min)
         
-        UIConstants.RoundedPanel card = new UIConstants.RoundedPanel(15, UIConstants.CARD_DARK);
-        card.setPreferredSize(new Dimension(300, 360));
-        card.setLayout(new BorderLayout());
-        card.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        UIConstants.RoundedPanel pedidoCard = new UIConstants.RoundedPanel(15, UIConstants.CARD_DARK);
+        pedidoCard.setPreferredSize(new Dimension(300, 360));
+        pedidoCard.setLayout(new BorderLayout());
+        pedidoCard.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
         // --- TOPO DO CARD ---
         JPanel headerCard = new JPanel(new BorderLayout());
         headerCard.setOpaque(false);
         
         JLabel lblId = new JLabel("#" + pedido.getIdPedido());
-        lblId.setFont(UIConstants.ARIAL_16_B);
+        lblId.setFont(UIConstants.ARIAL_18_B);
         lblId.setForeground(UIConstants.FG_LIGHT);
         
         JLabel lblTempo = new JLabel(minutosDecorridos + " min");
@@ -174,7 +178,7 @@ public class GestaoCozinhaPanel extends JPanel {
             for (ItemPedido item : pedido.getItens()) {
                 JLabel lblItem = new JLabel("<html><b>" + item.getQuantidade() + "x</b> " + item.getNomeProduto() + "</html>");
                 lblItem.setForeground(UIConstants.FG_LIGHT);
-                lblItem.setFont(UIConstants.FONT_REGULAR);
+                lblItem.setFont(UIConstants.FONT_REGULAR_15);
                 lblItem.setBorder(new EmptyBorder(0, 0, 8, 0));
                 painelItens.add(lblItem);
             }
@@ -204,11 +208,11 @@ public class GestaoCozinhaPanel extends JPanel {
             UIConstants.showSuccess(this, "Pedido #" + pedido.getIdPedido() + " finalizado!");
         });
 
-        card.add(topContainer, BorderLayout.NORTH);
-        card.add(scrollItens, BorderLayout.CENTER);
-        card.add(btnAction, BorderLayout.SOUTH);
+        pedidoCard.add(topContainer, BorderLayout.NORTH);
+        pedidoCard.add(scrollItens, BorderLayout.CENTER);
+        pedidoCard.add(btnAction, BorderLayout.SOUTH);
 
-        return card;
+        return pedidoCard;
     }
 
     private JButton createActionButton(String text, GoogleMaterialDesignIcons icon, Color bg) {

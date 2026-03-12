@@ -48,11 +48,13 @@ public final class UIConstants {
     public static final Font ARIAL_14   = new Font("Arial", Font.PLAIN, 14);
     public static final Font ARIAL_14_B = new Font("Arial", Font.BOLD, 14);
     public static final Font ARIAL_16_B = new Font("Arial", Font.BOLD, 16);
+    public static final Font ARIAL_18_B = new Font("Arial", Font.BOLD, 18);
     public static final Font FONT_TITLE = new Font("Segoe UI", Font.BOLD, 24);
     public static final Font FONT_TITLE_LARGE = FONT_TITLE.deriveFont(28f);
     public static final Font FONT_SECTION = new Font("Segoe UI", Font.BOLD, 22);
     public static final Font FONT_BOLD  = new Font("Segoe UI", Font.BOLD, 14);
     public static final Font FONT_REGULAR = new Font("Segoe UI", Font.PLAIN, 14);
+    public static final Font FONT_REGULAR_15 = new Font("Segoe UI", Font.PLAIN, 15);
 
     // =================================================================================
     // 3. CONFIGURAÇÃO GLOBAL (FLATLAF)

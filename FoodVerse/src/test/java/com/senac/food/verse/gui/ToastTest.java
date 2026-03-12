@@ -33,4 +33,26 @@ class ToastTest {
         assertTrue(html.contains("Operação concluída."));
         assertTrue(html.startsWith("<html>"));
     }
+
+    @Test
+    void geraHtmlPadraoQuandoMensagemForNula() {
+        String html = Toast.toHtmlMessage(null);
+
+        assertTrue(html.contains("Operação concluída."));
+    }
+
+    @Test
+    void limitaLarguraParaMensagensMuitoLongas() {
+        Dimension size = Toast.calculateToastSize("Mensagem extremamente longa para validar que o toast não cresce indefinidamente e continua respeitando o limite máximo visual definido para feedbacks do sistema em janelas amplas e em cenários de erro detalhado.");
+
+        assertTrue(size.width <= 520);
+    }
+
+    @Test
+    void calculaDimensaoMesmoQuandoMensagemForNula() {
+        Dimension size = Toast.calculateToastSize(null);
+
+        assertTrue(size.width >= 360);
+        assertTrue(size.height >= 56);
+    }
 }
