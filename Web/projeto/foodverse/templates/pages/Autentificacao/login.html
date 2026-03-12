@@ -1,95 +1,509 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}Login - FoodVerse{% endblock %}
+
 {% block content %}
-<section class="auth-container">
-    <div class="auth-row">
-        
-        <div class="auth-form-side">
-            <div class="form-wrapper">
-                <img src="{% static 'img/logobc.svg' %}" alt="FoodVerse" class="auth-logo">
-                
-                <div class="auth-header">
-                    <h1>Bem-Vindo</h1>
-                    <p>Faça login para continuar conectado.</p>
-                </div>
 
-                <!-- Mensagens Django Personalizadas -->
-                {% if messages %}
-                    <div class="messages-container">
-                        {% for message in messages %}
-                            <div class="custom-alert
-                                {% if message.tags == 'success' %}alert-success-custom{% endif %}
-                                {% if message.tags == 'error' %}alert-error-custom{% endif %}
-                            ">
-                                {{ message }}
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-                <form method="POST" action="{% url 'login' %}">
-                    {% csrf_token %}
-                    <div class="input-group-custom">
-                        <input type="text" name="username" placeholder="Email ou usuário" required
-                               value="{{ request.POST.username }}">
-                    </div>
-                    <div class="input-group-custom">
-                        <input type="password" name="password" placeholder="Senha" required>
-                    </div>
-                    
-                    <div class="auth-options">
-                        <label class="remember-me">
-                            <input type="checkbox"> <span>Manter conectado</span>
-                        </label>
-                        <a href="#" class="forgot-password">Esqueceu a senha?</a>
-                    </div>
+<style>
+  :root {
+    --red:      #C41017;
+    --red-dark: #9b0c12;
+    --red-lt:   #fff5f5;
+    --ink:      #0f0e0e;
+    --warm:     #f5f2ed;
+    --stone:    #e3ded6;
+    --muted:    #908880;
+    --white:    #ffffff;
+    --surface:  #faf8f4;
+  }
 
-                    <button type="submit" class="btn-login">ENTRAR</button>
-                </form>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-                <div class="auth-footer">
-                    <p class="divider"><span>ou faça login com</span></p>
-                    <div class="social-login">
-                        <button class="social-btn"><i class="fab fa-google"></i></button>
-                        <button class="social-btn"><i class="fab fa-facebook-f"></i></button>
-                    </div>
-                    <p class="signup-text">
-                        Não tem uma conta? <a href="{% url 'cadastro' %}">Clique aqui para se cadastrar.</a>
-                    </p>
-                </div>
-            </div>
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--warm);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ── Layout ── */
+  .auth-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+  }
+
+  /* ── Painel direito (imagem/decorativo) ── */
+  .image-side {
+    position: relative;
+    background: var(--ink);
+    display: flex;
+    align-items: flex-end;
+    padding: 56px 48px;
+    overflow: hidden;
+    order: -1; /* fica à esquerda no login */
+  }
+
+  .image-side::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 70% 15%, rgba(196,16,23,.4) 0%, transparent 55%),
+      radial-gradient(ellipse at 20% 85%, rgba(196,16,23,.22) 0%, transparent 50%);
+    z-index: 0;
+  }
+
+  .deco { position: absolute; border-radius: 50%; background: rgba(255,255,255,.045); }
+  .deco-1 { width: 440px; height: 440px; top: -130px; left: -140px; }
+  .deco-2 { width: 280px; height: 280px; bottom: 40px; right: -90px; }
+  .deco-3 { width: 150px; height: 150px; top: 38%;    left: 30px; }
+  .deco-4 { width: 70px;  height: 70px;  top: 22%;    right: 30px; }
+
+  .image-text { position: relative; z-index: 1; }
+
+  .image-text h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.9rem, 2.8vw, 2.7rem);
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.15;
+    margin-bottom: 14px;
+  }
+  .image-text h2 span { color: #ff6b6b; }
+
+  .image-text p {
+    font-size: .88rem;
+    color: rgba(255,255,255,.5);
+    line-height: 1.7;
+    max-width: 340px;
+    margin-bottom: 32px;
+  }
+
+  .perks { display: flex; flex-direction: column; gap: 12px; }
+  .perk {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: .83rem;
+    font-weight: 600;
+    color: rgba(255,255,255,.82);
+  }
+  .perk-icon {
+    width: 32px; height: 32px;
+    background: rgba(196,16,23,.25);
+    border: 1px solid rgba(196,16,23,.35);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: #ff8585; font-size: .8rem; flex-shrink: 0;
+  }
+
+  /* ── Form side ── */
+  .form-side {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 40px;
+    background: var(--warm);
+    overflow-y: auto;
+  }
+
+  .form-inner {
+    width: 100%;
+    max-width: 400px;
+    animation: fadeUp .5s ease both;
+  }
+
+  .auth-logo { height: 36px; margin-bottom: 40px; display: block; }
+
+  .auth-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.9rem, 3vw, 2.4rem);
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+
+  .auth-sub { font-size: .88rem; color: var(--muted); margin-bottom: 32px; }
+
+  /* ── Alerts ── */
+  .alerts { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
+
+  .alert-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 11px 14px;
+    border-radius: 12px;
+    font-size: .82rem;
+    font-weight: 600;
+  }
+  .alert-item > i { flex-shrink: 0; margin-top: 1px; }
+  .alert-error   { background: var(--red-lt); color: var(--red); border: 1px solid rgba(196,16,23,.18); }
+  .alert-success { background: #f0fdf4; color: #16a34a; border: 1px solid rgba(22,163,74,.2); }
+
+  /* ── Fields ── */
+  .field { margin-bottom: 14px; }
+
+  .field label {
+    display: block;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .field-inner { position: relative; display: flex; align-items: center; }
+
+  .field-icon {
+    position: absolute;
+    left: 13px;
+    color: var(--muted);
+    font-size: .9rem;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .field input {
+    width: 100%;
+    padding: 13px 14px 13px 40px;
+    border: 1.5px solid var(--stone);
+    border-radius: 12px;
+    background: var(--surface);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem;
+    font-weight: 500;
+    color: var(--ink);
+    transition: border-color .18s, box-shadow .18s, background .18s;
+    outline: none;
+  }
+  .field input.has-toggle { padding-right: 44px; }
+
+  .field input:focus {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px rgba(196,16,23,.1);
+    background: var(--white);
+  }
+  .field input::placeholder { color: #c5bfb8; font-weight: 400; }
+
+  /* ── Toggle senha ── */
+  .toggle-pw {
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 44px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: .95rem;
+    border-radius: 0 12px 12px 0;
+    transition: color .18s;
+    z-index: 2;
+  }
+  .toggle-pw:hover { color: var(--red); }
+  .toggle-pw i { pointer-events: none; }
+
+  /* ── Options row ── */
+  .options-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+    margin-top: 4px;
+  }
+
+  .remember {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: .8rem;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  /* checkbox customizado */
+  .remember input[type="checkbox"] { display: none; }
+  .checkmark {
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--stone);
+    border-radius: 5px;
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    transition: background .18s, border-color .18s;
+    flex-shrink: 0;
+  }
+  .checkmark i { font-size: .6rem; color: #fff; opacity: 0; transition: opacity .18s; }
+  .remember input:checked ~ .checkmark {
+    background: var(--red);
+    border-color: var(--red);
+  }
+  .remember input:checked ~ .checkmark i { opacity: 1; }
+
+  .forgot {
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--red);
+    text-decoration: none;
+    transition: opacity .18s;
+  }
+  .forgot:hover { opacity: .75; }
+
+  /* ── Submit ── */
+  .btn-submit {
+    width: 100%;
+    background: var(--red);
+    color: #fff;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem;
+    font-weight: 700;
+    padding: 14px;
+    border-radius: 14px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(196,16,23,.3);
+    transition: background .18s, transform .18s, box-shadow .18s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    letter-spacing: .03em;
+  }
+  .btn-submit:hover {
+    background: var(--red-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(196,16,23,.4);
+  }
+
+  /* ── Divider ── */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 22px 0 16px;
+    color: var(--muted);
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--stone);
+  }
+
+  /* ── Social buttons ── */
+  .social-row { display: flex; gap: 10px; margin-bottom: 24px; }
+
+  .social-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px;
+    border: 1.5px solid var(--stone);
+    border-radius: 12px;
+    background: var(--surface);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--ink);
+    cursor: pointer;
+    transition: border-color .18s, background .18s, transform .18s;
+  }
+  .social-btn:hover {
+    border-color: var(--muted);
+    background: var(--white);
+    transform: translateY(-1px);
+  }
+  .social-btn img { width: 16px; height: 16px; }
+
+  .auth-footer {
+    text-align: center;
+    font-size: .85rem;
+    color: var(--muted);
+  }
+  .auth-footer a { color: var(--red); font-weight: 700; text-decoration: none; }
+  .auth-footer a:hover { text-decoration: underline; }
+
+  /* ── Responsive ── */
+  @media (max-width: 800px) {
+    .auth-wrap { grid-template-columns: 1fr; }
+    .image-side { display: none; }
+    .form-side { padding: 40px 24px; min-height: 100vh; }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
+<div class="auth-wrap">
+
+  <!-- ── Painel decorativo (esquerda no login) ── -->
+  <div class="image-side">
+    <div class="deco deco-1"></div>
+    <div class="deco deco-2"></div>
+    <div class="deco deco-3"></div>
+    <div class="deco deco-4"></div>
+    <div class="image-text">
+      <h2>Descubra novos sabores no <span>FoodVerse</span></h2>
+      <p>Faça login e tenha acesso a milhares de restaurantes com entrega rápida na sua porta.</p>
+      <div class="perks">
+        <div class="perk">
+          <div class="perk-icon"><i class="bi bi-geo-alt-fill"></i></div>
+          Rastreie seu pedido em tempo real
+        </div>
+        <div class="perk">
+          <div class="perk-icon"><i class="bi bi-heart-fill"></i></div>
+          Seus favoritos sempre à mão
+        </div>
+        <div class="perk">
+          <div class="perk-icon"><i class="bi bi-bag-check-fill"></i></div>
+          Histórico completo de pedidos
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Formulário ── -->
+  <div class="form-side">
+    <div class="form-inner">
+
+      <img src="{% static 'img/logobc.svg' %}" alt="FoodVerse" class="auth-logo">
+      <h1 class="auth-title">Bem-vindo de volta</h1>
+      <p class="auth-sub">Entre com suas credenciais para continuar.</p>
+
+      {% if messages %}
+      <div class="alerts">
+        {% for message in messages %}
+        <div class="alert-item
+          {% if message.tags == 'success' %}alert-success
+          {% elif message.tags == 'error' %}alert-error
+          {% else %}alert-error{% endif %}">
+          <i class="bi
+            {% if message.tags == 'success' %}bi-check-circle-fill
+            {% else %}bi-exclamation-circle-fill{% endif %}"></i>
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <form method="POST" action="{% url 'login' %}">
+        {% csrf_token %}
+
+        <div class="field">
+          <label>E-mail ou usuário</label>
+          <div class="field-inner">
+            <i class="bi bi-person field-icon"></i>
+            <input type="text" name="username" placeholder="Seu usuário ou e-mail"
+                   required value="{{ request.POST.username }}">
+          </div>
         </div>
 
-        <div class="auth-image-side">
-          
-            <div class="overlay"></div>
-            <div class="image-content">
-                <h2>Descubra novos sabores no <span>FoodVerse</span></h2>
-            </div>
+        <div class="field">
+          <label>Senha</label>
+          <div class="field-inner">
+            <i class="bi bi-lock field-icon"></i>
+            <input type="password" name="password" id="login-password"
+                   placeholder="Sua senha" required class="has-toggle">
+            <button type="button" class="toggle-pw" data-target="login-password" aria-label="Mostrar senha">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
         </div>
+
+        <div class="options-row">
+          <label class="remember">
+            <input type="checkbox" name="remember">
+            <span class="checkmark"><i class="bi bi-check"></i></span>
+            Manter conectado
+          </label>
+          <a href="#" class="forgot">Esqueceu a senha?</a>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          <i class="bi bi-box-arrow-in-right"></i> Entrar
+        </button>
+      </form>
+
+      <div class="divider">ou continue com</div>
+
+      <div class="social-row">
+        <button class="social-btn">
+          <!-- Google SVG inline para não depender de Font Awesome -->
+          <svg width="16" height="16" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
+          Google
+        </button>
+        <button class="social-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#1877F2">
+            <path d="M24 12.073C24 5.404 18.627 0 12 0S0 5.404 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.791-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.931-1.956 1.886v2.268h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/>
+          </svg>
+          Facebook
+        </button>
+      </div>
+
+      <div class="auth-footer">
+        Não tem uma conta? <a href="{% url 'cadastro' %}">Cadastre-se grátis</a>
+      </div>
 
     </div>
-</section>
+  </div>
 
-<!-- JS para desaparecer as mensagens após 4s -->
+</div>
+
 <script>
-    const successMessage = document.querySelectorAll('.alert-success-custom');
-    console.log(successMessage)
+  /* ── Toggle senha ── */
+  document.querySelectorAll('.toggle-pw').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var input = document.getElementById(this.dataset.target);
+      var icon  = this.querySelector('i');
+      if (input.type === 'password') {
+        input.type     = 'text';
+        icon.className = 'bi bi-eye-slash';
+        this.setAttribute('aria-label', 'Ocultar senha');
+      } else {
+        input.type     = 'password';
+        icon.className = 'bi bi-eye';
+        this.setAttribute('aria-label', 'Mostrar senha');
+      }
+    });
+  });
 
-    if (successMessage.length > 0) {
-        setTimeout(() => {
-            window.location.href = "{% url 'home' %}";
-        }, 2000);
-    }
-    
-    setTimeout(() => {
-        document.querySelectorAll('.custom-alert').forEach(alert => {
-            alert.style.opacity = '0';
-            alert.style.transform = 'translateX(40px)';
-            setTimeout(() => alert.remove(), 400);
-        });
-    }, 4000);
+  /* ── Redirect automático no sucesso ── */
+  if (document.querySelectorAll('.alert-success').length > 0) {
+    setTimeout(function() { window.location.href = "{% url 'home' %}"; }, 2000);
+  }
+
+  /* ── Fade-out dos alertas após 4s ── */
+  setTimeout(function() {
+    document.querySelectorAll('.alert-item').forEach(function(el) {
+      el.style.transition = 'opacity .4s, transform .4s';
+      el.style.opacity    = '0';
+      el.style.transform  = 'translateX(20px)';
+      setTimeout(function() { el.remove(); }, 420);
+    });
+  }, 4000);
 </script>
 
 {% endblock %}

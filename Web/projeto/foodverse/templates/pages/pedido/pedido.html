@@ -4,173 +4,521 @@
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
 
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900;1,9..144,400&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
   :root {
-    --red:     #C41017;
-    --red-lt:  #fdf2f2;
-    --ink:     #111010;
-    --warm:    #f8f6f1;
-    --stone:   #e8e4dc;
-    --muted:   #7a7570;
-    --white:   #ffffff;
-    --green:   #16a34a;
-    --radius:  20px;
-    --shadow:  0 2px 16px rgba(17,16,16,.07);
+    --red:      #C41017;
+    --red-dark: #9b0c12;
+    --red-lt:   #fff5f5;
+    --ink:      #0f0e0e;
+    --warm:     #f5f2ed;
+    --stone:    #e3ded6;
+    --muted:    #908880;
+    --white:    #ffffff;
+    --radius:   16px;
   }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     padding-top: 90px;
     background: var(--warm);
-    font-family: 'Instrument Sans', sans-serif;
+    font-family: 'DM Sans', sans-serif;
     color: var(--ink);
+    min-height: 100vh;
   }
 
-  .page-wrap { max-width: 1120px; margin: 0 auto; padding: 32px 20px 80px; }
-
-  .page-top {
-    display: flex; align-items: flex-end; justify-content: space-between;
-    margin-bottom: 32px; flex-wrap: wrap; gap: 14px;
+  /* ── Page shell ── */
+  .pg {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 48px 24px 100px;
   }
 
-  .page-title {
-    font-family: 'Fraunces', serif;
-    font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+  /* ── Hero header ── */
+  .pg-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+
+  .pg-eyebrow {
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 6px;
+  }
+
+  .pg-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4vw, 3rem);
     font-weight: 900;
+    line-height: 1.05;
   }
 
+  .btn-new {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--red);
+    color: #fff;
+    text-decoration: none;
+    font-size: .85rem;
+    font-weight: 700;
+    padding: 11px 20px;
+    border-radius: 100px;
+    transition: background .18s, transform .18s, box-shadow .18s;
+    box-shadow: 0 4px 14px rgba(196,16,23,.25);
+    white-space: nowrap;
+  }
+  .btn-new:hover {
+    background: var(--red-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(196,16,23,.35);
+  }
+
+  /* ── Order block ── */
   .order-block {
     display: grid;
-    grid-template-columns: 1fr 340px;
-    gap: 20px; align-items: start;
-    margin-bottom: 60px;
-    border-bottom: 2px dashed var(--stone);
-    padding-bottom: 40px;
+    grid-template-columns: 1fr 320px;
+    gap: 20px;
+    align-items: start;
+    margin-bottom: 36px;
+    animation: fadeUp .5s ease both;
+  }
+  .order-block:nth-child(2) { animation-delay: .07s; }
+  .order-block:nth-child(3) { animation-delay: .14s; }
+  .order-block:nth-child(4) { animation-delay: .21s; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
-  .order-block:last-child { border-bottom: none; }
+  @media (max-width: 840px) {
+    .order-block { grid-template-columns: 1fr; }
+    .summary-card { position: static !important; }
+  }
 
-  @media (max-width: 860px) { .order-block { grid-template-columns: 1fr; } }
-
-  .o-card {
+  /* ── Cards ── */
+  .card {
     background: var(--white);
     border-radius: var(--radius);
     border: 1px solid var(--stone);
-    box-shadow: var(--shadow);
-    padding: 26px 28px;
-    margin-bottom: 18px;
+    box-shadow: 0 1px 4px rgba(15,14,14,.05), 0 8px 24px rgba(15,14,14,.05);
+    overflow: hidden;
+    margin-bottom: 16px;
+    transition: box-shadow .2s;
+  }
+  .card:hover {
+    box-shadow: 0 2px 8px rgba(15,14,14,.07), 0 12px 32px rgba(15,14,14,.09);
+  }
+  .card:last-child { margin-bottom: 0; }
+
+  .card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px 16px;
+    border-bottom: 1px solid var(--stone);
+    gap: 12px;
   }
 
-  .card-title {
-    font-family: 'Fraunces', serif; font-size: 1.05rem; font-weight: 700;
-    margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--stone);
-    display: flex; align-items: center; gap: 9px;
+  .card-head-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
+
+  .rest-icon {
+    width: 38px;
+    height: 38px;
+    background: var(--red-lt);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--red);
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .rest-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .order-id {
+    font-size: .68rem;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--warm);
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--stone);
+    white-space: nowrap;
+  }
+
+  /* ── Items ── */
+  .card-body { padding: 4px 22px; }
 
   .order-item {
-    display: flex; align-items: center; justify-content: space-between; gap: 16px;
-    padding: 12px 0; border-bottom: 1px solid var(--stone);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 13px 0;
+    border-bottom: 1px dashed var(--stone);
   }
   .order-item:last-child { border-bottom: none; }
 
-  .track-bar-wrap { background: var(--stone); border-radius: 100px; height: 8px; overflow: hidden; margin: 15px 0; }
-  .track-bar { height: 100%; background: var(--red); transition: width .6s ease; }
-  
-  .track-steps { display: flex; justify-content: space-between; }
-  .track-step { font-size: .65rem; font-weight: 600; color: var(--muted); text-align: center; flex: 1; }
-  
+  .item-qty {
+    width: 24px;
+    height: 24px;
+    background: var(--red);
+    color: #fff;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .7rem;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  .item-name  { font-size: .9rem; font-weight: 600; }
+  .item-cat   { font-size: .72rem; color: var(--muted); margin-top: 1px; }
+  .item-price {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  /* ── Status card ── */
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 12px;
+    border-radius: 100px;
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .03em;
+    background: var(--red-lt);
+    color: var(--red);
+    margin: 18px 22px 0;
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    background: var(--red);
+    border-radius: 50%;
+    animation: pulse 1.8s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: .5; transform: scale(.8); }
+  }
+
+  .track-wrap { padding: 14px 22px 20px; }
+
+  .steps-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    position: relative;
+  }
+
+  .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    flex: 1;
+    z-index: 1;
+  }
+
+  .step-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--stone);
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .65rem;
+    color: var(--muted);
+    transition: all .3s;
+  }
+  .step.done .step-dot {
+    background: var(--red);
+    border-color: var(--red);
+    color: #fff;
+  }
+  .step.active .step-dot {
+    background: var(--white);
+    border-color: var(--red);
+    color: var(--red);
+    box-shadow: 0 0 0 4px rgba(196,16,23,.12);
+  }
+
+  .step-label {
+    font-size: .62rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-align: center;
+  }
+  .step.done .step-label, .step.active .step-label { color: var(--red); }
+
+  .track-line {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    right: 14px;
+    height: 2px;
+    background: var(--stone);
+    z-index: 0;
+  }
+  .track-progress {
+    height: 100%;
+    background: var(--red);
+    border-radius: 2px;
+    transition: width .6s ease;
+  }
+
+  /* ── Summary card ── */
   .summary-card {
-    background: var(--white); border-radius: var(--radius); border: 1px solid var(--stone);
-    box-shadow: var(--shadow); padding: 26px; position: sticky; top: 106px;
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid var(--stone);
+    box-shadow: 0 1px 4px rgba(15,14,14,.05), 0 8px 24px rgba(15,14,14,.06);
+    padding: 24px;
+    position: sticky;
+    top: 106px;
   }
 
-  .total-num { font-family: 'Fraunces', serif; font-size: 1.8rem; font-weight: 900; color: var(--red); }
-  
-  .delivery-info { background: var(--warm); border-radius: 14px; padding: 14px; margin-bottom: 15px; border: 1px solid var(--stone); }
-  .delivery-row { display: flex; align-items: center; gap: 8px; font-size: .8rem; margin-bottom: 6px; font-weight: 500; }
-  .delivery-row i { color: var(--red); width: 15px; }
-
-  .status-badge {
-    display: inline-flex; align-items: center; gap: 8px; 
-    background: var(--red-lt); color: var(--red); 
-    padding: 5px 12px; border-radius: 100px; 
-    font-size: .75rem; font-weight: 800; margin-bottom: 15px;
+  .s-date {
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 14px;
   }
+
+  .s-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--stone);
+  }
+  .s-total-label { font-size: .8rem; font-weight: 700; color: var(--muted); }
+  .s-total-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.9rem;
+    font-weight: 900;
+    color: var(--red);
+    line-height: 1;
+  }
+
+  .info-block {
+    background: var(--warm);
+    border-radius: 12px;
+    padding: 14px;
+    border: 1px solid var(--stone);
+    margin-bottom: 16px;
+  }
+
+  .info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: .8rem;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 9px;
+  }
+  .info-row:last-child { margin-bottom: 0; }
+
+  .info-icon {
+    width: 20px;
+    height: 20px;
+    background: var(--red-lt);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--red);
+    font-size: .65rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .btn-help {
+    width: 100%;
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    padding: 13px;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .18s, transform .18s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-help:hover {
+    background: #2a2828;
+    transform: translateY(-1px);
+  }
+
+  /* ── Empty state ── */
+  .empty {
+    text-align: center;
+    padding: 120px 0;
+    animation: fadeUp .5s ease;
+  }
+  .empty-icon {
+    font-size: 3.5rem;
+    color: var(--stone);
+    margin-bottom: 16px;
+    display: block;
+  }
+  .empty-text { color: var(--muted); font-size: .9rem; margin-bottom: 20px; }
+  .empty-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--red);
+    font-weight: 700;
+    text-decoration: none;
+    font-size: .9rem;
+    transition: gap .18s;
+  }
+  .empty-link:hover { gap: 11px; }
 </style>
 
-<div class="page-wrap">
+<div class="pg">
 
-  <div class="page-top">
+  <div class="pg-header">
     <div>
-      <p style="font-size: .75rem; font-weight: 700; color: var(--muted); text-transform: uppercase;">Acompanhe suas delícias</p>
-      <h1 class="page-title">Meus Pedidos</h1>
+      <p class="pg-eyebrow">Acompanhe suas delícias</p>
+      <h1 class="pg-title">Meus Pedidos</h1>
     </div>
-    <a href="{% url 'restaurantes' %}" style="text-decoration: none; color: var(--red); font-weight: 700; font-size: .9rem;">
-      <i class="bi bi-plus-circle"></i> Novo Pedido
+    <a href="{% url 'restaurantes' %}" class="btn-new">
+      <i class="bi bi-plus-lg"></i> Novo Pedido
     </a>
   </div>
 
   {% for pedido in pedidos %}
+  {% with sid=pedido.status.id_status %}
   <div class="order-block">
-    
-    <div>
-      <div class="o-card">
-        <div class="card-title">
-          <i class="bi bi-shop"></i> {{ pedido.restaurante.nome }} 
-          <span style="margin-left: auto; font-size: .7rem; color: var(--muted);">#{{ pedido.id_pedido }}</span>
-        </div>
 
-        {% for item in pedido.tbpedidosprodutos_set.all %}
-        <div class="order-item">
-          <div style="display: flex; flex-direction: column;">
-            <span style="font-weight: 700; font-size: .95rem;">{{ item.quantidade }}x {{ item.produto.nome_produto }}</span>
-            <span style="font-size: .75rem; color: var(--muted);">{{ item.produto.categoria }}</span>
+    <!-- Left column -->
+    <div>
+
+      <!-- Items card -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-left">
+            <div class="rest-icon"><i class="bi bi-shop"></i></div>
+            <div>
+              <div class="rest-name">{{ pedido.restaurante.nome }}</div>
+            </div>
           </div>
-          <span style="font-family: 'Fraunces', serif; font-weight: 700;">R$ {{ item.produto.preco }}</span>
+          <span class="order-id">#{{ pedido.id_pedido }}</span>
         </div>
-        {% endfor %}
+        <div class="card-body">
+          {% for item in pedido.tbpedidosprodutos_set.all %}
+          <div class="order-item">
+            <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
+              <span class="item-qty">{{ item.quantidade }}</span>
+              <div style="min-width:0;">
+                <div class="item-name">{{ item.produto.nome_produto }}</div>
+                <div class="item-cat">{{ item.produto.categoria }}</div>
+              </div>
+            </div>
+            <span class="item-price">R$ {{ item.produto.preco }}</span>
+          </div>
+          {% endfor %}
+        </div>
       </div>
 
-      <div class="o-card">
-        <div class="card-title"><i class="bi bi-truck"></i> Status do Pedido</div>
-        
-        <div class="status-badge">
-          <span style="width: 6px; height: 6px; background: var(--red); border-radius: 50%;"></span>
+      <!-- Status card -->
+      <div class="card">
+        <div class="status-pill">
+          <span class="status-dot"></span>
           {{ pedido.status.nome_status }}
         </div>
 
-        <div class="track-bar-wrap">
-          <div class="track-bar" style="width: {% if pedido.status.id_status <= 1 %}25%{% elif pedido.status.id_status == 2 %}60%{% else %}100%{% endif %}"></div>
-        </div>
-        <div class="track-steps">
-          <div class="track-step">Pendente</div>
-          <div class="track-step">Confirmado</div>
-          <div class="track-step">Preparando</div>
-          <div class="track-step">A caminho</div>
-          <div class="track-step">Entregue</div>
+        <div class="track-wrap">
+          <div class="steps-row">
+            <div class="track-line">
+              <div class="track-progress" style="width:
+                {% if sid == 1 %}0%
+                {% elif sid == 2 %}33%
+                {% elif sid == 3 %}66%
+                {% else %}100%{% endif %}">
+              </div>
+            </div>
+
+            {# sid=1: Confirmado(active) | sid=2: Confirmado(done) Preparando(active) | etc. #}
+            <div class="step {% if sid > 1 %}done{% elif sid == 1 %}active{% endif %}">
+              <div class="step-dot"><i class="bi bi-check-lg"></i></div>
+              <span class="step-label">Confirmado</span>
+            </div>
+            <div class="step {% if sid > 2 %}done{% elif sid == 2 %}active{% endif %}">
+              <div class="step-dot"><i class="bi bi-fire"></i></div>
+              <span class="step-label">Preparando</span>
+            </div>
+            <div class="step {% if sid > 3 %}done{% elif sid == 3 %}active{% endif %}">
+              <div class="step-dot"><i class="bi bi-bicycle"></i></div>
+              <span class="step-label">A caminho</span>
+            </div>
+            <div class="step {% if sid >= 4 %}done{% endif %}">
+              <div class="step-dot"><i class="bi bi-house-check"></i></div>
+              <span class="step-label">Entregue</span>
+            </div>
+          </div>
         </div>
       </div>
+
     </div>
 
+    <!-- Right column: summary -->
     <div>
       <div class="summary-card">
-        <div style="font-size: .75rem; color: var(--muted); margin-bottom: 5px;">{{ pedido.data_pedido|date:"d M Y · H:i" }}</div>
-        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;">
-          <span style="font-weight: 700;">Total Pago</span>
-          <span class="total-num">R$ {{ pedido.valor_total }}</span>
+        <div class="s-date">{{ pedido.data_pedido|date:"d M Y · H:i" }}</div>
+        <div class="s-total-row">
+          <span class="s-total-label">Total Pago</span>
+          <span class="s-total-val">R$ {{ pedido.valor_total }}</span>
         </div>
 
-        <div class="delivery-info d-flex flex-column align-items-start gap-2 mb-4">
-          <div class="delivery-row">
-            <i class="bi bi-geo-alt-fill"></i>
+        <div class="info-block">
+          <div class="info-row">
+            <div class="info-icon"><i class="bi bi-geo-alt-fill"></i></div>
             <span>{{ pedido.endereco_entrega|default:"Endereço não informado" }}</span>
           </div>
-          <div class="delivery-row">
-            <i class="bi bi-credit-card-fill"></i>
+          <div class="info-row">
+            <div class="info-icon"><i class="bi bi-credit-card-fill"></i></div>
             <span>
               {% for pag in pedido.tbpagamentos_set.all %}
-                Forma de Pagamento: {{ pag.metodo_pagamento }}{% if not forloop.last %}, {% endif %}
+                {{ pag.metodo_pagamento }}{% if not forloop.last %}, {% endif %}
               {% empty %}
                 Não informado
               {% endfor %}
@@ -178,18 +526,22 @@
           </div>
         </div>
 
-        <button class="btn-track" style="width: 100%; background: var(--ink); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer;">
+        <button class="btn-help">
+          <i class="bi bi-headset"></i>
           Ajuda com este pedido
         </button>
       </div>
     </div>
 
   </div>
+  {% endwith %}
   {% empty %}
-  <div style="text-align: center; padding: 100px 0;">
-      <i class="bi bi-bag-x" style="font-size: 3rem; color: var(--stone);"></i>
-      <p style="color: var(--muted); margin-top: 15px;">Você ainda não fez nenhum pedido.</p>
-      <a href="{% url 'restaurantes' %}" style="color: var(--red); font-weight: 700; text-decoration: none;">Começar agora</a>
+  <div class="empty">
+    <i class="bi bi-bag-x empty-icon"></i>
+    <p class="empty-text">Você ainda não fez nenhum pedido.</p>
+    <a href="{% url 'restaurantes' %}" class="empty-link">
+      Explorar restaurantes <i class="bi bi-arrow-right"></i>
+    </a>
   </div>
   {% endfor %}
 

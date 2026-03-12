@@ -1,184 +1,339 @@
-{% extends 'base.html' %} 
-{% load static %} 
+{% extends 'base.html' %}
+{% load static %}
 
-{% block content %} 
+{% block content %}
 {% include "pages/pagePrincipal/header.html" %}
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
 <style>
   :root {
-    --ifood-red: #ea1d2c;
-    --ifood-gray-text: #717171;
-    --ifood-bg: #f7f7f7;
+    --red:      #C41017;
+    --red-dark: #9b0c12;
+    --red-lt:   #fff5f5;
+    --ink:      #0f0e0e;
+    --warm:     #f5f2ed;
+    --stone:    #e3ded6;
+    --muted:    #908880;
+    --white:    #ffffff;
+    --radius:   20px;
   }
 
-  /* Estrutura Principal */
-  .main-wrapper {
-    background-color: var(--ifood-bg);
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    padding-top: 90px;
+    background: var(--warm);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink);
     min-height: 100vh;
-    padding-bottom: 60px;
   }
 
-  .header-spacer {
-    height: 100px;
-  }
-
-  .profile-container {
-    max-width: 600px;
+  .pg {
+    max-width: 580px;
     margin: 0 auto;
+    padding: 48px 20px 100px;
   }
 
-  .edit-card {
-    border: none;
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  /* ── Header ── */
+  .pg-header {
+    margin-bottom: 28px;
+    animation: fadeUp .4s ease both;
   }
-
-  /* Labels Customizadas */
-  .label-custom-perfil {
-    font-size: 0.75rem;
-    color: var(--ifood-gray-text);
-    text-transform: uppercase;
+  .pg-eyebrow {
+    font-size: .7rem;
     font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--red);
     margin-bottom: 4px;
-    display: block;
+  }
+  .pg-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.7rem, 4vw, 2.2rem);
+    font-weight: 900;
+    line-height: 1.05;
   }
 
-  /* Input Estilizado */
-  .input-perfil-edit {
-    border: 1px solid #e8e8e8 !important;
-    padding: 12px !important;
-    border-radius: 8px !important;
-    margin-bottom: 20px !important;
-    font-weight: 500 !important;
-    transition: all 0.2s !important;
-    height: auto !important;
+  /* ── Erros ── */
+  .erros-box {
+    background: var(--red-lt);
+    border: 1px solid rgba(196,16,23,.2);
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    animation: fadeUp .4s ease both;
   }
-
-  .input-perfil-edit:focus {
-    border-color: var(--ifood-red) !important;
-    box-shadow: 0 0 0 0.2rem rgba(234, 29, 44, 0.1) !important;
-    outline: none !important;
-    background-color: #fff !important;
-  }
-
-  /* Estado Read-only (Cadeado) */
-  .input-perfil-edit:read-only {
-    background-color: #f8f9fa !important;
-    color: #adb5bd !important;
-    cursor: not-allowed !important;
-    border-style: dashed !important;
-  }
-
-  /* Alerta de Endereço Faltando */
-  .perfil-input-missing {
-    border: 2px dashed #ffc107 !important;
-    background-color: #fffdf5 !important;
-  }
-
-  /* Botão Salvar */
-  .btn-perfil-save {
-    background-color: var(--ifood-red);
-    color: white;
-    border: none;
+  .erros-box p {
+    font-size: .82rem;
     font-weight: 600;
-    padding: 14px;
+    color: var(--red);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .erros-box p:last-child { margin-bottom: 0; }
+
+  /* ── Card ── */
+  .edit-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid var(--stone);
+    box-shadow: 0 1px 4px rgba(15,14,14,.04), 0 8px 28px rgba(15,14,14,.06);
+    overflow: hidden;
+    animation: fadeUp .4s .06s ease both;
+  }
+
+  /* ── Section titles inside card ── */
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 24px 14px;
+    border-bottom: 1px solid var(--stone);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .section-title i {
+    width: 28px; height: 28px;
+    background: var(--red-lt);
     border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--red);
+    font-size: .8rem;
+    flex-shrink: 0;
+  }
+
+  /* ── Fields grid ── */
+  .fields {
+    padding: 20px 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 16px;
+  }
+  .field-full { grid-column: 1 / -1; }
+
+  .field { margin-bottom: 18px; }
+  .field:last-child { margin-bottom: 0; }
+
+  .field label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .field label i { font-size: .7rem; }
+
+  .field input {
     width: 100%;
-    transition: 0.2s;
+    padding: 11px 14px;
+    border: 1.5px solid var(--stone);
+    border-radius: 12px;
+    background: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem;
+    font-weight: 500;
+    color: var(--ink);
+    transition: border-color .18s, box-shadow .18s, background .18s;
+    outline: none;
+  }
+  .field input:focus {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px rgba(196,16,23,.1);
+  }
+  .field input::placeholder { color: var(--muted); font-weight: 400; }
+
+  .field input[readonly] {
+    background: var(--warm);
+    color: var(--muted);
+    cursor: not-allowed;
+    border-style: dashed;
+  }
+
+  /* CEP row: input + status */
+  .cep-row { display: flex; flex-direction: column; }
+  .cep-status {
+    font-size: .72rem;
+    font-weight: 600;
+    margin-top: 5px;
+    min-height: 16px;
+  }
+
+  /* Divider between sections */
+  .card-divider { border: none; border-top: 1px solid var(--stone); margin: 0; }
+
+  /* ── Actions ── */
+  .actions {
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    animation: fadeUp .4s .12s ease both;
+  }
+
+  .btn-save {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    background: var(--red);
+    color: #fff;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem;
+    font-weight: 700;
+    padding: 14px;
+    border-radius: 14px;
     cursor: pointer;
+    box-shadow: 0 4px 16px rgba(196,16,23,.28);
+    transition: background .18s, transform .18s, box-shadow .18s;
+    width: 100%;
+  }
+  .btn-save:hover {
+    background: var(--red-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(196,16,23,.38);
   }
 
-  .btn-perfil-save:hover {
-    background-color: #d91a27;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(234, 29, 44, 0.2);
+  .btn-cancel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: transparent;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: .85rem;
+    font-weight: 600;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid var(--stone);
+    transition: color .18s, border-color .18s, background .18s;
+  }
+  .btn-cancel:hover {
+    color: var(--ink);
+    border-color: var(--ink);
+    background: var(--warm);
   }
 
-  #cep-status {
-    font-size: 0.75rem;
-    margin-top: -15px;
-    display: block;
-    margin-bottom: 10px;
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 480px) {
+    .fields { grid-template-columns: 1fr; }
+    .field-full { grid-column: 1; }
   }
 </style>
 
-<div class="main-wrapper">
-  <div class="header-spacer"></div>
+<div class="pg">
 
-  <div class="container profile-container px-3">
-    <div class="edit-card p-4">
-      <div class="mb-4">
-        <h4 class="fw-bold text-dark">Editar Dados</h4>
-        <p class="text-muted small">
-          Campos com cadeado <i class="bi bi-lock"></i> não podem ser alterados.
-        </p>
+  <div class="pg-header">
+    <p class="pg-eyebrow">Sua conta</p>
+    <h1 class="pg-title">Editar Dados</h1>
+  </div>
+
+  {% if erros %}
+  <div class="erros-box">
+    {% for erro in erros %}
+      <p><i class="bi bi-exclamation-circle-fill"></i> {{ erro }}</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <form method="POST">
+    {% csrf_token %}
+
+    <div class="edit-card">
+
+      <!-- Seção: Conta -->
+      <div class="section-title">
+        <i class="bi bi-person-fill"></i>
+        Informações da Conta
       </div>
 
-      <form method="POST">
-        {% csrf_token %}
-        <div class="row">
-          <div class="col-12">
-            <label class="label-custom-perfil">CPF <i class="bi bi-lock-fill small"></i></label>
-            <input type="text" class="form-control input-perfil-edit" value="{{ perfil.cpf|default:'Não informado' }}" readonly />
-          </div>
+      <div class="fields">
+        <div class="field field-full">
+          <label>CPF <i class="bi bi-lock-fill"></i></label>
+          <input type="text" value="{{ perfil.cpf|default:'Não informado' }}" readonly>
+        </div>
 
-          <div class="col-md-6">
-            <label for="username" class="label-custom-perfil">Nome de Usuário</label>
-            <input type="text" name="username" id="username" class="form-control input-perfil-edit" value="{{ perfil.username }}" required />
-          </div>
+        <div class="field">
+          <label for="username">Nome de Usuário</label>
+          <input type="text" name="username" id="username"
+                 value="{{ form_data.username|default:perfil.username }}" required>
+        </div>
 
-          <div class="col-md-6">
-            <label for="email" class="label-custom-perfil">E-mail</label>
-            <input type="email" name="email" id="email" class="form-control input-perfil-edit" value="{{ perfil.email }}" required />
-          </div>
+        <div class="field">
+          <label for="email">E-mail</label>
+          <input type="email" name="email" id="email"
+                 value="{{ form_data.email|default:perfil.email }}" required>
+        </div>
 
-          <div class="col-12">
-            <label for="telefone" class="label-custom-perfil">Telefone</label>
-            <input type="text" name="telefone" id="telefone" class="form-control input-perfil-edit" placeholder="(00) 00000-0000" value="{{ perfil.telefone|default:'' }}" />
-          </div>
+        <div class="field field-full">
+          <label for="telefone">Telefone</label>
+          <input type="text" name="telefone" id="telefone"
+                 placeholder="(00) 00000-0000"
+                 value="{{ form_data.telefone|default:perfil.telefone|default:'' }}">
+        </div>
+      </div>
 
-          <div class="col-md-7">
-            <label for="cep" class="label-custom-perfil">CEP (Busca automática)</label>
-            <input type="text" name="cep" id="cep" class="form-control input-perfil-edit" placeholder="00000-000" maxlength="9" />
-            <span id="cep-status"></span>
-          </div>
+      <hr class="card-divider">
 
-          <div class="col-md-5">
-            <label for="numero" class="label-custom-perfil">Número</label>
-            <input type="text" name="numero" id="numero" class="form-control input-perfil-edit" placeholder="Ex: 123" />
-          </div>
+      <!-- Seção: Endereço -->
+      <div class="section-title">
+        <i class="bi bi-geo-alt-fill"></i>
+        Endereço de Entrega
+      </div>
 
-          <div class="col-12">
-            <label for="endereco" class="label-custom-perfil">Endereço Completo</label>
-            
-            {% if not perfil.endereco %}
-            <div class="alert alert-warning py-2 mb-2 d-flex align-items-center" id="alert-address" style="font-size: 0.85rem">
-              <i class="bi bi-exclamation-triangle-fill me-2"></i>
-              Digite o CEP para preencher o endereço.
-            </div>
-            {% endif %}
-
-            <input type="text" name="endereco" id="endereco" 
-                   class="form-control input-perfil-edit {% if not perfil.endereco %}perfil-input-missing{% endif %}" 
-                   placeholder="Rua, Número, Bairro, Cidade - UF" 
-                   value="{{ perfil.endereco|default:'' }}" />
+      <div class="fields">
+        <div class="field">
+          <label for="cep">CEP</label>
+          <div class="cep-row">
+            <input type="text" name="cep" id="cep"
+                   placeholder="00000-000" maxlength="9">
+            <span class="cep-status" id="cep-status"></span>
           </div>
         </div>
 
-        <div class="mt-3">
-          <button type="submit" class="btn btn-perfil-save shadow-sm mb-3">
-            Salvar Alterações
-          </button>
-          <div class="text-center">
-            <a href="{% url 'perfil' %}" class="text-muted text-decoration-none small fw-bold">Cancelar</a>
-          </div>
+        <div class="field">
+          <label for="numero">Número</label>
+          <input type="text" name="numero" id="numero" placeholder="Ex: 123">
         </div>
-      </form>
+
+        <div class="field field-full">
+          <label for="endereco">Endereço Completo</label>
+          <input type="text" name="endereco" id="endereco"
+                 placeholder="Rua, Número, Bairro, Cidade - UF"
+                 value="{{ form_data.endereco|default:perfil.endereco|default:'' }}">
+        </div>
+      </div>
+
+      <!-- Actions inside card -->
+      <hr class="card-divider">
+      <div class="actions">
+        <button type="submit" class="btn-save">
+          <i class="bi bi-check-lg"></i> Salvar Alterações
+        </button>
+        <a href="{% url 'perfil' %}" class="btn-cancel">
+          <i class="bi bi-x-lg"></i> Cancelar
+        </a>
+      </div>
+
     </div>
-  </div>
+  </form>
+
 </div>
 
 <script>
@@ -249,5 +404,5 @@
   });
 </script>
 
-{% include "pages/pagePrincipal/footer.html" %} 
+{% include "pages/pagePrincipal/footer.html" %}
 {% endblock %}
