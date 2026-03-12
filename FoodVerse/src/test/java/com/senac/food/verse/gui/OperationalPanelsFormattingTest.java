@@ -41,4 +41,9 @@ class OperationalPanelsFormattingTest {
         assertTrue(markup.contains("Horário indisponível"));
         assertTrue(markup.contains(UIConstants.toHex(UIConstants.FG_MUTED)));
     }
+
+    @Test
+    void mesasUsaCorWarningPadraoParaReservaProxima() {
+        assertEquals(UIConstants.WARNING_ORANGE, GestaoMesasPanel.resolveStatusColor("PROXIMA"));
+    }
 }

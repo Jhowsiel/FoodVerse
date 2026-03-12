@@ -132,7 +132,7 @@ public class CardapioPainel extends JPanel {
         actionPanel.setOpaque(false);
 
         JButton btnNovo = new JButton("Novo Prato");
-        btnNovo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ADD, 18, Color.WHITE));
+        btnNovo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ADD, 18, UIConstants.SEL_FG));
         UIConstants.stylePrimary(btnNovo);
         btnNovo.setToolTipText("Cadastrar nova refeição");
         btnNovo.addActionListener(e -> novoPrato());
@@ -223,7 +223,7 @@ public class CardapioPainel extends JPanel {
         actionPanel.setOpaque(false);
 
         JButton btnNovo = new JButton("Novo Produto");
-        btnNovo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ADD, 18, Color.WHITE));
+        btnNovo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ADD, 18, UIConstants.SEL_FG));
         UIConstants.stylePrimary(btnNovo);
         btnNovo.addActionListener(e -> novoProduto());
 
@@ -656,7 +656,7 @@ public class CardapioPainel extends JPanel {
             pBottom.setBackground(UIConstants.BG_DARK);
             
             JLabel lQtd = new JLabel("Qtd:");
-            lQtd.setForeground(Color.WHITE);
+            lQtd.setForeground(UIConstants.FG_LIGHT);
             JSpinner sQtd = new JSpinner(new SpinnerNumberModel(1.0, 0.01, 1000.0, 1.0));
             UIConstants.styleSpinner(sQtd);
             

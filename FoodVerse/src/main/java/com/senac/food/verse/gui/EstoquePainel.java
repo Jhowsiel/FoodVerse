@@ -127,7 +127,7 @@ public class EstoquePainel extends JPanel {
         actionPanel.setOpaque(false);
 
         btnNovo = new JButton("Novo Item");
-        btnNovo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ADD_BOX, 18, Color.WHITE));
+        btnNovo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ADD_BOX, 18, UIConstants.SEL_FG));
         UIConstants.stylePrimary(btnNovo);
         btnNovo.addActionListener(e -> novoItem());
 
