@@ -410,12 +410,12 @@ public class CardapioPainel extends JPanel {
         int row = tblPratos.getSelectedRow();
         if(row < 0) { Toast.show(this, "Selecione um prato.", Toast.Type.WARNING); return; }
         Long id = (Long) tblPratos.getValueAt(row, 0);
-        
-        if(JOptionPane.showConfirmDialog(this, "Excluir este prato permanentemente?", "Confirmar", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+
+        UIConstants.showConfirmDialog(this, "Confirmar exclusão", "Excluir este prato permanentemente?", () -> {
             dao.excluirPrato(id);
             atualizarTabelaPratos();
             Toast.show(this, "Prato removido.", Toast.Type.ERROR);
-        }
+        });
     }
 
     private void novoProduto() {
@@ -457,12 +457,12 @@ public class CardapioPainel extends JPanel {
         int row = tblProdutos.getSelectedRow();
         if(row < 0) { Toast.show(this, "Selecione um produto.", Toast.Type.WARNING); return; }
         Long id = (Long) tblProdutos.getValueAt(row, 0);
-        
-        if(JOptionPane.showConfirmDialog(this, "Excluir este produto?", "Confirmar", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+
+        UIConstants.showConfirmDialog(this, "Confirmar exclusão", "Excluir este produto?", () -> {
             dao.excluirProduto(id);
             atualizarTabelaProdutos();
             Toast.show(this, "Produto removido.", Toast.Type.ERROR);
-        }
+        });
     }
 
     // =================================================================================
