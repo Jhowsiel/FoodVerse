@@ -144,6 +144,7 @@
           <div class="track-bar" style="width: {% if pedido.status.id_status <= 1 %}25%{% elif pedido.status.id_status == 2 %}60%{% else %}100%{% endif %}"></div>
         </div>
         <div class="track-steps">
+          <div class="track-step">Pendente</div>
           <div class="track-step">Confirmado</div>
           <div class="track-step">Preparando</div>
           <div class="track-step">A caminho</div>
@@ -160,7 +161,7 @@
           <span class="total-num">R$ {{ pedido.valor_total }}</span>
         </div>
 
-        <div class="delivery-info">
+        <div class="delivery-info d-flex flex-column align-items-start gap-2 mb-4">
           <div class="delivery-row">
             <i class="bi bi-geo-alt-fill"></i>
             <span>{{ pedido.endereco_entrega|default:"Endereço não informado" }}</span>
@@ -169,7 +170,7 @@
             <i class="bi bi-credit-card-fill"></i>
             <span>
               {% for pag in pedido.tbpagamentos_set.all %}
-                {{ pag.metodo_pagamento }}{% if not forloop.last %}, {% endif %}
+                Forma de Pagamento: {{ pag.metodo_pagamento }}{% if not forloop.last %}, {% endif %}
               {% empty %}
                 Não informado
               {% endfor %}

@@ -195,7 +195,7 @@ def restaurante_detalhe_view(request, id):
 
 def prato_view(request):
     rest_id = _int_param(request.GET.get('restaurante_id'), 1)  
-    p_id = _int_param(request.GET.get('produto_id'), 1)
+    p_id = _int_param(request.GET.get('produto_id'), 1)  
 
     print(f"Recebendo restaurante_id={rest_id} e produto_id={p_id}")  # Debug
     
@@ -236,6 +236,11 @@ from .models import TbReservas  # Certifique-se de importar o model correto para
 def reserva_view(request):
     r_id = _int_param(request.GET.get('restaurante_id'), 1)
     p_id = _int_param(request.GET.get('produto_id'), 0) # Pega o prato da URL
+
+    client = get_cliente_logado(request)
+    if not client:
+        messages.error(request, "Faça login para fazer uma reserva.")
+        return redirect('login')
     
     restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
 
@@ -277,7 +282,6 @@ def reserva_pagamento(request):
 
 def pedido_view(request):
     cliente_id = request.session.get('cliente_id')
-    print(f"DEBUG: Tentando buscar pedidos para o Cliente ID: {cliente_id}") # Veja isso no terminal
 
     if not cliente_id:
         return redirect('login')
@@ -285,13 +289,15 @@ def pedido_view(request):
     # Tenta buscar o cliente para validar se ele existe no novo banco
     try:
         cliente = TbClientes.objects.get(id_cliente=cliente_id)
+
+        if cliente.id_cliente != cliente_id:
+            return redirect('login')
+        
     except TbClientes.DoesNotExist:
         print("DEBUG: Cliente da sessão não existe no banco de dados!")
         return redirect('login') 
 
     pedidos = TbPedidos.objects.filter(cliente_id=cliente_id).order_by('-data_pedido').prefetch_related('tbpedidosprodutos_set__produto')
-    
-    print(f"DEBUG: Quantidade de pedidos encontrados: {pedidos.count()}") # Veja isso no terminal
 
     r_id = request.GET.get('restaurante_id')
     restaurante = None
@@ -351,6 +357,11 @@ def adicionar_carrinho(request):
     return redirect('carrinho')
 # View 2 — só EXIBE o carrinho, nunca modifica
 def carrinho_view(request):
+    client = get_cliente_logado(request)
+    if not client:
+        messages.error(request, "Faça login para fazer um pedido.")
+        return redirect('login')
+    
     carrinho = request.session.get('carrinho', {})
     subtotal = sum(
         i['preco'] * i['quantidade']
@@ -507,7 +518,8 @@ def finalizacao_view(request):
                 del request.session['carrinho'][r_id]
                 request.session.modified = True
 
-                return render(request, 'pages/pedido/pedido.html', {'pedido': pedido})
+                # return render(request, 'pages/pedido/pedido.html', {'pedido': pedido})
+                return redirect('pedido')  # Redireciona para a página de pedidos
 
         except Exception as e:
             print(f"ERRO: {e}")
