@@ -32,6 +32,9 @@ public final class UIConstants {
     public static final Color DANGER_RED      = new Color(220, 53, 69);
     public static final Color WARNING_ORANGE  = new Color(230, 126, 34);
     public static final Color INFO_BLUE       = new Color(52, 152, 219);
+    public static final Color SELECTED_DANGER_CARD_BG = PRIMARY_RED.darker().darker();
+    public static final Color SELECTED_INFO_CARD_BG   = INFO_BLUE.darker().darker();
+    public static final Color WARNING_PANEL_BG        = WARNING_ORANGE.darker().darker();
     
     // Tabelas e Grades
     public static final Color GRID_DARK       = new Color(70, 70, 70);
@@ -50,7 +53,7 @@ public final class UIConstants {
     public static final Font ARIAL_16_B = new Font("Arial", Font.BOLD, 16);
     public static final Font ARIAL_18_B = new Font("Arial", Font.BOLD, 18);
     public static final Font FONT_TITLE = new Font("Segoe UI", Font.BOLD, 24);
-    public static final Font FONT_TITLE_LARGE = FONT_TITLE.deriveFont(28f);
+    public static final Font FONT_TITLE_LARGE = new Font("Segoe UI", Font.BOLD, 28);
     public static final Font FONT_SECTION = new Font("Segoe UI", Font.BOLD, 22);
     public static final Font FONT_BOLD  = new Font("Segoe UI", Font.BOLD, 14);
     public static final Font FONT_REGULAR = new Font("Segoe UI", Font.PLAIN, 14);
@@ -444,6 +447,13 @@ public final class UIConstants {
     
     public static void showWarning(Component parent, String mensagem) {
         Toast.show(parent, mensagem, Toast.Type.WARNING);
+    }
+
+    public static String toHex(Color color) {
+        if (color == null) {
+            return "#000000";
+        }
+        return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
     }
 
     // Classe Interna para Painéis Arredondados

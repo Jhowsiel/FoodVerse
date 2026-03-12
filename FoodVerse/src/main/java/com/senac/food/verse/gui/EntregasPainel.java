@@ -24,7 +24,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.function.Consumer;
 
 public class EntregasPainel extends JPanel {
 
@@ -76,7 +75,7 @@ public class EntregasPainel extends JPanel {
         JPanel pnlTitle = new JPanel(new BorderLayout());
         pnlTitle.setOpaque(false);
         JLabel lblTitle = new JLabel("Em Rota (Frota)");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        lblTitle.setFont(UIConstants.FONT_SECTION);
         lblTitle.setForeground(UIConstants.FG_LIGHT);
         lblTitle.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.MOTORCYCLE, 28, UIConstants.FG_LIGHT));
 
@@ -110,7 +109,7 @@ public class EntregasPainel extends JPanel {
         gc.insets = new Insets(0, 0, 0, 0);
         lblContador = new JLabel("A carregar...");
         lblContador.setFont(UIConstants.ARIAL_12_B);
-        lblContador.setForeground(new Color(52, 152, 219)); 
+        lblContador.setForeground(UIConstants.INFO_BLUE); 
         header.add(lblContador, gc);
 
         panelLista.add(header, BorderLayout.NORTH);
@@ -144,16 +143,31 @@ public class EntregasPainel extends JPanel {
         panelDetalhes.removeAll();
         JPanel empty = new JPanel(new GridBagLayout());
         empty.setBackground(UIConstants.BG_DARK);
-        
+
+        JPanel content = new JPanel();
+        content.setOpaque(false);
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+
+        JLabel icon = new JLabel(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.MAP, 80, UIConstants.FG_MUTED));
+        icon.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         JLabel msg = new JLabel("Selecione uma entrega em andamento");
-        msg.setForeground(UIConstants.FG_MUTED);
+        msg.setForeground(UIConstants.FG_LIGHT);
         msg.setFont(UIConstants.FONT_TITLE);
-        msg.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.MAP, 80, UIConstants.FG_MUTED));
-        msg.setHorizontalTextPosition(SwingConstants.CENTER);
-        msg.setVerticalTextPosition(SwingConstants.BOTTOM);
-        msg.setIconTextGap(20);
-        
-        empty.add(msg);
+        msg.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel hint = new JLabel("Use o painel para copiar endereço, trocar motoboy ou concluir a entrega.");
+        hint.setForeground(UIConstants.FG_MUTED);
+        hint.setFont(UIConstants.FONT_REGULAR);
+        hint.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        content.add(icon);
+        content.add(Box.createVerticalStrut(18));
+        content.add(msg);
+        content.add(Box.createVerticalStrut(8));
+        content.add(hint);
+
+        empty.add(content);
         panelDetalhes.add(empty);
         panelDetalhes.revalidate();
         panelDetalhes.repaint();
@@ -260,7 +274,7 @@ public class EntregasPainel extends JPanel {
     // =========================================================================
     private JPanel criarCardMiniatura(Pedidos p) {
         boolean isSelected = (entregaSelecionada != null && entregaSelecionada.getIdPedido().equals(p.getIdPedido()));
-        Color bgColor = isSelected ? new Color(40, 60, 80) : UIConstants.CARD_DARK;
+        Color bgColor = isSelected ? UIConstants.SELECTED_INFO_CARD_BG : UIConstants.CARD_DARK;
         
         UIConstants.RoundedPanel card = new UIConstants.RoundedPanel(12, bgColor);
         card.setLayout(new BorderLayout(10, 5));
@@ -270,7 +284,7 @@ public class EntregasPainel extends JPanel {
 
         JPanel strip = new JPanel();
         strip.setPreferredSize(new Dimension(5, 0));
-        strip.setBackground(new Color(52, 152, 219));
+        strip.setBackground(UIConstants.INFO_BLUE);
         card.add(strip, BorderLayout.WEST);
         
         JPanel center = new JPanel(new GridLayout(3, 1, 0, 2));
@@ -283,7 +297,7 @@ public class EntregasPainel extends JPanel {
         lId.setForeground(UIConstants.PRIMARY_RED);
         lId.setFont(UIConstants.ARIAL_14_B);
         JLabel lNome = new JLabel(p.getNomeCliente());
-        lNome.setForeground(Color.WHITE);
+        lNome.setForeground(UIConstants.FG_LIGHT);
         lNome.setFont(UIConstants.ARIAL_14_B);
         row1.add(lId, BorderLayout.WEST);
         row1.add(lNome, BorderLayout.CENTER);
@@ -318,18 +332,25 @@ public class EntregasPainel extends JPanel {
         return card;
     }
 
-    private String calcularTempoSLA(String horaPedido) {
+    static String calcularTempoSlaFormatado(String horaPedido) {
+        if (horaPedido == null || horaPedido.isBlank()) {
+            return "<html><font color='" + UIConstants.toHex(UIConstants.FG_MUTED) + "'>Horário indisponível</font></html>";
+        }
         try {
             LocalTime hp = LocalTime.parse(horaPedido, DateTimeFormatter.ofPattern("HH:mm"));
             long min = ChronoUnit.MINUTES.between(hp, LocalTime.now());
             if(min < 0) min = 0;
             
-            if(min > 45) return "<html><font color='#ff4444'> ATRASADO (" + min + " min)</font></html>";
-            if(min > 30) return "<html><font color='#f39c12'> Atenção (" + min + " min)</font></html>";
-            return "<html><font color='#2ecc71'> No prazo (" + min + " min)</font></html>";
+            if(min > 45) return "<html><font color='" + UIConstants.toHex(UIConstants.DANGER_RED) + "'> ATRASADO (" + min + " min)</font></html>";
+            if(min > 30) return "<html><font color='" + UIConstants.toHex(UIConstants.WARNING_ORANGE) + "'> Atenção (" + min + " min)</font></html>";
+            return "<html><font color='" + UIConstants.toHex(UIConstants.SUCCESS_GREEN) + "'> No prazo (" + min + " min)</font></html>";
         } catch (Exception e) {
             return " Saiu às " + horaPedido;
         }
+    }
+
+    private String calcularTempoSLA(String horaPedido) {
+        return calcularTempoSlaFormatado(horaPedido);
     }
 
     // =========================================================================
@@ -347,13 +368,13 @@ public class EntregasPainel extends JPanel {
         headerInfo.setOpaque(false);
         
         JLabel titulo = new JLabel("Pedido #" + p.getIdPedido() + " - " + p.getNomeCliente());
-        titulo.setFont(new Font("Segoe UI", Font.BOLD, 26));
-        titulo.setForeground(Color.WHITE);
+        titulo.setFont(UIConstants.FONT_TITLE_LARGE);
+        titulo.setForeground(UIConstants.FG_LIGHT);
         
         JLabel badgeStatus = new JLabel("  EM ROTA  ");
         badgeStatus.setOpaque(true);
-        badgeStatus.setBackground(new Color(52, 152, 219));
-        badgeStatus.setForeground(Color.WHITE);
+        badgeStatus.setBackground(UIConstants.INFO_BLUE);
+        badgeStatus.setForeground(UIConstants.SEL_FG);
         badgeStatus.setFont(UIConstants.ARIAL_12_B);
         badgeStatus.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
         
@@ -378,7 +399,7 @@ public class EntregasPainel extends JPanel {
         JPanel pnlEnd = criarCardInformacao("ENDEREÇO DE ENTREGA", p.getEnderecoCompleto(), "Use o botão para copiar", GoogleMaterialDesignIcons.LOCATION_ON);
         JButton btnCopiar = new JButton("Copiar");
         UIConstants.styleSecondary(btnCopiar);
-        btnCopiar.setFont(new Font("Arial", Font.BOLD, 10));
+        btnCopiar.setFont(UIConstants.ARIAL_12_B);
         btnCopiar.setMargin(new Insets(2,5,2,5));
         btnCopiar.addActionListener(e -> {
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(p.getEnderecoCompleto()), null);
@@ -394,7 +415,7 @@ public class EntregasPainel extends JPanel {
         JPanel pnlMoto = criarCardInformacao("FROTA / MOTOBOY", (p.getNomeEntregador() != null ? p.getNomeEntregador() : "Não atribuído"), "Em trânsito", GoogleMaterialDesignIcons.MOTORCYCLE);
         JButton btnTrocar = new JButton("Trocar");
         UIConstants.styleSecondary(btnTrocar);
-        btnTrocar.setFont(new Font("Arial", Font.BOLD, 10));
+        btnTrocar.setFont(UIConstants.ARIAL_12_B);
         btnTrocar.addActionListener(e -> trocarMotoboy(p));
         pnlMoto.add(btnTrocar, BorderLayout.EAST);
         gridInfo.add(pnlMoto);
@@ -419,12 +440,12 @@ public class EntregasPainel extends JPanel {
 
         // Observações em Destaque
         if (p.getObservacoes() != null && !p.getObservacoes().trim().isEmpty()) {
-            UIConstants.RoundedPanel pnlObs = new UIConstants.RoundedPanel(12, new Color(80, 60, 20)); 
+            UIConstants.RoundedPanel pnlObs = new UIConstants.RoundedPanel(12, UIConstants.WARNING_PANEL_BG); 
             pnlObs.setLayout(new BorderLayout(10, 10));
             pnlObs.setBorder(new EmptyBorder(15, 15, 15, 15));
-            JLabel icoObs = new JLabel(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.WARNING, 30, Color.ORANGE));
+            JLabel icoObs = new JLabel(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.WARNING, 30, UIConstants.WARNING_ORANGE));
             JLabel txtObs = new JLabel("<html><b>OBSERVAÇÕES (ATENÇÃO ENTREGADOR):</b><br>" + p.getObservacoes() + "</html>");
-            txtObs.setForeground(Color.WHITE);
+            txtObs.setForeground(UIConstants.FG_LIGHT);
             txtObs.setFont(UIConstants.ARIAL_14);
             pnlObs.add(icoObs, BorderLayout.WEST);
             pnlObs.add(txtObs, BorderLayout.CENTER);
@@ -490,11 +511,11 @@ public class EntregasPainel extends JPanel {
         
         JLabel lblTit = new JLabel(titulo.toUpperCase());
         lblTit.setFont(UIConstants.ARIAL_12_B);
-        lblTit.setForeground(new Color(52, 152, 219)); 
+        lblTit.setForeground(UIConstants.INFO_BLUE); 
         
         JLabel lblL1 = new JLabel(linha1);
         lblL1.setFont(UIConstants.ARIAL_16_B);
-        lblL1.setForeground(Color.WHITE);
+        lblL1.setForeground(UIConstants.FG_LIGHT);
         
         JLabel lblL2 = new JLabel(linha2);
         lblL2.setFont(UIConstants.ARIAL_12);
@@ -521,61 +542,6 @@ public class EntregasPainel extends JPanel {
         } catch (Exception ex) {
             UIConstants.showError(this, "Erro ao abrir o navegador.");
         }
-    }
-
-    // NOVA FUNÇÃO: Substitui o JOptionPane branco/feio e mantém a paleta Dark
-    private void mostrarInputCustomizado(String titulo, String mensagem, Consumer<String> onConfirm) {
-        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), titulo, true);
-        dialog.setLayout(new BorderLayout());
-        dialog.setUndecorated(true); 
-        
-        UIConstants.RoundedPanel panel = new UIConstants.RoundedPanel(20, UIConstants.BG_DARK_ALT);
-        panel.setLayout(new BorderLayout(20, 20));
-        panel.setBorder(new EmptyBorder(25, 30, 25, 30));
-        
-        JLabel lblIcon = new JLabel(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.EDIT, 40, new Color(52, 152, 219)));
-        JLabel lblMsg = new JLabel("<html><center>" + mensagem + "</center></html>");
-        lblMsg.setFont(UIConstants.ARIAL_16_B);
-        lblMsg.setForeground(Color.WHITE);
-        lblMsg.setHorizontalAlignment(SwingConstants.CENTER);
-        
-        JPanel pnlCenter = new JPanel(new BorderLayout(10, 10));
-        pnlCenter.setOpaque(false);
-        pnlCenter.add(lblIcon, BorderLayout.NORTH);
-        pnlCenter.add(lblMsg, BorderLayout.CENTER);
-        
-        JTextField txtInput = new JTextField();
-        UIConstants.styleField(txtInput);
-        txtInput.setPreferredSize(new Dimension(250, 45));
-        pnlCenter.add(txtInput, BorderLayout.SOUTH);
-        
-        JPanel pnlBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
-        pnlBotoes.setOpaque(false);
-        
-        JButton btnCancelar = new JButton("CANCELAR");
-        UIConstants.styleSecondary(btnCancelar);
-        btnCancelar.setPreferredSize(new Dimension(130, 40));
-        btnCancelar.addActionListener(e -> dialog.dispose());
-        
-        JButton btnConfirmar = new JButton("CONFIRMAR");
-        UIConstants.stylePrimary(btnConfirmar);
-        btnConfirmar.setPreferredSize(new Dimension(130, 40));
-        btnConfirmar.addActionListener(e -> {
-            dialog.dispose();
-            onConfirm.accept(txtInput.getText());
-        });
-        
-        pnlBotoes.add(btnCancelar);
-        pnlBotoes.add(btnConfirmar);
-        
-        panel.add(pnlCenter, BorderLayout.CENTER);
-        panel.add(pnlBotoes, BorderLayout.SOUTH);
-        
-        dialog.add(panel, BorderLayout.CENTER);
-        dialog.pack();
-        dialog.setLocationRelativeTo(this);
-        dialog.setBackground(new Color(0, 0, 0, 0)); 
-        dialog.setVisible(true);
     }
 
     private void trocarMotoboy(Pedidos p) {
