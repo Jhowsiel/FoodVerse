@@ -30,6 +30,11 @@ public final class UIConstants {
     public static final Color PRIMARY_RED_ALT = new Color(0xEB, 0x00, 0x29);
     public static final Color SUCCESS_GREEN   = new Color(0x19, 0x87, 0x54);
     public static final Color DANGER_RED      = new Color(220, 53, 69);
+    public static final Color WARNING_ORANGE  = new Color(230, 126, 34);
+    public static final Color INFO_BLUE       = new Color(52, 152, 219);
+    public static final Color SELECTED_DANGER_CARD_BG = PRIMARY_RED.darker().darker();
+    public static final Color SELECTED_INFO_CARD_BG   = INFO_BLUE.darker().darker();
+    public static final Color WARNING_PANEL_BG        = WARNING_ORANGE.darker().darker();
     
     // Tabelas e Grades
     public static final Color GRID_DARK       = new Color(70, 70, 70);
@@ -46,9 +51,13 @@ public final class UIConstants {
     public static final Font ARIAL_14   = new Font("Arial", Font.PLAIN, 14);
     public static final Font ARIAL_14_B = new Font("Arial", Font.BOLD, 14);
     public static final Font ARIAL_16_B = new Font("Arial", Font.BOLD, 16);
+    public static final Font ARIAL_18_B = new Font("Arial", Font.BOLD, 18);
     public static final Font FONT_TITLE = new Font("Segoe UI", Font.BOLD, 24);
+    public static final Font FONT_TITLE_LARGE = new Font("Segoe UI", Font.BOLD, 28);
+    public static final Font FONT_SECTION = new Font("Segoe UI", Font.BOLD, 22);
     public static final Font FONT_BOLD  = new Font("Segoe UI", Font.BOLD, 14);
     public static final Font FONT_REGULAR = new Font("Segoe UI", Font.PLAIN, 14);
+    public static final Font FONT_REGULAR_15 = new Font("Segoe UI", Font.PLAIN, 15);
 
     // =================================================================================
     // 3. CONFIGURAÇÃO GLOBAL (FLATLAF)
@@ -290,8 +299,8 @@ public final class UIConstants {
         
         JLabel lblIcon = new JLabel(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.HELP_OUTLINE, 40, PRIMARY_RED));
         JLabel lblMsg = new JLabel("<html><center>" + mensagem + "</center></html>");
-        lblMsg.setFont(new Font("Arial", Font.BOLD, 16));
-        lblMsg.setForeground(Color.WHITE);
+        lblMsg.setFont(ARIAL_16_B);
+        lblMsg.setForeground(FG_LIGHT);
         lblMsg.setHorizontalAlignment(SwingConstants.CENTER);
         
         JPanel pnlCenter = new JPanel(new BorderLayout(10, 10));
@@ -342,10 +351,10 @@ public final class UIConstants {
         panel.setLayout(new BorderLayout(20, 20));
         panel.setBorder(new EmptyBorder(25, 30, 25, 30));
 
-        JLabel lblIcon = new JLabel(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.EDIT, 40, new Color(52, 152, 219)));
+        JLabel lblIcon = new JLabel(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.EDIT, 40, INFO_BLUE));
         JLabel lblMsg = new JLabel("<html><center>" + mensagem + "</center></html>");
-        lblMsg.setFont(new Font("Arial", Font.BOLD, 16));
-        lblMsg.setForeground(Color.WHITE);
+        lblMsg.setFont(ARIAL_16_B);
+        lblMsg.setForeground(FG_LIGHT);
         lblMsg.setHorizontalAlignment(SwingConstants.CENTER);
 
         JPanel pnlCenter = new JPanel(new BorderLayout(10, 10));
@@ -438,6 +447,13 @@ public final class UIConstants {
     
     public static void showWarning(Component parent, String mensagem) {
         Toast.show(parent, mensagem, Toast.Type.WARNING);
+    }
+
+    public static String toHex(Color color) {
+        if (color == null) {
+            return "#000000";
+        }
+        return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
     }
 
     // Classe Interna para Painéis Arredondados

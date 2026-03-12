@@ -69,8 +69,8 @@ public class HomePanel extends JPanel {
         
         kpiPanel.add(new InfoCard("Usuário", valorOuPadrao(ctx.getNome(), "Não identificado"), GoogleMaterialDesignIcons.ACCOUNT_CIRCLE, UIConstants.PRIMARY_RED));
         kpiPanel.add(new InfoCard("Perfil", valorOuPadrao(ctx.getCargo(), "Sem cargo"), GoogleMaterialDesignIcons.PERSON, UIConstants.SUCCESS_GREEN));
-        kpiPanel.add(new InfoCard("Escopo", buildScopeLabel(ctx), GoogleMaterialDesignIcons.TRACK_CHANGES, new Color(230, 126, 34)));
-        kpiPanel.add(new InfoCard("Restaurante", buildRestaurantSummary(ctx), GoogleMaterialDesignIcons.STORE, new Color(52, 152, 219)));
+        kpiPanel.add(new InfoCard("Escopo", buildScopeLabel(ctx), GoogleMaterialDesignIcons.TRACK_CHANGES, UIConstants.WARNING_ORANGE));
+        kpiPanel.add(new InfoCard("Restaurante", buildRestaurantSummary(ctx), GoogleMaterialDesignIcons.STORE, UIConstants.INFO_BLUE));
 
         content.add(kpiPanel);
         content.add(Box.createVerticalStrut(30)); // Espaçamento
@@ -300,7 +300,7 @@ public class HomePanel extends JPanel {
             lblTit.setForeground(UIConstants.FG_MUTED);
             
             JLabel lblVal = new JLabel(valor);
-            lblVal.setFont(new Font("Segoe UI", Font.BOLD, 22)); 
+            lblVal.setFont(UIConstants.FONT_SECTION);
             lblVal.setForeground(UIConstants.FG_LIGHT);
             
             pText.add(lblTit);

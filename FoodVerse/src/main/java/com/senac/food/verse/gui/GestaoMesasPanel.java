@@ -120,7 +120,7 @@ public class GestaoMesasPanel extends JPanel {
         JPanel legenda = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         legenda.setBackground(UIConstants.BG_DARK_ALT);
         legenda.add(criarItemLegenda("Livre", UIConstants.SUCCESS_GREEN));
-        legenda.add(criarItemLegenda("Próxima", new Color(243, 156, 18)));
+        legenda.add(criarItemLegenda("Próxima", UIConstants.WARNING_ORANGE));
         legenda.add(criarItemLegenda("Check-in agora", UIConstants.PRIMARY_RED));
         legenda.add(criarItemLegenda("Atrasada", UIConstants.DANGER_RED));
         return legenda;
@@ -512,7 +512,7 @@ public class GestaoMesasPanel extends JPanel {
 
     private JButton createButton(String text, GoogleMaterialDesignIcons icon, Color bg) {
         JButton btn = new JButton(text);
-        btn.setIcon(IconFontSwing.buildIcon(icon, 18, Color.WHITE));
+        btn.setIcon(IconFontSwing.buildIcon(icon, 18, UIConstants.SEL_FG));
         if (UIConstants.SUCCESS_GREEN.equals(bg)) {
             UIConstants.styleSuccess(btn);
         } else if (UIConstants.DANGER_RED.equals(bg)) {
@@ -539,11 +539,11 @@ public class GestaoMesasPanel extends JPanel {
         return "PROXIMA";
     }
 
-    private static Color resolveStatusColor(String status) {
+    static Color resolveStatusColor(String status) {
         return switch (status) {
             case "CHECK_IN" -> UIConstants.PRIMARY_RED;
             case "ATRASADA" -> UIConstants.DANGER_RED;
-            case "PROXIMA" -> new Color(243, 156, 18);
+            case "PROXIMA" -> UIConstants.WARNING_ORANGE;
             default -> UIConstants.SUCCESS_GREEN;
         };
     }

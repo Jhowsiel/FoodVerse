@@ -92,7 +92,7 @@ public class TelaInicial extends JFrame {
 
         JLabel lblLogo = new JLabel("FOODVERSE");
         lblLogo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.RESTAURANT_MENU, 50, UIConstants.PRIMARY_RED));
-        lblLogo.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        lblLogo.setFont(UIConstants.FONT_TITLE_LARGE);
         lblLogo.setForeground(UIConstants.FG_LIGHT);
         lblLogo.setHorizontalAlignment(SwingConstants.CENTER);
         lblLogo.setVerticalTextPosition(SwingConstants.BOTTOM);
@@ -301,7 +301,7 @@ public class TelaInicial extends JFrame {
         
         JButton btnSair = new JButton("Sair");
         UIConstants.styleDanger(btnSair);
-        btnSair.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.EXIT_TO_APP, 18, Color.WHITE));
+        btnSair.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.EXIT_TO_APP, 18, UIConstants.SEL_FG));
         btnSair.addActionListener(e -> logout());
         footerPanel.add(btnSair, BorderLayout.CENTER);
         sidebar.add(footerPanel, BorderLayout.SOUTH);
@@ -455,9 +455,7 @@ public class TelaInicial extends JFrame {
         } catch (Exception e) {
             System.err.println("Erro ao carregar módulo: " + nome);
             e.printStackTrace();
-            JPanel erroPanel = new JPanel(new BorderLayout());
-            erroPanel.setBackground(UIConstants.BG_DARK);
-            erroPanel.add(new JLabel("Erro ao carregar módulo " + nome, SwingConstants.CENTER));
+            JPanel erroPanel = createModuleErrorPanel(nome);
             panelBody.add(erroPanel, cardName);
             adicionarModulo(nome, icone, cardName);
         }
@@ -465,7 +463,7 @@ public class TelaInicial extends JFrame {
 
     private void addTituloSecao(String titulo) {
         JLabel l = new JLabel(titulo);
-        l.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        l.setFont(UIConstants.ARIAL_12_B);
         l.setForeground(UIConstants.FG_MUTED);
         l.setBorder(new EmptyBorder(20, 10, 5, 0));
         l.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -488,7 +486,7 @@ public class TelaInicial extends JFrame {
         btn.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent e) {
                 if(btn.getBackground() != UIConstants.BG_DARK)
-                    btn.setBackground(new Color(50, 50, 50));
+                    btn.setBackground(UIConstants.CARD_DARK);
             }
             public void mouseExited(MouseEvent e) {
                 if(btn.getBackground() != UIConstants.BG_DARK)
@@ -496,11 +494,7 @@ public class TelaInicial extends JFrame {
             }
         });
 
-        btn.addActionListener(e -> {
-            resetarBotoesMenu(cardName);
-            CardLayout cl = (CardLayout) panelBody.getLayout();
-            cl.show(panelBody, cardName);
-        });
+        btn.addActionListener(e -> abrirModulo(cardName));
 
         botoesMenu.add(btn);
         sidebarContainer.add(btn);
@@ -640,6 +634,41 @@ public class TelaInicial extends JFrame {
             return "Modo global ativo. Selecione um restaurante para operar.";
         }
         return "Operando como " + ctx.getCargo() + " no restaurante #" + ctx.getRestauranteEfetivo() + ".";
+    }
+
+    static String buildModuleLoadErrorText(String nomeModulo) {
+        return "Não foi possível carregar o módulo " + nomeModulo + ".";
+    }
+
+    private JPanel createModuleErrorPanel(String nomeModulo) {
+        JPanel wrapper = new JPanel(new GridBagLayout());
+        wrapper.setBackground(UIConstants.BG_DARK);
+
+        JPanel content = new JPanel();
+        content.setOpaque(false);
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+
+        JLabel icon = new JLabel(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ERROR_OUTLINE, 64, UIConstants.WARNING_ORANGE));
+        icon.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel titulo = new JLabel(buildModuleLoadErrorText(nomeModulo));
+        titulo.setFont(UIConstants.FONT_SECTION);
+        titulo.setForeground(UIConstants.FG_LIGHT);
+        titulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel descricao = new JLabel("Tente reabrir o módulo ou sincronizar novamente o contexto atual.");
+        descricao.setFont(UIConstants.FONT_REGULAR);
+        descricao.setForeground(UIConstants.FG_MUTED);
+        descricao.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        content.add(icon);
+        content.add(Box.createVerticalStrut(16));
+        content.add(titulo);
+        content.add(Box.createVerticalStrut(8));
+        content.add(descricao);
+
+        wrapper.add(content);
+        return wrapper;
     }
 
     private void cadastrar() {

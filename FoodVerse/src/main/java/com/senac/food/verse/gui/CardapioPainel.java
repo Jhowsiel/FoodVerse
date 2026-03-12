@@ -132,7 +132,7 @@ public class CardapioPainel extends JPanel {
         actionPanel.setOpaque(false);
 
         JButton btnNovo = new JButton("Novo Prato");
-        btnNovo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ADD, 18, Color.WHITE));
+        btnNovo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ADD, 18, UIConstants.SEL_FG));
         UIConstants.stylePrimary(btnNovo);
         btnNovo.setToolTipText("Cadastrar nova refeição");
         btnNovo.addActionListener(e -> novoPrato());
@@ -223,7 +223,7 @@ public class CardapioPainel extends JPanel {
         actionPanel.setOpaque(false);
 
         JButton btnNovo = new JButton("Novo Produto");
-        btnNovo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ADD, 18, Color.WHITE));
+        btnNovo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ADD, 18, UIConstants.SEL_FG));
         UIConstants.stylePrimary(btnNovo);
         btnNovo.addActionListener(e -> novoProduto());
 
@@ -410,12 +410,12 @@ public class CardapioPainel extends JPanel {
         int row = tblPratos.getSelectedRow();
         if(row < 0) { Toast.show(this, "Selecione um prato.", Toast.Type.WARNING); return; }
         Long id = (Long) tblPratos.getValueAt(row, 0);
-        
-        if(JOptionPane.showConfirmDialog(this, "Excluir este prato permanentemente?", "Confirmar", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+
+        UIConstants.showConfirmDialog(this, "Confirmar exclusão", "Excluir este prato permanentemente?", () -> {
             dao.excluirPrato(id);
             atualizarTabelaPratos();
             Toast.show(this, "Prato removido.", Toast.Type.ERROR);
-        }
+        });
     }
 
     private void novoProduto() {
@@ -457,12 +457,12 @@ public class CardapioPainel extends JPanel {
         int row = tblProdutos.getSelectedRow();
         if(row < 0) { Toast.show(this, "Selecione um produto.", Toast.Type.WARNING); return; }
         Long id = (Long) tblProdutos.getValueAt(row, 0);
-        
-        if(JOptionPane.showConfirmDialog(this, "Excluir este produto?", "Confirmar", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+
+        UIConstants.showConfirmDialog(this, "Confirmar exclusão", "Excluir este produto?", () -> {
             dao.excluirProduto(id);
             atualizarTabelaProdutos();
             Toast.show(this, "Produto removido.", Toast.Type.ERROR);
-        }
+        });
     }
 
     // =================================================================================
@@ -656,7 +656,7 @@ public class CardapioPainel extends JPanel {
             pBottom.setBackground(UIConstants.BG_DARK);
             
             JLabel lQtd = new JLabel("Qtd:");
-            lQtd.setForeground(Color.WHITE);
+            lQtd.setForeground(UIConstants.FG_LIGHT);
             JSpinner sQtd = new JSpinner(new SpinnerNumberModel(1.0, 0.01, 1000.0, 1.0));
             UIConstants.styleSpinner(sQtd);
             
