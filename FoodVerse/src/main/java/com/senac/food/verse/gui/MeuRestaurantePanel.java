@@ -93,7 +93,7 @@ public class MeuRestaurantePanel extends JPanel {
             }
         };
         l.setFont(UIConstants.FONT_BOLD);
-        l.setForeground(Color.WHITE);
+        l.setForeground(UIConstants.SEL_FG);
         l.setBackground(cor);
         l.setOpaque(false);
         l.setBorder(new EmptyBorder(6, 14, 6, 14));
@@ -193,13 +193,13 @@ public class MeuRestaurantePanel extends JPanel {
 
         btnToggleAberto = new JButton("Fechar Restaurante");
         UIConstants.styleDanger(btnToggleAberto);
-        btnToggleAberto.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.LOCK, 18, Color.WHITE));
+        btnToggleAberto.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.LOCK, 18, UIConstants.SEL_FG));
         btnToggleAberto.addActionListener(e -> toggleAberto());
         acoes.add(btnToggleAberto);
 
         btnSalvar = new JButton("Salvar Alterações");
         UIConstants.stylePrimary(btnSalvar);
-        btnSalvar.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.SAVE, 18, Color.WHITE));
+        btnSalvar.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.SAVE, 18, UIConstants.SEL_FG));
         btnSalvar.addActionListener(e -> salvarDados());
         acoes.add(btnSalvar);
 
@@ -327,13 +327,13 @@ public class MeuRestaurantePanel extends JPanel {
             lblStatusAberto.setText("● ABERTO");
             lblStatusAberto.setBackground(UIConstants.SUCCESS_GREEN);
             btnToggleAberto.setText("Fechar Restaurante");
-            btnToggleAberto.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.LOCK, 18, Color.WHITE));
+            btnToggleAberto.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.LOCK, 18, UIConstants.SEL_FG));
             UIConstants.styleDanger(btnToggleAberto);
         } else {
             lblStatusAberto.setText("● FECHADO");
             lblStatusAberto.setBackground(UIConstants.DANGER_RED);
             btnToggleAberto.setText("Abrir Restaurante");
-            btnToggleAberto.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.LOCK_OPEN, 18, Color.WHITE));
+            btnToggleAberto.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.LOCK_OPEN, 18, UIConstants.SEL_FG));
             UIConstants.styleSuccess(btnToggleAberto);
         }
     }
@@ -353,7 +353,7 @@ public class MeuRestaurantePanel extends JPanel {
                 UIConstants.styleSecondary(btnToggleAtivo);
             } else {
                 btnToggleAtivo.setText("Ativar na Plataforma");
-                btnToggleAtivo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.CHECK_CIRCLE, 16, Color.WHITE));
+                btnToggleAtivo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.CHECK_CIRCLE, 16, UIConstants.SEL_FG));
                 UIConstants.styleSuccess(btnToggleAtivo);
             }
         }

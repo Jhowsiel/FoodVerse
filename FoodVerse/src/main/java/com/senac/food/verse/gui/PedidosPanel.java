@@ -61,7 +61,7 @@ public class PedidosPanel extends JPanel {
         panelLista = new JPanel(new BorderLayout());
         panelLista.setBackground(UIConstants.BG_DARK_ALT);
         panelLista.setPreferredSize(new Dimension(420, 0));
-        panelLista.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, new Color(45, 45, 45)));
+        panelLista.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, UIConstants.GRID_DARK));
         
         JPanel header = new JPanel(new GridBagLayout());
         header.setBackground(UIConstants.BG_DARK_ALT);
@@ -147,16 +147,31 @@ public class PedidosPanel extends JPanel {
         panelDetalhes.removeAll();
         JPanel empty = new JPanel(new GridBagLayout());
         empty.setBackground(UIConstants.BG_DARK);
-        
+
+        JPanel content = new JPanel();
+        content.setOpaque(false);
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+
+        JLabel icon = new JLabel(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ASSIGNMENT, 80, UIConstants.FG_MUTED));
+        icon.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         JLabel msg = new JLabel("Selecione um pedido para iniciar a operação");
-        msg.setForeground(UIConstants.FG_MUTED);
+        msg.setForeground(UIConstants.FG_LIGHT);
         msg.setFont(UIConstants.FONT_TITLE);
-        msg.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ASSIGNMENT, 80, UIConstants.FG_MUTED));
-        msg.setHorizontalTextPosition(SwingConstants.CENTER);
-        msg.setVerticalTextPosition(SwingConstants.BOTTOM);
-        msg.setIconTextGap(20);
-        
-        empty.add(msg);
+        msg.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel hint = new JLabel("Acompanhe status, impressão e despacho no painel à direita.");
+        hint.setForeground(UIConstants.FG_MUTED);
+        hint.setFont(UIConstants.FONT_REGULAR);
+        hint.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        content.add(icon);
+        content.add(Box.createVerticalStrut(18));
+        content.add(msg);
+        content.add(Box.createVerticalStrut(8));
+        content.add(hint);
+
+        empty.add(content);
         panelDetalhes.add(empty);
         panelDetalhes.revalidate();
         panelDetalhes.repaint();
@@ -260,7 +275,7 @@ public class PedidosPanel extends JPanel {
     // =========================================================================
     private JPanel criarCardMiniatura(Pedidos p) {
         boolean isSelected = (pedidoSelecionado != null && pedidoSelecionado.getIdPedido().equals(p.getIdPedido()));
-        Color bgColor = isSelected ? new Color(70, 30, 30) : UIConstants.CARD_DARK;
+        Color bgColor = isSelected ? UIConstants.SELECTED_DANGER_CARD_BG : UIConstants.CARD_DARK;
         
         UIConstants.RoundedPanel card = new UIConstants.RoundedPanel(12, bgColor);
         card.setLayout(new BorderLayout(10, 5));
@@ -282,7 +297,7 @@ public class PedidosPanel extends JPanel {
         lId.setForeground(UIConstants.PRIMARY_RED);
         lId.setFont(UIConstants.ARIAL_14_B);
         JLabel lNome = new JLabel(p.getNomeCliente());
-        lNome.setForeground(Color.WHITE);
+        lNome.setForeground(UIConstants.FG_LIGHT);
         lNome.setFont(UIConstants.ARIAL_14_B);
         row1.add(lId, BorderLayout.WEST);
         row1.add(lNome, BorderLayout.CENTER);
@@ -318,21 +333,28 @@ public class PedidosPanel extends JPanel {
         return card;
     }
     
-    private String calcularSLA(String horaPedido, String status) {
+    static String calcularSlaFormatado(String horaPedido, String status) {
+        if (horaPedido == null || horaPedido.isBlank()) {
+            return "<html><font color='" + UIConstants.toHex(UIConstants.FG_MUTED) + "'>Horário indisponível</font></html>";
+        }
         if(status.equalsIgnoreCase("concluido") || status.equalsIgnoreCase("cancelado")) {
-            return "<html><font color='#888888'>Fechado</font></html>";
+            return "<html><font color='" + UIConstants.toHex(UIConstants.FG_MUTED) + "'>Fechado</font></html>";
         }
         try {
             LocalTime hp = LocalTime.parse(horaPedido, DateTimeFormatter.ofPattern("HH:mm"));
             long min = ChronoUnit.MINUTES.between(hp, LocalTime.now());
-            if(min < 0) min = 0; 
+            min = Math.max(0, min); 
             
-            if(min > 30) return "<html><font color='#ff4444'>ATRASADO (" + min + " min)</font></html>";
-            else if (min > 15) return "<html><font color='#ffaa00'>Em espera (" + min + " min)</font></html>";
-            else return "<html><font color='#00cc66'>No prazo (" + min + " min)</font></html>";
+            if(min > 30) return "<html><font color='" + UIConstants.toHex(UIConstants.DANGER_RED) + "'>ATRASADO (" + min + " min)</font></html>";
+            else if (min > 15) return "<html><font color='" + UIConstants.toHex(UIConstants.WARNING_ORANGE) + "'>Em espera (" + min + " min)</font></html>";
+            else return "<html><font color='" + UIConstants.toHex(UIConstants.SUCCESS_GREEN) + "'>No prazo (" + min + " min)</font></html>";
         } catch (Exception e) {
-            return "<html><font color='#aaaaaa'>Às " + horaPedido + "</font></html>";
+            return "<html><font color='" + UIConstants.toHex(UIConstants.FG_MUTED) + "'>Às " + horaPedido + "</font></html>";
         }
+    }
+
+    private String calcularSLA(String horaPedido, String status) {
+        return calcularSlaFormatado(horaPedido, status);
     }
     
     // =========================================================================
@@ -352,13 +374,13 @@ public class PedidosPanel extends JPanel {
         JPanel pnlTitulos = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
         pnlTitulos.setOpaque(false);
         JLabel titulo = new JLabel("Pedido #" + p.getIdPedido());
-        titulo.setFont(new Font("Segoe UI", Font.BOLD, 28));
-        titulo.setForeground(Color.WHITE);
+        titulo.setFont(UIConstants.FONT_TITLE_LARGE);
+        titulo.setForeground(UIConstants.FG_LIGHT);
         
         JLabel badgeStatus = new JLabel("  " + p.getStatusPedido().toUpperCase() + "  ");
         badgeStatus.setOpaque(true);
         badgeStatus.setBackground(getColorStatus(p.getStatusPedido()));
-        badgeStatus.setForeground(Color.WHITE);
+        badgeStatus.setForeground(UIConstants.SEL_FG);
         badgeStatus.setFont(UIConstants.ARIAL_12_B);
         badgeStatus.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
         
@@ -393,12 +415,12 @@ public class PedidosPanel extends JPanel {
         }
         
         if (p.getObservacoes() != null && !p.getObservacoes().trim().isEmpty()) {
-            UIConstants.RoundedPanel pnlObs = new UIConstants.RoundedPanel(12, new Color(80, 40, 20)); 
+            UIConstants.RoundedPanel pnlObs = new UIConstants.RoundedPanel(12, UIConstants.WARNING_PANEL_BG);
             pnlObs.setLayout(new BorderLayout(10, 10));
             pnlObs.setBorder(new EmptyBorder(15, 15, 15, 15));
-            JLabel icoObs = new JLabel(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.WARNING, 24, Color.ORANGE));
+            JLabel icoObs = new JLabel(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.WARNING, 24, UIConstants.WARNING_ORANGE));
             JLabel txtObs = new JLabel("<html><b>ALERTA COZINHA:</b><br>" + p.getObservacoes() + "</html>");
-            txtObs.setForeground(Color.WHITE);
+            txtObs.setForeground(UIConstants.FG_LIGHT);
             txtObs.setFont(UIConstants.ARIAL_14);
             pnlObs.add(icoObs, BorderLayout.WEST);
             pnlObs.add(txtObs, BorderLayout.CENTER);
@@ -433,7 +455,7 @@ public class PedidosPanel extends JPanel {
                 lQtd.setFont(UIConstants.ARIAL_14_B);
                 
                 JLabel lNome = new JLabel(item.getNomeProduto());
-                lNome.setForeground(Color.WHITE);
+                lNome.setForeground(UIConstants.FG_LIGHT);
                 lNome.setFont(UIConstants.ARIAL_14);
                 
                 JLabel lPreco = new JLabel(nf.format(item.getPreco()));
@@ -584,7 +606,7 @@ public class PedidosPanel extends JPanel {
     private JLabel criarBadgeTimeline(String txt, boolean ativo) {
         JLabel l = new JLabel(txt);
         l.setFont(UIConstants.ARIAL_12_B);
-        l.setForeground(ativo ? Color.WHITE : UIConstants.FG_MUTED);
+        l.setForeground(ativo ? UIConstants.SEL_FG : UIConstants.FG_MUTED);
         l.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(ativo ? UIConstants.PRIMARY_RED : UIConstants.GRID_DARK, 1),
             BorderFactory.createEmptyBorder(5, 10, 5, 10)
@@ -618,7 +640,7 @@ public class PedidosPanel extends JPanel {
         
         JLabel lblL1 = new JLabel(linha1);
         lblL1.setFont(UIConstants.ARIAL_14_B);
-        lblL1.setForeground(Color.WHITE);
+        lblL1.setForeground(UIConstants.FG_LIGHT);
         
         JLabel lblL2 = new JLabel(linha2);
         lblL2.setFont(UIConstants.ARIAL_12);
@@ -747,14 +769,18 @@ public class PedidosPanel extends JPanel {
     // =========================================================================
     // 7. CONTROLO DE ESTADOS E BASE DE DADOS SEGURO
     // =========================================================================
-    private Color getColorStatus(String status) {
+    static Color resolverCorStatus(String status) {
         String s = status.toLowerCase();
-        if(s.equals("pendente")) return new Color(243, 156, 18); 
+        if(s.equals("pendente")) return UIConstants.WARNING_ORANGE; 
         if(s.equals("em preparo")) return UIConstants.PRIMARY_RED; 
         if(s.equals("pronto")) return UIConstants.SUCCESS_GREEN; 
-        if(s.equals("em rota")) return new Color(52, 152, 219); 
+        if(s.equals("em rota")) return UIConstants.INFO_BLUE; 
         if(s.equals("cancelado")) return UIConstants.DANGER_RED; 
         return UIConstants.FG_MUTED; 
+    }
+
+    private Color getColorStatus(String status) {
+        return resolverCorStatus(status);
     }
     
     // --- LÓGICA DRY: UTILIZAÇÃO DA UICONSTANTS ---

@@ -44,8 +44,6 @@ public class AprovacaoCadastrosPanel extends JPanel {
     private JLabel lblTotalPendentes;
     private JLabel lblTotalAtivos;
 
-    private final Color STATUS_PENDING = new Color(230, 126, 34);
-
     public AprovacaoCadastrosPanel() {
         this.sessionContext = SessionContext.getInstance();
         this.modoGerentesGlobal = isGlobalManagerMode(sessionContext);
@@ -112,7 +110,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
 
         JPanel cards = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
         cards.setOpaque(false);
-        lblTotalPendentes = criarBadgeInfo("Pendentes", STATUS_PENDING);
+        lblTotalPendentes = criarBadgeInfo("Pendentes", UIConstants.WARNING_ORANGE);
         lblTotalAtivos = criarBadgeInfo("Ativos", UIConstants.SUCCESS_GREEN);
         cards.add(lblTotalAtivos);
         cards.add(lblTotalPendentes);
@@ -133,7 +131,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
             }
         };
         l.setFont(UIConstants.FONT_BOLD);
-        l.setForeground(Color.WHITE);
+        l.setForeground(UIConstants.SEL_FG);
         l.setBackground(cor);
         l.setOpaque(false);
         l.setBorder(new EmptyBorder(5, 12, 5, 12));
@@ -159,7 +157,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
         btnPanel.setOpaque(false);
 
         JButton btnNovo = new JButton(buildPrimaryActionLabel(sessionContext));
-        btnNovo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.PERSON_ADD, 18, Color.WHITE));
+        btnNovo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.PERSON_ADD, 18, UIConstants.SEL_FG));
         UIConstants.stylePrimary(btnNovo);
         btnNovo.setPreferredSize(new Dimension(170, 40));
         btnNovo.addActionListener(e -> abrirModalEdicao(null));
@@ -297,7 +295,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
             }
 
             lblTotalPendentes.setText(pendentes + " Pendentes");
-            lblTotalPendentes.setBackground(pendentes > 0 ? STATUS_PENDING : UIConstants.CARD_DARK);
+            lblTotalPendentes.setBackground(pendentes > 0 ? UIConstants.WARNING_ORANGE : UIConstants.CARD_DARK);
             lblTotalAtivos.setText(ativos + " Ativos");
             lblTotalAtivos.setBackground(ativos > 0 ? UIConstants.SUCCESS_GREEN : UIConstants.CARD_DARK);
 
@@ -710,7 +708,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
                     l.setText("● ATIVO");
                 }
                 case STATUS_PENDENTE -> {
-                    l.setForeground(STATUS_PENDING);
+                    l.setForeground(UIConstants.WARNING_ORANGE);
                     l.setText("● PENDENTE");
                 }
                 case STATUS_DESLIGADO -> {
@@ -749,7 +747,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
         private void configBtn(JButton b, GoogleMaterialDesignIcons icon, Color c) {
             b.setIcon(IconFontSwing.buildIcon(icon, 16, c));
             b.setPreferredSize(new Dimension(32, 32));
-            b.setBackground(new Color(0, 0, 0, 0));
+            b.setBackground(UIConstants.BG_DARK_ALT);
             b.setOpaque(false);
             b.setBorder(BorderFactory.createLineBorder(c, 1));
             b.setCursor(new Cursor(Cursor.HAND_CURSOR));

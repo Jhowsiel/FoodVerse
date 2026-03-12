@@ -11,15 +11,17 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.RoundRectangle2D;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class GestaoCozinhaPanel extends JPanel {
 
+    private static final Logger LOGGER = Logger.getLogger(GestaoCozinhaPanel.class.getName());
     private final PedidoDAO dao = new PedidoDAO();
     private JPanel containerPedidos;
     private JLabel lblContador;
@@ -37,7 +39,7 @@ public class GestaoCozinhaPanel extends JPanel {
         JPanel pnlTitle = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
         pnlTitle.setOpaque(false);
         JLabel title = new JLabel("Produção (KDS)");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        title.setFont(UIConstants.FONT_TITLE);
         title.setForeground(UIConstants.FG_LIGHT);
         title.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.RESTAURANT, 28, UIConstants.FG_LIGHT));
         
@@ -56,10 +58,11 @@ public class GestaoCozinhaPanel extends JPanel {
         add(header, BorderLayout.NORTH);
 
         // --- GRID DE PEDIDOS ---
-        containerPedidos = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 20));
+        containerPedidos = new JPanel(createPedidosLayout());
         containerPedidos.setBackground(UIConstants.BG_DARK);
 
         JScrollPane scroll = new JScrollPane(containerPedidos);
+        UIConstants.styleScrollPane(scroll);
         scroll.setBorder(null);
         scroll.getVerticalScrollBar().setUnitIncrement(20);
         scroll.getViewport().setBackground(UIConstants.BG_DARK);
@@ -103,9 +106,11 @@ public class GestaoCozinhaPanel extends JPanel {
                     containerPedidos.removeAll();
                     
                     if(pedidos.isEmpty()) {
-                        lblContador.setText("Cozinha Limpa! (Nenhum pedido)");
+                        lblContador.setText("Cozinha em dia");
                         lblContador.setForeground(UIConstants.SUCCESS_GREEN);
+                        renderizarEstadoVazio();
                     } else {
+                        containerPedidos.setLayout(createPedidosLayout());
                         lblContador.setText(pedidos.size() + " pedidos na fila");
                         lblContador.setForeground(UIConstants.PRIMARY_RED);
                         
@@ -116,7 +121,8 @@ public class GestaoCozinhaPanel extends JPanel {
                     containerPedidos.revalidate();
                     containerPedidos.repaint();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    LOGGER.log(Level.WARNING, "Falha ao sincronizar pedidos da cozinha.", e);
+                    UIConstants.showError(GestaoCozinhaPanel.this, "Não foi possível sincronizar a cozinha.");
                 }
             }
         }.execute();
@@ -133,31 +139,36 @@ public class GestaoCozinhaPanel extends JPanel {
         
         boolean isAtrasado = minutosDecorridos > 25; // SLA da cozinha (25 min)
         
-        RoundedPanel card = new RoundedPanel(15, UIConstants.CARD_DARK);
-        card.setPreferredSize(new Dimension(300, 360));
-        card.setLayout(new BorderLayout());
-        card.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        UIConstants.RoundedPanel pedidoCard = new UIConstants.RoundedPanel(15, UIConstants.CARD_DARK);
+        pedidoCard.setPreferredSize(new Dimension(300, 360));
+        pedidoCard.setLayout(new BorderLayout());
+        pedidoCard.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
         // --- TOPO DO CARD ---
         JPanel headerCard = new JPanel(new BorderLayout());
         headerCard.setOpaque(false);
         
         JLabel lblId = new JLabel("#" + pedido.getIdPedido());
-        lblId.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblId.setFont(UIConstants.ARIAL_18_B);
         lblId.setForeground(UIConstants.FG_LIGHT);
         
         JLabel lblTempo = new JLabel(minutosDecorridos + " min");
-        lblTempo.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblTempo.setFont(UIConstants.ARIAL_14_B);
         lblTempo.setForeground(isAtrasado ? UIConstants.PRIMARY_RED_ALT : UIConstants.SUCCESS_GREEN);
         lblTempo.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ACCESS_TIME, 16, isAtrasado ? UIConstants.PRIMARY_RED_ALT : UIConstants.SUCCESS_GREEN));
 
         headerCard.add(lblId, BorderLayout.WEST);
         headerCard.add(lblTempo, BorderLayout.EAST);
 
-        String local = pedido.getModoEntrega().equalsIgnoreCase("Delivery") ? "🛵 DELIVERY" : "🍽️ SALÃO (" + pedido.getMesa() + ")";
-        JLabel lblOrigem = new JLabel(local);
-        lblOrigem.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        boolean delivery = pedido.getModoEntrega().equalsIgnoreCase("Delivery");
+        JLabel lblOrigem = new JLabel(buildKitchenOriginText(pedido.getModoEntrega(), pedido.getMesa()));
+        lblOrigem.setFont(UIConstants.ARIAL_12_B);
         lblOrigem.setForeground(UIConstants.FG_MUTED);
+        lblOrigem.setIcon(IconFontSwing.buildIcon(
+                delivery ? GoogleMaterialDesignIcons.MOTORCYCLE : GoogleMaterialDesignIcons.RESTAURANT,
+                14,
+                UIConstants.FG_MUTED));
+        lblOrigem.setIconTextGap(8);
         lblOrigem.setBorder(new EmptyBorder(5,0,15,0));
 
         JPanel topContainer = new JPanel(new BorderLayout());
@@ -173,8 +184,8 @@ public class GestaoCozinhaPanel extends JPanel {
         if(pedido.getItens() != null) {
             for (ItemPedido item : pedido.getItens()) {
                 JLabel lblItem = new JLabel("<html><b>" + item.getQuantidade() + "x</b> " + item.getNomeProduto() + "</html>");
-                lblItem.setForeground(Color.WHITE);
-                lblItem.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+                lblItem.setForeground(UIConstants.FG_LIGHT);
+                lblItem.setFont(UIConstants.FONT_REGULAR_15);
                 lblItem.setBorder(new EmptyBorder(0, 0, 8, 0));
                 painelItens.add(lblItem);
             }
@@ -183,7 +194,7 @@ public class GestaoCozinhaPanel extends JPanel {
         // --- OBSERVAÇÕES ---
         if(pedido.getObservacoes() != null && !pedido.getObservacoes().isEmpty()) {
             painelItens.add(Box.createVerticalStrut(10));
-            JLabel lblObs = new JLabel("<html><font color='#FFA500'>⚠️ OBS:</font> " + pedido.getObservacoes() + "</html>");
+            JLabel lblObs = new JLabel(buildKitchenObservationMarkup(pedido.getObservacoes()));
             lblObs.setFont(UIConstants.ARIAL_12);
             painelItens.add(lblObs);
         }
@@ -204,18 +215,18 @@ public class GestaoCozinhaPanel extends JPanel {
             UIConstants.showSuccess(this, "Pedido #" + pedido.getIdPedido() + " finalizado!");
         });
 
-        card.add(topContainer, BorderLayout.NORTH);
-        card.add(scrollItens, BorderLayout.CENTER);
-        card.add(btnAction, BorderLayout.SOUTH);
+        pedidoCard.add(topContainer, BorderLayout.NORTH);
+        pedidoCard.add(scrollItens, BorderLayout.CENTER);
+        pedidoCard.add(btnAction, BorderLayout.SOUTH);
 
-        return card;
+        return pedidoCard;
     }
 
     private JButton createActionButton(String text, GoogleMaterialDesignIcons icon, Color bg) {
         JButton btn = new JButton(text);
-        btn.setIcon(IconFontSwing.buildIcon(icon, 18, Color.WHITE));
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        btn.setForeground(Color.WHITE);
+        btn.setIcon(IconFontSwing.buildIcon(icon, 18, UIConstants.SEL_FG));
+        btn.setFont(UIConstants.ARIAL_12_B);
+        btn.setForeground(UIConstants.SEL_FG);
         btn.setBackground(bg);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btn.setFocusPainted(false);
@@ -223,19 +234,52 @@ public class GestaoCozinhaPanel extends JPanel {
         return btn;
     }
 
-    private static class RoundedPanel extends JPanel {
-        private int radius; 
-        private Color bgColor;
-        public RoundedPanel(int radius, Color bgColor) { 
-            this.radius = radius; 
-            this.bgColor = bgColor; 
-            setOpaque(false); 
+    private void renderizarEstadoVazio() {
+        containerPedidos.setLayout(new GridBagLayout());
+
+        JPanel empty = new JPanel();
+        empty.setOpaque(false);
+        empty.setLayout(new BoxLayout(empty, BoxLayout.Y_AXIS));
+        empty.setBorder(new EmptyBorder(30, 30, 30, 30));
+
+        JLabel icon = new JLabel(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.KITCHEN, 64, UIConstants.FG_MUTED));
+        icon.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel titulo = new JLabel("Nenhum pedido em preparo");
+        titulo.setFont(UIConstants.FONT_SECTION);
+        titulo.setForeground(UIConstants.FG_LIGHT);
+        titulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel descricao = new JLabel("Assim que novos pedidos entrarem na cozinha, eles aparecerão aqui.");
+        descricao.setFont(UIConstants.FONT_REGULAR);
+        descricao.setForeground(UIConstants.FG_MUTED);
+        descricao.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        empty.add(icon);
+        empty.add(Box.createVerticalStrut(18));
+        empty.add(titulo);
+        empty.add(Box.createVerticalStrut(8));
+        empty.add(descricao);
+
+        containerPedidos.add(empty);
+    }
+
+    static String buildKitchenOriginText(String modoEntrega, String mesa) {
+        if (modoEntrega != null && modoEntrega.equalsIgnoreCase("Delivery")) {
+            return "Delivery";
         }
-        @Override protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g;
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(bgColor);
-            g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), radius, radius));
+        if (mesa == null || mesa.isBlank()) {
+            return "Salão";
         }
+        return "Salão (" + mesa + ")";
+    }
+
+    static String buildKitchenObservationMarkup(String observacao) {
+        return "<html><font color='" + UIConstants.toHex(UIConstants.WARNING_ORANGE) + "'><b>OBS:</b></font> "
+                + observacao + "</html>";
+    }
+
+    private static FlowLayout createPedidosLayout() {
+        return new FlowLayout(FlowLayout.LEFT, 20, 20);
     }
 }
