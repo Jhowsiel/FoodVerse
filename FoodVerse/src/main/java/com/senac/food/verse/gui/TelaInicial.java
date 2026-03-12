@@ -395,7 +395,7 @@ public class TelaInicial extends JFrame {
             // Admin Global: gerencia restaurantes + pode entrar no contexto de um deles
             addTituloSecao("ADMIN GLOBAL");
             adicionarPainelSeguro("Restaurantes", GoogleMaterialDesignIcons.STORE_MALL_DIRECTORY, "RESTAURANTES", new AdminRestaurantesPanel(this));
-            adicionarPainelSeguro("Equipe", GoogleMaterialDesignIcons.SUPERVISOR_ACCOUNT, "USUARIOS", new AprovacaoCadastrosPanel());
+            adicionarPainelSeguro("Gerentes", GoogleMaterialDesignIcons.SUPERVISOR_ACCOUNT, "USUARIOS", new AprovacaoCadastrosPanel());
         }
 
         if (adminComContexto && (isAdmin || isGerente)) {
@@ -436,6 +436,11 @@ public class TelaInicial extends JFrame {
     }
 
     private void abrirModulo(String cardName) {
+        SessionContext ctx = SessionContext.getInstance();
+        if (!PermissionChecker.canAccessModule(ctx, cardName)) {
+            Toast.show(this, PermissionChecker.buildBlockedModuleMessage(ctx, cardName), Toast.Type.WARNING);
+            return;
+        }
         resetarBotoesMenu(cardName);
         CardLayout cl = (CardLayout) panelBody.getLayout();
         cl.show(panelBody, cardName);
