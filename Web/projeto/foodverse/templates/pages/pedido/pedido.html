@@ -426,7 +426,7 @@
   </div>
 
   {% for pedido in pedidos %}
-  {% with sid=pedido.status.id_status %}
+  {% with sid=pedido.status.id_status|default:0 %}
   <div class="order-block">
 
     <!-- Left column -->
@@ -453,7 +453,7 @@
                 <div class="item-cat">{{ item.produto.categoria }}</div>
               </div>
             </div>
-            <span class="item-price">R$ {{ item.produto.preco }}</span>
+            <span class="item-price">R$ {{ item.produto.preco|floatformat:2|default:"0.00" }}</span>
           </div>
           {% endfor %}
         </div>
@@ -463,7 +463,7 @@
       <div class="card">
         <div class="status-pill">
           <span class="status-dot"></span>
-          {{ pedido.status.nome_status }}
+          {{ pedido.status.nome_status|default:"Pendente" }}
         </div>
 
         <div class="track-wrap">
@@ -506,7 +506,7 @@
         <div class="s-date">{{ pedido.data_pedido|date:"d M Y · H:i" }}</div>
         <div class="s-total-row">
           <span class="s-total-label">Total Pago</span>
-          <span class="s-total-val">R$ {{ pedido.valor_total }}</span>
+          <span class="s-total-val">R$ {{ pedido.valor_total|floatformat:2|default:"0.00" }}</span>
         </div>
 
         <div class="info-block">

@@ -17,7 +17,7 @@ def carrinho_context(request):
     )
     
     subtotal = sum(
-        i['preco'] * i['quantidade']
+        (i.get('preco') or 0) * i.get('quantidade', 0)
         for r in carrinho.values()
         for i in r.get('itens', [])
     )

@@ -5,13 +5,15 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q
+from django.db import transaction
 from django.contrib.auth.hashers import make_password, check_password
 import requests
 import re
 
-# Importando as suas models
 from .models import (
-    TbClientes, TbRestaurantes, TbProdutos, TbNutricao, TbAvaliacoes
+    TbClientes, TbRestaurantes, TbProdutos, TbNutricao, TbAvaliacoes,
+    TbReservas, TbPedidos, TbPedidosProdutos, TbStatusPedido, TbEstoque,
+    TbPagamentos
 )
 
 # -------------------------------------------------------------------------
@@ -92,11 +94,6 @@ def logout_view(request):
     list(messages.get_messages(request))  # limpa todas as mensagens pendentes
     return redirect('login')
 
-import re
-from django.contrib import messages
-from django.contrib.auth.hashers import make_password
-from django.utils import timezone
-from django.shortcuts import render, redirect
 
 def cadastro_view(request):
     if get_cliente_logado(request):
@@ -275,7 +272,7 @@ def restaurante_view(request):
     })
 
 def restaurante_detalhe_view(request, id):
-    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=id)
+    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=id, ativo=True)
     # Filtra produtos usando a instância do restaurante
     pratos = TbProdutos.objects.filter(restaurante=restaurante, disponivel=True)
 
@@ -288,9 +285,7 @@ def prato_view(request):
     rest_id = _int_param(request.GET.get('restaurante_id'), 1)  
     p_id = _int_param(request.GET.get('produto_id'), 1)  
 
-    print(f"Recebendo restaurante_id={rest_id} e produto_id={p_id}")  # Debug
-    
-    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=rest_id)
+    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=rest_id, ativo=True)
     prato = get_object_or_404(TbProdutos, id_produto=p_id, restaurante=restaurante)
     # O campo na model TbNutricao chama-se 'produto'
     nutricao = TbNutricao.objects.filter(produto=prato).first()
@@ -322,8 +317,6 @@ def buscar_prato_restaurante(request):
 # -------------------------------------------------------------------------
 # PEDIDOS E RESERVAS
 # -------------------------------------------------------------------------
-
-from .models import TbReservas  # Certifique-se de importar o model correto para reservas
 
 def reserva_view(request):
     r_id = _int_param(request.GET.get('restaurante_id'), 1)
@@ -386,7 +379,7 @@ def pedido_view(request):
             return redirect('login')
         
     except TbClientes.DoesNotExist:
-        print("DEBUG: Cliente da sessão não existe no banco de dados!")
+        del request.session['cliente_id']
         return redirect('login') 
 
     pedidos = TbPedidos.objects.filter(cliente_id=cliente_id).order_by('-data_pedido').prefetch_related('tbpedidosprodutos_set__produto')
@@ -439,7 +432,7 @@ def adicionar_carrinho(request):
         itens.append({
             'id': produto.id_produto,
             'nome': produto.nome_produto,
-            'preco': float(produto.preco),
+            'preco': float(produto.preco) if produto.preco else 0.0,
             'quantidade': 1
         })
 
@@ -456,9 +449,9 @@ def carrinho_view(request):
     
     carrinho = request.session.get('carrinho', {})
     subtotal = sum(
-        i['preco'] * i['quantidade']
+        (i.get('preco') or 0) * i.get('quantidade', 0)
         for r in carrinho.values()
-        for i in r['itens']
+        for i in r.get('itens', [])
     )
 
     return render(request, 'pages/pedido/carrinho.html', {
@@ -514,20 +507,6 @@ def remover_restaurante(request, r_id):
 
 
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.db import transaction
-from django.utils import timezone
-from decimal import Decimal
-from .models import TbPedidos, TbPedidosProdutos, TbStatusPedido, TbEstoque, TbProdutos
-
-from django.db import transaction
-from django.utils import timezone
-from decimal import Decimal
-from django.shortcuts import render, redirect, get_object_or_404
-# Importe seus modelos exatamente como estão no arquivo que você mandou
-from .models import TbPedidos, TbPedidosProdutos, TbStatusPedido, TbEstoque, TbProdutos, TbClientes, TbRestaurantes
-
-from .models import TbPagamentos # Certifique-se de importar
 
 def finalizacao_view(request):
     r_id = request.GET.get('restaurante_id') or request.POST.get('restaurante_id')
@@ -536,9 +515,16 @@ def finalizacao_view(request):
     if not r_id or r_id not in carrinho:
         return redirect('carrinho')
 
-    cliente_id = request.session.get('cliente_id', 1)
+    cliente_id = request.session.get('cliente_id')
+    if not cliente_id:
+        messages.error(request, 'Faça login para finalizar o pedido.')
+        return redirect('login')
     cliente_instancia = get_object_or_404(TbClientes, id_cliente=cliente_id)
-    restaurante_instancia = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
+    restaurante_instancia = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True)
+
+    if not restaurante_instancia.aberto:
+        messages.error(request, 'Este restaurante está fechado no momento.')
+        return redirect('carrinho')
     dados_venda = carrinho[r_id]
     
     # --- CÁLCULOS PARA O RESUMO (P1) ---
@@ -564,8 +550,20 @@ def finalizacao_view(request):
 
     # SE O USUÁRIO CLICOU EM "CONFIRMAR PEDIDO" (POST)
     if request.method == 'POST':
-        endereco = request.POST.get('endereco')
+        endereco = request.POST.get('endereco', '').strip()
         metodo_pagamento = request.POST.get('pagamento') # Ex: 'Cartão', 'Pix'
+
+        if not endereco:
+            messages.error(request, 'Informe o endereço de entrega.')
+            return render(request, 'pages/pedido/finalizacao.html', {
+                'carrinho': dados_venda,
+                'restaurante': restaurante_instancia,
+                'cliente': cliente_instancia,
+                'subtotal': subtotal,
+                'entrega': entrega,
+                'desconto': desconto,
+                'total': total_final,
+            })
 
         try:
             with transaction.atomic():
@@ -614,7 +612,7 @@ def finalizacao_view(request):
                 return redirect('pedido')  # Redireciona para a página de pedidos
 
         except Exception as e:
-            print(f"ERRO: {e}")
+            messages.error(request, f'Erro ao finalizar o pedido: {e}')
             return redirect('carrinho')
         
 

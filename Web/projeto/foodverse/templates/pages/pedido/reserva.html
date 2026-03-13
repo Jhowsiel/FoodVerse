@@ -187,7 +187,7 @@
           <div class="p-3 bg-light rounded-3 mb-3">
             <div class="d-flex justify-content-between mb-2">
               <span class="text-muted">Avaliação:</span>
-              <span class="fw-bold text-warning"><i class="bi bi-star-fill"></i> {{ restaurante.avaliacao }}</span>
+              <span class="fw-bold text-warning"><i class="bi bi-star-fill"></i> {{ restaurante.avaliacao|default:"—" }}</span>
             </div>
             <div class="d-flex justify-content-between">
               <span class="text-muted">Taxa de Reserva:</span>

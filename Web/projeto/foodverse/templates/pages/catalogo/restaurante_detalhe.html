@@ -443,7 +443,7 @@
         {% else %}
           <div class="dish-no-img"><i class="fa-solid fa-utensils"></i></div>
         {% endif %}
-        <span class="price-tag">R$ {{ prato.preco }}</span>
+        <span class="price-tag">R$ {{ prato.preco|floatformat:2|default:"0.00" }}</span>
       </div>
 
       <div class="dish-body">
