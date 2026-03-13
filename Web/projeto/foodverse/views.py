@@ -333,7 +333,7 @@ def reserva_view(request):
         messages.error(request, "Faça login para fazer uma reserva.")
         return redirect('login')
     
-    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
+    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True)
 
     reservas_do_banco = TbReservas.objects.filter(
         restaurante=restaurante,
@@ -360,7 +360,7 @@ def reserva_pagamento(request):
     if request.method == 'POST':
         r_id = _int_param(request.POST.get('restaurante_id'), 1) 
 
-        restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
+        restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True)
 
         return render(request, 'pages/pedido/reserva_pagamento.html', {
             'restaurante': restaurante,
@@ -388,7 +388,7 @@ def pedido_view(request):
     r_id = request.GET.get('restaurante_id')
     restaurante = None
     if r_id:
-        restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
+        restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True)
 
     return render(request, 'pages/pedido/pedido.html', {
         'pedidos': pedidos,
@@ -621,7 +621,7 @@ def finalizacao_view(request):
 # -------------------------------------------------------------------------
 def feedback_view(request):
     r_id = _int_param(request.GET.get('restaurante_id'), 1)
-    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
+    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True)
     cliente = get_cliente_logado(request)
 
     if request.method == 'POST':

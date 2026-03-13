@@ -4,6 +4,7 @@ import com.senac.food.verse.ConexaoBanco;
 import com.senac.food.verse.ItemPedido;
 import com.senac.food.verse.PedidoDAO;
 import com.senac.food.verse.Pedidos;
+import com.senac.food.verse.SessionContext;
 import jiconfont.icons.google_material_design_icons.GoogleMaterialDesignIcons;
 import jiconfont.swing.IconFontSwing;
 
@@ -672,7 +673,7 @@ public class PedidosPanel extends JPanel {
         txtCupom.setMargin(new Insets(20, 20, 20, 20));
         
         StringBuilder sb = new StringBuilder();
-        sb.append("      RESTAURANTE FOODVERSE      \n");
+        sb.append("      ").append(SessionContext.getInstance().getRestauranteLabel().toUpperCase()).append("      \n");
         sb.append("=================================\n");
         sb.append("PEDIDO #").append(p.getIdPedido()).append("\n");
         sb.append("DATA: ").append(p.getHoraPedido()).append("\n");
@@ -820,9 +821,13 @@ public class PedidosPanel extends JPanel {
                         }
                     }
                     
-                    try (PreparedStatement up = conn.prepareStatement("UPDATE tb_pedidos SET status_id = ? WHERE ID_pedido = ?")) {
+                    int rid = SessionContext.getInstance().getRestauranteEfetivo();
+                    String sqlUp = "UPDATE tb_pedidos SET status_id = ? WHERE ID_pedido = ?"
+                            + (rid > 0 ? " AND ID_restaurante = ?" : "");
+                    try (PreparedStatement up = conn.prepareStatement(sqlUp)) {
                         up.setInt(1, statusId);
                         up.setString(2, p.getIdPedido());
+                        if (rid > 0) up.setInt(3, rid);
                         up.executeUpdate();
                     }
                     

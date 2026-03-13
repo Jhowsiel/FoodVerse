@@ -3,6 +3,7 @@ package com.senac.food.verse.gui;
 import com.senac.food.verse.ConexaoBanco;
 import com.senac.food.verse.PedidoDAO;
 import com.senac.food.verse.Pedidos;
+import com.senac.food.verse.SessionContext;
 import jiconfont.icons.google_material_design_icons.GoogleMaterialDesignIcons;
 import jiconfont.swing.IconFontSwing;
 
@@ -536,7 +537,7 @@ public class EntregasPainel extends JPanel {
                 return;
             }
             String numeroLimpo = telefone.replaceAll("[^0-9]", "");
-            String msg = "Olá " + nome + ", do restaurante FoodVerse. O motoboy está a caminho!";
+            String msg = "Olá " + nome + ", do " + SessionContext.getInstance().getRestauranteLabel() + ". O motoboy está a caminho!";
             String url = "https://wa.me/55" + numeroLimpo + "?text=" + msg.replace(" ", "%20");
             Desktop.getDesktop().browse(new URI(url));
         } catch (Exception ex) {
@@ -604,9 +605,13 @@ public class EntregasPainel extends JPanel {
                             if(rs.next()) statusId = rs.getInt(1);
                         }
                         
-                        try(PreparedStatement up = conn.prepareStatement("UPDATE tb_pedidos SET status_id = ? WHERE ID_pedido = ?")) {
+                        int rid = SessionContext.getInstance().getRestauranteEfetivo();
+                        String sqlUp = "UPDATE tb_pedidos SET status_id = ? WHERE ID_pedido = ?"
+                                + (rid > 0 ? " AND ID_restaurante = ?" : "");
+                        try(PreparedStatement up = conn.prepareStatement(sqlUp)) {
                             up.setInt(1, statusId);
                             up.setString(2, p.getIdPedido());
+                            if (rid > 0) up.setInt(3, rid);
                             up.executeUpdate();
                         }
                         banco.fecharConexao();
