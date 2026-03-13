@@ -493,11 +493,9 @@ public class CardapioPainel extends JPanel {
         private JTextField txtCarbo;
         private JTextField txtGordura;
         private final JCheckBox[] chkRestricoes = new JCheckBox[RESTRICOES_OPCOES.length];
-        private final Window dialogOwner;
 
         public PratoDialog(Window owner, Prato base) {
             super(owner, base == null ? "Novo Prato" : "Editar Prato", ModalityType.APPLICATION_MODAL);
-            this.dialogOwner = owner;
             getContentPane().setBackground(UIConstants.BG_DARK);
             setLayout(new BorderLayout());
 
@@ -704,7 +702,7 @@ public class CardapioPainel extends JPanel {
             pack();
             setMinimumSize(new Dimension(720, 680));
             if(getWidth() < 720 || getHeight() < 680) setSize(720, 680);
-            setLocationRelativeTo(dialogOwner);
+            setLocationRelativeTo(owner);
         }
 
         private void abrirSeletorIngredientes() {
