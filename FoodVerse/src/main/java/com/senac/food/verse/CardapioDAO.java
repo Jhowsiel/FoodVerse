@@ -181,8 +181,10 @@ public class CardapioDAO {
                 for(int i=0; i<PRATOS_MOCK.size(); i++) if(PRATOS_MOCK.get(i).getId().equals(prato.getId())) { PRATOS_MOCK.set(i, prato); break; }
                 return;
             }
-            String sql = "UPDATE tb_produtos SET nome_produto=?, categoria=?, descricao=?, preco=?, disponivel=?, imagem=?, tempo_preparo=? WHERE ID_produto=?";
-            try(PreparedStatement ps = conn.prepareStatement(sql)) {
+            int rid = SessionContext.getInstance().getRestauranteEfetivo();
+            StringBuilder sql = new StringBuilder("UPDATE tb_produtos SET nome_produto=?, categoria=?, descricao=?, preco=?, disponivel=?, imagem=?, tempo_preparo=? WHERE ID_produto=?");
+            if (rid > 0) sql.append(" AND ID_restaurante = ?");
+            try(PreparedStatement ps = conn.prepareStatement(sql.toString())) {
                 ps.setString(1, prato.getNome());
                 ps.setString(2, prato.getCategoria());
                 ps.setString(3, prato.getDescricao());
@@ -191,6 +193,7 @@ public class CardapioDAO {
                 ps.setString(6, prato.getImagem());
                 ps.setInt(7, prato.getTempoPreparo());
                 ps.setLong(8, prato.getId());
+                if (rid > 0) ps.setInt(9, rid);
                 ps.executeUpdate();
             }
         } catch(Exception e) { e.printStackTrace(); }
@@ -200,8 +203,13 @@ public class CardapioDAO {
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) { PRATOS_MOCK.removeIf(p -> p.getId().equals(id)); return; }
-            try(PreparedStatement ps = conn.prepareStatement("DELETE FROM tb_produtos WHERE ID_produto=?")) {
-                ps.setLong(1, id); ps.executeUpdate();
+            int rid = SessionContext.getInstance().getRestauranteEfetivo();
+            StringBuilder sql = new StringBuilder("DELETE FROM tb_produtos WHERE ID_produto=?");
+            if (rid > 0) sql.append(" AND ID_restaurante = ?");
+            try(PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                ps.setLong(1, id);
+                if (rid > 0) ps.setInt(2, rid);
+                ps.executeUpdate();
             }
         } catch(Exception e) { e.printStackTrace(); }
     }
@@ -211,9 +219,12 @@ public class CardapioDAO {
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) return PRATOS_MOCK.stream().filter(p -> p.getId().equals(id)).findFirst().orElse(null);
             
-            String sql = "SELECT * FROM tb_produtos WHERE ID_produto=?";
-            try(PreparedStatement ps = conn.prepareStatement(sql)) {
+            int rid = SessionContext.getInstance().getRestauranteEfetivo();
+            StringBuilder sql = new StringBuilder("SELECT * FROM tb_produtos WHERE ID_produto=?");
+            if (rid > 0) sql.append(" AND ID_restaurante = ?");
+            try(PreparedStatement ps = conn.prepareStatement(sql.toString())) {
                 ps.setLong(1, id);
+                if (rid > 0) ps.setInt(2, rid);
                 try(ResultSet rs = ps.executeQuery()) {
                     if(rs.next()) {
                         Prato pr = new Prato(rs.getLong("ID_produto"), rs.getString("nome_produto"),
@@ -317,8 +328,10 @@ public class CardapioDAO {
                 for(int i=0; i<PRODUTOS_MOCK.size(); i++) if(PRODUTOS_MOCK.get(i).getId().equals(p.getId())) { PRODUTOS_MOCK.set(i, p); break; }
                 return;
             }
-            String sql = "UPDATE tb_produtos SET nome_produto=?, categoria=?, descricao=?, preco=?, disponivel=?, imagem=? WHERE ID_produto=?";
-            try(PreparedStatement ps = conn.prepareStatement(sql)) {
+            int rid = SessionContext.getInstance().getRestauranteEfetivo();
+            StringBuilder sql = new StringBuilder("UPDATE tb_produtos SET nome_produto=?, categoria=?, descricao=?, preco=?, disponivel=?, imagem=? WHERE ID_produto=?");
+            if (rid > 0) sql.append(" AND ID_restaurante = ?");
+            try(PreparedStatement ps = conn.prepareStatement(sql.toString())) {
                 ps.setString(1, p.getNome());
                 ps.setString(2, p.getCategoria());
                 ps.setString(3, p.getDescricao());
@@ -326,6 +339,7 @@ public class CardapioDAO {
                 ps.setBoolean(5, p.isAtivo());
                 ps.setString(6, p.getImagem());
                 ps.setLong(7, p.getId());
+                if (rid > 0) ps.setInt(8, rid);
                 ps.executeUpdate();
             }
         } catch(Exception e) { e.printStackTrace(); }
@@ -335,8 +349,13 @@ public class CardapioDAO {
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) { PRODUTOS_MOCK.removeIf(p -> p.getId().equals(id)); return; }
-            try(PreparedStatement ps = conn.prepareStatement("DELETE FROM tb_produtos WHERE ID_produto=?")) {
-                ps.setLong(1, id); ps.executeUpdate();
+            int rid = SessionContext.getInstance().getRestauranteEfetivo();
+            StringBuilder sql = new StringBuilder("DELETE FROM tb_produtos WHERE ID_produto=?");
+            if (rid > 0) sql.append(" AND ID_restaurante = ?");
+            try(PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                ps.setLong(1, id);
+                if (rid > 0) ps.setInt(2, rid);
+                ps.executeUpdate();
             }
         } catch(Exception e) { e.printStackTrace(); }
     }
@@ -345,9 +364,12 @@ public class CardapioDAO {
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) return PRODUTOS_MOCK.stream().filter(p -> p.getId().equals(id)).findFirst().orElse(null);
-            String sql = "SELECT * FROM tb_produtos WHERE ID_produto=?";
-            try(PreparedStatement ps = conn.prepareStatement(sql)) {
+            int rid = SessionContext.getInstance().getRestauranteEfetivo();
+            StringBuilder sql = new StringBuilder("SELECT * FROM tb_produtos WHERE ID_produto=?");
+            if (rid > 0) sql.append(" AND ID_restaurante = ?");
+            try(PreparedStatement ps = conn.prepareStatement(sql.toString())) {
                 ps.setLong(1, id);
+                if (rid > 0) ps.setInt(2, rid);
                 try(ResultSet rs = ps.executeQuery()) {
                     if(rs.next()) {
                         ProdutoVenda pv = new ProdutoVenda(rs.getLong("ID_produto"), rs.getString("nome_produto"),

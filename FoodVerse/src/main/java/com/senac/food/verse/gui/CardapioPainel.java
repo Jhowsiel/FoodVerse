@@ -29,7 +29,7 @@ import java.util.stream.Stream;
 
 public class CardapioPainel extends JPanel {
 
-    private static final String PRODUTO_IMAGES_DIR = "imagens" + File.separator + "produtos";
+    private static final String PRODUTO_IMAGES_DIR = "media" + File.separator + "produtos";
 
     private final CardapioDAO dao = new CardapioDAO();
     private final EstoqueDAO estoqueDAO = new EstoqueDAO();

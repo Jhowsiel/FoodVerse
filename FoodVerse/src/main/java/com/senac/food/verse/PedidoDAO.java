@@ -238,6 +238,7 @@ public class PedidoDAO {
                 return null;
             }
 
+            int rid = SessionContext.getInstance().getRestauranteEfetivo();
             String sql = "SELECT "
                     + "p.ID_pedido, "
                     + "c.username AS nome_cliente, "
@@ -251,10 +252,12 @@ public class PedidoDAO {
                     + "JOIN tb_clientes c ON p.ID_cliente = c.id_cliente "
                     + "JOIN tb_status_pedido s ON p.status_id = s.ID_status "
                     + "LEFT JOIN tb_pagamentos pg ON p.ID_pedido = pg.ID_pedido "
-                    + "WHERE p.ID_pedido = ?";
+                    + "WHERE p.ID_pedido = ?"
+                    + (rid > 0 ? " AND p.ID_restaurante = ?" : "");
 
             PreparedStatement stmt = conexao.conn.prepareStatement(sql);
             stmt.setString(1, pedidoId);
+            if (rid > 0) stmt.setInt(2, rid);
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
@@ -361,10 +364,13 @@ public class PedidoDAO {
             if (rs.next()) {
                 int statusId = rs.getInt("ID_status");
 
-                String sqlUpdate = "UPDATE tb_pedidos SET status_id = ? WHERE ID_pedido = ?";
+                int rid = SessionContext.getInstance().getRestauranteEfetivo();
+                String sqlUpdate = "UPDATE tb_pedidos SET status_id = ? WHERE ID_pedido = ?"
+                        + (rid > 0 ? " AND ID_restaurante = ?" : "");
                 PreparedStatement stmtUpdate = conexao.conn.prepareStatement(sqlUpdate);
                 stmtUpdate.setInt(1, statusId);
                 stmtUpdate.setString(2, idPedido);
+                if (rid > 0) stmtUpdate.setInt(3, rid);
 
                 int rowsUpdated = stmtUpdate.executeUpdate();
 

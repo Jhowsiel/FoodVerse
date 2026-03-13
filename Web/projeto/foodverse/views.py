@@ -275,7 +275,7 @@ def restaurante_view(request):
     })
 
 def restaurante_detalhe_view(request, id):
-    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=id)
+    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=id, ativo=True)
     # Filtra produtos usando a instância do restaurante
     pratos = TbProdutos.objects.filter(restaurante=restaurante, disponivel=True)
 
@@ -288,9 +288,7 @@ def prato_view(request):
     rest_id = _int_param(request.GET.get('restaurante_id'), 1)  
     p_id = _int_param(request.GET.get('produto_id'), 1)  
 
-    print(f"Recebendo restaurante_id={rest_id} e produto_id={p_id}")  # Debug
-    
-    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=rest_id)
+    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=rest_id, ativo=True)
     prato = get_object_or_404(TbProdutos, id_produto=p_id, restaurante=restaurante)
     # O campo na model TbNutricao chama-se 'produto'
     nutricao = TbNutricao.objects.filter(produto=prato).first()
@@ -381,12 +379,7 @@ def pedido_view(request):
     # Tenta buscar o cliente para validar se ele existe no novo banco
     try:
         cliente = TbClientes.objects.get(id_cliente=cliente_id)
-
-        if cliente.id_cliente != cliente_id:
-            return redirect('login')
-        
     except TbClientes.DoesNotExist:
-        print("DEBUG: Cliente da sessão não existe no banco de dados!")
         return redirect('login') 
 
     pedidos = TbPedidos.objects.filter(cliente_id=cliente_id).order_by('-data_pedido').prefetch_related('tbpedidosprodutos_set__produto')
@@ -417,7 +410,10 @@ def adicionar_carrinho(request):
     # -----------------------------------------------
 
     # Se passou da trava, agora sim buscamos os dados no banco
-    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
+    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True)
+    if not restaurante.aberto:
+        messages.error(request, "Este restaurante está fechado no momento.")
+        return redirect('home')
     produto = get_object_or_404(TbProdutos, id_produto=p_id, restaurante=restaurante)
 
     # Cria a estrutura do restaurante se for o primeiro item dele
@@ -536,16 +532,17 @@ def finalizacao_view(request):
     if not r_id or r_id not in carrinho:
         return redirect('carrinho')
 
-    cliente_id = request.session.get('cliente_id', 1)
+    cliente_id = request.session.get('cliente_id')
+    if not cliente_id:
+        return redirect('login')
     cliente_instancia = get_object_or_404(TbClientes, id_cliente=cliente_id)
-    restaurante_instancia = get_object_or_404(TbRestaurantes, id_restaurante=r_id)
+    restaurante_instancia = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True)
     dados_venda = carrinho[r_id]
     
     # --- CÁLCULOS PARA O RESUMO (P1) ---
     subtotal = sum(Decimal(str(i['preco'])) * i['quantidade'] for i in dados_venda['itens'])
     
-    # Valores fictícios 
-    entrega = Decimal('5.00') 
+    entrega = restaurante_instancia.taxa_entrega if restaurante_instancia.taxa_entrega else Decimal('0.00')
     desconto = Decimal('10.00') if subtotal > 50 else Decimal('0.00')
     
     total_final = subtotal + entrega - desconto
@@ -614,7 +611,8 @@ def finalizacao_view(request):
                 return redirect('pedido')  # Redireciona para a página de pedidos
 
         except Exception as e:
-            print(f"ERRO: {e}")
+            import logging
+            logging.getLogger(__name__).error("Erro ao finalizar pedido: %s", e)
             return redirect('carrinho')
         
 

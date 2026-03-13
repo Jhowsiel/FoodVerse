@@ -611,13 +611,13 @@ public class TelaInicial extends JFrame {
         if (ctx.isAdmin()) {
             int restauranteId = ctx.getRestauranteEfetivo();
             if (restauranteId > 0) {
-                return "Restaurante em contexto: #" + restauranteId;
+                return "Restaurante em contexto: " + ctx.getRestauranteLabel();
             }
             return "Admin global sem restaurante selecionado";
         }
         int restauranteId = ctx.getRestauranteEfetivo();
         return restauranteId > 0
-                ? "Restaurante em contexto: #" + restauranteId
+                ? "Restaurante em contexto: " + ctx.getRestauranteLabel()
                 : "Restaurante vinculado não definido";
     }
 
@@ -633,7 +633,7 @@ public class TelaInicial extends JFrame {
         if (ctx.isAdmin() && !ctx.adminTemContextoRestaurante()) {
             return "Modo global ativo. Selecione um restaurante para operar.";
         }
-        return "Operando como " + ctx.getCargo() + " no restaurante #" + ctx.getRestauranteEfetivo() + ".";
+        return "Operando como " + ctx.getCargo() + " no restaurante " + ctx.getRestauranteLabel() + ".";
     }
 
     static String buildModuleLoadErrorText(String nomeModulo) {

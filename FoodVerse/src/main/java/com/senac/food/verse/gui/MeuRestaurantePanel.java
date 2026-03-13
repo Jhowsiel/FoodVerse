@@ -25,7 +25,7 @@ import java.sql.*;
 public class MeuRestaurantePanel extends JPanel {
 
     /** Diretório controlado para imagens de restaurantes. */
-    static final String IMAGES_DIR = "imagens" + File.separator + "restaurantes";
+    static final String IMAGES_DIR = "media" + File.separator + "restaurantes";
 
     private JTextField txtNome, txtCategoria, txtDescricao, txtTempo, txtTaxa;
     private JTextField txtImagem, txtBanner;
