@@ -379,7 +379,7 @@ def pedido_view(request):
             return redirect('login')
         
     except TbClientes.DoesNotExist:
-        del request.session['cliente_id']
+        request.session.flush()
         return redirect('login') 
 
     pedidos = TbPedidos.objects.filter(cliente_id=cliente_id).order_by('-data_pedido').prefetch_related('tbpedidosprodutos_set__produto')
@@ -611,8 +611,8 @@ def finalizacao_view(request):
                 # return render(request, 'pages/pedido/pedido.html', {'pedido': pedido})
                 return redirect('pedido')  # Redireciona para a página de pedidos
 
-        except Exception as e:
-            messages.error(request, f'Erro ao finalizar o pedido: {e}')
+        except Exception:
+            messages.error(request, 'Ocorreu um erro ao finalizar o pedido. Tente novamente.')
             return redirect('carrinho')
         
 
