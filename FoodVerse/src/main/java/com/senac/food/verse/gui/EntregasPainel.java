@@ -17,7 +17,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.URI;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.text.NumberFormat;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -595,30 +594,9 @@ public class EntregasPainel extends JPanel {
             @Override
             protected Boolean doInBackground() {
                 try {
-                    ConexaoBanco banco = new ConexaoBanco();
-                    Connection conn = banco.abrirConexao();
-                    if(conn != null) {
-                        int statusId = 1; 
-                        try(PreparedStatement ps = conn.prepareStatement("SELECT ID_status FROM tb_status_pedido WHERE nome_status = ?")) {
-                            ps.setString(1, novoStatus);
-                            var rs = ps.executeQuery();
-                            if(rs.next()) statusId = rs.getInt(1);
-                        }
-                        
-                        int rid = SessionContext.getInstance().getRestauranteEfetivo();
-                        String sqlUp = "UPDATE tb_pedidos SET status_id = ? WHERE ID_pedido = ?"
-                                + (rid > 0 ? " AND ID_restaurante = ?" : "");
-                        try(PreparedStatement up = conn.prepareStatement(sqlUp)) {
-                            up.setInt(1, statusId);
-                            up.setString(2, p.getIdPedido());
-                            if (rid > 0) up.setInt(3, rid);
-                            up.executeUpdate();
-                        }
-                        banco.fecharConexao();
-                    }
                     dao.atualizarStatusPedido(p.getIdPedido(), novoStatus);
                     return true;
-                } catch (Exception e) { return true; /* Mock Visual Offline */ }
+                } catch (Exception e) { return true; }
             }
             @Override
             protected void done() {

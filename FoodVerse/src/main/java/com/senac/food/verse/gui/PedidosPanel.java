@@ -1,6 +1,5 @@
 package com.senac.food.verse.gui;
 
-import com.senac.food.verse.ConexaoBanco;
 import com.senac.food.verse.ItemPedido;
 import com.senac.food.verse.PedidoDAO;
 import com.senac.food.verse.Pedidos;
@@ -12,8 +11,6 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.text.NumberFormat;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -809,28 +806,7 @@ public class PedidosPanel extends JPanel {
         new SwingWorker<Boolean, Void>() {
             @Override
             protected Boolean doInBackground() {
-                ConexaoBanco banco = new ConexaoBanco();
-                try (Connection conn = banco.abrirConexao()) {
-                    if (conn == null) return false;
-                    
-                    int statusId = 1; 
-                    try (PreparedStatement ps = conn.prepareStatement("SELECT ID_status FROM tb_status_pedido WHERE nome_status = ?")) {
-                        ps.setString(1, novoStatus);
-                        try (var rs = ps.executeQuery()) {
-                            if(rs.next()) statusId = rs.getInt(1);
-                        }
-                    }
-                    
-                    int rid = SessionContext.getInstance().getRestauranteEfetivo();
-                    String sqlUp = "UPDATE tb_pedidos SET status_id = ? WHERE ID_pedido = ?"
-                            + (rid > 0 ? " AND ID_restaurante = ?" : "");
-                    try (PreparedStatement up = conn.prepareStatement(sqlUp)) {
-                        up.setInt(1, statusId);
-                        up.setString(2, p.getIdPedido());
-                        if (rid > 0) up.setInt(3, rid);
-                        up.executeUpdate();
-                    }
-                    
+                try {
                     dao.atualizarStatusPedido(p.getIdPedido(), novoStatus);
                     return true;
                 } catch (Exception ex) { 
