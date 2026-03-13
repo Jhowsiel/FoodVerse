@@ -664,8 +664,8 @@ public class PedidosPanel extends JPanel {
         
         JTextArea txtCupom = new JTextArea();
         txtCupom.setFont(new Font("Monospaced", Font.PLAIN, 14));
-        txtCupom.setBackground(new Color(255, 255, 240)); 
-        txtCupom.setForeground(Color.BLACK);
+        txtCupom.setBackground(UIConstants.CARD_DARK);
+        txtCupom.setForeground(UIConstants.FG_LIGHT);
         txtCupom.setEditable(false);
         txtCupom.setMargin(new Insets(20, 20, 20, 20));
         
