@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load foodverse_tags %}
 
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
@@ -624,7 +625,7 @@
           <div class="cart-item">
             <div class="thumb">
               {% if item.imagem %}
-              <img src="{{ item.imagem }}" alt="{{ item.nome }}">
+              <img src="{% img_url item.imagem %}" alt="{{ item.nome }}">
               {% else %}
               <i class="bi bi-egg-fried"></i>
               {% endif %}

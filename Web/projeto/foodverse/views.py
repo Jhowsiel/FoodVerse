@@ -353,6 +353,10 @@ def reserva_view(request):
     
     restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True)
 
+    if not restaurante.aberto:
+        messages.error(request, "Este restaurante está fechado no momento.")
+        return redirect('restaurante_detalhe', id=r_id)
+
     reservas_do_banco = TbReservas.objects.filter(
         restaurante=restaurante,
         data_reserva__gte=timezone.now()
@@ -455,6 +459,7 @@ def adicionar_carrinho(request):
             'id': produto.id_produto,
             'nome': produto.nome_produto,
             'preco': float(produto.preco),
+            'imagem': produto.imagem or '',
             'quantidade': 1
         })
 

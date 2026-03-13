@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load foodverse_tags %}
 
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
@@ -321,7 +322,7 @@
       <div class="dish-img-card">
         <div class="img-wrap">
           {% if prato.imagem %}
-            <img src="/{{ prato.imagem }}" alt="{{ prato.nome_produto }}">
+            <img src="{% img_url prato.imagem %}" alt="{{ prato.nome_produto }}">
           {% else %}
             <div class="img-no-photo"><i class="bi bi-egg-fried"></i></div>
           {% endif %}
@@ -398,9 +399,15 @@
           <span class="price-num">R$ {{ prato.preco|default:"0.00" }}</span>
         </div>
 
+        {% if restaurante.aberto %}
         <a href="{% url 'adicionar_carrinho' %}?restaurante_id={{ restaurante.id_restaurante }}&produto_id={{ prato.id_produto }}" class="btn-delivery">
           <i class="bi bi-bicycle"></i> Pedir Delivery
         </a>
+        {% else %}
+        <span class="btn-delivery" style="opacity:.5; cursor:not-allowed; background:#555;">
+          <i class="bi bi-door-closed"></i> Restaurante fechado
+        </span>
+        {% endif %}
 
         <p class="cancel-note">
           <i class="bi bi-shield-check"></i> Cancelamento grátis até 2h antes
