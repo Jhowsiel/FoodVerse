@@ -48,6 +48,7 @@ class TbProdutos(models.Model):
     tempo_preparo = models.IntegerField(null=True, blank=True)
     disponivel = models.BooleanField(null=True, blank=True)
     destaque = models.BooleanField(null=True, blank=True)
+    restricoes = models.CharField(max_length=255, null=True, blank=True)
     data_criacao = models.DateTimeField(null=True, blank=True)
 
     class Meta:

@@ -468,15 +468,15 @@
                  onerror="this.style.display='none'">
 
             <div class="res-top-badges">
-              <span class="badge-rat"><i class="fa-solid fa-star"></i> {{ restaurante.avaliacao }}</span>
+              <span class="badge-rat"><i class="fa-solid fa-star"></i> {{ restaurante.avaliacao|default:"—" }}</span>
               {% if restaurante.cupom %}<span class="badge-cup">Cupom</span>{% endif %}
             </div>
             <div class="res-name-over">{{ restaurante.nome }}</div>
           </div>
           <div class="res-bottom">
             <div class="res-meta">
-              <span><i class="fa-solid fa-clock"></i> {{ restaurante.tempo }}</span>
-              <span class="free">{{ restaurante.taxa }}</span>
+              <span><i class="fa-solid fa-clock"></i> {{ restaurante.tempo_entrega|default:"30-45 min" }}</span>
+              <span class="free">{% if restaurante.taxa_entrega == 0 or restaurante.taxa_entrega == None %}Entrega grátis{% else %}R$ {{ restaurante.taxa_entrega }}{% endif %}</span>
             </div>
             <div class="res-btn"><i class="fa-solid fa-arrow-right"></i></div>
           </div>

@@ -336,85 +336,58 @@
         </div>
 
         <div class="dish-meta">
-          <h1 class="dish-title">{{ prato.nome_produto }}</h1>
-          <p class="dish-desc">{{ prato.descricao }}</p>
+          <h1 class="dish-title">{{ prato.nome_produto|default:"Produto" }}</h1>
+          {% if prato.descricao %}<p class="dish-desc">{{ prato.descricao }}</p>{% endif %}
         </div>
       </div>
 
-      <!-- Personalização -->
+      {% if prato.restricoes %}
       <div class="custom-card">
         <div class="section-label">
-          <i class="bi bi-sliders2-vertical"></i> Personalize seu prato
+          <i class="bi bi-shield-check"></i> Informações do prato
         </div>
-
         <div class="row g-3">
-          <div class="col-md-6 form-group">
-            <label class="field-label">Tamanho</label>
-            <select class="field-select">
-              <option>Pequena (300g)</option>
-              <option selected>Média (500g)</option>
-              <option>Grande (750g)</option>
-            </select>
-          </div>
-
-          <div class="col-md-6 form-group">
-            <label class="field-label">Proteína extra</label>
-            <select class="field-select">
-              <option>Sem adicional</option>
-              <option>Frango (+R$ 6,00)</option>
-              <option>Carne (+R$ 8,00)</option>
-            </select>
-          </div>
-
           <div class="col-12 form-group">
             <label class="field-label">Restrições alimentares</label>
             <div class="restriction-pills">
-              <input type="checkbox" class="pill-input" id="lactose">
-              <label class="pill-label" for="lactose">
-                <i class="bi bi-check2"></i> Sem lactose
-              </label>
-
-              <input type="checkbox" class="pill-input" id="gluten">
-              <label class="pill-label" for="gluten">
-                <i class="bi bi-check2"></i> Sem glúten
-              </label>
-
-              <input type="checkbox" class="pill-input" id="oleaginosas">
-              <label class="pill-label" for="oleaginosas">
-                <i class="bi bi-check2"></i> Sem oleaginosas
-              </label>
+              {% for tag in restricoes_list %}
+              <span class="pill-label"><i class="bi bi-check2"></i> {{ tag }}</span>
+              {% endfor %}
             </div>
           </div>
         </div>
       </div>
+      {% endif %}
 
     </div>
 
     <!-- SIDEBAR -->
     <div class="sidebar">
 
+      {% if nutricao %}
       <!-- Nutrição -->
       <div class="nutri-card">
         <div class="nutri-title">Informação Nutricional</div>
         <div class="nutri-grid">
           <div class="nutri-box">
             <span class="nutri-label">Calorias</span>
-            <span class="nutri-val cal">{{ nutricao.kcal|default:"0" }}<small style="font-size:.6em">kcal</small></span>
+            <span class="nutri-val cal">{{ nutricao.kcal|default:"—" }}<small style="font-size:.6em">kcal</small></span>
           </div>
           <div class="nutri-box">
             <span class="nutri-label">Proteína</span>
-            <span class="nutri-val prot">{{ nutricao.proteina|default:"0" }}<small style="font-size:.6em">g</small></span>
+            <span class="nutri-val prot">{{ nutricao.proteina|default:"—" }}<small style="font-size:.6em">g</small></span>
           </div>
           <div class="nutri-box">
             <span class="nutri-label">Carboidrato</span>
-            <span class="nutri-val carb">{{ nutricao.carbo|default:"0" }}<small style="font-size:.6em">g</small></span>
+            <span class="nutri-val carb">{{ nutricao.carbo|default:"—" }}<small style="font-size:.6em">g</small></span>
           </div>
           <div class="nutri-box">
             <span class="nutri-label">Gordura</span>
-            <span class="nutri-val fat">{{ nutricao.gordura|default:"0" }}<small style="font-size:.6em">g</small></span>
+            <span class="nutri-val fat">{{ nutricao.gordura|default:"—" }}<small style="font-size:.6em">g</small></span>
           </div>
         </div>
       </div>
+      {% endif %}
 
       <!-- Resumo -->
       <div class="order-card">
@@ -422,7 +395,7 @@
 
         <div class="price-row">
           <span class="price-label">Preço base</span>
-          <span class="price-num">R$ {{ prato.preco }}</span>
+          <span class="price-num">R$ {{ prato.preco|default:"0.00" }}</span>
         </div>
 
         <a href="{% url 'adicionar_carrinho' %}?restaurante_id={{ restaurante.id_restaurante }}&produto_id={{ prato.id_produto }}" class="btn-delivery">

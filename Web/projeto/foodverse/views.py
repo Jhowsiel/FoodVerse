@@ -277,12 +277,26 @@ def restaurante_view(request):
 
 def restaurante_detalhe_view(request, id):
     restaurante = get_object_or_404(TbRestaurantes, id_restaurante=id, ativo=True)
-    # Filtra produtos usando a instância do restaurante
     pratos = TbProdutos.objects.filter(restaurante=restaurante, disponivel=True)
+
+    categoria_ativa = request.GET.get('categoria', '')
+    if categoria_ativa:
+        pratos = pratos.filter(categoria=categoria_ativa)
+
+    categorias = (
+        TbProdutos.objects
+        .filter(restaurante=restaurante, disponivel=True, categoria__isnull=False)
+        .exclude(categoria='')
+        .values_list('categoria', flat=True)
+        .distinct()
+        .order_by('categoria')
+    )
 
     return render(request, 'pages/catalogo/restaurante_detalhe.html', {
         'restaurante': restaurante,
-        'pratos': pratos
+        'pratos': pratos,
+        'categorias': list(categorias),
+        'categoria_ativa': categoria_ativa,
     })
 
 def prato_view(request):
@@ -291,13 +305,17 @@ def prato_view(request):
 
     restaurante = get_object_or_404(TbRestaurantes, id_restaurante=rest_id, ativo=True)
     prato = get_object_or_404(TbProdutos, id_produto=p_id, restaurante=restaurante)
-    # O campo na model TbNutricao chama-se 'produto'
     nutricao = TbNutricao.objects.filter(produto=prato).first()
+
+    restricoes_list = []
+    if prato.restricoes:
+        restricoes_list = [t.strip() for t in prato.restricoes.split(',') if t.strip()]
 
     return render(request, 'pages/catalogo/prato.html', {
         'restaurante': restaurante,
         'prato': prato,
-        'nutricao': nutricao
+        'nutricao': nutricao,
+        'restricoes_list': restricoes_list,
     })
 
 def buscar_prato_restaurante(request):

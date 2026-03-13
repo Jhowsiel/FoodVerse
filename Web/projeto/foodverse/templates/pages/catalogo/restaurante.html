@@ -438,7 +438,7 @@
 
         <div class="img-badges">
           <span class="badge-rating">
-            <i class="fa-solid fa-star"></i> {{ restaurante.avaliacao }}
+            <i class="fa-solid fa-star"></i> {{ restaurante.avaliacao|default:"—" }}
           </span>
           {% if restaurante.cupom %}
             <span class="badge-cupom">Cupom</span>
@@ -449,10 +449,10 @@
       </div>
 
       <div class="card-body">
-        <p class="card-desc">{{ restaurante.descricao|truncatechars:90 }}</p>
+        <p class="card-desc">{{ restaurante.descricao|default:""|truncatechars:90 }}</p>
         <div class="card-meta">
-          <span><i class="fa-solid fa-clock"></i> {{ restaurante.tempo }}</span>
-          <span class="free">{{ restaurante.taxa }}</span>
+          <span><i class="fa-solid fa-clock"></i> {{ restaurante.tempo_entrega|default:"30-45 min" }}</span>
+          <span class="free">{% if restaurante.taxa_entrega == 0 or restaurante.taxa_entrega == None %}Entrega grátis{% else %}R$ {{ restaurante.taxa_entrega }}{% endif %}</span>
         </div>
       </div>
 

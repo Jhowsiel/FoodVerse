@@ -45,6 +45,7 @@ class SchemaMigrationScriptTest {
         assertSqlMatches(sql, "ALTER\\s+TABLE\\s+tb_restaurantes\\s+ADD\\s+imagem\\s+VARCHAR\\(255\\)\\s+NULL\\s*;");
         assertSqlMatches(sql, "ALTER\\s+TABLE\\s+tb_restaurantes\\s+ADD\\s+banner\\s+VARCHAR\\(255\\)\\s+NULL\\s*;");
         assertSqlMatches(sql, "ALTER\\s+TABLE\\s+tb_produtos\\s+ADD\\s+imagem\\s+VARCHAR\\(255\\)\\s+NULL\\s*;");
+        assertSqlMatches(sql, "ALTER\\s+TABLE\\s+tb_produtos\\s+ADD\\s+restricoes\\s+VARCHAR\\(255\\)\\s+NULL\\s*;");
     }
 
     @Test
