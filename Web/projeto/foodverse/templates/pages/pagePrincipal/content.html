@@ -463,7 +463,7 @@
               {% elif "sushi" in restaurante.nome|lower %}🍱
               {% else %}🍽️{% endif %}
             </span>
-            <img src="{% static restaurante.imagem %}" alt="{{ restaurante.nome }}"
+            <img src="/{{ restaurante.imagem }}" alt="{{ restaurante.nome }}"
                  onload="this.classList.add('loaded')"
                  onerror="this.style.display='none'">
 

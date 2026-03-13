@@ -382,7 +382,7 @@
   <div class="rest-hero">
     <div class="hero-img-wrap">
       {% if restaurante.imagem %}
-        <img src="{% static restaurante.imagem %}" class="hero-img" alt="{{ restaurante.nome }}">
+        <img src="/{{ restaurante.imagem }}" class="hero-img" alt="{{ restaurante.nome }}">
       {% else %}
         <div class="hero-img" style="background:linear-gradient(135deg,#1a1a1a,#0d0c0c);"></div>
       {% endif %}
@@ -439,7 +439,7 @@
 
       <div class="dish-img-wrap">
         {% if prato.imagem %}
-          <img src="{% static prato.imagem %}" alt="{{ prato.nome_produto }}">
+          <img src="/{{ prato.imagem }}" alt="{{ prato.nome_produto }}">
         {% else %}
           <div class="dish-no-img"><i class="fa-solid fa-utensils"></i></div>
         {% endif %}

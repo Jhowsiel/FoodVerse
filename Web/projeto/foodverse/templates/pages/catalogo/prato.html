@@ -321,7 +321,7 @@
       <div class="dish-img-card">
         <div class="img-wrap">
           {% if prato.imagem %}
-            <img src="{% static prato.imagem %}" alt="{{ prato.nome_produto }}">
+            <img src="/{{ prato.imagem }}" alt="{{ prato.nome_produto }}">
           {% else %}
             <div class="img-no-photo"><i class="bi bi-egg-fried"></i></div>
           {% endif %}

@@ -434,7 +434,7 @@
     <a href="{% url 'restaurante_detalhe' restaurante.id_restaurante %}" class="res-card">
 
       <div class="card-img-wrap">
-        <img src="{% static restaurante.imagem %}" class="card-img" alt="{{ restaurante.nome }}">
+        <img src="/{{ restaurante.imagem }}" class="card-img" alt="{{ restaurante.nome }}">
 
         <div class="img-badges">
           <span class="badge-rating">
