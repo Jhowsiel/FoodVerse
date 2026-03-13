@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q
 from django.contrib.auth.hashers import make_password, check_password
+import logging
 import requests
 import re
 
@@ -611,7 +612,6 @@ def finalizacao_view(request):
                 return redirect('pedido')  # Redireciona para a página de pedidos
 
         except Exception as e:
-            import logging
             logging.getLogger(__name__).error("Erro ao finalizar pedido: %s", e)
             return redirect('carrinho')
         
