@@ -3,6 +3,7 @@ package com.senac.food.verse.gui;
 import com.senac.food.verse.ConexaoBanco;
 import com.senac.food.verse.PedidoDAO;
 import com.senac.food.verse.Pedidos;
+import com.senac.food.verse.SessionContext;
 import jiconfont.icons.google_material_design_icons.GoogleMaterialDesignIcons;
 import jiconfont.swing.IconFontSwing;
 
@@ -16,7 +17,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.URI;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.text.NumberFormat;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -536,7 +536,7 @@ public class EntregasPainel extends JPanel {
                 return;
             }
             String numeroLimpo = telefone.replaceAll("[^0-9]", "");
-            String msg = "Olá " + nome + ", do restaurante FoodVerse. O motoboy está a caminho!";
+            String msg = "Olá " + nome + ", do " + SessionContext.getInstance().getRestauranteLabel() + ". O motoboy está a caminho!";
             String url = "https://wa.me/55" + numeroLimpo + "?text=" + msg.replace(" ", "%20");
             Desktop.getDesktop().browse(new URI(url));
         } catch (Exception ex) {
@@ -594,26 +594,9 @@ public class EntregasPainel extends JPanel {
             @Override
             protected Boolean doInBackground() {
                 try {
-                    ConexaoBanco banco = new ConexaoBanco();
-                    Connection conn = banco.abrirConexao();
-                    if(conn != null) {
-                        int statusId = 1; 
-                        try(PreparedStatement ps = conn.prepareStatement("SELECT ID_status FROM tb_status_pedido WHERE nome_status = ?")) {
-                            ps.setString(1, novoStatus);
-                            var rs = ps.executeQuery();
-                            if(rs.next()) statusId = rs.getInt(1);
-                        }
-                        
-                        try(PreparedStatement up = conn.prepareStatement("UPDATE tb_pedidos SET status_id = ? WHERE ID_pedido = ?")) {
-                            up.setInt(1, statusId);
-                            up.setString(2, p.getIdPedido());
-                            up.executeUpdate();
-                        }
-                        banco.fecharConexao();
-                    }
                     dao.atualizarStatusPedido(p.getIdPedido(), novoStatus);
                     return true;
-                } catch (Exception e) { return true; /* Mock Visual Offline */ }
+                } catch (Exception e) { return false; }
             }
             @Override
             protected void done() {

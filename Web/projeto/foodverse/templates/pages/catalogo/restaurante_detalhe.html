@@ -382,7 +382,7 @@
   <div class="rest-hero">
     <div class="hero-img-wrap">
       {% if restaurante.imagem %}
-        <img src="{% static restaurante.imagem %}" class="hero-img" alt="{{ restaurante.nome }}">
+        <img src="/{{ restaurante.imagem }}" class="hero-img" alt="{{ restaurante.nome }}">
       {% else %}
         <div class="hero-img" style="background:linear-gradient(135deg,#1a1a1a,#0d0c0c);"></div>
       {% endif %}
@@ -400,10 +400,10 @@
     <div class="hero-info">
       <div class="info-pills">
         <span class="info-pill">
-          <i class="fa-solid fa-clock"></i> {{ restaurante.tempo }}
+          <i class="fa-solid fa-clock"></i> {{ restaurante.tempo_entrega|default:"30-45 min" }}
         </span>
         <span class="info-pill free">
-          <i class="fa-solid fa-bicycle"></i> Entrega grátis
+          <i class="fa-solid fa-bicycle"></i> {% if restaurante.taxa_entrega == 0 or restaurante.taxa_entrega == None %}Entrega grátis{% else %}R$ {{ restaurante.taxa_entrega }}{% endif %}
         </span>
         {% if restaurante.cupom %}
         <span class="cupom-chip">
@@ -427,9 +427,12 @@
   <div class="menu-bar">
     <h2 class="menu-title">Cardápio</h2>
     <div class="filters">
-      <button class="filter-btn active">Todos</button>
-      <button class="filter-btn">Mais pedidos</button>
-      <button class="filter-btn">Promoções</button>
+      <a href="{% url 'restaurante_detalhe' restaurante.id_restaurante %}"
+         class="filter-btn {% if not categoria_ativa %}active{% endif %}">Todos</a>
+      {% for cat in categorias %}
+      <a href="{% url 'restaurante_detalhe' restaurante.id_restaurante %}?categoria={{ cat }}"
+         class="filter-btn {% if categoria_ativa == cat %}active{% endif %}">{{ cat }}</a>
+      {% endfor %}
     </div>
   </div>
 
@@ -439,16 +442,16 @@
 
       <div class="dish-img-wrap">
         {% if prato.imagem %}
-          <img src="{% static prato.imagem %}" alt="{{ prato.nome_produto }}">
+          <img src="/{{ prato.imagem }}" alt="{{ prato.nome_produto }}">
         {% else %}
           <div class="dish-no-img"><i class="fa-solid fa-utensils"></i></div>
         {% endif %}
-        <span class="price-tag">R$ {{ prato.preco }}</span>
+        {% if prato.preco %}<span class="price-tag">R$ {{ prato.preco }}</span>{% endif %}
       </div>
 
       <div class="dish-body">
-        <h5 class="dish-name">{{ prato.nome_produto }}</h5>
-        <p class="dish-desc">{{ prato.descricao|truncatechars:110 }}</p>
+        <h5 class="dish-name">{{ prato.nome_produto|default:"Produto" }}</h5>
+        <p class="dish-desc">{{ prato.descricao|default:""|truncatechars:110 }}</p>
         <a href="{% url 'prato' %}?restaurante_id={{ restaurante.id_restaurante }}&produto_id={{ prato.id_produto }}"
            class="btn-ver">
           Ver prato <i class="fa-solid fa-arrow-right"></i>

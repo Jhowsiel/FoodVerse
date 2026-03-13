@@ -251,7 +251,7 @@ public class HomePanel extends JPanel {
         if (ctx.isAdmin() && !ctx.adminTemContextoRestaurante()) {
             return "Você está no modo global. Selecione um restaurante para liberar os módulos operacionais.";
         }
-        return "Seu painel inicial já está filtrado para o restaurante #" + ctx.getRestauranteEfetivo() + ".";
+        return "Seu painel inicial já está filtrado para o restaurante " + ctx.getRestauranteLabel() + ".";
     }
 
     private static String[] buildOperationalLines(SessionContext ctx) {
@@ -273,7 +273,7 @@ public class HomePanel extends JPanel {
             return "Selecione";
         }
         int restauranteId = ctx.getRestauranteEfetivo();
-        return restauranteId > 0 ? "#" + restauranteId : "Não definido";
+        return restauranteId > 0 ? ctx.getRestauranteLabel() : "Não definido";
     }
 
     private static String valorOuPadrao(String valor, String padrao) {

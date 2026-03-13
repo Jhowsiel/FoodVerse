@@ -18,6 +18,7 @@ public final class SessionContext {
     private String cargo;
     private String status;
     private int    restauranteId;          // ID do restaurante vinculado ao funcionário
+    private String nomeRestaurante;        // Nome do restaurante efetivo (para exibição)
     private boolean isAdmin;
     private int    restauranteSelecionadoId; // Admin escolheu entrar no contexto deste restaurante
 
@@ -49,6 +50,7 @@ public final class SessionContext {
         cargo                    = null;
         status                   = null;
         restauranteId            = 0;
+        nomeRestaurante          = null;
         isAdmin                  = false;
         restauranteSelecionadoId = 0;
     }
@@ -67,6 +69,9 @@ public final class SessionContext {
     public int getRestauranteSelecionadoId() { return restauranteSelecionadoId; }
     public void setRestauranteSelecionadoId(int id) { this.restauranteSelecionadoId = id; }
 
+    public String getNomeRestaurante() { return nomeRestaurante; }
+    public void setNomeRestaurante(String nomeRestaurante) { this.nomeRestaurante = nomeRestaurante; }
+
     /**
      * Retorna o ID do restaurante efetivo para filtrar dados:
      *  - Se não-Admin: usa restauranteId do login.
@@ -81,5 +86,17 @@ public final class SessionContext {
     /** Admin está operando dentro do contexto de um restaurante específico? */
     public boolean adminTemContextoRestaurante() {
         return isAdmin && restauranteSelecionadoId > 0;
+    }
+
+    /**
+     * Retorna o rótulo do restaurante efetivo para exibição na UI.
+     * Se o nome está preenchido, usa o nome; caso contrário, usa "#ID".
+     */
+    public String getRestauranteLabel() {
+        if (nomeRestaurante != null && !nomeRestaurante.isBlank()) {
+            return nomeRestaurante;
+        }
+        int rid = getRestauranteEfetivo();
+        return rid > 0 ? "#" + rid : "";
     }
 }

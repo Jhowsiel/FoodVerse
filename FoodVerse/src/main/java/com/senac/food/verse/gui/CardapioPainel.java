@@ -29,7 +29,7 @@ import java.util.stream.Stream;
 
 public class CardapioPainel extends JPanel {
 
-    private static final String PRODUTO_IMAGES_DIR = "imagens" + File.separator + "produtos";
+    private static final String PRODUTO_IMAGES_DIR = "media" + File.separator + "produtos";
 
     private final CardapioDAO dao = new CardapioDAO();
     private final EstoqueDAO estoqueDAO = new EstoqueDAO();
@@ -379,7 +379,8 @@ public class CardapioPainel extends JPanel {
         PratoDialog d = new PratoDialog(SwingUtilities.getWindowAncestor(this), null);
         d.setVisible(true);
         if(d.getResultado() != null) {
-            dao.salvarPrato(d.getResultado());
+            Prato saved = dao.salvarPrato(d.getResultado());
+            d.salvarNutricao(saved.getId());
             carregarCombos();
             atualizarTabelaPratos();
             Toast.show(this, "Prato cadastrado!", Toast.Type.SUCCESS);
@@ -400,6 +401,7 @@ public class CardapioPainel extends JPanel {
         if(d.getResultado() != null) {
             d.getResultado().setId(id);
             dao.atualizarPrato(d.getResultado());
+            d.salvarNutricao(id);
             carregarCombos();
             atualizarTabelaPratos();
             Toast.show(this, "Alterações salvas!", Toast.Type.SUCCESS);
@@ -470,6 +472,10 @@ public class CardapioPainel extends JPanel {
     // =================================================================================
 
     // --- DIALOG PRATO ---
+    private static final String[] RESTRICOES_OPCOES = {
+        "Sem glúten", "Sem lactose", "Vegano", "Vegetariano", "Sem oleaginosas", "Sem açúcar"
+    };
+
     private class PratoDialog extends JDialog {
         private JTextField txtNome;
         private JTextArea txtDescricao;
@@ -481,6 +487,12 @@ public class CardapioPainel extends JPanel {
         private DefaultTableModel ingModel;
         private JTable tblIng;
         private Prato resultado;
+
+        private JSpinner spKcal;
+        private JTextField txtProteina;
+        private JTextField txtCarbo;
+        private JTextField txtGordura;
+        private final JCheckBox[] chkRestricoes = new JCheckBox[RESTRICOES_OPCOES.length];
 
         public PratoDialog(Window owner, Prato base) {
             super(owner, base == null ? "Novo Prato" : "Editar Prato", ModalityType.APPLICATION_MODAL);
@@ -566,14 +578,71 @@ public class CardapioPainel extends JPanel {
             pImg.add(btnEscolherImg, BorderLayout.EAST);
             form.add(pImg, gc);
 
+            // --- Nutrição (opcional) ---
+            gc.gridx=0; gc.gridy=5; gc.gridwidth=2; gc.insets = new Insets(15, 5, 5, 5);
+            JLabel lblNutri = new JLabel("Informação Nutricional (opcional)");
+            lblNutri.setFont(UIConstants.FONT_BOLD);
+            lblNutri.setForeground(UIConstants.FG_LIGHT);
+            form.add(lblNutri, gc);
+            gc.gridwidth = 1;
+
+            gc.gridx=0; gc.gridy=6; gc.weightx=0; gc.insets = new Insets(5, 5, 5, 5);
+            form.add(criarLabel("Calorias (kcal):"), gc);
+            gc.gridx=1;
+            JPanel pNutri = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0)); pNutri.setOpaque(false);
+            spKcal = new JSpinner(new SpinnerNumberModel(0, 0, 99999, 1));
+            UIConstants.styleSpinner(spKcal);
+            spKcal.setPreferredSize(new Dimension(80, 35));
+            pNutri.add(spKcal);
+
+            pNutri.add(Box.createHorizontalStrut(15));
+            pNutri.add(criarLabel("Proteína (g):"));
+            pNutri.add(Box.createHorizontalStrut(5));
+            txtProteina = new JTextField(5); UIConstants.styleField(txtProteina);
+            pNutri.add(txtProteina);
+
+            pNutri.add(Box.createHorizontalStrut(15));
+            pNutri.add(criarLabel("Carbo (g):"));
+            pNutri.add(Box.createHorizontalStrut(5));
+            txtCarbo = new JTextField(5); UIConstants.styleField(txtCarbo);
+            pNutri.add(txtCarbo);
+
+            pNutri.add(Box.createHorizontalStrut(15));
+            pNutri.add(criarLabel("Gordura (g):"));
+            pNutri.add(Box.createHorizontalStrut(5));
+            txtGordura = new JTextField(5); UIConstants.styleField(txtGordura);
+            pNutri.add(txtGordura);
+            form.add(pNutri, gc);
+
+            // --- Restrições alimentares ---
+            gc.gridx=0; gc.gridy=7; gc.gridwidth=2; gc.insets = new Insets(15, 5, 5, 5);
+            JLabel lblRestr = new JLabel("Restrições Alimentares");
+            lblRestr.setFont(UIConstants.FONT_BOLD);
+            lblRestr.setForeground(UIConstants.FG_LIGHT);
+            form.add(lblRestr, gc);
+            gc.gridwidth = 1;
+
+            gc.gridx=0; gc.gridy=8; gc.gridwidth=2;
+            gc.insets = new Insets(2, 5, 5, 5);
+            JPanel pRestr = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 2));
+            pRestr.setOpaque(false);
+            for(int i = 0; i < RESTRICOES_OPCOES.length; i++) {
+                chkRestricoes[i] = new JCheckBox(RESTRICOES_OPCOES[i]);
+                chkRestricoes[i].setForeground(UIConstants.FG_LIGHT);
+                chkRestricoes[i].setOpaque(false);
+                pRestr.add(chkRestricoes[i]);
+            }
+            form.add(pRestr, gc);
+            gc.gridwidth = 1;
+
             // Tabela Ingredientes
-            gc.gridx=0; gc.gridy=5; gc.gridwidth=2; gc.insets = new Insets(20, 5, 5, 5);
+            gc.gridx=0; gc.gridy=9; gc.gridwidth=2; gc.insets = new Insets(20, 5, 5, 5);
             JLabel lblIng = new JLabel("Ficha Técnica (Ingredientes)");
             lblIng.setFont(UIConstants.FONT_BOLD);
             lblIng.setForeground(UIConstants.FG_LIGHT);
             form.add(lblIng, gc);
 
-            gc.gridy=6; gc.weighty=1.0; gc.fill = GridBagConstraints.BOTH;
+            gc.gridy=10; gc.weighty=1.0; gc.fill = GridBagConstraints.BOTH;
             String[] iCols = {"ID Estoque", "Item", "Un.", "Qtd"};
             ingModel = new DefaultTableModel(iCols, 0) {
                 @Override public boolean isCellEditable(int r, int c) { return false; }
@@ -586,7 +655,7 @@ public class CardapioPainel extends JPanel {
             form.add(scrollIng, gc);
 
             // Botões Ingredientes
-            gc.gridy=7; gc.weighty=0; gc.fill = GridBagConstraints.HORIZONTAL;
+            gc.gridy=11; gc.weighty=0; gc.fill = GridBagConstraints.HORIZONTAL;
             JPanel pIngBtns = new JPanel(new FlowLayout(FlowLayout.RIGHT));
             pIngBtns.setOpaque(false);
             
@@ -695,21 +764,47 @@ public class CardapioPainel extends JPanel {
             for(ReceitaItem ri : p.getIngredientes()) {
                 ingModel.addRow(new Object[]{ri.getItemEstoqueId(), ri.getItemNome(), ri.getUnidade(), ri.getQuantidade()});
             }
+            // Restrições
+            if(p.getRestricoes() != null && !p.getRestricoes().isEmpty()) {
+                Set<String> tags = new HashSet<>(Arrays.asList(p.getRestricoes().split(",")));
+                for(int i = 0; i < RESTRICOES_OPCOES.length; i++) {
+                    chkRestricoes[i].setSelected(tags.contains(RESTRICOES_OPCOES[i].trim()));
+                }
+            }
+            // Nutrição
+            if(p.getId() != null) {
+                CardapioDAO.Nutricao nut = dao.buscarNutricao(p.getId());
+                if(nut != null) {
+                    if(nut.getKcal() != null) spKcal.setValue(nut.getKcal());
+                    if(nut.getProteina() != null) txtProteina.setText(nut.getProteina());
+                    if(nut.getCarbo() != null) txtCarbo.setText(nut.getCarbo());
+                    if(nut.getGordura() != null) txtGordura.setText(nut.getGordura());
+                }
+            }
         }
 
         private void salvar() {
             if(txtNome.getText().trim().isEmpty()) { Toast.show(this, "Nome obrigatório", Toast.Type.WARNING); return; }
-            
+            double preco = (Double)spPreco.getValue();
+            if(preco < 0.01) { Toast.show(this, "Preço deve ser no mínimo R$ 0,01", Toast.Type.WARNING); return; }
+
             resultado = new Prato();
             resultado.setNome(txtNome.getText().trim());
             resultado.setDescricao(txtDescricao.getText().trim());
             resultado.setCategoria(cbCategoria.getSelectedItem().toString());
-            resultado.setPreco((Double)spPreco.getValue());
+            resultado.setPreco(preco);
             resultado.setTempoPreparo((Integer)spTempoPreparo.getValue());
             resultado.setAtivo(chkAtivo.isSelected());
             String imgPath = txtImagem.getText().trim();
             resultado.setImagem(imgPath.isEmpty() ? null : imgPath);
-            
+
+            // Restrições
+            List<String> tags = new ArrayList<>();
+            for(int i = 0; i < RESTRICOES_OPCOES.length; i++) {
+                if(chkRestricoes[i].isSelected()) tags.add(RESTRICOES_OPCOES[i]);
+            }
+            resultado.setRestricoes(tags.isEmpty() ? null : String.join(",", tags));
+
             for(int i=0; i<ingModel.getRowCount(); i++) {
                 Long id = (Long) ingModel.getValueAt(i, 0);
                 String nome = (String) ingModel.getValueAt(i, 1);
@@ -718,6 +813,16 @@ public class CardapioPainel extends JPanel {
                 resultado.getIngredientes().add(new ReceitaItem(id, nome, un, qtd));
             }
             dispose();
+        }
+
+        /** Called after save completes to persist nutrition data. */
+        void salvarNutricao(Long produtoId) {
+            if(produtoId == null) return;
+            Integer kcal = (Integer)spKcal.getValue();
+            String proteina = txtProteina.getText().trim();
+            String carbo = txtCarbo.getText().trim();
+            String gordura = txtGordura.getText().trim();
+            dao.salvarOuAtualizarNutricao(produtoId, kcal, proteina, carbo, gordura);
         }
 
         public Prato getResultado() { return resultado; }
@@ -732,10 +837,11 @@ public class CardapioPainel extends JPanel {
         private JCheckBox chkAtivo;
         private JTextField txtImagem;
         private ProdutoVenda resultado;
+        private final JCheckBox[] chkRestr = new JCheckBox[RESTRICOES_OPCOES.length];
 
         public ProdutoDialog(Window owner, ProdutoVenda base) {
             super(owner, base == null ? "Novo Produto" : "Editar Produto", ModalityType.APPLICATION_MODAL);
-            setSize(500, 460);
+            setSize(540, 520);
             setLocationRelativeTo(owner);
             getContentPane().setBackground(UIConstants.BG_DARK);
             setLayout(new BorderLayout());
@@ -759,7 +865,6 @@ public class CardapioPainel extends JPanel {
             gc.gridy++;
             cbCategoria = new JComboBox<>(CATEGORIAS_PRODUTOS_PADRAO);
             UIConstants.styleCombo(cbCategoria);
-            cbCategoria.setEditable(true);
             form.add(cbCategoria, gc);
 
             gc.gridy++;
@@ -809,7 +914,25 @@ public class CardapioPainel extends JPanel {
             pImg.add(btnEscolherImg, BorderLayout.EAST);
             form.add(pImg, gc);
 
-            add(form, BorderLayout.CENTER);
+            // Restrições
+            gc.gridy++;
+            form.add(criarLabel("Restrições Alimentares:"), gc);
+            gc.gridy++;
+            JPanel pRestr = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 2));
+            pRestr.setOpaque(false);
+            for(int i = 0; i < RESTRICOES_OPCOES.length; i++) {
+                chkRestr[i] = new JCheckBox(RESTRICOES_OPCOES[i]);
+                chkRestr[i].setForeground(UIConstants.FG_LIGHT);
+                chkRestr[i].setOpaque(false);
+                pRestr.add(chkRestr[i]);
+            }
+            form.add(pRestr, gc);
+
+            JScrollPane scrollForm = new JScrollPane(form);
+            scrollForm.setBorder(null);
+            scrollForm.setOpaque(false);
+            scrollForm.getViewport().setOpaque(false);
+            add(scrollForm, BorderLayout.CENTER);
 
             JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
             footer.setBackground(UIConstants.BG_DARK);
@@ -823,12 +946,20 @@ public class CardapioPainel extends JPanel {
             UIConstants.styleSuccess(btnSave);
             btnSave.addActionListener(e -> {
                 if(txtNome.getText().trim().isEmpty()) { Toast.show(this, "Nome é obrigatório", Toast.Type.WARNING); return; }
+                double preco = (Double)spPreco.getValue();
+                if(preco < 0.01) { Toast.show(this, "Preço deve ser no mínimo R$ 0,01", Toast.Type.WARNING); return; }
                 resultado = new ProdutoVenda(null, txtNome.getText().trim(),
                         cbCategoria.getSelectedItem().toString(),
-                        chkAtivo.isSelected(), (Double)spPreco.getValue());
+                        chkAtivo.isSelected(), preco);
                 resultado.setDescricao(txtDescricao.getText().trim());
                 String imgPath = txtImagem.getText().trim();
                 resultado.setImagem(imgPath.isEmpty() ? null : imgPath);
+                // Restrições
+                List<String> tags = new ArrayList<>();
+                for(int i = 0; i < RESTRICOES_OPCOES.length; i++) {
+                    if(chkRestr[i].isSelected()) tags.add(RESTRICOES_OPCOES[i]);
+                }
+                resultado.setRestricoes(tags.isEmpty() ? null : String.join(",", tags));
                 dispose();
             });
 
@@ -843,6 +974,12 @@ public class CardapioPainel extends JPanel {
                 chkAtivo.setSelected(base.isAtivo());
                 if(base.getDescricao() != null) txtDescricao.setText(base.getDescricao());
                 if(base.getImagem() != null) txtImagem.setText(base.getImagem());
+                if(base.getRestricoes() != null && !base.getRestricoes().isEmpty()) {
+                    Set<String> rtags = new HashSet<>(Arrays.asList(base.getRestricoes().split(",")));
+                    for(int i = 0; i < RESTRICOES_OPCOES.length; i++) {
+                        chkRestr[i].setSelected(rtags.contains(RESTRICOES_OPCOES[i].trim()));
+                    }
+                }
             }
         }
         public ProdutoVenda getResultado() { return resultado; }

@@ -46,4 +46,26 @@ class DashboardContextTest {
         assertEquals("Restaurante em contexto: #4", TelaInicial.buildRestaurantContextText(ctx));
         assertEquals("Operando como Admin no restaurante #4.", TelaInicial.buildOperationalModeText(ctx));
     }
+
+    @Test
+    void deveExibirNomeDoRestauranteQuandoDisponivel() {
+        SessionContext ctx = SessionContext.getInstance();
+        ctx.inicializar(2, "Maria", "Gerente", "ativo", 7);
+        ctx.setNomeRestaurante("Sabor da Casa");
+
+        assertEquals("Restaurante em contexto: Sabor da Casa", TelaInicial.buildRestaurantContextText(ctx));
+        assertEquals("Operando como Gerente no restaurante Sabor da Casa.", TelaInicial.buildOperationalModeText(ctx));
+        assertEquals("Seu painel inicial já está filtrado para o restaurante Sabor da Casa.", HomePanel.buildHomeSummaryText(ctx));
+    }
+
+    @Test
+    void deveExibirNomeDoRestauranteParaAdminComContexto() {
+        SessionContext ctx = SessionContext.getInstance();
+        ctx.inicializar(1, "Admin", "Admin", "ativo", 0);
+        ctx.setRestauranteSelecionadoId(4);
+        ctx.setNomeRestaurante("Pizzaria Bella");
+
+        assertEquals("Restaurante em contexto: Pizzaria Bella", TelaInicial.buildRestaurantContextText(ctx));
+        assertEquals("Operando como Admin no restaurante Pizzaria Bella.", TelaInicial.buildOperationalModeText(ctx));
+    }
 }

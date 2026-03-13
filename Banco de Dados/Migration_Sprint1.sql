@@ -122,6 +122,18 @@ BEGIN
 END
 GO
 
+-- -------------------------------------------------------------------------
+-- 5. tb_produtos: garantir coluna restricoes (tags alimentares, ex.: "Sem glúten,Vegano")
+-- -------------------------------------------------------------------------
+IF NOT EXISTS (
+    SELECT 1 FROM sys.columns
+    WHERE object_id = OBJECT_ID('tb_produtos') AND name = 'restricoes'
+)
+BEGIN
+    ALTER TABLE tb_produtos ADD restricoes VARCHAR(255) NULL;
+END
+GO
+
 -- ============================================================================
 -- Fim da Migration_Sprint1.sql
 -- ============================================================================

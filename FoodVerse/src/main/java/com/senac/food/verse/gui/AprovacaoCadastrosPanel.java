@@ -637,6 +637,10 @@ public class AprovacaoCadastrosPanel extends JPanel {
     }
 
     private static String buildFallbackRestaurantName(int restauranteId) {
+        String label = SessionContext.getInstance().getRestauranteLabel();
+        if (label != null && !label.isBlank() && !label.startsWith("#")) {
+            return label;
+        }
         return "Restaurante #" + restauranteId;
     }
 

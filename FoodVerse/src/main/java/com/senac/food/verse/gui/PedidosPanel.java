@@ -1,9 +1,9 @@
 package com.senac.food.verse.gui;
 
-import com.senac.food.verse.ConexaoBanco;
 import com.senac.food.verse.ItemPedido;
 import com.senac.food.verse.PedidoDAO;
 import com.senac.food.verse.Pedidos;
+import com.senac.food.verse.SessionContext;
 import jiconfont.icons.google_material_design_icons.GoogleMaterialDesignIcons;
 import jiconfont.swing.IconFontSwing;
 
@@ -11,8 +11,6 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.text.NumberFormat;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -666,13 +664,13 @@ public class PedidosPanel extends JPanel {
         
         JTextArea txtCupom = new JTextArea();
         txtCupom.setFont(new Font("Monospaced", Font.PLAIN, 14));
-        txtCupom.setBackground(new Color(255, 255, 240)); 
-        txtCupom.setForeground(Color.BLACK);
+        txtCupom.setBackground(UIConstants.CARD_DARK);
+        txtCupom.setForeground(UIConstants.FG_LIGHT);
         txtCupom.setEditable(false);
         txtCupom.setMargin(new Insets(20, 20, 20, 20));
         
         StringBuilder sb = new StringBuilder();
-        sb.append("      RESTAURANTE FOODVERSE      \n");
+        sb.append("      ").append(SessionContext.getInstance().getRestauranteLabel().toUpperCase()).append("      \n");
         sb.append("=================================\n");
         sb.append("PEDIDO #").append(p.getIdPedido()).append("\n");
         sb.append("DATA: ").append(p.getHoraPedido()).append("\n");
@@ -808,24 +806,7 @@ public class PedidosPanel extends JPanel {
         new SwingWorker<Boolean, Void>() {
             @Override
             protected Boolean doInBackground() {
-                ConexaoBanco banco = new ConexaoBanco();
-                try (Connection conn = banco.abrirConexao()) {
-                    if (conn == null) return false;
-                    
-                    int statusId = 1; 
-                    try (PreparedStatement ps = conn.prepareStatement("SELECT ID_status FROM tb_status_pedido WHERE nome_status = ?")) {
-                        ps.setString(1, novoStatus);
-                        try (var rs = ps.executeQuery()) {
-                            if(rs.next()) statusId = rs.getInt(1);
-                        }
-                    }
-                    
-                    try (PreparedStatement up = conn.prepareStatement("UPDATE tb_pedidos SET status_id = ? WHERE ID_pedido = ?")) {
-                        up.setInt(1, statusId);
-                        up.setString(2, p.getIdPedido());
-                        up.executeUpdate();
-                    }
-                    
+                try {
                     dao.atualizarStatusPedido(p.getIdPedido(), novoStatus);
                     return true;
                 } catch (Exception ex) { 
