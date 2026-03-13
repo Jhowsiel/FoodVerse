@@ -401,18 +401,6 @@ def pedido_view(request):
         'restaurante_atual': restaurante,
     })
 
-
-from django.http import JsonResponse
-
-def status_pedido(request, pedido_id):
-    pedido = TbPedidos.objects.get(id_pedido=pedido_id)
-
-    return JsonResponse({
-        "status": pedido.status.nome_status,
-        "status_id": pedido.status.id_status
-    })
-
-
 # View 1 — só ADICIONA e redireciona
 def adicionar_carrinho(request):
     r_id = _int_param(request.GET.get('restaurante_id'), 1)
