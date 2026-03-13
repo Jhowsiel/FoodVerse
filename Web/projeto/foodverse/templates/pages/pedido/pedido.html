@@ -470,7 +470,7 @@
           <div class="steps-row">
             <div class="track-line">
               <div class="track-progress" style="width:
-                {% if sid == 1 %}0%
+                {% if sid == 1 %}0% 
                 {% elif sid == 2 %}33%
                 {% elif sid == 3 %}66%
                 {% else %}100%{% endif %}">
@@ -546,6 +546,36 @@
   {% endfor %}
 
 </div>
+
+<script>
+  // Coleta os IDs e status atuais de todos os pedidos na página
+  const pedidosStatus = {
+    {% for pedido in pedidos %}
+      {{ pedido.id_pedido }}: {{ pedido.status.id_status }}{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  };
+
+  function verificarPedidos() {
+    Object.keys(pedidosStatus).forEach(function(pedidoId) {
+      fetch('/pedido/status/' + pedidoId + '/')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          // Só recarrega se o status mudou
+          if (data.status !== pedidosStatus[pedidoId]) {
+            location.reload();
+          }
+        })
+        .catch(function(err) {
+          console.warn('Erro ao verificar pedido', pedidoId, err);
+        });
+    });
+  }
+
+  // Só inicia polling se houver pedidos
+  if (Object.keys(pedidosStatus).length > 0) {
+    setInterval(verificarPedidos, 5000);
+  }
+</script>
 
 {% include "pages/pagePrincipal/footer.html" %}
 {% endblock %}
