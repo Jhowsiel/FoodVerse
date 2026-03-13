@@ -786,7 +786,7 @@ public class CardapioPainel extends JPanel {
         private void salvar() {
             if(txtNome.getText().trim().isEmpty()) { Toast.show(this, "Nome obrigatório", Toast.Type.WARNING); return; }
             double preco = (Double)spPreco.getValue();
-            if(preco < 0.01) { Toast.show(this, "Preço deve ser maior que zero", Toast.Type.WARNING); return; }
+            if(preco < 0.01) { Toast.show(this, "Preço deve ser no mínimo R$ 0,01", Toast.Type.WARNING); return; }
 
             resultado = new Prato();
             resultado.setNome(txtNome.getText().trim());
@@ -947,7 +947,7 @@ public class CardapioPainel extends JPanel {
             btnSave.addActionListener(e -> {
                 if(txtNome.getText().trim().isEmpty()) { Toast.show(this, "Nome é obrigatório", Toast.Type.WARNING); return; }
                 double preco = (Double)spPreco.getValue();
-                if(preco < 0.01) { Toast.show(this, "Preço deve ser maior que zero", Toast.Type.WARNING); return; }
+                if(preco < 0.01) { Toast.show(this, "Preço deve ser no mínimo R$ 0,01", Toast.Type.WARNING); return; }
                 resultado = new ProdutoVenda(null, txtNome.getText().trim(),
                         cbCategoria.getSelectedItem().toString(),
                         chkAtivo.isSelected(), preco);
