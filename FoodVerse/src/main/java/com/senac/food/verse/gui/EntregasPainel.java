@@ -596,7 +596,7 @@ public class EntregasPainel extends JPanel {
                 try {
                     dao.atualizarStatusPedido(p.getIdPedido(), novoStatus);
                     return true;
-                } catch (Exception e) { return true; }
+                } catch (Exception e) { return false; }
             }
             @Override
             protected void done() {
