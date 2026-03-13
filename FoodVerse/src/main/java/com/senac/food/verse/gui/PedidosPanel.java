@@ -822,7 +822,7 @@ public class PedidosPanel extends JPanel {
                     
                     try (PreparedStatement up = conn.prepareStatement("UPDATE tb_pedidos SET status_id = ? WHERE ID_pedido = ?")) {
                         up.setInt(1, statusId);
-                        up.setString(2, p.getIdPedido());
+                        up.setInt(2, Integer.parseInt(p.getIdPedido()));
                         up.executeUpdate();
                     }
                     

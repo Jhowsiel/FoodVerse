@@ -91,6 +91,14 @@ CREATE TABLE tb_status_pedido (
     nome_status VARCHAR(50)
 );
 
+-- Dados mestres obrigatórios para o fluxo de pedidos (Django + Java)
+INSERT INTO tb_status_pedido (ID_status, nome_status) VALUES (1, 'pendente');
+INSERT INTO tb_status_pedido (ID_status, nome_status) VALUES (2, 'em preparo');
+INSERT INTO tb_status_pedido (ID_status, nome_status) VALUES (3, 'pronto');
+INSERT INTO tb_status_pedido (ID_status, nome_status) VALUES (4, 'em rota');
+INSERT INTO tb_status_pedido (ID_status, nome_status) VALUES (5, 'concluido');
+INSERT INTO tb_status_pedido (ID_status, nome_status) VALUES (6, 'cancelado');
+
 
 -- PEDIDOS
 CREATE TABLE tb_pedidos (
@@ -118,6 +126,7 @@ CREATE TABLE tb_pedidos_produtos (
     ID_pedido INT,
     ID_produto INT,
     quantidade INT,
+    preco_unitario DECIMAL(10,2),
 
     PRIMARY KEY (ID_pedido, ID_produto),
 

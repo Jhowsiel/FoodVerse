@@ -122,6 +122,45 @@ BEGIN
 END
 GO
 
+-- -------------------------------------------------------------------------
+-- 5. tb_status_pedido: garantir dados mestres de status
+--    Ambos os sistemas dependem desses registros:
+--    • Django: get_object_or_404(TbStatusPedido, id_status=1)
+--    • Java:   SELECT ID_status FROM tb_status_pedido WHERE nome_status = ?
+-- -------------------------------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM tb_status_pedido WHERE ID_status = 1)
+    INSERT INTO tb_status_pedido (ID_status, nome_status) VALUES (1, 'pendente');
+
+IF NOT EXISTS (SELECT 1 FROM tb_status_pedido WHERE ID_status = 2)
+    INSERT INTO tb_status_pedido (ID_status, nome_status) VALUES (2, 'em preparo');
+
+IF NOT EXISTS (SELECT 1 FROM tb_status_pedido WHERE ID_status = 3)
+    INSERT INTO tb_status_pedido (ID_status, nome_status) VALUES (3, 'pronto');
+
+IF NOT EXISTS (SELECT 1 FROM tb_status_pedido WHERE ID_status = 4)
+    INSERT INTO tb_status_pedido (ID_status, nome_status) VALUES (4, 'em rota');
+
+IF NOT EXISTS (SELECT 1 FROM tb_status_pedido WHERE ID_status = 5)
+    INSERT INTO tb_status_pedido (ID_status, nome_status) VALUES (5, 'concluido');
+
+IF NOT EXISTS (SELECT 1 FROM tb_status_pedido WHERE ID_status = 6)
+    INSERT INTO tb_status_pedido (ID_status, nome_status) VALUES (6, 'cancelado');
+GO
+
+-- -------------------------------------------------------------------------
+-- 6. tb_pedidos_produtos: garantir coluna preco_unitario
+--    Armazena o preço no momento da compra para consistência entre
+--    Django (criação do pedido) e Java (leitura dos itens).
+-- -------------------------------------------------------------------------
+IF NOT EXISTS (
+    SELECT 1 FROM sys.columns
+    WHERE object_id = OBJECT_ID('tb_pedidos_produtos') AND name = 'preco_unitario'
+)
+BEGIN
+    ALTER TABLE tb_pedidos_produtos ADD preco_unitario DECIMAL(10,2) NULL;
+END
+GO
+
 -- ============================================================================
 -- Fim da Migration_Sprint1.sql
 -- ============================================================================

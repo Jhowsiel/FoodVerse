@@ -118,6 +118,7 @@ class TbPedidosProdutos(models.Model):
     pedido = models.ForeignKey('TbPedidos', models.DO_NOTHING, db_column='ID_pedido', primary_key=True)
     produto = models.ForeignKey('TbProdutos', models.DO_NOTHING, db_column='ID_produto')
     quantidade = models.IntegerField(db_column='quantidade')
+    preco_unitario = models.DecimalField(max_digits=10, decimal_places=2, db_column='preco_unitario', null=True, blank=True)
 
     class Meta:
         managed = False

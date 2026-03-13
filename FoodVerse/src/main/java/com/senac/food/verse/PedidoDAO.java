@@ -10,7 +10,7 @@ public class PedidoDAO {
 
     private final ArrayList<Pedidos> listaPedidos = new ArrayList<>();
     private ArrayList<Pedidos> cachePedidos = new ArrayList<>();
-    private String ultimoIdCarregado = null;
+    private int ultimoIdCarregado = -1;
 
     // --- MÉTODOS AUXILIARES PARA MODO OFFLINE (SIMULAÇÃO) ---
     private ArrayList<Pedidos> gerarPedidosSimulados() {
@@ -68,8 +68,9 @@ public class PedidoDAO {
             ResultSet rs = psFresh.executeQuery();
 
             while (rs.next()) {
-                String idPedido = rs.getString("ID_pedido");
-                List<ItemPedido> itens = buscarItensDoPedido(idPedido);
+                int idPedidoInt = rs.getInt("ID_pedido");
+                String idPedido = String.valueOf(idPedidoInt);
+                List<ItemPedido> itens = buscarItensDoPedido(idPedidoInt);
                 String enderecoEntrega = rs.getString("endereco_entrega");
                 String modoEntrega = (enderecoEntrega != null && !enderecoEntrega.isEmpty()) ? "Delivery" : "Salão";
 
@@ -80,8 +81,8 @@ public class PedidoDAO {
 
                 pedidosFresh.add(pedido);
 
-                if (ultimoIdCarregado == null || idPedido.compareTo(ultimoIdCarregado) > 0) {
-                    ultimoIdCarregado = idPedido;
+                if (idPedidoInt > ultimoIdCarregado) {
+                    ultimoIdCarregado = idPedidoInt;
                 }
             }
         } catch (SQLException ex) {
@@ -130,8 +131,9 @@ public class PedidoDAO {
             ResultSet rs = psAll.executeQuery();
 
             while (rs.next()) {
-                String idPedido = rs.getString("ID_pedido");
-                List<ItemPedido> itens = buscarItensDoPedido(idPedido);
+                int idPedidoInt = rs.getInt("ID_pedido");
+                String idPedido = String.valueOf(idPedidoInt);
+                List<ItemPedido> itens = buscarItensDoPedido(idPedidoInt);
                 String enderecoEntrega = rs.getString("endereco_entrega");
                 String modoEntrega = (enderecoEntrega != null && !enderecoEntrega.isEmpty()) ? "Delivery" : "Salão";
 
@@ -142,8 +144,8 @@ public class PedidoDAO {
 
                 listaPedidos.add(pedido);
 
-                if (ultimoIdCarregado == null || idPedido.compareTo(ultimoIdCarregado) > 0) {
-                    ultimoIdCarregado = idPedido;
+                if (idPedidoInt > ultimoIdCarregado) {
+                    ultimoIdCarregado = idPedidoInt;
                 }
             }
         } catch (SQLException ex) {
@@ -194,8 +196,8 @@ public class PedidoDAO {
             ResultSet rs = psCheck.executeQuery();
 
             if (rs.next()) {
-                String novoUltimoId = rs.getString("ultimo_id");
-                if (novoUltimoId != null && !novoUltimoId.equals(ultimoIdCarregado)) {
+                int novoUltimoId = rs.getInt("ultimo_id");
+                if (!rs.wasNull() && novoUltimoId > ultimoIdCarregado) {
                     temNovo = true;
                     ultimoIdCarregado = novoUltimoId;
                 }
@@ -254,12 +256,13 @@ public class PedidoDAO {
                     + "WHERE p.ID_pedido = ?";
 
             PreparedStatement stmt = conexao.conn.prepareStatement(sql);
-            stmt.setString(1, pedidoId);
+            stmt.setInt(1, Integer.parseInt(pedidoId));
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                String idPedido = rs.getString("ID_pedido");
-                List<ItemPedido> itens = buscarItensDoPedido(idPedido);
+                int idPedidoInt = rs.getInt("ID_pedido");
+                String idPedido = String.valueOf(idPedidoInt);
+                List<ItemPedido> itens = buscarItensDoPedido(idPedidoInt);
                 String enderecoEntrega = rs.getString("endereco_entrega");
                 String modoEntrega = (enderecoEntrega != null && !enderecoEntrega.isEmpty()) ? "Delivery" : "Salão";
 
@@ -299,7 +302,7 @@ public class PedidoDAO {
         return null;
     }
 
-    private List<ItemPedido> buscarItensDoPedido(String idPedido) {
+    private List<ItemPedido> buscarItensDoPedido(int idPedido) {
         List<ItemPedido> itens = new ArrayList<>();
         ConexaoBanco conexao = new ConexaoBanco();
 
@@ -307,20 +310,21 @@ public class PedidoDAO {
             conexao.abrirConexao();
             if(conexao.conn == null) return itens;
 
-            String sql = "SELECT pp.ID_produto, pr.nome_produto, pr.preco, pp.quantidade "
+            String sql = "SELECT pp.ID_produto, pr.nome_produto, "
+                       + "COALESCE(pp.preco_unitario, pr.preco) AS preco_efetivo, pp.quantidade "
                        + "FROM tb_pedidos_produtos pp "
                        + "JOIN tb_produtos pr ON pp.ID_produto = pr.ID_produto "
                        + "WHERE pp.ID_pedido = ?";
 
             try (PreparedStatement pstmt = conexao.conn.prepareStatement(sql)) {
-                pstmt.setString(1, idPedido);
+                pstmt.setInt(1, idPedido);
                 ResultSet rs = pstmt.executeQuery();
 
                 while (rs.next()) {
                     String idProduto = rs.getString("ID_produto");
                     String nomeProduto = rs.getString("nome_produto");
                     int quantidade = rs.getInt("quantidade");
-                    double precoUnitario = rs.getDouble("preco");
+                    double precoUnitario = rs.getDouble("preco_efetivo");
                     double precoTotal = precoUnitario * quantidade;
 
                     ItemPedido item = new ItemPedido(idProduto, nomeProduto, quantidade, precoTotal);
@@ -364,7 +368,7 @@ public class PedidoDAO {
                 String sqlUpdate = "UPDATE tb_pedidos SET status_id = ? WHERE ID_pedido = ?";
                 PreparedStatement stmtUpdate = conexao.conn.prepareStatement(sqlUpdate);
                 stmtUpdate.setInt(1, statusId);
-                stmtUpdate.setString(2, idPedido);
+                stmtUpdate.setInt(2, Integer.parseInt(idPedido));
 
                 int rowsUpdated = stmtUpdate.executeUpdate();
 

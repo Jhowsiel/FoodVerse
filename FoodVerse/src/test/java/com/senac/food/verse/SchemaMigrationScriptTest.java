@@ -71,4 +71,30 @@ class SchemaMigrationScriptTest {
         assertSqlMatches(sql, "ALTER\\s+TABLE\\s+tb_restaurantes\\s+ALTER\\s+COLUMN\\s+ativo\\s+BIT\\s+NOT\\s+NULL\\s*;");
         assertSqlMatches(sql, "ALTER\\s+TABLE\\s+tb_restaurantes\\s+ALTER\\s+COLUMN\\s+aberto\\s+BIT\\s+NOT\\s+NULL\\s*;");
     }
+
+    @Test
+    void deveGarantirDadosMestresStatusPedido() throws IOException {
+        String sql = readMigration();
+
+        // Os 6 status obrigatórios devem existir na migration para garantir
+        // que Django (id_status=1) e Java (nome_status=?) encontrem os registros.
+        assertSqlMatches(sql, "INSERT\\s+INTO\\s+tb_status_pedido.*VALUES\\s*\\(1,\\s*'pendente'\\)");
+        assertSqlMatches(sql, "INSERT\\s+INTO\\s+tb_status_pedido.*VALUES\\s*\\(2,\\s*'em preparo'\\)");
+        assertSqlMatches(sql, "INSERT\\s+INTO\\s+tb_status_pedido.*VALUES\\s*\\(3,\\s*'pronto'\\)");
+        assertSqlMatches(sql, "INSERT\\s+INTO\\s+tb_status_pedido.*VALUES\\s*\\(4,\\s*'em rota'\\)");
+        assertSqlMatches(sql, "INSERT\\s+INTO\\s+tb_status_pedido.*VALUES\\s*\\(5,\\s*'concluido'\\)");
+        assertSqlMatches(sql, "INSERT\\s+INTO\\s+tb_status_pedido.*VALUES\\s*\\(6,\\s*'cancelado'\\)");
+    }
+
+    @Test
+    void deveGarantirColunaPrecoUnitarioEmPedidosProdutos() throws IOException {
+        String sql = readMigration();
+
+        // A coluna preco_unitario garante consistência de preço entre
+        // o momento da compra (Django) e a leitura no ERP (Java).
+        assertSqlMatches(sql,
+                "WHERE\\s+object_id\\s*=\\s*OBJECT_ID\\('tb_pedidos_produtos'\\)\\s+AND\\s+name\\s*=\\s*'preco_unitario'");
+        assertSqlMatches(sql,
+                "ALTER\\s+TABLE\\s+tb_pedidos_produtos\\s+ADD\\s+preco_unitario\\s+DECIMAL\\(10,2\\)\\s+NULL");
+    }
 }

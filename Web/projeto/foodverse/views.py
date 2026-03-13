@@ -569,7 +569,11 @@ def finalizacao_view(request):
 
         try:
             with transaction.atomic():
-                status_instancia = get_object_or_404(TbStatusPedido, id_status=1)
+                status_instancia = TbStatusPedido.objects.filter(nome_status='pendente').first()
+                if status_instancia is None:
+                    status_instancia = TbStatusPedido.objects.filter(id_status=1).first()
+                if status_instancia is None:
+                    raise ValueError("Status 'pendente' não encontrado em tb_status_pedido. Execute a migration de dados mestres.")
 
                 # 1. Criar o Pedido com o endereço vindo do formulário
                 pedido = TbPedidos.objects.create(
@@ -595,7 +599,8 @@ def finalizacao_view(request):
                     TbPedidosProdutos.objects.create(
                         pedido=pedido,
                         produto=produto_instancia,
-                        quantidade=item['quantidade']
+                        quantidade=item['quantidade'],
+                        preco_unitario=Decimal(str(item['preco']))
                     )
 
                     estoque = TbEstoque.objects.filter(produto=produto_instancia).first()
