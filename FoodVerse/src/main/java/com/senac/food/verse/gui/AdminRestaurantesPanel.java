@@ -165,9 +165,7 @@ public class AdminRestaurantesPanel extends JPanel {
     private void abrirDialogRestaurante(Integer idRestaurante) {
         JDialog dialog = new JDialog(parentFrame,
                 idRestaurante == null ? "Novo Restaurante" : "Editar Restaurante", true);
-        dialog.setSize(520, 620);
-        dialog.setLocationRelativeTo(parentFrame);
-        dialog.setResizable(false);
+        dialog.setResizable(true);
 
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(UIConstants.BG_DARK_ALT);
@@ -259,6 +257,10 @@ public class AdminRestaurantesPanel extends JPanel {
         scroll.setBorder(null);
         scroll.getViewport().setBackground(UIConstants.BG_DARK_ALT);
         dialog.setContentPane(scroll);
+        dialog.pack();
+        dialog.setMinimumSize(new Dimension(520, 620));
+        if(dialog.getWidth() < 520 || dialog.getHeight() < 620) dialog.setSize(520, 620);
+        dialog.setLocationRelativeTo(parentFrame);
         dialog.setVisible(true);
     }
 

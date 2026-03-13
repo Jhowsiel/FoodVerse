@@ -313,8 +313,6 @@ public class AprovacaoCadastrosPanel extends JPanel {
 
         JDialog modal = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
                 idFuncionario == null ? buildPrimaryActionLabel(sessionContext) : "Editar cadastro", true);
-        modal.setSize(470, modoGerentesGlobal ? 620 : 590);
-        modal.setLocationRelativeTo(this);
         modal.getContentPane().setBackground(UIConstants.BG_DARK);
         modal.setLayout(new BorderLayout());
 
@@ -452,6 +450,11 @@ public class AprovacaoCadastrosPanel extends JPanel {
         btnPanel.add(btnCancelar);
         btnPanel.add(btnSalvar);
         modal.add(btnPanel, BorderLayout.SOUTH);
+        modal.pack();
+        int minH = modoGerentesGlobal ? 620 : 590;
+        modal.setMinimumSize(new Dimension(470, minH));
+        if(modal.getWidth() < 470 || modal.getHeight() < minH) modal.setSize(470, minH);
+        modal.setLocationRelativeTo(this);
         modal.setVisible(true);
     }
 
