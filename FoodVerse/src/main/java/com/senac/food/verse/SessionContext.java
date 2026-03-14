@@ -89,14 +89,13 @@ public final class SessionContext {
     }
 
     /**
-     * Retorna o rótulo do restaurante efetivo para exibição na UI.
-     * Se o nome está preenchido, usa o nome; caso contrário, usa "#ID".
+     * Retorna o nome do restaurante em contexto para exibição na UI.
+     * Evita exibir identificadores técnicos quando o nome não estiver disponível.
      */
     public String getRestauranteLabel() {
         if (nomeRestaurante != null && !nomeRestaurante.isBlank()) {
-            return nomeRestaurante;
+            return nomeRestaurante.trim();
         }
-        int rid = getRestauranteEfetivo();
-        return rid > 0 ? "#" + rid : "";
+        return "restaurante sem nome cadastrado";
     }
 }

@@ -641,10 +641,10 @@ public class AprovacaoCadastrosPanel extends JPanel {
 
     private static String buildFallbackRestaurantName(int restauranteId) {
         String label = SessionContext.getInstance().getRestauranteLabel();
-        if (label != null && !label.isBlank() && !label.startsWith("#")) {
+        if (label != null && !label.isBlank() && !"restaurante sem nome cadastrado".equalsIgnoreCase(label.trim())) {
             return label;
         }
-        return "Restaurante #" + restauranteId;
+        return "Restaurante sem nome cadastrado";
     }
 
     private void selecionarRestaurante(JComboBox<RestauranteOption> combo, int restauranteId) {
