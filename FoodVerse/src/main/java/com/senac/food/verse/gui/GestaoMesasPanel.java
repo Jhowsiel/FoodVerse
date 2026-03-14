@@ -301,8 +301,6 @@ public class GestaoMesasPanel extends JPanel {
     private void abrirDetalhesReserva(Reserva reserva) {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Detalhes da Reserva", true);
         dialog.setLayout(new BorderLayout(0, 15));
-        dialog.setSize(420, 300);
-        dialog.setLocationRelativeTo(this);
         dialog.getContentPane().setBackground(UIConstants.BG_DARK);
 
         JPanel content = new JPanel();
@@ -350,6 +348,10 @@ public class GestaoMesasPanel extends JPanel {
 
         dialog.add(content, BorderLayout.CENTER);
         dialog.add(footer, BorderLayout.SOUTH);
+        dialog.pack();
+        dialog.setMinimumSize(new Dimension(420, 300));
+        if(dialog.getWidth() < 420 || dialog.getHeight() < 300) dialog.setSize(420, 300);
+        dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
     }
 
@@ -383,8 +385,6 @@ public class GestaoMesasPanel extends JPanel {
 
         JDialog modal = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Nova Reserva", true);
         modal.setLayout(new BorderLayout(0, 15));
-        modal.setSize(420, 360);
-        modal.setLocationRelativeTo(this);
         modal.getContentPane().setBackground(UIConstants.BG_DARK);
 
         JPanel form = new JPanel(new GridBagLayout());
@@ -478,6 +478,10 @@ public class GestaoMesasPanel extends JPanel {
 
         modal.add(form, BorderLayout.CENTER);
         modal.add(footer, BorderLayout.SOUTH);
+        modal.pack();
+        modal.setMinimumSize(new Dimension(420, 360));
+        if(modal.getWidth() < 420 || modal.getHeight() < 360) modal.setSize(420, 360);
+        modal.setLocationRelativeTo(this);
         modal.setVisible(true);
     }
 

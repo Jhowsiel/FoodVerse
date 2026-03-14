@@ -262,7 +262,7 @@ public class EstoqueDAO {
             if (rid <= 0) {
                 return false;
             }
-            String sqlProd = "INSERT INTO tb_produtos (ID_restaurante, nome_produto, categoria, disponivel) VALUES (?, ?, ?, ?)";
+            String sqlProd = "INSERT INTO tb_produtos (ID_restaurante, nome_produto, categoria, disponivel, tipo_produto) VALUES (?, ?, ?, ?, 'INSUMO')";
             try(PreparedStatement psProd = conn.prepareStatement(sqlProd, Statement.RETURN_GENERATED_KEYS)) {
                 psProd.setInt(1, rid);
                 psProd.setString(2, item.getNome());

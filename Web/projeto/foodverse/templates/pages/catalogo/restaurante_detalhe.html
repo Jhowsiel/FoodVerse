@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load foodverse_tags %}
 
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
@@ -382,14 +383,18 @@
   <div class="rest-hero">
     <div class="hero-img-wrap">
       {% if restaurante.imagem %}
-        <img src="/{{ restaurante.imagem }}" class="hero-img" alt="{{ restaurante.nome }}">
+        <img src="{% img_url restaurante.imagem %}" class="hero-img" alt="{{ restaurante.nome }}">
       {% else %}
         <div class="hero-img" style="background:linear-gradient(135deg,#1a1a1a,#0d0c0c);"></div>
       {% endif %}
 
       <div class="hero-overlay">
         <h1 class="hero-name">{{ restaurante.nome }}</h1>
-        {% if restaurante.avaliacao %}
+        {% if not restaurante.aberto %}
+        <span class="hero-rating" style="background:rgba(196,16,23,.85);">
+          <i class="fa-solid fa-door-closed"></i> Fechado
+        </span>
+        {% elif restaurante.avaliacao %}
         <span class="hero-rating">
           <i class="fa-solid fa-star"></i> {{ restaurante.avaliacao }}
         </span>
@@ -412,9 +417,15 @@
         {% endif %}
       </div>
 
+      {% if restaurante.aberto %}
       <a href="{% url 'reserva' %}?restaurante_id={{ restaurante.id_restaurante }}" class="btn-reservar">
         <i class="fa-solid fa-calendar-check"></i> Reservar mesa
       </a>
+      {% else %}
+      <span class="btn-reservar" style="opacity:.5; cursor:not-allowed; background:#555;">
+        <i class="fa-solid fa-door-closed"></i> Restaurante fechado
+      </span>
+      {% endif %}
     </div>
 
     {% if restaurante.descricao %}
@@ -442,7 +453,7 @@
 
       <div class="dish-img-wrap">
         {% if prato.imagem %}
-          <img src="/{{ prato.imagem }}" alt="{{ prato.nome_produto }}">
+          <img src="{% img_url prato.imagem %}" alt="{{ prato.nome_produto }}">
         {% else %}
           <div class="dish-no-img"><i class="fa-solid fa-utensils"></i></div>
         {% endif %}

@@ -397,8 +397,6 @@ public class EstoquePainel extends JPanel {
         public ItemDialog(Window owner, ItemEstoque base) {
             super(owner, base == null ? "Novo Item de Estoque" : "Editar Item", ModalityType.APPLICATION_MODAL);
             this.base = base;
-            setSize(500, 520);
-            setLocationRelativeTo(owner);
             getContentPane().setBackground(UIConstants.BG_DARK);
             setLayout(new BorderLayout());
 
@@ -476,6 +474,11 @@ public class EstoquePainel extends JPanel {
                 spEstoqueMin.setValue(base.getEstoqueMinimo());
                 chkAtivo.setSelected(base.isAtivo());
             }
+
+            pack();
+            setMinimumSize(new Dimension(500, 520));
+            if(getWidth() < 500 || getHeight() < 520) setSize(500, 520);
+            setLocationRelativeTo(owner);
         }
 
         private void salvar() {
@@ -520,8 +523,6 @@ public class EstoquePainel extends JPanel {
         public MovimentacaoDialog(Window owner, ItemEstoque item) {
             super(owner, "Ajuste de Estoque", ModalityType.APPLICATION_MODAL);
             this.item = item;
-            setSize(450, 400);
-            setLocationRelativeTo(owner);
             getContentPane().setBackground(UIConstants.BG_DARK);
             setLayout(new BorderLayout());
 
@@ -605,6 +606,11 @@ public class EstoquePainel extends JPanel {
             rbSaida.addActionListener(e -> atualizarPrevisaoSaldo());
             spQtd.addChangeListener(e -> atualizarPrevisaoSaldo());
             atualizarPrevisaoSaldo();
+
+            pack();
+            setMinimumSize(new Dimension(450, 400));
+            if(getWidth() < 450 || getHeight() < 400) setSize(450, 400);
+            setLocationRelativeTo(owner);
         }
 
         private void styleRadio(JRadioButton rb) {

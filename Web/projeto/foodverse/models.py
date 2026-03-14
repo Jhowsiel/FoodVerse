@@ -50,6 +50,7 @@ class TbProdutos(models.Model):
     destaque = models.BooleanField(null=True, blank=True)
     restricoes = models.CharField(max_length=255, null=True, blank=True)
     data_criacao = models.DateTimeField(null=True, blank=True)
+    tipo_produto = models.CharField(max_length=20, default='VENDA', null=True, blank=True)
 
     class Meta:
         db_table = "tb_produtos"

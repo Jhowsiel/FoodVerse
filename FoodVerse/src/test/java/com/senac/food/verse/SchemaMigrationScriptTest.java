@@ -72,4 +72,26 @@ class SchemaMigrationScriptTest {
         assertSqlMatches(sql, "ALTER\\s+TABLE\\s+tb_restaurantes\\s+ALTER\\s+COLUMN\\s+ativo\\s+BIT\\s+NOT\\s+NULL\\s*;");
         assertSqlMatches(sql, "ALTER\\s+TABLE\\s+tb_restaurantes\\s+ALTER\\s+COLUMN\\s+aberto\\s+BIT\\s+NOT\\s+NULL\\s*;");
     }
+
+    @Test
+    void deveGarantirWave2TipoProdutoEReceitas() throws IOException {
+        String sql = readMigration();
+
+        // tipo_produto column
+        assertSqlMatches(sql, "WHERE\\s+object_id\\s*=\\s*OBJECT_ID\\('tb_produtos'\\)\\s+AND\\s+name\\s*=\\s*'tipo_produto'");
+        assertSqlMatches(sql, "ALTER\\s+TABLE\\s+tb_produtos\\s+ADD\\s+tipo_produto\\s+VARCHAR\\(20\\)\\s+NOT\\s+NULL\\s+DEFAULT\\s+'VENDA'\\s*;");
+
+        // tb_receitas table
+        assertSqlMatches(sql, "CREATE\\s+TABLE\\s+tb_receitas");
+        assertSqlMatches(sql, "ID_produto_venda\\s+INT\\s+NOT\\s+NULL");
+        assertSqlMatches(sql, "ID_insumo\\s+INT\\s+NOT\\s+NULL");
+
+        // personalization tables
+        assertSqlMatches(sql, "CREATE\\s+TABLE\\s+tb_personalizacao_grupos");
+        assertSqlMatches(sql, "CREATE\\s+TABLE\\s+tb_personalizacao_opcoes");
+
+        // status seed data
+        assertSqlMatches(sql, "INSERT\\s+INTO\\s+tb_status_pedido.*VALUES\\s*\\(1,\\s*'pendente'\\)");
+        assertSqlMatches(sql, "INSERT\\s+INTO\\s+tb_status_pedido.*VALUES\\s*\\(6,\\s*'cancelado'\\)");
+    }
 }

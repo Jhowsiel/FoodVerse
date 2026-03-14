@@ -496,8 +496,6 @@ public class CardapioPainel extends JPanel {
 
         public PratoDialog(Window owner, Prato base) {
             super(owner, base == null ? "Novo Prato" : "Editar Prato", ModalityType.APPLICATION_MODAL);
-            setSize(720, 680);
-            setLocationRelativeTo(owner);
             getContentPane().setBackground(UIConstants.BG_DARK);
             setLayout(new BorderLayout());
 
@@ -700,13 +698,16 @@ public class CardapioPainel extends JPanel {
             add(footer, BorderLayout.SOUTH);
 
             if(base != null) carregarDados(base);
+
+            pack();
+            setMinimumSize(new Dimension(720, 680));
+            if(getWidth() < 720 || getHeight() < 680) setSize(720, 680);
+            setLocationRelativeTo(owner);
         }
 
         private void abrirSeletorIngredientes() {
             // Modal simples para buscar no estoque
             JDialog d = new JDialog(this, "Selecionar do Estoque", true);
-            d.setSize(500, 400);
-            d.setLocationRelativeTo(this);
             d.getContentPane().setBackground(UIConstants.BG_DARK);
             d.setLayout(new BorderLayout());
 
@@ -750,6 +751,10 @@ public class CardapioPainel extends JPanel {
             pBottom.add(sQtd);
             pBottom.add(bAdd);
             d.add(pBottom, BorderLayout.SOUTH);
+            d.pack();
+            d.setMinimumSize(new Dimension(500, 400));
+            if(d.getWidth() < 500 || d.getHeight() < 400) d.setSize(500, 400);
+            d.setLocationRelativeTo(this);
             d.setVisible(true);
         }
 
@@ -841,8 +846,6 @@ public class CardapioPainel extends JPanel {
 
         public ProdutoDialog(Window owner, ProdutoVenda base) {
             super(owner, base == null ? "Novo Produto" : "Editar Produto", ModalityType.APPLICATION_MODAL);
-            setSize(540, 520);
-            setLocationRelativeTo(owner);
             getContentPane().setBackground(UIConstants.BG_DARK);
             setLayout(new BorderLayout());
 
@@ -981,6 +984,11 @@ public class CardapioPainel extends JPanel {
                     }
                 }
             }
+
+            pack();
+            setMinimumSize(new Dimension(540, 520));
+            if(getWidth() < 540 || getHeight() < 520) setSize(540, 520);
+            setLocationRelativeTo(owner);
         }
         public ProdutoVenda getResultado() { return resultado; }
     }

@@ -192,6 +192,9 @@
   @media (min-width: 992px) {
     .nav-collapse { display: flex !important; flex: 1; align-items: center; }
   }
+
+  /* Prevent long text from breaking auth buttons */
+  .btn-signup, .btn-login { white-space: nowrap; flex-shrink: 0; }
 </style>
 
 <nav class="custom-navbar" id="mainNavbar">
@@ -230,7 +233,7 @@
         </a>
 
         <div class="dropdown">
-          <a class="user-btn" data-bs-toggle="dropdown" aria-expanded="false">
+          <a class="user-btn" href="#" role="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
             <div class="user-avatar">{{ cliente_logado.username|make_list|first|upper }}</div>
             <span class="user-name">{{ cliente_logado.username }}</span>
             <i class="fa-solid fa-chevron-down user-chevron"></i>

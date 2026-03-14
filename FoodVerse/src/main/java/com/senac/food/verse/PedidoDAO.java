@@ -340,6 +340,64 @@ public class PedidoDAO {
         return itens;
     }
 
+    /**
+     * Creates a local order (dine-in/takeout) directly from the Java management panel.
+     * Sets status to 'pendente' (1) and tipo to 'Salão'.
+     * @param mesa table number or null for takeout
+     * @param itens list of items with product ID, name, quantity, price
+     * @return generated order ID or null on error
+     */
+    public String criarPedidoLocal(String mesa, List<ItemPedido> itens) {
+        if(itens == null || itens.isEmpty()) return null;
+        ConexaoBanco conexao = new ConexaoBanco();
+        try {
+            conexao.abrirConexao();
+            if(conexao.conn == null) {
+                // Offline mock
+                String mockId = String.valueOf(System.currentTimeMillis() % 100000);
+                double total = itens.stream().mapToDouble(ItemPedido::getPreco).sum();
+                Pedidos p = new Pedidos(mockId, "Cliente Local", java.time.LocalTime.now().toString().substring(0,5),
+                    null, null, null, null, null, "Salão", null,
+                    itens, "pendente", null, "Local", total, mesa);
+                listaPedidos.add(p);
+                return mockId;
+            }
+            int rid = SessionContext.getInstance().getRestauranteEfetivo();
+            double total = itens.stream().mapToDouble(ItemPedido::getPreco).sum();
+            // Insert order
+            String sqlPedido = "INSERT INTO tb_pedidos (ID_restaurante, status_id, valor_total, data_pedido, mesa) VALUES (?, 1, ?, GETDATE(), ?)";
+            int pedidoId;
+            try(PreparedStatement ps = conexao.conn.prepareStatement(sqlPedido, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+                ps.setInt(1, rid);
+                ps.setDouble(2, total);
+                ps.setString(3, mesa);
+                ps.executeUpdate();
+                try(ResultSet rsKey = ps.getGeneratedKeys()) {
+                    if(!rsKey.next()) return null;
+                    pedidoId = rsKey.getInt(1);
+                }
+            }
+            // Insert order items
+            String sqlItem = "INSERT INTO tb_pedidos_produtos (ID_pedido, ID_produto, quantidade, preco_unitario) VALUES (?, ?, ?, ?)";
+            try(PreparedStatement ps = conexao.conn.prepareStatement(sqlItem)) {
+                for(ItemPedido item : itens) {
+                    ps.setInt(1, pedidoId);
+                    ps.setInt(2, Integer.parseInt(item.getIdItem()));
+                    ps.setInt(3, item.getQuantidade());
+                    ps.setDouble(4, item.getPreco() / Math.max(item.getQuantidade(), 1));
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+            return String.valueOf(pedidoId);
+        } catch(SQLException ex) {
+            System.out.println("Erro ao criar pedido local: " + ex.getMessage());
+        } finally {
+            conexao.fecharConexao();
+        }
+        return null;
+    }
+
     public void atualizarStatusPedido(String idPedido, String novoStatus) {
         ConexaoBanco conexao = new ConexaoBanco();
 
@@ -356,6 +414,19 @@ public class PedidoDAO {
                 return;
             }
 
+            // Fetch current status to prevent double deduction
+            int rid = SessionContext.getInstance().getRestauranteEfetivo();
+            String sqlCurr = "SELECT status_id FROM tb_pedidos WHERE ID_pedido = ?"
+                    + (rid > 0 ? " AND ID_restaurante = ?" : "");
+            int statusAtual = 0;
+            try(PreparedStatement psCurr = conexao.conn.prepareStatement(sqlCurr)) {
+                psCurr.setInt(1, Integer.parseInt(idPedido));
+                if (rid > 0) psCurr.setInt(2, rid);
+                try(ResultSet rsCurr = psCurr.executeQuery()) {
+                    if(rsCurr.next()) statusAtual = rsCurr.getInt("status_id");
+                }
+            }
+
             String sqlBuscaStatus = "SELECT ID_status FROM tb_status_pedido WHERE nome_status = ?";
             PreparedStatement stmtBusca = conexao.conn.prepareStatement(sqlBuscaStatus);
             stmtBusca.setString(1, novoStatus);
@@ -364,7 +435,11 @@ public class PedidoDAO {
             if (rs.next()) {
                 int statusId = rs.getInt("ID_status");
 
-                int rid = SessionContext.getInstance().getRestauranteEfetivo();
+                // BOM stock deduction: only on transition 1 (pendente) → 2 (em preparo)
+                if(statusAtual == 1 && statusId == 2) {
+                    baixarEstoquePorReceita(conexao.conn, idPedido);
+                }
+
                 String sqlUpdate = "UPDATE tb_pedidos SET status_id = ? WHERE ID_pedido = ?"
                         + (rid > 0 ? " AND ID_restaurante = ?" : "");
                 PreparedStatement stmtUpdate = conexao.conn.prepareStatement(sqlUpdate);
@@ -388,6 +463,51 @@ public class PedidoDAO {
             System.out.println("Erro ao atualizar status do pedido: " + ex.getMessage());
         } finally {
             conexao.fecharConexao();
+        }
+    }
+
+    /**
+     * Deduct ingredient stock based on recipe (BOM) when an order moves to preparation.
+     * For each order item: qty_ordered * recipe_qty is deducted from the ingredient's stock.
+     */
+    private void baixarEstoquePorReceita(java.sql.Connection conn, String idPedido) {
+        try {
+            // Get order items
+            String sqlItens = "SELECT pp.ID_produto, pp.quantidade FROM tb_pedidos_produtos pp WHERE pp.ID_pedido = ?";
+            try(PreparedStatement ps = conn.prepareStatement(sqlItens)) {
+                ps.setInt(1, Integer.parseInt(idPedido));
+                try(ResultSet rs = ps.executeQuery()) {
+                    while(rs.next()) {
+                        long produtoId = rs.getLong("ID_produto");
+                        int qtdPedido = rs.getInt("quantidade");
+                        // Deduct ingredients for this product
+                        String sqlReceita = "SELECT r.ID_insumo, r.quantidade FROM tb_receitas r WHERE r.ID_produto_venda = ? AND r.ativo = 1";
+                        try(PreparedStatement psR = conn.prepareStatement(sqlReceita)) {
+                            psR.setLong(1, produtoId);
+                            try(ResultSet rsR = psR.executeQuery()) {
+                                while(rsR.next()) {
+                                    long insumoId = rsR.getLong("ID_insumo");
+                                    double qtdReceita = rsR.getDouble("quantidade");
+                                    double totalBaixar = qtdPedido * qtdReceita;
+                                    // Deduct from tb_estoque where ID_produto = insumoId
+                                    String sqlBaixa = "UPDATE tb_estoque SET quantidade = quantidade - ? WHERE ID_produto = ? AND quantidade >= ?";
+                                    try(PreparedStatement psBaixa = conn.prepareStatement(sqlBaixa)) {
+                                        psBaixa.setDouble(1, totalBaixar);
+                                        psBaixa.setLong(2, insumoId);
+                                        psBaixa.setDouble(3, totalBaixar);
+                                        int updated = psBaixa.executeUpdate();
+                                        if(updated == 0) {
+                                            System.out.println("AVISO: Estoque insuficiente do insumo ID=" + insumoId + " para o pedido " + idPedido);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch(Exception e) {
+            System.out.println("Erro na baixa de estoque por receita: " + e.getMessage());
         }
     }
 }

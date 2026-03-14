@@ -145,7 +145,20 @@ public class ReservaDAO {
     // Método auxiliar para buscar clientes para o combobox
     public List<String> listarClientesSimples() {
         List<String> clientes = new ArrayList<>();
-        String sql = "SELECT id_cliente AS id, username FROM tb_clientes ORDER BY username";
+        int rid = SessionContext.getInstance().getRestauranteEfetivo();
+
+        String sql;
+        if (rid > 0) {
+            sql = "SELECT DISTINCT c.id_cliente AS id, c.username FROM tb_clientes c " +
+                  "WHERE c.id_cliente IN (" +
+                  "  SELECT r2.ID_cliente FROM tb_reservas r2 WHERE r2.ID_restaurante = ?" +
+                  "  UNION" +
+                  "  SELECT p.ID_cliente FROM tb_pedidos p WHERE p.ID_restaurante = ?" +
+                  ") ORDER BY c.username";
+        } else {
+            sql = "SELECT id_cliente AS id, username FROM tb_clientes ORDER BY username";
+        }
+
         ConexaoBanco cb = new ConexaoBanco();
         Connection conn = cb.abrirConexao();
         
@@ -155,11 +168,15 @@ public class ReservaDAO {
             return clientes;
         }
         
-        try (Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery(sql)) {
-             
-             while(rs.next()) {
-                 clientes.add(rs.getInt("id") + " - " + rs.getString("username"));
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+             if (rid > 0) {
+                 ps.setInt(1, rid);
+                 ps.setInt(2, rid);
+             }
+             try (ResultSet rs = ps.executeQuery()) {
+                 while(rs.next()) {
+                     clientes.add(rs.getInt("id") + " - " + rs.getString("username"));
+                 }
              }
         } catch(Exception e) { 
             e.printStackTrace(); 

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load foodverse_tags %}
 
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
@@ -434,13 +435,15 @@
     <a href="{% url 'restaurante_detalhe' restaurante.id_restaurante %}" class="res-card">
 
       <div class="card-img-wrap">
-        <img src="/{{ restaurante.imagem }}" class="card-img" alt="{{ restaurante.nome }}">
+        <img src="{% img_url restaurante.imagem %}" class="card-img" alt="{{ restaurante.nome }}">
 
         <div class="img-badges">
           <span class="badge-rating">
             <i class="fa-solid fa-star"></i> {{ restaurante.avaliacao|default:"—" }}
           </span>
-          {% if restaurante.cupom %}
+          {% if not restaurante.aberto %}
+            <span class="badge-cupom" style="background:#C41017;">Fechado</span>
+          {% elif restaurante.cupom %}
             <span class="badge-cupom">Cupom</span>
           {% endif %}
         </div>
