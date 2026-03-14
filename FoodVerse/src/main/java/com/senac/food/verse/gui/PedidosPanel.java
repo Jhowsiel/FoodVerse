@@ -89,9 +89,21 @@ public class PedidosPanel extends JPanel {
         btnRefresh.setToolTipText("Forçar Atualização");
         btnRefresh.setPreferredSize(new Dimension(45, 40));
         btnRefresh.addActionListener(e -> carregarDadosAsync(false));
-        
+
+        JButton btnNovoPedido = new JButton("Novo Pedido");
+        UIConstants.stylePrimary(btnNovoPedido);
+        btnNovoPedido.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.ADD_SHOPPING_CART, 18, UIConstants.FG_LIGHT));
+        btnNovoPedido.setToolTipText("Criar pedido local (balcão/mesa)");
+        btnNovoPedido.setPreferredSize(new Dimension(145, 40));
+        btnNovoPedido.addActionListener(e -> abrirDialogPedidoLocal());
+
+        JPanel pnlBtns = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
+        pnlBtns.setOpaque(false);
+        pnlBtns.add(btnNovoPedido);
+        pnlBtns.add(btnRefresh);
+
         pnlBusca.add(txtBuscar, BorderLayout.CENTER);
-        pnlBusca.add(btnRefresh, BorderLayout.EAST);
+        pnlBusca.add(pnlBtns, BorderLayout.EAST);
         header.add(pnlBusca, gc);
         
         gc.gridy++;
@@ -828,5 +840,142 @@ public class PedidosPanel extends JPanel {
                 } catch (Exception e) {}
             }
         }.execute();
+    }
+
+    // =========================================================================
+    // NOVO PEDIDO LOCAL (BALCÃO / MESA)
+    // =========================================================================
+    private void abrirDialogPedidoLocal() {
+        JDialog dlg = new JDialog(SwingUtilities.getWindowAncestor(this), "Novo Pedido Local", Dialog.ModalityType.APPLICATION_MODAL);
+        dlg.setSize(520, 560);
+        dlg.setLocationRelativeTo(this);
+        dlg.setLayout(new BorderLayout());
+        dlg.getContentPane().setBackground(UIConstants.BG_DARK);
+
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBackground(UIConstants.BG_DARK);
+        form.setBorder(new EmptyBorder(20, 20, 10, 20));
+        GridBagConstraints gc = new GridBagConstraints();
+        gc.fill = GridBagConstraints.HORIZONTAL;
+        gc.insets = new Insets(6, 0, 6, 0);
+        gc.gridx = 0; gc.gridy = 0; gc.weightx = 1;
+
+        JLabel lblTipo = new JLabel("Tipo de atendimento:");
+        lblTipo.setForeground(UIConstants.FG_LIGHT);
+        lblTipo.setFont(UIConstants.ARIAL_12_B);
+        form.add(lblTipo, gc);
+        gc.gridy++;
+        JComboBox<String> cbTipo = new JComboBox<>(new String[]{"Mesa", "Retirada (Balcão)"});
+        UIConstants.styleCombo(cbTipo);
+        form.add(cbTipo, gc);
+
+        gc.gridy++;
+        JLabel lblMesa = new JLabel("Número da mesa:");
+        lblMesa.setForeground(UIConstants.FG_LIGHT);
+        lblMesa.setFont(UIConstants.ARIAL_12_B);
+        form.add(lblMesa, gc);
+        gc.gridy++;
+        JTextField txtMesa = new JTextField();
+        UIConstants.styleField(txtMesa);
+        txtMesa.setColumns(10);
+        form.add(txtMesa, gc);
+
+        cbTipo.addActionListener(e -> {
+            boolean isMesa = cbTipo.getSelectedIndex() == 0;
+            lblMesa.setVisible(isMesa);
+            txtMesa.setVisible(isMesa);
+        });
+
+        // Items table
+        gc.gridy++;
+        JLabel lblItens = new JLabel("Itens do pedido:");
+        lblItens.setForeground(UIConstants.FG_LIGHT);
+        lblItens.setFont(UIConstants.ARIAL_12_B);
+        form.add(lblItens, gc);
+
+        gc.gridy++;
+        gc.weighty = 1; gc.fill = GridBagConstraints.BOTH;
+        DefaultListModel<String> itemModel = new DefaultListModel<>();
+        java.util.List<ItemPedido> itensList = new ArrayList<>();
+        JList<String> lstItens = new JList<>(itemModel);
+        lstItens.setBackground(UIConstants.BG_DARK_ALT);
+        lstItens.setForeground(UIConstants.FG_LIGHT);
+        lstItens.setFont(UIConstants.ARIAL_12);
+        JScrollPane spItens = new JScrollPane(lstItens);
+        UIConstants.styleScrollPane(spItens);
+        spItens.setPreferredSize(new Dimension(460, 160));
+        form.add(spItens, gc);
+
+        gc.gridy++; gc.weighty = 0; gc.fill = GridBagConstraints.HORIZONTAL;
+        JPanel pnlAddItem = new JPanel(new BorderLayout(8, 0));
+        pnlAddItem.setOpaque(false);
+        JButton btnAddItem = new JButton("Adicionar Item");
+        UIConstants.styleSecondary(btnAddItem);
+        btnAddItem.addActionListener(e -> {
+            // Load available VENDA products
+            var cardapioDAO = new com.senac.food.verse.CardapioDAO();
+            var pratos = cardapioDAO.listarPratos("", "Todas", "Ativos");
+            if(pratos.isEmpty()) {
+                UIConstants.showWarning(dlg, "Nenhum produto disponível no cardápio.");
+                return;
+            }
+            String[] nomes = pratos.stream().map(p -> p.getNome() + " — R$ " + String.format("%.2f", p.getPreco())).toArray(String[]::new);
+            String escolha = (String) JOptionPane.showInputDialog(dlg, "Selecione o produto:", "Adicionar Item",
+                JOptionPane.PLAIN_MESSAGE, null, nomes, nomes[0]);
+            if(escolha == null) return;
+            int idx = java.util.Arrays.asList(nomes).indexOf(escolha);
+            var prato = pratos.get(idx);
+            String qtdStr = JOptionPane.showInputDialog(dlg, "Quantidade:", "1");
+            int qtd;
+            try { qtd = Integer.parseInt(qtdStr); } catch(Exception ex) { qtd = 1; }
+            if(qtd < 1) qtd = 1;
+            ItemPedido item = new ItemPedido(String.valueOf(prato.getId()), prato.getNome(), qtd, prato.getPreco() * qtd);
+            itensList.add(item);
+            itemModel.addElement(qtd + "x " + prato.getNome() + " — R$ " + String.format("%.2f", prato.getPreco() * qtd));
+        });
+        JButton btnRemItem = new JButton("Remover");
+        UIConstants.styleDanger(btnRemItem);
+        btnRemItem.addActionListener(e -> {
+            int sel = lstItens.getSelectedIndex();
+            if(sel >= 0) { itensList.remove(sel); itemModel.remove(sel); }
+        });
+        pnlAddItem.add(btnAddItem, BorderLayout.CENTER);
+        pnlAddItem.add(btnRemItem, BorderLayout.EAST);
+        form.add(pnlAddItem, gc);
+
+        dlg.add(form, BorderLayout.CENTER);
+
+        // Bottom buttons
+        JPanel pnlBot = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 12));
+        pnlBot.setBackground(UIConstants.BG_DARK_ALT);
+        JButton btnCancel = new JButton("Cancelar");
+        UIConstants.styleSecondary(btnCancel);
+        btnCancel.addActionListener(e -> dlg.dispose());
+        JButton btnSalvar = new JButton("Criar Pedido");
+        UIConstants.stylePrimary(btnSalvar);
+        btnSalvar.addActionListener(e -> {
+            if(itensList.isEmpty()) {
+                UIConstants.showWarning(dlg, "Adicione pelo menos um item.");
+                return;
+            }
+            String mesa = cbTipo.getSelectedIndex() == 0 ? txtMesa.getText().trim() : null;
+            if(cbTipo.getSelectedIndex() == 0 && (mesa == null || mesa.isEmpty())) {
+                UIConstants.showWarning(dlg, "Informe o número da mesa.");
+                return;
+            }
+            String pedidoId = dao.criarPedidoLocal(mesa, itensList);
+            if(pedidoId != null) {
+                UIConstants.showSuccess(dlg, "Pedido local #" + pedidoId + " criado!");
+                dlg.dispose();
+                carregarDadosAsync(false);
+            } else {
+                UIConstants.showError(dlg, "Erro ao criar pedido. Verifique a conexão.");
+            }
+        });
+        pnlBot.add(btnCancel);
+        pnlBot.add(btnSalvar);
+        dlg.add(pnlBot, BorderLayout.SOUTH);
+
+        dlg.setVisible(true);
     }
 }

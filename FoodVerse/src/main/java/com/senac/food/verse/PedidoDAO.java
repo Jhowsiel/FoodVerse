@@ -340,6 +340,64 @@ public class PedidoDAO {
         return itens;
     }
 
+    /**
+     * Creates a local order (dine-in/takeout) directly from the Java management panel.
+     * Sets status to 'pendente' (1) and tipo to 'Salão'.
+     * @param mesa table number or null for takeout
+     * @param itens list of items with product ID, name, quantity, price
+     * @return generated order ID or null on error
+     */
+    public String criarPedidoLocal(String mesa, List<ItemPedido> itens) {
+        if(itens == null || itens.isEmpty()) return null;
+        ConexaoBanco conexao = new ConexaoBanco();
+        try {
+            conexao.abrirConexao();
+            if(conexao.conn == null) {
+                // Offline mock
+                String mockId = String.valueOf(System.currentTimeMillis() % 100000);
+                double total = itens.stream().mapToDouble(ItemPedido::getPreco).sum();
+                Pedidos p = new Pedidos(mockId, "Cliente Local", java.time.LocalTime.now().toString().substring(0,5),
+                    null, null, null, null, null, "Salão", null,
+                    itens, "pendente", null, "Local", total, mesa);
+                listaPedidos.add(p);
+                return mockId;
+            }
+            int rid = SessionContext.getInstance().getRestauranteEfetivo();
+            double total = itens.stream().mapToDouble(ItemPedido::getPreco).sum();
+            // Insert order
+            String sqlPedido = "INSERT INTO tb_pedidos (ID_restaurante, status_id, valor_total, data_pedido, mesa) VALUES (?, 1, ?, GETDATE(), ?)";
+            int pedidoId;
+            try(PreparedStatement ps = conexao.conn.prepareStatement(sqlPedido, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+                ps.setInt(1, rid);
+                ps.setDouble(2, total);
+                ps.setString(3, mesa);
+                ps.executeUpdate();
+                try(ResultSet rsKey = ps.getGeneratedKeys()) {
+                    if(!rsKey.next()) return null;
+                    pedidoId = rsKey.getInt(1);
+                }
+            }
+            // Insert order items
+            String sqlItem = "INSERT INTO tb_pedidos_produtos (ID_pedido, ID_produto, quantidade, preco_unitario) VALUES (?, ?, ?, ?)";
+            try(PreparedStatement ps = conexao.conn.prepareStatement(sqlItem)) {
+                for(ItemPedido item : itens) {
+                    ps.setInt(1, pedidoId);
+                    ps.setInt(2, Integer.parseInt(item.getIdItem()));
+                    ps.setInt(3, item.getQuantidade());
+                    ps.setDouble(4, item.getPreco() / Math.max(item.getQuantidade(), 1));
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+            return String.valueOf(pedidoId);
+        } catch(SQLException ex) {
+            System.out.println("Erro ao criar pedido local: " + ex.getMessage());
+        } finally {
+            conexao.fecharConexao();
+        }
+        return null;
+    }
+
     public void atualizarStatusPedido(String idPedido, String novoStatus) {
         ConexaoBanco conexao = new ConexaoBanco();
 
