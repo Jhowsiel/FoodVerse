@@ -348,10 +348,7 @@ public class GestaoMesasPanel extends JPanel {
 
         dialog.add(content, BorderLayout.CENTER);
         dialog.add(footer, BorderLayout.SOUTH);
-        dialog.pack();
-        dialog.setMinimumSize(new Dimension(420, 300));
-        if(dialog.getWidth() < 420 || dialog.getHeight() < 300) dialog.setSize(420, 300);
-        dialog.setLocationRelativeTo(this);
+        configurarDialogResponsivo(dialog, 420, 300);
         dialog.setVisible(true);
     }
 
@@ -398,8 +395,9 @@ public class GestaoMesasPanel extends JPanel {
         gc.weightx = 1.0;
         gc.insets = new Insets(6, 0, 6, 0);
 
-        JComboBox<String> comboClientes = new JComboBox<>(dao.listarClientesSimples().toArray(new String[0]));
-        UIConstants.styleCombo(comboClientes);
+        JTextField txtCliente = new JTextField();
+        UIConstants.styleField(txtCliente);
+        txtCliente.putClientProperty("JTextField.placeholderText", "Nome do cliente presente no salão");
 
         SpinnerDateModel dateModel = new SpinnerDateModel(
                 Date.from(nowInAppZone().plusHours(1).atZone(APP_ZONE_ID).toInstant()),
@@ -419,9 +417,9 @@ public class GestaoMesasPanel extends JPanel {
             comboMesas.setSelectedItem(mesaPreSelecionada);
         }
 
-        form.add(label("Cliente"), gc);
+        form.add(label("Cliente no salão"), gc);
         gc.gridy++;
-        form.add(comboClientes, gc);
+        form.add(txtCliente, gc);
         gc.gridy++;
         form.add(label("Data e hora"), gc);
         gc.gridy++;
@@ -445,12 +443,19 @@ public class GestaoMesasPanel extends JPanel {
         btnSalvar.addActionListener(e -> {
             try {
                 Reserva r = new Reserva();
-                String clienteStr = (String) comboClientes.getSelectedItem();
-                if (clienteStr == null || clienteStr.isBlank()) {
-                    Toast.show(modal, "Selecione um cliente para continuar.", Toast.Type.WARNING);
+                String nomeCliente = txtCliente.getText() != null ? txtCliente.getText().trim() : "";
+                if (nomeCliente.isBlank()) {
+                    Toast.show(modal, "Informe o nome do cliente para registrar a reserva.", Toast.Type.WARNING);
                     return;
                 }
-                r.setIdCliente(Integer.parseInt(clienteStr.split(" - ")[0]));
+                int idCliente = dao.obterOuCriarClienteLocal(nomeCliente);
+                if (idCliente <= 0) {
+                    Toast.show(modal, "Não foi possível vincular o cliente ao restaurante atual.", Toast.Type.ERROR);
+                    return;
+                }
+
+                r.setIdCliente(idCliente);
+                r.setNomeCliente(nomeCliente);
                 r.setIdRestaurante(sessionContext.getRestauranteEfetivo());
                 r.setDataReserva(LocalDateTime.ofInstant(((Date) spDataHora.getValue()).toInstant(), APP_ZONE_ID));
                 r.setNumPessoas(((Number) spPessoas.getValue()).intValue());
@@ -462,7 +467,7 @@ public class GestaoMesasPanel extends JPanel {
                 }
 
                 if (dao.criarReserva(r)) {
-                    Toast.show(this, "Reserva criada com sucesso!", Toast.Type.SUCCESS);
+                    Toast.show(this, "Reserva registrada com sucesso.", Toast.Type.SUCCESS);
                     modal.dispose();
                     carregarMesas();
                 } else {
@@ -478,11 +483,22 @@ public class GestaoMesasPanel extends JPanel {
 
         modal.add(form, BorderLayout.CENTER);
         modal.add(footer, BorderLayout.SOUTH);
-        modal.pack();
-        modal.setMinimumSize(new Dimension(420, 360));
-        if(modal.getWidth() < 420 || modal.getHeight() < 360) modal.setSize(420, 360);
-        modal.setLocationRelativeTo(this);
+        configurarDialogResponsivo(modal, 460, 400);
         modal.setVisible(true);
+    }
+
+    private void configurarDialogResponsivo(JDialog dialog, int minWidth, int minHeight) {
+        dialog.pack();
+        dialog.setMinimumSize(new Dimension(minWidth, minHeight));
+        Dimension base = getSize();
+        int width = Math.max(dialog.getWidth(), minWidth);
+        int height = Math.max(dialog.getHeight(), minHeight);
+        if (base.width > 0 && base.height > 0) {
+            width = Math.min(width, (int) (base.width * 0.95));
+            height = Math.min(height, (int) (base.height * 0.95));
+        }
+        dialog.setSize(width, height);
+        dialog.setLocationRelativeTo(this);
     }
 
     private void cancelarReserva(Reserva reserva) {

@@ -32,9 +32,9 @@ class DashboardContextTest {
         SessionContext ctx = SessionContext.getInstance();
         ctx.inicializar(2, "Maria", "Gerente", "ativo", 7);
 
-        assertEquals("Restaurante em contexto: #7", TelaInicial.buildRestaurantContextText(ctx));
-        assertEquals("Operando como Gerente no restaurante #7.", TelaInicial.buildOperationalModeText(ctx));
-        assertEquals("Seu painel inicial já está filtrado para o restaurante #7.", HomePanel.buildHomeSummaryText(ctx));
+        assertEquals("Restaurante em contexto: restaurante sem nome cadastrado", TelaInicial.buildRestaurantContextText(ctx));
+        assertEquals("Operando como Gerente no restaurante restaurante sem nome cadastrado.", TelaInicial.buildOperationalModeText(ctx));
+        assertEquals("Seu painel inicial já está filtrado para o restaurante restaurante sem nome cadastrado.", HomePanel.buildHomeSummaryText(ctx));
     }
 
     @Test
@@ -43,8 +43,8 @@ class DashboardContextTest {
         ctx.inicializar(1, "Admin", "Admin", "ativo", 0);
         ctx.setRestauranteSelecionadoId(4);
 
-        assertEquals("Restaurante em contexto: #4", TelaInicial.buildRestaurantContextText(ctx));
-        assertEquals("Operando como Admin no restaurante #4.", TelaInicial.buildOperationalModeText(ctx));
+        assertEquals("Restaurante em contexto: restaurante sem nome cadastrado", TelaInicial.buildRestaurantContextText(ctx));
+        assertEquals("Operando como Admin no restaurante restaurante sem nome cadastrado.", TelaInicial.buildOperationalModeText(ctx));
     }
 
     @Test

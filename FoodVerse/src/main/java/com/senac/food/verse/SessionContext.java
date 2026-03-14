@@ -1,5 +1,9 @@
 package com.senac.food.verse;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
 /**
  * Contexto de sessão do usuário logado.
  * Singleton — preenchido no login e limpo no logout.
@@ -89,14 +93,43 @@ public final class SessionContext {
     }
 
     /**
-     * Retorna o rótulo do restaurante efetivo para exibição na UI.
-     * Se o nome está preenchido, usa o nome; caso contrário, usa "#ID".
+     * Retorna o nome do restaurante em contexto para exibição na UI.
+     * Evita exibir identificadores técnicos quando o nome não estiver disponível.
      */
     public String getRestauranteLabel() {
         if (nomeRestaurante != null && !nomeRestaurante.isBlank()) {
-            return nomeRestaurante;
+            return nomeRestaurante.trim();
         }
         int rid = getRestauranteEfetivo();
-        return rid > 0 ? "#" + rid : "";
+        if (rid > 0) {
+            String nomeResolvido = buscarNomeRestaurantePorId(rid);
+            if (nomeResolvido != null && !nomeResolvido.isBlank()) {
+                this.nomeRestaurante = nomeResolvido.trim();
+                return this.nomeRestaurante;
+            }
+        }
+        return "restaurante sem nome cadastrado";
+    }
+
+    private String buscarNomeRestaurantePorId(int restauranteId) {
+        ConexaoBanco cb = new ConexaoBanco();
+        Connection conn = cb.abrirConexao();
+        if (conn == null) {
+            return null;
+        }
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT nome FROM tb_restaurantes WHERE id_restaurante = ?")) {
+            ps.setInt(1, restauranteId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("nome");
+                }
+            }
+        } catch (Exception ignored) {
+            return null;
+        } finally {
+            cb.fecharConexao();
+        }
+        return null;
     }
 }
