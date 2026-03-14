@@ -40,7 +40,8 @@ public class ValidarCadastroTest {
         ValidarCadastro validator = new ValidarCadastro();
         JLabel labelSenha = new JLabel();
         JLabel labelConfirmacao = new JLabel();
-        assertFalse(validator.validarAsSenhas("senha1", "senha2", labelSenha, labelConfirmacao));
+        // Ambas as senhas são válidas no formato, mas diferentes entre si
+        assertFalse(validator.validarAsSenhas("Senha1@ok", "Senha2@ok", labelSenha, labelConfirmacao));
         assertEquals("As senhas não coincidem", labelConfirmacao.getText());
         assertEquals(Color.RED, labelConfirmacao.getForeground());
     }
