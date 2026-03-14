@@ -31,7 +31,7 @@ public class ReservaDAO {
             return lista;
         }
         int rid = SessionContext.getInstance().getRestauranteEfetivo();
-        String sql = "SELECT r.ID_reserva, r.ID_cliente, c.username, r.data_reserva, r.numero_pessoas, r.mesa " +
+        String sql = "SELECT r.ID_reserva, r.ID_cliente, c.username, c.nome, r.data_reserva, r.numero_pessoas, r.mesa " +
                      "FROM tb_reservas r " +
                      "LEFT JOIN tb_clientes c ON r.ID_cliente = c.id_cliente " +
                      "WHERE CAST(r.data_reserva AS DATE) = CAST(GETDATE() AS DATE)" +
@@ -53,8 +53,11 @@ public class ReservaDAO {
                     Reserva r = new Reserva();
                     r.setIdReserva(rs.getInt("ID_reserva"));
                     r.setIdCliente(rs.getInt("ID_cliente"));
-                    String nomeCliente = rs.getString("username");
-                    r.setNomeCliente(nomeCliente != null ? nomeCliente : "Cliente #" + rs.getInt("ID_cliente"));
+                    String nomeCliente = rs.getString("nome");
+                    if (nomeCliente == null || nomeCliente.isBlank()) {
+                        nomeCliente = rs.getString("username");
+                    }
+                    r.setNomeCliente(nomeCliente != null && !nomeCliente.isBlank() ? nomeCliente : "Cliente sem nome");
                     
                     Timestamp ts = rs.getTimestamp("data_reserva");
                     if (ts != null) r.setDataReserva(ts.toLocalDateTime());
@@ -184,6 +187,72 @@ public class ReservaDAO {
             cb.fecharConexao();
         }
         return clientes;
+    }
+
+
+    public int obterOuCriarClienteLocal(String nomeCliente) {
+        if (nomeCliente == null || nomeCliente.isBlank() || semContextoOperacional()) {
+            return 0;
+        }
+        int rid = SessionContext.getInstance().getRestauranteEfetivo();
+        if (rid <= 0) {
+            return 0;
+        }
+
+        String nomeNormalizado = nomeCliente.trim();
+        ConexaoBanco cb = new ConexaoBanco();
+        Connection conn = cb.abrirConexao();
+        if (conn == null) {
+            return 0;
+        }
+
+        try {
+            String sqlBusca =
+                    "SELECT TOP 1 c.id_cliente " +
+                    "FROM tb_clientes c " +
+                    "WHERE (LOWER(c.nome) = LOWER(?) OR LOWER(c.username) = LOWER(?)) " +
+                    "AND (c.id_cliente IN (SELECT r.ID_cliente FROM tb_reservas r WHERE r.ID_restaurante = ?) " +
+                    "OR c.id_cliente IN (SELECT p.ID_cliente FROM tb_pedidos p WHERE p.ID_restaurante = ?)) " +
+                    "ORDER BY c.id_cliente DESC";
+            try (PreparedStatement ps = conn.prepareStatement(sqlBusca)) {
+                ps.setString(1, nomeNormalizado);
+                ps.setString(2, nomeNormalizado);
+                ps.setInt(3, rid);
+                ps.setInt(4, rid);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getInt("id_cliente");
+                    }
+                }
+            }
+
+            String usernameBase = nomeNormalizado
+                    .toLowerCase()
+                    .replaceAll("[^a-z0-9]+", ".")
+                    .replaceAll("^\\.+|\\.+$", "");
+            if (usernameBase.isBlank()) {
+                usernameBase = "cliente";
+            }
+            String username = usernameBase + "." + System.currentTimeMillis();
+
+            String sqlInsert =
+                    "INSERT INTO tb_clientes (username, nome, data_cadastro) VALUES (?, ?, GETDATE())";
+            try (PreparedStatement ps = conn.prepareStatement(sqlInsert, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setString(1, username);
+                ps.setString(2, nomeNormalizado);
+                ps.executeUpdate();
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        return rs.getInt(1);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            cb.fecharConexao();
+        }
+        return 0;
     }
 
     private boolean existeConflitoReserva(Connection conn, int restauranteId, String mesa, LocalDateTime dataReserva, int idReservaAtual)
