@@ -277,7 +277,7 @@ def restaurante_view(request):
 
 def restaurante_detalhe_view(request, id):
     restaurante = get_object_or_404(TbRestaurantes, id_restaurante=id, ativo=True)
-    pratos = TbProdutos.objects.filter(restaurante=restaurante, disponivel=True)
+    pratos = TbProdutos.objects.filter(restaurante=restaurante, disponivel=True).exclude(tipo_produto='INSUMO')
 
     categoria_ativa = request.GET.get('categoria', '')
     if categoria_ativa:
@@ -287,6 +287,7 @@ def restaurante_detalhe_view(request, id):
         TbProdutos.objects
         .filter(restaurante=restaurante, disponivel=True, categoria__isnull=False)
         .exclude(categoria='')
+        .exclude(tipo_produto='INSUMO')
         .values_list('categoria', flat=True)
         .distinct()
         .order_by('categoria')

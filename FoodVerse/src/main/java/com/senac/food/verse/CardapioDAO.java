@@ -40,6 +40,7 @@ public class CardapioDAO {
         private String descricao;
         private String imagem;
         private int tempoPreparo;
+        private String tipoProduto = "VENDA";
         private final List<ReceitaItem> ingredientes = new ArrayList<>();
 
         public Prato() {}
@@ -62,6 +63,8 @@ public class CardapioDAO {
         public void setImagem(String imagem) { this.imagem = imagem; }
         public int getTempoPreparo() { return tempoPreparo; }
         public void setTempoPreparo(int tempoPreparo) { this.tempoPreparo = tempoPreparo; }
+        public String getTipoProduto() { return tipoProduto; }
+        public void setTipoProduto(String tipoProduto) { this.tipoProduto = tipoProduto; }
         public List<ReceitaItem> getIngredientes() { return ingredientes; }
         private String restricoes;
         public String getRestricoes() { return restricoes; }
@@ -123,7 +126,7 @@ public class CardapioDAO {
                     .collect(Collectors.toList());
             }
 
-            StringBuilder sql = new StringBuilder("SELECT * FROM tb_produtos WHERE nome_produto LIKE ?");
+            StringBuilder sql = new StringBuilder("SELECT * FROM tb_produtos WHERE nome_produto LIKE ? AND COALESCE(tipo_produto, 'VENDA') = 'VENDA'");
             int rid = SessionContext.getInstance().getRestauranteEfetivo();
             if (rid > 0) sql.append(" AND ID_restaurante = ?");
             if(categoria != null && !categoria.equalsIgnoreCase("Todas")) sql.append(" AND categoria = ?");
@@ -158,7 +161,7 @@ public class CardapioDAO {
             if(conn == null) { prato.setId(SEQ_ID.getAndIncrement()); PRATOS_MOCK.add(prato); return prato; }
 
             int rid = SessionContext.getInstance().getRestauranteEfetivo();
-            String sql = "INSERT INTO tb_produtos (ID_restaurante, nome_produto, categoria, descricao, preco, disponivel, imagem, tempo_preparo, restricoes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO tb_produtos (ID_restaurante, nome_produto, categoria, descricao, preco, disponivel, imagem, tempo_preparo, restricoes, tipo_produto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'VENDA')";
             try(PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setObject(1, rid > 0 ? rid : null);
                 ps.setString(2, prato.getNome());
@@ -175,6 +178,8 @@ public class CardapioDAO {
                     if(rs.next()) prato.setId(rs.getLong(1));
                 }
             }
+            // Persist recipe ingredients
+            salvarReceita(conn, prato.getId(), prato.getIngredientes());
         } catch(Exception e) { e.printStackTrace(); }
         return prato;
     }
@@ -203,6 +208,8 @@ public class CardapioDAO {
                 if (rid > 0) ps.setInt(10, rid);
                 ps.executeUpdate();
             }
+            // Update recipe ingredients
+            salvarReceita(conn, prato.getId(), prato.getIngredientes());
         } catch(Exception e) { e.printStackTrace(); }
     }
 
@@ -240,6 +247,8 @@ public class CardapioDAO {
                         pr.setImagem(rs.getString("imagem"));
                         pr.setTempoPreparo(rs.getInt("tempo_preparo"));
                         try { pr.setRestricoes(rs.getString("restricoes")); } catch(Exception ignored) {}
+                        // Load recipe ingredients
+                        carregarReceita(conn, pr);
                         return pr;
                     }
                 }
@@ -254,7 +263,7 @@ public class CardapioDAO {
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) return PRATOS_MOCK.stream().map(Prato::getCategoria).distinct().collect(Collectors.toList());
             int rid = SessionContext.getInstance().getRestauranteEfetivo();
-            String sql = "SELECT DISTINCT categoria FROM tb_produtos WHERE categoria IS NOT NULL"
+            String sql = "SELECT DISTINCT categoria FROM tb_produtos WHERE categoria IS NOT NULL AND COALESCE(tipo_produto, 'VENDA') = 'VENDA'"
                     + (rid > 0 ? " AND ID_restaurante = ?" : "");
             try(PreparedStatement ps = conn.prepareStatement(sql)) {
                 if (rid > 0) ps.setInt(1, rid);
@@ -279,7 +288,7 @@ public class CardapioDAO {
                     .collect(Collectors.toList());
             }
 
-            StringBuilder sql = new StringBuilder("SELECT * FROM tb_produtos WHERE nome_produto LIKE ?");
+            StringBuilder sql = new StringBuilder("SELECT * FROM tb_produtos WHERE nome_produto LIKE ? AND COALESCE(tipo_produto, 'VENDA') = 'VENDA'");
             int rid = SessionContext.getInstance().getRestauranteEfetivo();
             if (rid > 0) sql.append(" AND ID_restaurante = ?");
             if(categoria != null && !categoria.equalsIgnoreCase("Todas")) sql.append(" AND categoria = ?");
@@ -402,7 +411,7 @@ public class CardapioDAO {
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) return PRODUTOS_MOCK.stream().map(ProdutoVenda::getCategoria).distinct().collect(Collectors.toList());
             int rid = SessionContext.getInstance().getRestauranteEfetivo();
-            String sql = "SELECT DISTINCT categoria FROM tb_produtos WHERE categoria IS NOT NULL"
+            String sql = "SELECT DISTINCT categoria FROM tb_produtos WHERE categoria IS NOT NULL AND COALESCE(tipo_produto, 'VENDA') = 'VENDA'"
                     + (rid > 0 ? " AND ID_restaurante = ?" : "");
             try(PreparedStatement ps = conn.prepareStatement(sql)) {
                 if (rid > 0) ps.setInt(1, rid);
@@ -502,5 +511,88 @@ public class CardapioDAO {
                 }
             }
         } catch(Exception e) { e.printStackTrace(); }
+    }
+
+    // ================== RECEITA (BOM) ==================
+
+    private void carregarReceita(Connection conn, Prato prato) {
+        if(prato == null || prato.getId() == null) return;
+        try {
+            String sql = "SELECT r.ID_insumo, p.nome_produto, r.unidade, r.quantidade " +
+                         "FROM tb_receitas r JOIN tb_produtos p ON r.ID_insumo = p.ID_produto " +
+                         "WHERE r.ID_produto_venda = ? AND r.ativo = 1";
+            try(PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setLong(1, prato.getId());
+                try(ResultSet rs = ps.executeQuery()) {
+                    while(rs.next()) {
+                        prato.getIngredientes().add(new ReceitaItem(
+                            rs.getLong("ID_insumo"),
+                            rs.getString("nome_produto"),
+                            rs.getString("unidade"),
+                            rs.getDouble("quantidade")
+                        ));
+                    }
+                }
+            }
+        } catch(Exception ignored) {
+            // tb_receitas may not exist yet
+        }
+    }
+
+    private void salvarReceita(Connection conn, Long produtoVendaId, List<ReceitaItem> ingredientes) {
+        if(produtoVendaId == null) return;
+        try {
+            // Remove old recipe entries
+            try(PreparedStatement ps = conn.prepareStatement("DELETE FROM tb_receitas WHERE ID_produto_venda = ?")) {
+                ps.setLong(1, produtoVendaId);
+                ps.executeUpdate();
+            }
+            // Insert new entries
+            if(ingredientes != null && !ingredientes.isEmpty()) {
+                String sql = "INSERT INTO tb_receitas (ID_produto_venda, ID_insumo, quantidade, unidade) VALUES (?, ?, ?, ?)";
+                try(PreparedStatement ps = conn.prepareStatement(sql)) {
+                    for(ReceitaItem ri : ingredientes) {
+                        ps.setLong(1, produtoVendaId);
+                        ps.setLong(2, ri.getItemEstoqueId());
+                        ps.setDouble(3, ri.getQuantidade());
+                        ps.setString(4, ri.getUnidade());
+                        ps.addBatch();
+                    }
+                    ps.executeBatch();
+                }
+            }
+        } catch(Exception ignored) {
+            // tb_receitas may not exist yet
+        }
+    }
+
+    /**
+     * Returns the recipe (BOM) for a product by its ID.
+     * Used by PedidoDAO for stock deduction.
+     */
+    public List<ReceitaItem> buscarReceitaPorProduto(Long produtoId) {
+        List<ReceitaItem> items = new ArrayList<>();
+        if(produtoId == null) return items;
+        ConexaoBanco cb = new ConexaoBanco();
+        try(Connection conn = cb.abrirConexao()) {
+            if(conn == null) return items;
+            String sql = "SELECT r.ID_insumo, p.nome_produto, r.unidade, r.quantidade " +
+                         "FROM tb_receitas r JOIN tb_produtos p ON r.ID_insumo = p.ID_produto " +
+                         "WHERE r.ID_produto_venda = ? AND r.ativo = 1";
+            try(PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setLong(1, produtoId);
+                try(ResultSet rs = ps.executeQuery()) {
+                    while(rs.next()) {
+                        items.add(new ReceitaItem(
+                            rs.getLong("ID_insumo"),
+                            rs.getString("nome_produto"),
+                            rs.getString("unidade"),
+                            rs.getDouble("quantidade")
+                        ));
+                    }
+                }
+            }
+        } catch(Exception ignored) {}
+        return items;
     }
 }

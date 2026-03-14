@@ -356,6 +356,19 @@ public class PedidoDAO {
                 return;
             }
 
+            // Fetch current status to prevent double deduction
+            int rid = SessionContext.getInstance().getRestauranteEfetivo();
+            String sqlCurr = "SELECT status_id FROM tb_pedidos WHERE ID_pedido = ?"
+                    + (rid > 0 ? " AND ID_restaurante = ?" : "");
+            int statusAtual = 0;
+            try(PreparedStatement psCurr = conexao.conn.prepareStatement(sqlCurr)) {
+                psCurr.setInt(1, Integer.parseInt(idPedido));
+                if (rid > 0) psCurr.setInt(2, rid);
+                try(ResultSet rsCurr = psCurr.executeQuery()) {
+                    if(rsCurr.next()) statusAtual = rsCurr.getInt("status_id");
+                }
+            }
+
             String sqlBuscaStatus = "SELECT ID_status FROM tb_status_pedido WHERE nome_status = ?";
             PreparedStatement stmtBusca = conexao.conn.prepareStatement(sqlBuscaStatus);
             stmtBusca.setString(1, novoStatus);
@@ -364,7 +377,11 @@ public class PedidoDAO {
             if (rs.next()) {
                 int statusId = rs.getInt("ID_status");
 
-                int rid = SessionContext.getInstance().getRestauranteEfetivo();
+                // BOM stock deduction: only on transition 1 (pendente) → 2 (em preparo)
+                if(statusAtual == 1 && statusId == 2) {
+                    baixarEstoquePorReceita(conexao.conn, idPedido);
+                }
+
                 String sqlUpdate = "UPDATE tb_pedidos SET status_id = ? WHERE ID_pedido = ?"
                         + (rid > 0 ? " AND ID_restaurante = ?" : "");
                 PreparedStatement stmtUpdate = conexao.conn.prepareStatement(sqlUpdate);
@@ -388,6 +405,51 @@ public class PedidoDAO {
             System.out.println("Erro ao atualizar status do pedido: " + ex.getMessage());
         } finally {
             conexao.fecharConexao();
+        }
+    }
+
+    /**
+     * Deduct ingredient stock based on recipe (BOM) when an order moves to preparation.
+     * For each order item: qty_ordered * recipe_qty is deducted from the ingredient's stock.
+     */
+    private void baixarEstoquePorReceita(java.sql.Connection conn, String idPedido) {
+        try {
+            // Get order items
+            String sqlItens = "SELECT pp.ID_produto, pp.quantidade FROM tb_pedidos_produtos pp WHERE pp.ID_pedido = ?";
+            try(PreparedStatement ps = conn.prepareStatement(sqlItens)) {
+                ps.setInt(1, Integer.parseInt(idPedido));
+                try(ResultSet rs = ps.executeQuery()) {
+                    while(rs.next()) {
+                        long produtoId = rs.getLong("ID_produto");
+                        int qtdPedido = rs.getInt("quantidade");
+                        // Deduct ingredients for this product
+                        String sqlReceita = "SELECT r.ID_insumo, r.quantidade FROM tb_receitas r WHERE r.ID_produto_venda = ? AND r.ativo = 1";
+                        try(PreparedStatement psR = conn.prepareStatement(sqlReceita)) {
+                            psR.setLong(1, produtoId);
+                            try(ResultSet rsR = psR.executeQuery()) {
+                                while(rsR.next()) {
+                                    long insumoId = rsR.getLong("ID_insumo");
+                                    double qtdReceita = rsR.getDouble("quantidade");
+                                    double totalBaixar = qtdPedido * qtdReceita;
+                                    // Deduct from tb_estoque where ID_produto = insumoId
+                                    String sqlBaixa = "UPDATE tb_estoque SET quantidade = quantidade - ? WHERE ID_produto = ? AND quantidade >= ?";
+                                    try(PreparedStatement psBaixa = conn.prepareStatement(sqlBaixa)) {
+                                        psBaixa.setDouble(1, totalBaixar);
+                                        psBaixa.setLong(2, insumoId);
+                                        psBaixa.setDouble(3, totalBaixar);
+                                        int updated = psBaixa.executeUpdate();
+                                        if(updated == 0) {
+                                            System.out.println("AVISO: Estoque insuficiente do insumo ID=" + insumoId + " para o pedido " + idPedido);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch(Exception e) {
+            System.out.println("Erro na baixa de estoque por receita: " + e.getMessage());
         }
     }
 }
