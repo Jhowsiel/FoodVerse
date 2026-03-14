@@ -534,8 +534,8 @@ public class CardapioDAO {
                     }
                 }
             }
-        } catch(Exception ignored) {
-            // tb_receitas may not exist yet
+        } catch(Exception e) {
+            System.out.println("Aviso: Erro ao carregar receita do produto " + prato.getId() + ": " + e.getMessage());
         }
     }
 
@@ -561,8 +561,8 @@ public class CardapioDAO {
                     ps.executeBatch();
                 }
             }
-        } catch(Exception ignored) {
-            // tb_receitas may not exist yet
+        } catch(Exception e) {
+            System.out.println("Aviso: Erro ao salvar receita do produto " + produtoVendaId + ": " + e.getMessage());
         }
     }
 
