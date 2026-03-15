@@ -427,7 +427,7 @@
   </div>
 
   <p class="grid-label">
-    {% if categoria_ativa %}{{ categoria_ativa }}{% else %}Todos os restaurantes{% endif %}
+    {% if query %}Resultados para "{{ query }}"{% elif categoria_ativa %}{{ categoria_ativa }}{% else %}Todos os restaurantes{% endif %}
   </p>
 
   <div class="res-grid pb-5">
@@ -435,7 +435,7 @@
     <a href="{% url 'restaurante_detalhe' restaurante.id_restaurante %}" class="res-card">
 
       <div class="card-img-wrap">
-        <img src="{% img_url restaurante.imagem %}" class="card-img" alt="{{ restaurante.nome }}">
+        <img src="{% img_or_fallback restaurante.imagem %}" class="card-img" alt="{{ restaurante.nome }}">
 
         <div class="img-badges">
           <span class="badge-rating">
@@ -473,7 +473,7 @@
     <div class="empty-wrap">
       <i class="fa-solid fa-shop"></i>
       <h4>Nenhum restaurante encontrado</h4>
-      <p>Tente outra categoria ou volte mais tarde.</p>
+      <p>{% if not query %}Digite um termo para buscar restaurantes ou pratos.{% else %}Tente outro termo ou volte mais tarde.{% endif %}</p>
     </div>
     {% endfor %}
   </div>

@@ -72,40 +72,22 @@
           </div>
         </div>
 
-        <form action="{% url 'pedido' %}" method="POST">
-          {% csrf_token %}
-          <h5 class="fw-bold mb-3">Escolha como pagar:</h5>
-          
-          <input type="radio" class="btn-check" name="metodo_pagamento" id="pix" value="pix" checked>
-          <label class="method-option" for="pix">
-            <i class="bi bi-qr-code-scan fs-2 text-danger me-3"></i>
-            <div>
-              <span class="fw-bold d-block">Pix</span>
-              <small class="text-muted">Aprovação imediata e reserva garantida na hora.</small>
-            </div>
-            <i class="bi bi-check-circle-fill ms-auto text-danger fs-4"></i>
-          </label>
+        
+        <div class="alert alert-success border-0" style="background:#e8f8ef;">
+          <strong>Pagamento simulado aprovado!</strong><br>
+          Sua reserva foi registrada com sucesso e já está confirmada no sistema.
+        </div>
 
-          <input type="radio" class="btn-check" name="metodo_pagamento" id="cartao" value="cartao">
-          <label class="method-option" for="cartao">
-            <i class="bi bi-credit-card-2-back fs-2 text-danger me-3"></i>
-            <div>
-              <span class="fw-bold d-block">Cartão de Crédito</span>
-              <small class="text-muted">Parcele sua reserva em até 2x sem juros.</small>
-            </div>
-          </label>
+        <div class="summary-badge mb-3">
+          <div class="d-flex justify-content-between"><span class="text-muted">Mesa atribuída</span><strong>{{ mesa }}</strong></div>
+          <div class="d-flex justify-content-between"><span class="text-muted">Método</span><strong>{{ metodo_pagamento|title }}</strong></div>
+          <div class="d-flex justify-content-between"><span class="text-muted">Código da reserva</span><strong>#{{ reserva.id_reserva }}</strong></div>
+        </div>
 
-          <div class="alert alert-light border mt-4">
-            <small class="text-muted">
-              <i class="bi bi-shield-lock-fill me-1"></i> 
-              Seus dados estão seguros. Utilizamos criptografia de ponta a ponta.
-            </small>
-          </div>
+        <a href="{% url 'pedido' %}" class="btn btn-danger btn-lg w-100 py-3 mt-3 fw-bold shadow">
+          Ir para Meus Pedidos
+        </a>
 
-          <button type="submit" class="btn btn-danger btn-lg w-100 py-3 mt-3 fw-bold shadow">
-            Finalizar Pagamento de R$ 20,00
-          </button>
-        </form>
       </div>
     </div>
 
@@ -126,7 +108,7 @@
         
         <div class="d-flex justify-content-between align-items-center mb-4">
           <span class="fw-bold">Total a Pagar</span>
-          <span class="total-section">R$ 20,00</span>
+          <span class="total-section">{{ total }}</span>
         </div>
 
         <div class="bg-danger bg-opacity-10 p-3 rounded-3">

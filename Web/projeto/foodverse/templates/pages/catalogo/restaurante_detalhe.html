@@ -382,8 +382,8 @@
 
   <div class="rest-hero">
     <div class="hero-img-wrap">
-      {% if restaurante.imagem %}
-        <img src="{% img_url restaurante.imagem %}" class="hero-img" alt="{{ restaurante.nome }}">
+      {% if restaurante.banner or restaurante.imagem %}
+        <img src="{% img_or_fallback restaurante.banner|default:restaurante.imagem %}" class="hero-img" alt="{{ restaurante.nome }}">
       {% else %}
         <div class="hero-img" style="background:linear-gradient(135deg,#1a1a1a,#0d0c0c);"></div>
       {% endif %}
@@ -453,7 +453,7 @@
 
       <div class="dish-img-wrap">
         {% if prato.imagem %}
-          <img src="{% img_url prato.imagem %}" alt="{{ prato.nome_produto }}">
+          <img src="{% img_or_fallback prato.imagem %}" alt="{{ prato.nome_produto }}">
         {% else %}
           <div class="dish-no-img"><i class="fa-solid fa-utensils"></i></div>
         {% endif %}
@@ -477,6 +477,30 @@
     </div>
     {% endfor %}
   </div>
+
+
+  {% if sugestoes %}
+  <div class="menu-bar" style="margin-top:42px;">
+    <h2 class="menu-title">Sugestões para acompanhar</h2>
+  </div>
+  <div class="dish-grid">
+    {% for sugestao in sugestoes %}
+    <div class="dish-card">
+      <div class="dish-img-wrap">
+        <img src="{% img_or_fallback sugestao.imagem %}" alt="{{ sugestao.nome_produto }}">
+        {% if sugestao.preco %}<span class="price-tag">R$ {{ sugestao.preco }}</span>{% endif %}
+      </div>
+      <div class="dish-body">
+        <h5 class="dish-name">{{ sugestao.nome_produto|default:"Item" }}</h5>
+        <p class="dish-desc">{{ sugestao.descricao|default:"Combina bem com seu pedido."|truncatechars:90 }}</p>
+        <a href="{% url 'prato' %}?restaurante_id={{ restaurante.id_restaurante }}&produto_id={{ sugestao.id_produto }}" class="btn-ver">
+          Ver item <i class="fa-solid fa-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
 
 </div>
 
