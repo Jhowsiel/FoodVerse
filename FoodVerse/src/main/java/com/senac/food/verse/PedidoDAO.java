@@ -1,5 +1,7 @@
 package com.senac.food.verse;
 
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -347,6 +349,18 @@ public class PedidoDAO {
      * @param itens list of items with product ID, name, quantity, price
      * @return generated order ID or null on error
      */
+
+    private boolean hasColumn(Connection conn, String tableName, String columnName) {
+        try {
+            DatabaseMetaData metaData = conn.getMetaData();
+            try (ResultSet rs = metaData.getColumns(null, null, tableName, columnName)) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
     public String criarPedidoLocal(String mesa, List<ItemPedido> itens) {
         if(itens == null || itens.isEmpty()) return null;
         ConexaoBanco conexao = new ConexaoBanco();
@@ -365,12 +379,17 @@ public class PedidoDAO {
             int rid = SessionContext.getInstance().getRestauranteEfetivo();
             double total = itens.stream().mapToDouble(ItemPedido::getPreco).sum();
             // Insert order
-            String sqlPedido = "INSERT INTO tb_pedidos (ID_restaurante, status_id, valor_total, data_pedido, mesa) VALUES (?, 1, ?, GETDATE(), ?)";
+            boolean possuiMesa = hasColumn(conexao.conn, "tb_pedidos", "mesa");
+            String sqlPedido = possuiMesa
+                    ? "INSERT INTO tb_pedidos (ID_restaurante, status_id, valor_total, data_pedido, mesa) VALUES (?, 1, ?, GETDATE(), ?)"
+                    : "INSERT INTO tb_pedidos (ID_restaurante, status_id, valor_total, data_pedido) VALUES (?, 1, ?, GETDATE())";
             int pedidoId;
             try(PreparedStatement ps = conexao.conn.prepareStatement(sqlPedido, java.sql.Statement.RETURN_GENERATED_KEYS)) {
                 ps.setInt(1, rid);
                 ps.setDouble(2, total);
-                ps.setString(3, mesa);
+                if (possuiMesa) {
+                    ps.setString(3, mesa);
+                }
                 ps.executeUpdate();
                 try(ResultSet rsKey = ps.getGeneratedKeys()) {
                     if(!rsKey.next()) return null;

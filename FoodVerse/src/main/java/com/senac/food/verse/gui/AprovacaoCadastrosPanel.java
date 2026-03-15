@@ -520,7 +520,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
                     ps.setString(4, email);
                     ps.setString(5, cargo);
                     ps.setString(6, telefoneNormalizado);
-                    ps.setString(7, senha);
+                    ps.setString(7, PasswordUtils.hash(senha));
                     ps.setString(8, statusNormalizado);
                     ps.executeUpdate();
                 }
@@ -538,7 +538,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
                     ps.setString(6, telefoneNormalizado);
                     ps.setString(7, statusNormalizado);
                     if (!senha.isBlank()) {
-                        ps.setString(8, senha);
+                        ps.setString(8, PasswordUtils.hash(senha));
                         ps.setInt(9, idFuncionario);
                     } else {
                         ps.setInt(8, idFuncionario);
@@ -641,10 +641,10 @@ public class AprovacaoCadastrosPanel extends JPanel {
 
     private static String buildFallbackRestaurantName(int restauranteId) {
         String label = SessionContext.getInstance().getRestauranteLabel();
-        if (label != null && !label.isBlank() && !label.startsWith("#")) {
+        if (label != null && !label.isBlank() && !"restaurante sem nome cadastrado".equalsIgnoreCase(label.trim())) {
             return label;
         }
-        return "Restaurante #" + restauranteId;
+        return "Restaurante sem nome cadastrado";
     }
 
     private void selecionarRestaurante(JComboBox<RestauranteOption> combo, int restauranteId) {
