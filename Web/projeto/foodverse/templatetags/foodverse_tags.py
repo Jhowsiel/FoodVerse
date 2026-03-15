@@ -22,3 +22,9 @@ def img_url(path):
     if clean.startswith(media_url.lstrip('/')):
         return '/' + clean
     return media_url + clean
+
+
+@register.simple_tag
+def img_or_fallback(path, fallback='/static/img/logo.png'):
+    resolved = img_url(path)
+    return resolved or fallback

@@ -1,40 +1,59 @@
+from datetime import datetime, timedelta
 from decimal import Decimal
-
-from django.http import JsonResponse
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.utils import timezone
-from django.db.models import Q
-from django.contrib.auth.hashers import make_password, check_password
 import logging
-import requests
+import random
 import re
 
-# Importando as suas models
+import requests
+from django.contrib import messages
+from django.contrib.auth.hashers import check_password, make_password
+from django.db import transaction
+from django.db.models import Q
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+
 from .models import (
-    TbClientes, TbRestaurantes, TbProdutos, TbNutricao, TbAvaliacoes
+    TbAvaliacoes,
+    TbClientes,
+    TbEstoque,
+    TbNutricao,
+    TbPagamentos,
+    TbPedidos,
+    TbPedidosProdutos,
+    TbProdutos,
+    TbReservas,
+    TbRestaurantes,
+    TbStatusPedido,
 )
 
-# -------------------------------------------------------------------------
-# FUNÇÕES AUXILIARES
-# -------------------------------------------------------------------------
+RESERVA_HORARIOS = ['12:00', '13:00', '19:00', '20:00', '21:00']
+MESAS_DISPONIVEIS = [f'M{numero}' for numero in range(1, 13)]
+
+
 def _int_param(valor, padrao):
-    """Converte parâmetro para inteiro com segurança."""
     try:
         return int(valor)
     except (TypeError, ValueError):
         return padrao
 
+
 def get_cliente_logado(request):
-    """Retorna a instância do cliente logado ou None."""
     cliente_id = request.session.get('cliente_id')
     if cliente_id:
         return TbClientes.objects.filter(id_cliente=cliente_id).first()
     return None
 
-# -------------------------------------------------------------------------
-# PÁGINA INICIAL
-# -------------------------------------------------------------------------
+
+def restaurantes_operacionais():
+    return TbRestaurantes.objects.filter(ativo=True, aberto=True)
+
+
+def _datas_reserva_validas():
+    hoje = timezone.localdate()
+    return [(hoje + timedelta(days=offset)).strftime('%Y-%m-%d') for offset in range(7)]
+
+
 def home(request):
     endereco = None
     cep = None
@@ -42,30 +61,30 @@ def home(request):
     if request.method == 'POST':
         cep = request.POST.get('cep', '').strip()
         if cep:
-            url = f"https://viacep.com.br/ws/{cep}/json/"
+            url = f'https://viacep.com.br/ws/{cep}/json/'
             try:
                 response = requests.get(url, timeout=5)
                 data = response.json()
-                if "erro" not in data:
-                    endereco = f"{data.get('logradouro', '')}, {data.get('bairro', '')}, {data.get('localidade', '')} - {data.get('uf', '')}"
+                if 'erro' not in data:
+                    endereco = (
+                        f"{data.get('logradouro', '')}, {data.get('bairro', '')}, "
+                        f"{data.get('localidade', '')} - {data.get('uf', '')}"
+                    )
             except requests.RequestException:
                 endereco = None
 
-    restaurantes = TbRestaurantes.objects.filter(ativo=True)
-    categorias = TbRestaurantes.objects.filter(ativo=True).values_list('categoria', flat=True).distinct()
+    restaurantes = restaurantes_operacionais()
+    categorias = restaurantes.values_list('categoria', flat=True).distinct()
 
-    context = {
+    return render(request, 'index.html', {
         'endereco': endereco,
         'cep': cep,
         'restaurantes': restaurantes,
         'categorias': sorted(filter(None, categorias)),
         'cliente_logado': get_cliente_logado(request),
-    }
-    return render(request, 'index.html', context)
+    })
 
-# -------------------------------------------------------------------------
-# AUTENTICAÇÃO E CADASTRO
-# -------------------------------------------------------------------------
+
 def login_view(request):
     if get_cliente_logado(request):
         return redirect('home')
@@ -76,113 +95,81 @@ def login_view(request):
         remember_me = request.POST.get('remember_me')
 
         cliente = TbClientes.objects.filter(username=username).first()
-
         if cliente and check_password(password, cliente.senha):
             request.session['cliente_id'] = cliente.id_cliente
             request.session.set_expiry(1209600 if remember_me else 0)
             messages.success(request, 'Login realizado com sucesso!')
             return redirect('home')
-        else:
-            messages.error(request, 'Usuário ou senha incorretos.')
+
+        messages.error(request, 'Usuário ou senha incorretos.')
 
     return render(request, 'pages/Autentificacao/login.html')
+
 
 def logout_view(request):
     if 'cliente_id' in request.session:
         del request.session['cliente_id']
-    list(messages.get_messages(request))  # limpa todas as mensagens pendentes
+    list(messages.get_messages(request))
     return redirect('login')
 
-import re
-from django.contrib import messages
-from django.contrib.auth.hashers import make_password
-from django.utils import timezone
-from django.shortcuts import render, redirect
 
 def cadastro_view(request):
     if get_cliente_logado(request):
         return redirect('home')
 
     if request.method == 'POST':
-        nome             = request.POST.get('name', '').strip()
-        username         = request.POST.get('username', '').strip()
-        cpf              = re.sub(r'\D', '', request.POST.get('cpf', ''))
-        telefone         = re.sub(r'\D', '', request.POST.get('telefone', ''))
-        email            = request.POST.get('email', '').strip().lower()
-        password         = request.POST.get('password', '')
+        nome = request.POST.get('name', '').strip()
+        username = request.POST.get('username', '').strip()
+        cpf = re.sub(r'\D', '', request.POST.get('cpf', ''))
+        telefone = re.sub(r'\D', '', request.POST.get('telefone', ''))
+        email = request.POST.get('email', '').strip().lower()
+        password = request.POST.get('password', '')
         confirm_password = request.POST.get('confirm_password', '')
 
         erros = []
-
-        # ── Campos obrigatórios ──────────────────────────────────────────
         if not all([nome, username, cpf, telefone, email, password, confirm_password]):
-            erros.append("Todos os campos são obrigatórios.")
-
-        # ── Nome ─────────────────────────────────────────────────────────
+            erros.append('Todos os campos são obrigatórios.')
         if nome and len(nome) < 3:
-            erros.append("O nome deve ter pelo menos 3 caracteres.")
+            erros.append('O nome deve ter pelo menos 3 caracteres.')
         if nome and not re.match(r'^[A-Za-zÀ-ÿ\s]+$', nome):
-            erros.append("O nome deve conter apenas letras.")
-
-        # ── Username ─────────────────────────────────────────────────────
+            erros.append('O nome deve conter apenas letras.')
         if username and len(username) < 3:
-            erros.append("O nome de usuário deve ter pelo menos 3 caracteres.")
+            erros.append('O nome de usuário deve ter pelo menos 3 caracteres.')
         if username and not re.match(r'^[a-zA-Z0-9_]+$', username):
-            erros.append("O usuário só pode conter letras, números e underscore (_).")
+            erros.append('O usuário só pode conter letras, números e underscore (_).')
         if username and TbClientes.objects.filter(username=username).exists():
-            erros.append("Este nome de usuário já está em uso.")
-
-        # ── CPF ───────────────────────────────────────────────────────────
+            erros.append('Este nome de usuário já está em uso.')
         if cpf and len(cpf) != 11:
-            erros.append("CPF inválido. Informe os 11 dígitos.")
-        elif cpf and not _cpf_valido(cpf):
-            erros.append("CPF inválido (dígitos verificadores incorretos).")
-        elif cpf and TbClientes.objects.filter(cpf=cpf).exists():
-            erros.append("Este CPF já está cadastrado.")
-
-        # ── Telefone ──────────────────────────────────────────────────────
+            erros.append('CPF deve conter 11 dígitos.')
+        if cpf and len(cpf) == 11 and not _cpf_valido(cpf):
+            erros.append('CPF inválido.')
+        if cpf and TbClientes.objects.filter(cpf=cpf).exists():
+            erros.append('Este CPF já está cadastrado.')
         if telefone and len(telefone) not in (10, 11):
-            erros.append("Telefone inválido. Informe DDD + número (10 ou 11 dígitos).")
-        elif telefone and TbClientes.objects.filter(telefone=telefone).exists():
-            erros.append("Este telefone já está cadastrado.")
+            erros.append('Telefone inválido. Informe DDD + número.')
+        if telefone and TbClientes.objects.filter(telefone=telefone).exists():
+            erros.append('Este telefone já está cadastrado.')
+        if email and not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
+            erros.append('E-mail inválido.')
+        if email and TbClientes.objects.filter(email=email).exists():
+            erros.append('Este e-mail já está cadastrado.')
+        if password and len(password) < 8:
+            erros.append('A senha deve ter no mínimo 8 caracteres.')
+        if password != confirm_password:
+            erros.append('As senhas não conferem.')
 
-        # ── E-mail ────────────────────────────────────────────────────────
-        if email and not re.match(r'^[\w\.\+\-]+@[\w\-]+\.[a-z]{2,}$', email):
-            erros.append("E-mail inválido.")
-        elif email and TbClientes.objects.filter(email=email).exists():
-            erros.append("Este e-mail já está cadastrado.")
-
-        # ── Senha ─────────────────────────────────────────────────────────
-        if password:
-            if len(password) < 8:
-                erros.append("A senha deve ter pelo menos 8 caracteres.")
-            if not re.search(r'[A-Z]', password):
-                erros.append("A senha deve conter pelo menos uma letra maiúscula.")
-            if not re.search(r'[a-z]', password):
-                erros.append("A senha deve conter pelo menos uma letra minúscula.")
-            if not re.search(r'\d', password):
-                erros.append("A senha deve conter pelo menos um número.")
-            if not re.search(r'[!@#$%^&*(),.?\":{}|<>]', password):
-                erros.append("A senha deve conter pelo menos um caractere especial.")
-        if password and confirm_password and password != confirm_password:
-            erros.append("As senhas não coincidem.")
-
-        # ── Retorna erros ─────────────────────────────────────────────────
         if erros:
-            for erro in erros:
-                messages.error(request, erro)
-            return render(request, 'pages/Autentificacao/cadastro.html')
+            return render(request, 'pages/Autentificacao/cadastro.html', {'erros': erros})
 
-        # ── Criação ───────────────────────────────────────────────────────
         try:
             TbClientes.objects.create(
                 nome=nome,
                 username=username,
-                email=email,
                 cpf=cpf,
                 telefone=telefone,
+                email=email,
                 senha=make_password(password),
-                data_cadastro=timezone.now()
+                data_cadastro=timezone.now(),
             )
             messages.success(request, 'Cadastro realizado com sucesso! Faça login.')
             return redirect('login')
@@ -192,9 +179,8 @@ def cadastro_view(request):
     return render(request, 'pages/Autentificacao/cadastro.html')
 
 
-# ── Validação de CPF (algoritmo oficial) ──────────────────────────────────────
 def _cpf_valido(cpf: str) -> bool:
-    if len(set(cpf)) == 1:         
+    if len(set(cpf)) == 1:
         return False
     for i in range(9, 11):
         soma = sum(int(cpf[j]) * (i + 1 - j) for j in range(i))
@@ -203,12 +189,9 @@ def _cpf_valido(cpf: str) -> bool:
             return False
     return True
 
-# -------------------------------------------------------------------------
-# PERFIL DO CLIENTE
-# -------------------------------------------------------------------------
+
 def perfil_view(request):
     cliente = get_cliente_logado(request)
-    
     if not cliente:
         return redirect('login')
     return render(request, 'pages/perfil/perfil.html', {'perfil': cliente})
@@ -221,34 +204,33 @@ def editar_perfil_view(request):
 
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
-        email    = request.POST.get('email', '').strip().lower()
+        email = request.POST.get('email', '').strip().lower()
         telefone = request.POST.get('telefone', '').strip()
         endereco = request.POST.get('endereco', '').strip()
 
         outros = TbClientes.objects.exclude(pk=cliente.pk)
         erros = []
-
         if username and outros.filter(username=username).exists():
-            erros.append("Este nome de usuário já está cadastrado.")
+            erros.append('Este nome de usuário já está cadastrado.')
         if email and outros.filter(email=email).exists():
-            erros.append("Este e-mail já está cadastrado.")
+            erros.append('Este e-mail já está cadastrado.')
         if telefone and outros.filter(telefone=telefone).exists():
-            erros.append("Este telefone já está cadastrado.")
+            erros.append('Este telefone já está cadastrado.')
 
         if erros:
             return render(request, 'pages/perfil/editar/editar.html', {
                 'perfil': cliente,
                 'erros': erros,
-                'form_data': {        # devolve o que o usuário digitou
+                'form_data': {
                     'username': username,
-                    'email':    email,
+                    'email': email,
                     'telefone': telefone,
                     'endereco': endereco,
-                }
+                },
             })
 
         cliente.username = username
-        cliente.email    = email
+        cliente.email = email
         cliente.telefone = telefone
         cliente.endereco = endereco
         cliente.save()
@@ -256,24 +238,22 @@ def editar_perfil_view(request):
         return redirect('perfil')
 
     return render(request, 'pages/perfil/editar/editar.html', {'perfil': cliente})
-# -------------------------------------------------------------------------
-# CATÁLOGO: RESTAURANTES E PRATOS
-# -------------------------------------------------------------------------
+
+
 def restaurante_view(request):
     categoria = request.GET.get('categoria')
-    restaurantes = TbRestaurantes.objects.filter(ativo=True)
-    
+    restaurantes = restaurantes_operacionais()
     if categoria:
         restaurantes = restaurantes.filter(categoria=categoria)
 
-    categorias = TbRestaurantes.objects.filter(ativo=True).values_list('categoria', flat=True).distinct()
-
+    categorias = restaurantes_operacionais().values_list('categoria', flat=True).distinct()
     return render(request, 'pages/catalogo/restaurante.html', {
         'restaurantes': restaurantes,
         'categorias': sorted(filter(None, categorias)),
         'categoria_ativa': categoria,
         'restaurante_destaque': restaurantes.first(),
     })
+
 
 def restaurante_detalhe_view(request, id):
     restaurante = get_object_or_404(TbRestaurantes, id_restaurante=id, ativo=True)
@@ -284,8 +264,7 @@ def restaurante_detalhe_view(request, id):
         pratos = pratos.filter(categoria=categoria_ativa)
 
     categorias = (
-        TbProdutos.objects
-        .filter(restaurante=restaurante, disponivel=True, categoria__isnull=False)
+        TbProdutos.objects.filter(restaurante=restaurante, disponivel=True, categoria__isnull=False)
         .exclude(categoria='')
         .exclude(tipo_produto='INSUMO')
         .values_list('categoria', flat=True)
@@ -293,16 +272,24 @@ def restaurante_detalhe_view(request, id):
         .order_by('categoria')
     )
 
+    sugestoes = TbProdutos.objects.filter(
+        restaurante=restaurante,
+        disponivel=True,
+        categoria__iregex=r'bebida|sobremesa',
+    ).exclude(tipo_produto='INSUMO')[:6]
+
     return render(request, 'pages/catalogo/restaurante_detalhe.html', {
         'restaurante': restaurante,
         'pratos': pratos,
         'categorias': list(categorias),
         'categoria_ativa': categoria_ativa,
+        'sugestoes': sugestoes,
     })
 
+
 def prato_view(request):
-    rest_id = _int_param(request.GET.get('restaurante_id'), 1)  
-    p_id = _int_param(request.GET.get('produto_id'), 1)  
+    rest_id = _int_param(request.GET.get('restaurante_id'), 1)
+    p_id = _int_param(request.GET.get('produto_id'), 1)
 
     restaurante = get_object_or_404(TbRestaurantes, id_restaurante=rest_id, ativo=True)
     prato = get_object_or_404(TbProdutos, id_produto=p_id, restaurante=restaurante)
@@ -312,135 +299,161 @@ def prato_view(request):
     if prato.restricoes:
         restricoes_list = [t.strip() for t in prato.restricoes.split(',') if t.strip()]
 
+    acompanhamentos = TbProdutos.objects.filter(
+        restaurante=restaurante,
+        disponivel=True,
+        categoria__iregex=r'bebida|sobremesa',
+    ).exclude(id_produto=prato.id_produto).exclude(tipo_produto='INSUMO')[:6]
+
     return render(request, 'pages/catalogo/prato.html', {
         'restaurante': restaurante,
         'prato': prato,
         'nutricao': nutricao,
         'restricoes_list': restricoes_list,
+        'acompanhamentos': acompanhamentos,
     })
+
 
 def buscar_prato_restaurante(request):
     query = request.GET.get('q', '').strip()
     if query:
-        resultados = TbRestaurantes.objects.filter(
-            Q(nome__icontains=query) | 
-            Q(tbprodutos__nome_produto__icontains=query),
-            ativo=True
+        resultados = restaurantes_operacionais().filter(
+            Q(nome__icontains=query) | Q(tbprodutos__nome_produto__icontains=query)
         ).distinct()
     else:
-        resultados = TbRestaurantes.objects.filter(ativo=True)
+        resultados = TbRestaurantes.objects.none()
 
-    categorias = TbRestaurantes.objects.filter(ativo=True).values_list('categoria', flat=True).distinct()
-
+    categorias = restaurantes_operacionais().values_list('categoria', flat=True).distinct()
     return render(request, 'pages/catalogo/restaurante.html', {
         'restaurantes': resultados,
         'categorias': sorted(filter(None, categorias)),
+        'categoria_ativa': None,
+        'query': query,
     })
 
-# -------------------------------------------------------------------------
-# PEDIDOS E RESERVAS
-# -------------------------------------------------------------------------
-
-from .models import TbReservas  # Certifique-se de importar o model correto para reservas
 
 def reserva_view(request):
     r_id = _int_param(request.GET.get('restaurante_id'), 1)
-    p_id = _int_param(request.GET.get('produto_id'), 0) # Pega o prato da URL
 
     client = get_cliente_logado(request)
     if not client:
-        messages.error(request, "Faça login para fazer uma reserva.")
+        messages.error(request, 'Faça login para fazer uma reserva.')
         return redirect('login')
-    
+
     restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True)
-
     if not restaurante.aberto:
-        messages.error(request, "Este restaurante está fechado no momento.")
+        messages.error(request, 'Este restaurante está fechado no momento.')
         return redirect('restaurante_detalhe', id=r_id)
-
-    reservas_do_banco = TbReservas.objects.filter(
-        restaurante=restaurante,
-        data_reserva__gte=timezone.now()
-    ).order_by('data_reserva')
-    
-    datas_list = []
-    horarios_list = []
-
-    for reserva in reservas_do_banco:
-        d = reserva.data_reserva.strftime('%Y-%m-%d')
-        h = reserva.data_reserva.strftime('%H:%M')
-        
-        if d not in datas_list: datas_list.append(d)
-        if h not in horarios_list: horarios_list.append(h)
 
     return render(request, 'pages/pedido/reserva.html', {
         'restaurante': restaurante,
-        'datas': datas_list,     # Datas que existem no banco
-        'horarios': horarios_list, # Horários que existem no banco
+        'datas': _datas_reserva_validas(),
+        'horarios': RESERVA_HORARIOS,
     })
 
+
 def reserva_pagamento(request):
-    if request.method == 'POST':
-        r_id = _int_param(request.POST.get('restaurante_id'), 1) 
+    if request.method != 'POST':
+        return redirect('reserva')
 
-        restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True)
+    client = get_cliente_logado(request)
+    if not client:
+        messages.error(request, 'Faça login para concluir uma reserva.')
+        return redirect('login')
 
-        return render(request, 'pages/pedido/reserva_pagamento.html', {
-            'restaurante': restaurante,
-            'horario': request.POST.get('horario'),
-            'data': request.POST.get('data'),
-            'pessoas': request.POST.get('pessoas'),
-            'total': 'R$ 20,00', 
-        })
-    return redirect('reserva')
+    r_id = _int_param(request.POST.get('restaurante_id'), 1)
+    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True)
+
+    if not restaurante.aberto:
+        messages.error(request, 'Este restaurante está fechado no momento.')
+        return redirect('restaurante_detalhe', id=r_id)
+
+    data_str = request.POST.get('data', '')
+    horario_str = request.POST.get('horario', '')
+    pessoas = _int_param(request.POST.get('pessoas'), 2)
+    metodo_pagamento = request.POST.get('metodo_pagamento', 'pix')
+
+    if data_str not in _datas_reserva_validas() or horario_str not in RESERVA_HORARIOS:
+        messages.error(request, 'Selecione uma data e horário válidos para os próximos 7 dias.')
+        return redirect(f"{redirect('reserva').url}?restaurante_id={r_id}")
+
+    try:
+        reserva_data = timezone.make_aware(datetime.strptime(f'{data_str} {horario_str}', '%Y-%m-%d %H:%M'))
+    except ValueError:
+        messages.error(request, 'Data ou horário inválidos.')
+        return redirect(f"{redirect('reserva').url}?restaurante_id={r_id}")
+
+    mesas_ocupadas = set(
+        TbReservas.objects.filter(restaurante=restaurante, data_reserva=reserva_data)
+        .values_list('mesa', flat=True)
+    )
+    mesas_livres = [mesa for mesa in MESAS_DISPONIVEIS if mesa not in mesas_ocupadas]
+
+    if not mesas_livres:
+        messages.error(request, 'Não há mesas disponíveis para este horário. Tente outro horário.')
+        return redirect(f"{redirect('reserva').url}?restaurante_id={r_id}")
+
+    mesa_sorteada = random.choice(mesas_livres)
+    reserva = TbReservas.objects.create(
+        cliente=client,
+        restaurante=restaurante,
+        data_reserva=reserva_data,
+        numero_pessoas=pessoas,
+        mesa=mesa_sorteada,
+    )
+
+    return render(request, 'pages/pedido/reserva_pagamento.html', {
+        'restaurante': restaurante,
+        'horario': horario_str,
+        'data': data_str,
+        'pessoas': pessoas,
+        'metodo_pagamento': metodo_pagamento,
+        'mesa': mesa_sorteada,
+        'reserva': reserva,
+        'total': 'R$ 20,00',
+        'pagamento_aprovado': True,
+    })
+
 
 def pedido_view(request):
     cliente_id = request.session.get('cliente_id')
-
     if not cliente_id:
         return redirect('login')
 
-    # Tenta buscar o cliente para validar se ele existe no novo banco
     try:
-        cliente = TbClientes.objects.get(id_cliente=cliente_id)
+        TbClientes.objects.get(id_cliente=cliente_id)
     except TbClientes.DoesNotExist:
-        return redirect('login') 
+        return redirect('login')
 
-    pedidos = TbPedidos.objects.filter(cliente_id=cliente_id).order_by('-data_pedido').prefetch_related('tbpedidosprodutos_set__produto')
+    pedidos = (
+        TbPedidos.objects.filter(cliente_id=cliente_id)
+        .order_by('-data_pedido')
+        .prefetch_related('tbpedidosprodutos_set__produto')
+    )
 
     r_id = request.GET.get('restaurante_id')
     restaurante = None
     if r_id:
-        restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True)
+        restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True, aberto=True)
 
     return render(request, 'pages/pedido/pedido.html', {
         'pedidos': pedidos,
         'restaurante_atual': restaurante,
     })
 
-# View 1 — só ADICIONA e redireciona
+
 def adicionar_carrinho(request):
     r_id = _int_param(request.GET.get('restaurante_id'), 1)
-    p_id = _int_param(request.GET.get('produto_id'), 1) 
+    p_id = _int_param(request.GET.get('produto_id'), 1)
 
-    # 1. Pega o carrinho atual
     carrinho = request.session.get('carrinho', {})
-
-    # Se o carrinho tem algo E o restaurante novo NÃO é o que já está no carrinho
     if carrinho and str(r_id) not in carrinho:
-        from django.contrib import messages
-        messages.error(request, "Você já tem itens de outro restaurante. Finalize ou limpe o carrinho primeiro.")
+        messages.error(request, 'Você já tem itens de outro restaurante. Finalize ou limpe o carrinho primeiro.')
         return redirect('carrinho')
-    # -----------------------------------------------
 
-    # Se passou da trava, agora sim buscamos os dados no banco
-    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True)
-    if not restaurante.aberto:
-        messages.error(request, "Este restaurante está fechado no momento.")
-        return redirect('home')
+    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True, aberto=True)
     produto = get_object_or_404(TbProdutos, id_produto=p_id, restaurante=restaurante)
 
-    # Cria a estrutura do restaurante se for o primeiro item dele
     if str(r_id) not in carrinho:
         carrinho[str(r_id)] = {'restaurante': restaurante.nome, 'itens': []}
 
@@ -449,46 +462,39 @@ def adicionar_carrinho(request):
 
     if existente:
         if existente['quantidade'] + 1 > 10:
-            return JsonResponse({
-                'quantidade': existente['quantidade'],
-                'erro': 'Limite de 10 unidades'
-            })
-        else:
-            existente['quantidade'] += 1
+            return JsonResponse({'quantidade': existente['quantidade'], 'erro': 'Limite de 10 unidades'})
+        existente['quantidade'] += 1
     else:
         itens.append({
             'id': produto.id_produto,
             'nome': produto.nome_produto,
             'preco': float(produto.preco),
             'imagem': produto.imagem or '',
-            'quantidade': 1
+            'quantidade': 1,
         })
 
     request.session['carrinho'] = carrinho
     request.session.modified = True
-
     return redirect('carrinho')
-# View 2 — só EXIBE o carrinho, nunca modifica
+
+
 def carrinho_view(request):
     client = get_cliente_logado(request)
     if not client:
-        messages.error(request, "Faça login para fazer um pedido.")
+        messages.error(request, 'Faça login para fazer um pedido.')
         return redirect('login')
-    
+
     carrinho = request.session.get('carrinho', {})
-    subtotal = sum(
-        i['preco'] * i['quantidade']
-        for r in carrinho.values()
-        for i in r['itens']
-    )
+    subtotal = sum(i['preco'] * i['quantidade'] for r in carrinho.values() for i in r['itens'])
 
     return render(request, 'pages/pedido/carrinho.html', {
         'carrinho': carrinho,
-        'subtotal': f"R$ {subtotal:.2f}",
+        'subtotal': f'R$ {subtotal:.2f}',
         'entrega': 'Grátis',
         'desconto': 'R$ 0,00',
-        'total': f"R$ {subtotal:.2f}",
+        'total': f'R$ {subtotal:.2f}',
     })
+
 
 def aumentar_item(request, r_id, produto_id):
     carrinho = request.session.get('carrinho', {})
@@ -496,13 +502,14 @@ def aumentar_item(request, r_id, produto_id):
     item = next((i for i in itens if i['id'] == produto_id), None)
     if item:
         nova_quantidade = item['quantidade'] + 1
-        if (nova_quantidade > 10):
+        if nova_quantidade > 10:
             return JsonResponse({
                 'status': 'erro',
                 'mensagem': 'Limite máximo de 10 unidades por produto atingido.',
-                'quantidade_atual': item['quantidade']
-            }, status=400) # Status 400 indica erro do cliente
+                'quantidade_atual': item['quantidade'],
+            }, status=400)
         item['quantidade'] = nova_quantidade
+
     request.session['carrinho'] = carrinho
     request.session.modified = True
     return JsonResponse({'quantidade': item['quantidade'] if item else 0})
@@ -516,7 +523,8 @@ def diminuir_item(request, r_id, produto_id):
         if item['quantidade'] > 1:
             item['quantidade'] -= 1
         else:
-            itens.remove(item)  # remove se chegar a 0
+            itens.remove(item)
+
     request.session['carrinho'] = carrinho
     request.session.modified = True
     return JsonResponse({'quantidade': item['quantidade'] if item in itens else 0})
@@ -524,31 +532,13 @@ def diminuir_item(request, r_id, produto_id):
 
 def remover_restaurante(request, r_id):
     carrinho = request.session.get('carrinho', {})
-
     if str(r_id) in carrinho:
         del carrinho[str(r_id)]
 
     request.session['carrinho'] = carrinho
     request.session.modified = True
+    return JsonResponse({'status': 'ok'})
 
-    return JsonResponse({"status":"ok"})
-
-
-
-from django.shortcuts import render, redirect, get_object_or_404
-from django.db import transaction
-from django.utils import timezone
-from decimal import Decimal
-from .models import TbPedidos, TbPedidosProdutos, TbStatusPedido, TbEstoque, TbProdutos
-
-from django.db import transaction
-from django.utils import timezone
-from decimal import Decimal
-from django.shortcuts import render, redirect, get_object_or_404
-# Importe seus modelos exatamente como estão no arquivo que você mandou
-from .models import TbPedidos, TbPedidosProdutos, TbStatusPedido, TbEstoque, TbProdutos, TbClientes, TbRestaurantes
-
-from .models import TbPagamentos # Certifique-se de importar
 
 def finalizacao_view(request):
     r_id = request.GET.get('restaurante_id') or request.POST.get('restaurante_id')
@@ -560,19 +550,16 @@ def finalizacao_view(request):
     cliente_id = request.session.get('cliente_id')
     if not cliente_id:
         return redirect('login')
+
     cliente_instancia = get_object_or_404(TbClientes, id_cliente=cliente_id)
-    restaurante_instancia = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True)
+    restaurante_instancia = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True, aberto=True)
     dados_venda = carrinho[r_id]
-    
-    # --- CÁLCULOS PARA O RESUMO (P1) ---
+
     subtotal = sum(Decimal(str(i['preco'])) * i['quantidade'] for i in dados_venda['itens'])
-    
     entrega = restaurante_instancia.taxa_entrega if restaurante_instancia.taxa_entrega else Decimal('0.00')
     desconto = Decimal('10.00') if subtotal > 50 else Decimal('0.00')
-    
     total_final = subtotal + entrega - desconto
 
-    # SE O USUÁRIO ESTIVER APENAS ACESSANDO A PÁGINA (GET)
     if request.method == 'GET':
         return render(request, 'pages/pedido/finalizacao.html', {
             'carrinho': dados_venda,
@@ -584,65 +571,53 @@ def finalizacao_view(request):
             'total': total_final,
         })
 
-    # SE O USUÁRIO CLICOU EM "CONFIRMAR PEDIDO" (POST)
-    if request.method == 'POST':
-        endereco = request.POST.get('endereco')
-        metodo_pagamento = request.POST.get('pagamento') # Ex: 'Cartão', 'Pix'
+    endereco = request.POST.get('endereco')
+    metodo_pagamento = request.POST.get('pagamento')
 
-        try:
-            with transaction.atomic():
-                status_instancia = get_object_or_404(TbStatusPedido, id_status=1)
+    try:
+        with transaction.atomic():
+            status_instancia = get_object_or_404(TbStatusPedido, id_status=1)
+            pedido = TbPedidos.objects.create(
+                cliente=cliente_instancia,
+                restaurante=restaurante_instancia,
+                status=status_instancia,
+                valor_total=total_final,
+                data_pedido=timezone.now(),
+                endereco_entrega=endereco,
+            )
 
-                # 1. Criar o Pedido com o endereço vindo do formulário
-                pedido = TbPedidos.objects.create(
-                    cliente=cliente_instancia,      
-                    restaurante=restaurante_instancia, 
-                    status=status_instancia,        
-                    valor_total=total_final,
-                    data_pedido=timezone.now(),
-                    endereco_entrega=endereco  # PEGO DO FORMULÁRIO
-                )
+            TbPagamentos.objects.create(
+                pedido=pedido,
+                metodo_pagamento=metodo_pagamento,
+                valor=total_final,
+                data_pagamento=timezone.now(),
+            )
 
-                # 2. Criar o registro de Pagamento (usando seu Model TbPagamentos)
-                TbPagamentos.objects.create(
+            for item in dados_venda['itens']:
+                produto_instancia = get_object_or_404(TbProdutos, id_produto=item['id'])
+                TbPedidosProdutos.objects.create(
                     pedido=pedido,
-                    metodo_pagamento=metodo_pagamento,
-                    valor=total_final,
-                    data_pagamento=timezone.now()
+                    produto=produto_instancia,
+                    quantidade=item['quantidade'],
                 )
 
-                # 3. Criar Itens e Baixar Estoque
-                for item in dados_venda['itens']:
-                    produto_instancia = get_object_or_404(TbProdutos, id_produto=item['id'])
-                    TbPedidosProdutos.objects.create(
-                        pedido=pedido,
-                        produto=produto_instancia,
-                        quantidade=item['quantidade']
-                    )
+                estoque = TbEstoque.objects.filter(produto=produto_instancia).first()
+                if estoque:
+                    if estoque.quantidade >= item['quantidade']:
+                        estoque.quantidade -= item['quantidade']
+                        estoque.save()
+                    else:
+                        raise ValueError(f'Estoque insuficiente: {produto_instancia.nome_produto}')
 
-                    estoque = TbEstoque.objects.filter(produto=produto_instancia).first()
-                    if estoque:
-                        if estoque.quantidade >= item['quantidade']:
-                            estoque.quantidade -= item['quantidade']
-                            estoque.save()
-                        else:
-                            raise ValueError(f"Estoque insuficiente: {produto_instancia.nome_produto}")
+            del request.session['carrinho'][r_id]
+            request.session.modified = True
+            return redirect('pedido')
 
-                # 4. Limpar o carrinho
-                del request.session['carrinho'][r_id]
-                request.session.modified = True
+    except Exception as exc:
+        logging.getLogger(__name__).error('Erro ao finalizar pedido: %s', exc)
+        return redirect('carrinho')
 
-                # return render(request, 'pages/pedido/pedido.html', {'pedido': pedido})
-                return redirect('pedido')  # Redireciona para a página de pedidos
 
-        except Exception as e:
-            logging.getLogger(__name__).error("Erro ao finalizar pedido: %s", e)
-            return redirect('carrinho')
-        
-
-# -------------------------------------------------------------------------
-# FEEDBACK
-# -------------------------------------------------------------------------
 def feedback_view(request):
     r_id = _int_param(request.GET.get('restaurante_id'), 1)
     restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True)
@@ -658,14 +633,13 @@ def feedback_view(request):
                 restaurante=restaurante,
                 nota=nota,
                 comentario=comentario,
-                data_avaliacao=timezone.now()
+                data_avaliacao=timezone.now(),
             )
 
-        return render(request, 'pages/pedido/feedback_sucesso.html', {
-            'restaurante': restaurante
-        })
-    
+        return render(request, 'pages/pedido/feedback_sucesso.html', {'restaurante': restaurante})
+
     return render(request, 'pages/pedido/feedback.html', {'restaurante': restaurante})
+
 
 def feedback_sucesso_view(request):
     return render(request, 'pages/pedido/feedback_sucesso.html')
