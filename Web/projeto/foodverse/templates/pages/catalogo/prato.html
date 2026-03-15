@@ -310,7 +310,7 @@
 <div class="page-wrap">
 
   <a href="{% url 'restaurante_detalhe' restaurante.id_restaurante %}" class="back-link">
-    <i class="bi bi-arrow-left"></i> Voltar para {{ restaurante.nome }}
+    <i class="fa-solid fa-arrow-left"></i> Voltar para {{ restaurante.nome }}
   </a>
 
   <div class="dish-layout">
@@ -322,9 +322,9 @@
       <div class="dish-img-card">
         <div class="img-wrap">
           {% if prato.imagem %}
-            <img src="{% img_url prato.imagem %}" alt="{{ prato.nome_produto }}">
+            <img src="{% img_or_fallback prato.imagem %}" alt="{{ prato.nome_produto }}">
           {% else %}
-            <div class="img-no-photo"><i class="bi bi-egg-fried"></i></div>
+            <div class="img-no-photo"><i class="fa-solid fa-utensils"></i></div>
           {% endif %}
 
           <div class="img-breadcrumb">
@@ -345,14 +345,14 @@
       {% if prato.restricoes %}
       <div class="custom-card">
         <div class="section-label">
-          <i class="bi bi-shield-check"></i> Informações do prato
+          <i class="fa-solid fa-circle-check"></i> Informações do prato
         </div>
         <div class="row g-3">
           <div class="col-12 form-group">
             <label class="field-label">Restrições alimentares</label>
             <div class="restriction-pills">
               {% for tag in restricoes_list %}
-              <span class="pill-label"><i class="bi bi-check2"></i> {{ tag }}</span>
+              <span class="pill-label"><i class="fa-solid fa-check"></i> {{ tag }}</span>
               {% endfor %}
             </div>
           </div>
@@ -401,21 +401,40 @@
 
         {% if restaurante.aberto %}
         <a href="{% url 'adicionar_carrinho' %}?restaurante_id={{ restaurante.id_restaurante }}&produto_id={{ prato.id_produto }}" class="btn-delivery">
-          <i class="bi bi-bicycle"></i> Pedir Delivery
+          <i class="fa-solid fa-motorcycle"></i> Pedir Delivery
         </a>
         {% else %}
         <span class="btn-delivery" style="opacity:.5; cursor:not-allowed; background:#555;">
-          <i class="bi bi-door-closed"></i> Restaurante fechado
+          <i class="fa-solid fa-door-closed"></i> Restaurante fechado
         </span>
         {% endif %}
 
         <p class="cancel-note">
-          <i class="bi bi-shield-check"></i> Cancelamento grátis até 2h antes
+          <i class="fa-solid fa-circle-check"></i> Cancelamento grátis até 2h antes
         </p>
       </div>
 
     </div>
   </div>
+
+  {% if acompanhamentos %}
+  <section class="custom-card" style="margin-top:22px;">
+    <div class="section-label">
+      <i class="fa-solid fa-wine-glass"></i> Sugestões de acompanhamentos
+    </div>
+    <div class="row g-3">
+      {% for item in acompanhamentos %}
+      <div class="col-12 col-md-6">
+        <a href="{% url 'prato' %}?restaurante_id={{ restaurante.id_restaurante }}&produto_id={{ item.id_produto }}" class="btn-ver" style="width:100%; justify-content:space-between; text-decoration:none;">
+          <span>{{ item.nome_produto }}</span>
+          <strong>R$ {{ item.preco|default:"0.00" }}</strong>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
 </div>
 
 {% include "pages/pagePrincipal/footer.html" %}
