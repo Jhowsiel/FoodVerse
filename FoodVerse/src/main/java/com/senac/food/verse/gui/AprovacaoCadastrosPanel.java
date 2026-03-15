@@ -1,6 +1,7 @@
 package com.senac.food.verse.gui;
 
 import com.senac.food.verse.ConexaoBanco;
+import com.senac.food.verse.PasswordUtils;
 import com.senac.food.verse.SessionContext;
 import jiconfont.icons.google_material_design_icons.GoogleMaterialDesignIcons;
 import jiconfont.swing.IconFontSwing;
