@@ -1,8 +1,6 @@
-{% extends 'base.html' %}
 {% load static %}
 {% load foodverse_tags %}
 
-{% block content %}
 {% include "pages/pagePrincipal/header.html" %}
 
 <style>
@@ -336,7 +334,11 @@
       <div>
         <span class="hero-eyebrow"><i class="fa-solid fa-bolt"></i> Delivery Rápido Premium</span>
         <h1 class="hero-title">Com fome?<br>A gente <em>resolve.</em></h1>
+        {% if cliente_logado %}
+        <p class="hero-sub">Olá, {{ cliente_logado.nome|default:cliente_logado.username }}! Seus restaurantes favoritos estão abertos e prontos para o próximo pedido.</p>
+        {% else %}
         <p class="hero-sub">Encontre os melhores restaurantes da sua cidade e receba no conforto da sua casa com a melhor experiência.</p>
+        {% endif %}
 
         <div class="hero-search-box">
           
@@ -464,13 +466,14 @@
               {% elif "sushi" in restaurante.nome|lower %}🍱
               {% else %}🍽️{% endif %}
             </span>
-            <img src="{% img_url restaurante.imagem %}" alt="{{ restaurante.nome }}"
+            <img src="{% img_or_fallback restaurante.imagem %}" alt="{{ restaurante.nome }}"
                  onload="this.classList.add('loaded')"
                  onerror="this.style.display='none'">
 
             <div class="res-top-badges">
               <span class="badge-rat"><i class="fa-solid fa-star"></i> {{ restaurante.avaliacao|default:"—" }}</span>
-              {% if restaurante.cupom %}<span class="badge-cup">Cupom</span>{% endif %}
+              {% if not restaurante.aberto %}<span class="badge-cup" style="background:#C41017;">Fechado</span>
+              {% elif restaurante.cupom %}<span class="badge-cup">Cupom</span>{% endif %}
             </div>
             <div class="res-name-over">{{ restaurante.nome }}</div>
           </div>

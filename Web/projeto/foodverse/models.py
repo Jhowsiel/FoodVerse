@@ -45,7 +45,6 @@ class TbProdutos(models.Model):
     preco = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     categoria = models.CharField(max_length=50, null=True, blank=True)
     imagem = models.CharField(max_length=255, null=True, blank=True)
-    imagem_url = models.CharField(max_length=500, null=True, blank=True)
     tempo_preparo = models.IntegerField(null=True, blank=True)
     disponivel = models.BooleanField(null=True, blank=True)
     destaque = models.BooleanField(null=True, blank=True)
@@ -118,8 +117,8 @@ class TbPedidos(models.Model):
         db_table = "tb_pedidos"
 
 class TbPedidosProdutos(models.Model):
-    pedido = models.ForeignKey('TbPedidos', models.DO_NOTHING, db_column='ID_pedido', primary_key=True)
-    produto = models.ForeignKey('TbProdutos', models.DO_NOTHING, db_column='ID_produto')
+    pedido = models.ForeignKey(TbPedidos, models.DO_NOTHING, db_column='ID_pedido')
+    produto = models.ForeignKey(TbProdutos, models.DO_NOTHING, db_column='ID_produto')
     quantidade = models.IntegerField(db_column='quantidade')
 
     class Meta:
