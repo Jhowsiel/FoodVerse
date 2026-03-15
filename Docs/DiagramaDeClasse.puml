@@ -1,0 +1,260 @@
+@startuml DiagramaDeClasse_FoodVerse
+
+skinparam classBackgroundColor #EBF5FB
+skinparam classBorderColor #1A5276
+skinparam classArrowColor #555555
+skinparam classHeaderBackgroundColor #2E86AB
+skinparam classHeaderFontColor #FFFFFF
+skinparam packageBackgroundColor #FDFEFE
+skinparam packageBorderColor #AAB7B8
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam linetype ortho
+
+title FoodVerse — Diagrama de Classe
+
+' ============================================================
+' ENTIDADES DO DOMÍNIO
+' ============================================================
+
+package "Restaurante e Funcionários" #FEF9E7 {
+
+  class Restaurante {
+    - id_restaurante : int <<PK>>
+    - nome : String
+    - categoria : String
+    - descricao : String
+    - avaliacao : Decimal
+    - tempo_entrega : String
+    - taxa_entrega : Decimal
+    - cupom : String
+    - imagem : String
+    - banner : String
+    - ativo : boolean
+    - aberto : boolean
+  }
+
+  class Funcionario {
+    - id_funcionario : int <<PK>>
+    - nome : String
+    - username : String
+    - email : String
+    - cargo : CargoEnum
+    - telefone : String
+    - senha : String
+    - status : StatusFuncEnum
+    - data_cadastro : DateTime
+    + login() : boolean
+  }
+
+  enum CargoEnum {
+    ADMIN
+    GERENTE
+    ATENDENTE
+    COZINHEIRO
+    ENTREGADOR
+  }
+
+  enum StatusFuncEnum {
+    PENDENTE
+    ATIVO
+    BLOQUEADO
+    DESLIGADO
+    OFFLINE
+  }
+
+}
+
+package "Cardápio e Estoque" #E8F8F5 {
+
+  class Produto {
+    - id_produto : int <<PK>>
+    - nome_produto : String
+    - descricao : String
+    - preco : Decimal
+    - categoria : String
+    - imagem : String
+    - tempo_preparo : int
+    - disponivel : boolean
+    - destaque : boolean
+    - restricoes : String
+    - tipo_produto : TipoProdutoEnum
+    - data_criacao : DateTime
+  }
+
+  enum TipoProdutoEnum {
+    VENDA
+    INSUMO
+  }
+
+  class Nutricao {
+    - id_nutricao : int <<PK>>
+    - kcal : int
+    - proteina : String
+    - carbo : String
+    - gordura : String
+  }
+
+  class Estoque {
+    - id_estoque : int <<PK>>
+    - quantidade : int
+    - estoque_minimo : int
+    - ultima_atualizacao : DateTime
+  }
+
+  class Receita {
+    - id_produto_venda : int <<FK>>
+    - id_insumo : int <<FK>>
+    - quantidade_necessaria : Decimal
+  }
+
+}
+
+package "Clientes e Fidelidade" #EBF5FB {
+
+  class Cliente {
+    - id_cliente : int <<PK>>
+    - username : String
+    - nome : String
+    - email : String
+    - telefone : String
+    - cpf : String
+    - senha : String
+    - endereco : String
+    - data_cadastro : DateTime
+  }
+
+  class Fidelidade {
+    - id_fidelidade : int <<PK>>
+    - pontos : int
+    - cashback : Decimal
+  }
+
+}
+
+package "Pedidos e Pagamentos" #FDEDEC {
+
+  class Pedido {
+    - id_pedido : int <<PK>>
+    - data_pedido : DateTime
+    - endereco_entrega : String
+    - valor_total : Decimal
+  }
+
+  class PedidoProduto {
+    - quantidade : int
+    - preco_unitario : Decimal
+  }
+
+  class StatusPedido {
+    - id_status : int <<PK>>
+    - nome_status : String
+  }
+
+  note right of StatusPedido
+    Valores fixos:
+    1 = pendente
+    2 = em preparo
+    3 = pronto
+    4 = em rota
+    5 = concluido
+    6 = cancelado
+  end note
+
+  class Pagamento {
+    - id_pagamento : int <<PK>>
+    - metodo_pagamento : String
+    - valor : Decimal
+    - data_pagamento : DateTime
+  }
+
+  enum MetodoPagamentoEnum {
+    PIX
+    CARTAO
+    DINHEIRO
+  }
+
+}
+
+package "Reservas e Avaliações" #F9EBEA {
+
+  class Reserva {
+    - id_reserva : int <<PK>>
+    - data_reserva : DateTime
+    - numero_pessoas : int
+    - mesa : String
+  }
+
+  class Avaliacao {
+    - id_avaliacao : int <<PK>>
+    - comentario : String
+    - nota : int
+    - data_avaliacao : DateTime
+  }
+
+}
+
+package "Controle de Acesso (Java)" #F5EEF8 {
+
+  class SessionContext <<Singleton>> {
+    - instance : SessionContext
+    - funcionarioId : int
+    - nome : String
+    - cargo : String
+    - restauranteId : int
+    - nomeRestaurante : String
+    - isAdmin : boolean
+    - restauranteSelecionadoId : int
+    + getInstance() : SessionContext
+    + inicializar(id, nome, cargo, status, restId) : void
+    + limpar() : void
+    + getRestauranteEfetivo() : int
+    + adminTemContextoRestaurante() : boolean
+    + getRestauranteLabel() : String
+  }
+
+}
+
+' ============================================================
+' RELACIONAMENTOS
+' ============================================================
+
+' Restaurante
+Restaurante "1" *-- "0..*" Funcionario   : emprega >
+Restaurante "1" *-- "0..*" Produto        : possui >
+Restaurante "1" *-- "0..*" Pedido         : recebe >
+Restaurante "1" *-- "0..*" Reserva        : tem >
+Restaurante "1" *-- "0..*" Avaliacao      : recebe >
+
+' Produto
+Produto "1" *-- "0..1" Nutricao           : tem >
+Produto "1" *-- "0..1" Estoque            : controlado em >
+Produto "1" -- "0..*" Receita            : aparece em >
+
+Receita "0..*" -- "1" Produto            : usa insumo >
+
+Produto ..> TipoProdutoEnum : <<usa>>
+
+' Pedido
+Cliente "1" *-- "0..*" Pedido            : faz >
+Pedido "1" *-- "1..*" PedidoProduto      : contém >
+PedidoProduto "0..*" --> "1" Produto      : referencia >
+Pedido "0..*" --> "1" StatusPedido        : tem status >
+Pedido "1" *-- "0..1" Pagamento          : pago com >
+
+Pagamento ..> MetodoPagamentoEnum : <<usa>>
+
+' Reserva e Avaliação
+Cliente "1" *-- "0..*" Reserva           : faz >
+Cliente "1" *-- "0..*" Avaliacao         : faz >
+Cliente "1" *-- "0..1" Fidelidade        : acumula >
+
+' Funcionário
+Funcionario ..> CargoEnum : <<usa>>
+Funcionario ..> StatusFuncEnum : <<usa>>
+
+' SessionContext gerencia sessão do Funcionario
+SessionContext ..> Funcionario  : controla sessão de >
+SessionContext ..> Restaurante  : escopo de >
+
+@enduml
