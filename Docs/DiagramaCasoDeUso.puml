@@ -1,65 +1,57 @@
 @startuml DiagramaCasoDeUso_FoodVerse
 
+' ==========================================================
+' CONFIGURAÇÃO — A4 Paisagem (297 x 210 mm)
+' ==========================================================
+left to right direction
+scale max 1122 width
+scale max 793 height
+
 skinparam actorStyle awesome
 skinparam packageStyle rectangle
 skinparam backgroundColor #FFFFFF
-skinparam ArrowColor #555555
-skinparam ActorBorderColor #2E86AB
+skinparam ArrowColor #444444
+skinparam ActorBorderColor #1A5276
 skinparam ActorBackgroundColor #D6EAF8
+skinparam ActorFontSize 9
 skinparam UsecaseBorderColor #1A5276
 skinparam UsecaseBackgroundColor #EBF5FB
-skinparam NoteBackgroundColor #FDFEFE
-skinparam NoteBorderColor #AAB7B8
+skinparam UsecaseFontSize 9
 skinparam defaultFontName Arial
-skinparam defaultFontSize 12
+skinparam defaultFontSize 9
+skinparam nodesep 6
+skinparam ranksep 18
+skinparam padding 2
 
 title FoodVerse — Diagrama de Caso de Uso
 
-' ============================================================
-' ATORES
-' ============================================================
-
+' ========================
+' ATORES — esquerda
+' ========================
 actor "Cliente" as cliente
 
-actor "Funcionário\n(genérico)" as funcionario
-
-actor "Admin" as admin
-actor "Gerente" as gerente
-actor "Atendente" as atendente
-actor "Cozinheiro" as cozinheiro
-actor "Entregador" as entregador
-
-' Admin, Gerente, Atendente, Cozinheiro e Entregador
-' herdam do ator genérico Funcionário
-admin     -up-|> funcionario
-gerente   -up-|> funcionario
-atendente -up-|> funcionario
-cozinheiro -up-|> funcionario
-entregador -up-|> funcionario
-
-' ============================================================
-' PORTAL WEB (Django)
-' ============================================================
-
-rectangle "Portal Web" #EBF5FB {
+' ========================
+' PORTAL WEB (Django) — centro-esquerda
+' ========================
+rectangle "Portal Web (Django)" #EBF5FB {
 
   package "Conta e Perfil" {
     usecase "Criar conta" as UC_Cadastro
     usecase "Fazer login" as UC_LoginCliente
     usecase "Fazer logout" as UC_LogoutCliente
-    usecase "Visualizar perfil" as UC_VerPerfil
+    usecase "Ver perfil" as UC_VerPerfil
     usecase "Editar perfil" as UC_EditarPerfil
   }
 
-  package "Navegação e Pedidos" {
-    usecase "Buscar restaurantes" as UC_BuscarRestaurante
-    usecase "Ver cardápio do restaurante" as UC_VerCardapio
+  package "Pedidos e Carrinho" {
+    usecase "Buscar restaurantes" as UC_Buscar
+    usecase "Ver cardápio" as UC_VerCardapio
     usecase "Ver detalhes do prato" as UC_VerPrato
-    usecase "Adicionar item ao carrinho" as UC_Carrinho
-    usecase "Alterar quantidade no carrinho" as UC_AlterarCarrinho
-    usecase "Finalizar pedido" as UC_FinalizarPedido
-    usecase "Aplicar cupom de desconto" as UC_Cupom
-    usecase "Consultar histórico de pedidos" as UC_HistoricoPedido
+    usecase "Adicionar ao carrinho" as UC_Carrinho
+    usecase "Alterar quantidade" as UC_AltQtd
+    usecase "Finalizar pedido" as UC_Finalizar
+    usecase "Aplicar cupom" as UC_Cupom
+    usecase "Histórico de pedidos" as UC_Historico
   }
 
   package "Reservas e Avaliações" {
@@ -70,78 +62,83 @@ rectangle "Portal Web" #EBF5FB {
 
 }
 
-' ============================================================
-' APLICATIVO DESKTOP (Java/Swing)
-' ============================================================
-
-rectangle "Aplicativo Desktop (Java)" #FEF9E7 {
+' ========================
+' DESKTOP (Java) — centro-direita
+' ========================
+rectangle "App Desktop (Java/Swing)" #FEF9E7 {
 
   package "Acesso" {
     usecase "Fazer login" as UC_LoginFunc
-    usecase "Visualizar dashboard (Home)" as UC_Dashboard
+    usecase "Dashboard / Home" as UC_Dashboard
   }
 
   package "Gestão Administrativa" {
-    usecase "Aprovar/rejeitar\ncadastro de funcionário" as UC_Aprovacao
-    usecase "Gerenciar restaurantes\n(criar/editar/ativar)" as UC_GerenciarRestaurantes
-    usecase "Configurar dados\ndo restaurante" as UC_ConfigRestaurante
+    usecase "Aprovar cadastro\nde funcionário" as UC_Aprovacao
+    usecase "Gerenciar restaurantes" as UC_GerRest
+    usecase "Configurar restaurante" as UC_ConfigRest
   }
 
   package "Operações do Restaurante" {
-    usecase "Gerenciar cardápio\n(pratos e produtos)" as UC_Cardapio
-    usecase "Cadastrar receita\nde prato (BOM)" as UC_Receita
-    usecase "Gerenciar estoque\n(itens e movimentações)" as UC_Estoque
+    usecase "Gerenciar cardápio" as UC_Cardapio
+    usecase "Receita de prato (BOM)" as UC_Receita
+    usecase "Gerenciar estoque" as UC_Estoque
     usecase "Criar pedido local\n(mesa / balcão)" as UC_PedidoLocal
-    usecase "Gerenciar pedidos\n(atualizar status)" as UC_Pedidos
-    usecase "Painel de cozinha (KDS)\n(fila de preparo)" as UC_Cozinha
-    usecase "Gerenciar entregas\n(em rota / concluído)" as UC_Entregas
-    usecase "Gerenciar mesas\ne reservas" as UC_Mesas
+    usecase "Gerenciar pedidos" as UC_Pedidos
+    usecase "Painel de cozinha (KDS)" as UC_Cozinha
+    usecase "Gerenciar entregas" as UC_Entregas
+    usecase "Mesas e reservas" as UC_Mesas
   }
 
 }
 
-' ============================================================
-' ASSOCIAÇÕES — CLIENTE
-' ============================================================
+' ========================
+' ATORES — direita
+' ========================
+actor "Funcionário" as funcionario
+actor "Admin" as admin
+actor "Gerente" as gerente
+actor "Atendente" as atendente
+actor "Cozinheiro" as cozinheiro
+actor "Entregador" as entregador
 
+admin      --|> funcionario
+gerente    --|> funcionario
+atendente  --|> funcionario
+cozinheiro --|> funcionario
+entregador --|> funcionario
+
+' ========================
+' ASSOCIAÇÕES — CLIENTE
+' ========================
 cliente --> UC_Cadastro
 cliente --> UC_LoginCliente
 cliente --> UC_LogoutCliente
 cliente --> UC_VerPerfil
 cliente --> UC_EditarPerfil
-cliente --> UC_BuscarRestaurante
+cliente --> UC_Buscar
 cliente --> UC_VerCardapio
 cliente --> UC_VerPrato
 cliente --> UC_Carrinho
-cliente --> UC_AlterarCarrinho
-cliente --> UC_FinalizarPedido
-cliente --> UC_HistoricoPedido
+cliente --> UC_AltQtd
+cliente --> UC_Finalizar
+cliente --> UC_Historico
 cliente --> UC_Reserva
 cliente --> UC_Avaliacao
 
-UC_FinalizarPedido .> UC_Cupom : <<include>>
-UC_Reserva .> UC_PagarReserva : <<include>>
+UC_Finalizar .> UC_Cupom : <<include>>
+UC_Reserva   .> UC_PagarReserva : <<include>>
 
-' ============================================================
-' ASSOCIAÇÕES — FUNCIONÁRIO (todas as roles)
-' ============================================================
-
+' ========================
+' ASSOCIAÇÕES — FUNCIONÁRIO
+' ========================
 funcionario --> UC_LoginFunc
 funcionario --> UC_Dashboard
 
-' ============================================================
-' ASSOCIAÇÕES — ADMIN
-' ============================================================
-
 admin --> UC_Aprovacao
-admin --> UC_GerenciarRestaurantes
-
-' ============================================================
-' ASSOCIAÇÕES — GERENTE
-' ============================================================
+admin --> UC_GerRest
 
 gerente --> UC_Aprovacao
-gerente --> UC_ConfigRestaurante
+gerente --> UC_ConfigRest
 gerente --> UC_Cardapio
 gerente --> UC_Receita
 gerente --> UC_Estoque
@@ -149,32 +146,19 @@ gerente --> UC_Pedidos
 gerente --> UC_Entregas
 gerente --> UC_Mesas
 
-' ============================================================
-' ASSOCIAÇÕES — ATENDENTE
-' ============================================================
-
 atendente --> UC_Pedidos
 atendente --> UC_PedidoLocal
 atendente --> UC_Mesas
 
-' ============================================================
-' ASSOCIAÇÕES — COZINHEIRO
-' ============================================================
-
 cozinheiro --> UC_Cozinha
 cozinheiro --> UC_Pedidos
 
-' ============================================================
-' ASSOCIAÇÕES — ENTREGADOR
-' ============================================================
-
 entregador --> UC_Entregas
 
-' ============================================================
-' RELAÇÕES DE EXTENSÃO/INCLUSÃO
-' ============================================================
-
-UC_Receita .> UC_Cardapio : <<extend>>
-UC_PedidoLocal .> UC_Pedidos : <<extend>>
+' ========================
+' EXTENSÕES
+' ========================
+UC_Receita    .> UC_Cardapio  : <<extend>>
+UC_PedidoLocal .> UC_Pedidos  : <<extend>>
 
 @enduml

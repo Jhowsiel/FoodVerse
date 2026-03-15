@@ -1,21 +1,33 @@
 @startuml DiagramaDeClasse_FoodVerse
 
+' ==========================================================
+' CONFIGURAÇÃO — A4 Paisagem (297 x 210 mm)
+' ==========================================================
+left to right direction
+scale max 1122 width
+scale max 793 height
+
 skinparam classBackgroundColor #EBF5FB
 skinparam classBorderColor #1A5276
-skinparam classArrowColor #555555
+skinparam classArrowColor #444444
 skinparam classHeaderBackgroundColor #2E86AB
 skinparam classHeaderFontColor #FFFFFF
+skinparam classAttributeIconSize 0
 skinparam packageBackgroundColor #FDFEFE
 skinparam packageBorderColor #AAB7B8
+skinparam packageFontSize 9
 skinparam defaultFontName Arial
-skinparam defaultFontSize 11
-skinparam linetype ortho
+skinparam defaultFontSize 8
+skinparam classFontSize 9
+skinparam nodesep 8
+skinparam ranksep 20
+skinparam padding 2
 
 title FoodVerse — Diagrama de Classe
 
-' ============================================================
-' ENTIDADES DO DOMÍNIO
-' ============================================================
+' ==========================================================
+' LINHA SUPERIOR: Restaurante | Cardápio & Estoque | Clientes
+' ==========================================================
 
 package "Restaurante e Funcionários" #FEF9E7 {
 
@@ -27,9 +39,7 @@ package "Restaurante e Funcionários" #FEF9E7 {
     - avaliacao : Decimal
     - tempo_entrega : String
     - taxa_entrega : Decimal
-    - cupom : String
     - imagem : String
-    - banner : String
     - ativo : boolean
     - aberto : boolean
   }
@@ -40,8 +50,6 @@ package "Restaurante e Funcionários" #FEF9E7 {
     - username : String
     - email : String
     - cargo : CargoEnum
-    - telefone : String
-    - senha : String
     - status : StatusFuncEnum
     - data_cadastro : DateTime
     + login() : boolean
@@ -60,7 +68,6 @@ package "Restaurante e Funcionários" #FEF9E7 {
     ATIVO
     BLOQUEADO
     DESLIGADO
-    OFFLINE
   }
 
 }
@@ -70,16 +77,12 @@ package "Cardápio e Estoque" #E8F8F5 {
   class Produto {
     - id_produto : int <<PK>>
     - nome_produto : String
-    - descricao : String
     - preco : Decimal
     - categoria : String
-    - imagem : String
     - tempo_preparo : int
     - disponivel : boolean
     - destaque : boolean
-    - restricoes : String
     - tipo_produto : TipoProdutoEnum
-    - data_criacao : DateTime
   }
 
   enum TipoProdutoEnum {
@@ -110,16 +113,14 @@ package "Cardápio e Estoque" #E8F8F5 {
 
 }
 
-package "Clientes e Fidelidade" #EBF5FB {
+package "Clientes" #EBF5FB {
 
   class Cliente {
     - id_cliente : int <<PK>>
     - username : String
     - nome : String
     - email : String
-    - telefone : String
     - cpf : String
-    - senha : String
     - endereco : String
     - data_cadastro : DateTime
   }
@@ -131,6 +132,10 @@ package "Clientes e Fidelidade" #EBF5FB {
   }
 
 }
+
+' ==========================================================
+' LINHA INFERIOR: Pedidos & Pagamentos | Reservas | Acesso
+' ==========================================================
 
 package "Pedidos e Pagamentos" #FDEDEC {
 
@@ -151,14 +156,10 @@ package "Pedidos e Pagamentos" #FDEDEC {
     - nome_status : String
   }
 
-  note right of StatusPedido
-    Valores fixos:
-    1 = pendente
-    2 = em preparo
-    3 = pronto
-    4 = em rota
-    5 = concluido
-    6 = cancelado
+  note bottom of StatusPedido
+    1=pendente  2=em preparo
+    3=pronto    4=em rota
+    5=concluído 6=cancelado
   end note
 
   class Pagamento {
@@ -166,12 +167,6 @@ package "Pedidos e Pagamentos" #FDEDEC {
     - metodo_pagamento : String
     - valor : Decimal
     - data_pagamento : DateTime
-  }
-
-  enum MetodoPagamentoEnum {
-    PIX
-    CARTAO
-    DINHEIRO
   }
 
 }
@@ -194,67 +189,68 @@ package "Reservas e Avaliações" #F9EBEA {
 
 }
 
-package "Controle de Acesso (Java)" #F5EEF8 {
+package "Controle de Acesso" #F5EEF8 {
 
   class SessionContext <<Singleton>> {
-    - instance : SessionContext
     - funcionarioId : int
-    - nome : String
     - cargo : String
     - restauranteId : int
-    - nomeRestaurante : String
     - isAdmin : boolean
-    - restauranteSelecionadoId : int
     + getInstance() : SessionContext
-    + inicializar(id, nome, cargo, status, restId) : void
-    + limpar() : void
+    + inicializar(...) : void
     + getRestauranteEfetivo() : int
-    + adminTemContextoRestaurante() : boolean
     + getRestauranteLabel() : String
   }
 
 }
 
-' ============================================================
-' RELACIONAMENTOS
-' ============================================================
+' ==========================================================
+' LAYOUT — forçar duas linhas de pacotes
+' ==========================================================
+Restaurante -[hidden]right- Produto
+Produto     -[hidden]right- Cliente
+Pedido      -[hidden]right- Reserva
+Reserva     -[hidden]right- SessionContext
+Restaurante -[hidden]down-  Pedido
+Produto     -[hidden]down-  Reserva
+Cliente     -[hidden]down-  SessionContext
 
-' Restaurante
-Restaurante "1" *-- "0..*" Funcionario   : emprega >
-Restaurante "1" *-- "0..*" Produto        : possui >
-Restaurante "1" *-- "0..*" Pedido         : recebe >
-Restaurante "1" *-- "0..*" Reserva        : tem >
-Restaurante "1" *-- "0..*" Avaliacao      : recebe >
+' ==========================================================
+' RELACIONAMENTOS
+' ==========================================================
+
+' Restaurante — central
+Restaurante "1" *-- "0..*" Funcionario  : emprega >
+Restaurante "1" *-- "0..*" Produto      : possui >
+Restaurante "1" *-- "0..*" Pedido       : recebe >
+Restaurante "1" *-- "0..*" Reserva      : tem >
+Restaurante "1" *-- "0..*" Avaliacao    : recebe >
 
 ' Produto
-Produto "1" *-- "0..1" Nutricao           : tem >
-Produto "1" *-- "0..1" Estoque            : controlado em >
-Produto "1" -- "0..*" Receita            : aparece em >
-
-Receita "0..*" -- "1" Produto            : usa insumo >
-
-Produto ..> TipoProdutoEnum : <<usa>>
+Produto "1"    *-- "0..1" Nutricao      : tem >
+Produto "1"    *-- "0..1" Estoque       : controlado em >
+Produto "1"    --  "0..*" Receita       : aparece em >
+Receita "0..*" --  "1"    Produto       : usa insumo >
+Produto ..> TipoProdutoEnum             : <<usa>>
 
 ' Pedido
-Cliente "1" *-- "0..*" Pedido            : faz >
-Pedido "1" *-- "1..*" PedidoProduto      : contém >
-PedidoProduto "0..*" --> "1" Produto      : referencia >
-Pedido "0..*" --> "1" StatusPedido        : tem status >
-Pedido "1" *-- "0..1" Pagamento          : pago com >
+Cliente     "1"    *-- "0..*" Pedido         : faz >
+Pedido      "1"    *-- "1..*" PedidoProduto  : contém >
+PedidoProduto "0..*" --> "1"  Produto        : referencia >
+Pedido      "0..*" -->  "1"   StatusPedido   : tem status >
+Pedido      "1"    *-- "0..1" Pagamento      : pago com >
 
-Pagamento ..> MetodoPagamentoEnum : <<usa>>
-
-' Reserva e Avaliação
-Cliente "1" *-- "0..*" Reserva           : faz >
-Cliente "1" *-- "0..*" Avaliacao         : faz >
-Cliente "1" *-- "0..1" Fidelidade        : acumula >
+' Cliente
+Cliente "1" *-- "0..*" Reserva         : faz >
+Cliente "1" *-- "0..*" Avaliacao       : faz >
+Cliente "1" *-- "0..1" Fidelidade      : acumula >
 
 ' Funcionário
-Funcionario ..> CargoEnum : <<usa>>
-Funcionario ..> StatusFuncEnum : <<usa>>
+Funcionario ..> CargoEnum              : <<usa>>
+Funcionario ..> StatusFuncEnum         : <<usa>>
 
-' SessionContext gerencia sessão do Funcionario
-SessionContext ..> Funcionario  : controla sessão de >
-SessionContext ..> Restaurante  : escopo de >
+' Sessão
+SessionContext ..> Funcionario         : controla >
+SessionContext ..> Restaurante         : escopo de >
 
 @enduml
