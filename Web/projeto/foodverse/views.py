@@ -437,7 +437,7 @@ def pedido_view(request):
         return redirect('login')
 
     try:
-        cliente = TbClientes.objects.get(id_cliente=cliente_id)
+        TbClientes.objects.get(id_cliente=cliente_id)
     except TbClientes.DoesNotExist:
         return redirect('login')
 
