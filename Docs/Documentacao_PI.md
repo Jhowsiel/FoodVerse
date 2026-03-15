@@ -38,7 +38,7 @@ Para o cliente, o sistema oferece uma forma prática de pedir comida pela intern
 
 | Nº | Tipo | Nome | Descrição | Observação | Prioridade |
 |----|------|------|-----------|------------|------------|
-| 1 | F | Solicitação de Cadastro de Funcionário | Permite registrar novos funcionários no sistema, com status inicial "pendente" até aprovação. | Campos: nome, username, e-mail, senha, cargo e ID do restaurante. Status inicial: "pendente". | Alta |
+| 1 | F | Solicitação de Cadastro de Funcionário | Permite registrar novos funcionários no sistema, com status inicial "pendente" até aprovação. | Campos: nome, username, e-mail, senha (mín. 6 caracteres), cargo e ID do restaurante. Status inicial: "pendente". | Alta |
 | 1.2 | F | Aprovação de Cadastro de Funcionário | Permite que Admin ou Gerente aprove ou rejeite solicitações de cadastro de funcionários. | Lista de pendentes em destaque, alteração de status para "ativo" ou "bloqueado", registro de quem aprovou e quando. | Alta |
 | 2 | F | Login de Funcionário | Permite que funcionários aprovados acessem o sistema com e-mail e senha. | Verifica se o status é "ativo" antes de autenticar. Se pendente, bloqueado ou desligado, exibe mensagem explicativa. | Alta |
 | 2.1 | F | Controle de Acesso por Cargo | Libera ou restringe funcionalidades de acordo com o cargo do funcionário logado. | Cargos: Admin (acesso global ou por restaurante), Gerente, Atendente, Cozinheiro e Entregador. Cada cargo tem acesso a painéis específicos. | Alta |
@@ -176,8 +176,8 @@ WITH REPLACE;
 | email | VARCHAR(100) | NULL | E-mail |
 | cargo | VARCHAR(50) | NULL | Cargo (Admin, Gerente, Atendente, Cozinheiro, Entregador) |
 | telefone | VARCHAR(20) | NULL | Telefone |
-| senha | VARCHAR(255) | NULL | Senha armazenada com hash |
-| status | VARCHAR(20) | NULL | Status do cadastro (pendente, aprovado, bloqueado) |
+| senha | VARCHAR(255) | NULL | Senha armazenada com hash SHA-256 (prefixo `{SHA256}`) |
+| status | VARCHAR(20) | NULL | Status do cadastro (`pendente`, `ativo`, `bloqueado`) |
 | data_cadastro | DATETIME | NULL | Data do cadastro |
 
 #### tb_status_pedido — Tabela mestre de status de pedido
@@ -379,6 +379,261 @@ GO
 ```
 
 > O script pode ser re-executado quantas vezes forem necessárias sem causar erros — todas as operações são protegidas por verificações `IF NOT EXISTS` ou `IF OBJECT_ID ... IS NULL`.
+
+---
+
+---
+
+## 6. Critérios de Aceitação
+
+---
+
+### Funcionalidade: Solicitação de Cadastro de Funcionário
+
+**1. Cadastro Bem-Sucedido:**
+- **Dado:** Que o usuário preencheu todos os campos obrigatórios: nome, usuário, e-mail e senha; e selecionou um cargo (Atendente, Cozinheiro ou Entregador) nos chips de seleção.
+- **Quando:** Clicar no botão "Cadastrar".
+- **Então:** O sistema deve salvar os dados com status `pendente`, exibir a mensagem **"Solicitação validada e enviada!"** e redirecionar para a tela de login.
+
+**2. Validação de Campos Obrigatórios Vazios:**
+- **Dado:** Que um ou mais campos obrigatórios (nome, usuário, e-mail ou senha) estão vazios.
+- **Quando:** O usuário tentar se cadastrar.
+- **Então:** O sistema deve exibir a mensagem de erro **"Preencha todos os campos obrigatórios (*)"** e não realizar o cadastro.
+
+**3. Validação de Senha Fraca:**
+- **Dado:** Que o campo senha contém menos de 6 caracteres.
+- **Quando:** O usuário tentar se cadastrar.
+- **Então:** O sistema deve exibir a mensagem **"A senha deve ter no mínimo 6 caracteres."** e não realizar o cadastro.
+
+**4. Validação de E-mail ou Usuário Duplicado:**
+- **Dado:** Que o e-mail ou nome de usuário informado já está cadastrado.
+- **Quando:** O usuário tentar se cadastrar.
+- **Então:** O sistema deve impedir o cadastro e mostrar a mensagem **"Usuário ou E-mail já cadastrado."**
+
+**5. Persistência de Dados no Banco:**
+- **Dado:** Que todos os dados são válidos.
+- **Quando:** O cadastro for realizado.
+- **Então:** Os dados devem ser persistidos em `tb_funcionarios` com `status = 'pendente'` e aguardar aprovação de Admin ou Gerente.
+
+---
+
+### Funcionalidade: Aprovação de Cadastro de Funcionário
+
+**1. Aprovar ou Rejeitar Solicitações:**
+- **Dado:** Que um Admin ou Gerente esteja autenticado e na tela de gestão de usuários (lista de cadastros pendentes).
+- **Quando:** Selecionar pelo menos uma solicitação de cadastro e clicar em "Aprovar" ou "Rejeitar".
+- **Então:** O sistema deve atualizar o `status` das solicitações selecionadas para `ativo` (aprovado) ou `bloqueado` (rejeitado), registrar o nome do responsável e a data/hora da ação.
+
+**2. Validação de Seleção de Solicitações:**
+- **Dado:** Que o Admin ou Gerente esteja na tela de gestão de usuários.
+- **Quando:** Clicar em "Aprovar" ou "Rejeitar" sem nenhuma solicitação selecionada.
+- **Então:** O sistema deve exibir uma mensagem informando que é necessário selecionar ao menos uma solicitação e não realizar nenhuma ação de atualização.
+
+**3. Exibição de Solicitações Pendentes:**
+- **Dado:** Que um Admin ou Gerente acessa a tela de solicitações.
+- **Quando:** A lista de cadastros for carregada.
+- **Então:** O sistema deve exibir cadastros com status `pendente` em destaque. Administrador global visualiza apenas solicitações de Gerentes; Gerente visualiza apenas Atendentes, Cozinheiros e Entregadores do próprio restaurante.
+
+**4. Erro na Atualização de Status:**
+- **Dado:** Que uma ou mais solicitações estejam selecionadas.
+- **Quando:** Houver erro na atualização do status no banco de dados.
+- **Então:** O sistema deve manter os dados inalterados na tabela e exibir uma mensagem de erro ao responsável.
+
+---
+
+### Funcionalidade: Login de Funcionário
+
+**1. Autenticação Bem-Sucedida:**
+- **Dado:** Que o funcionário tenha cadastro com status `ativo` no banco de dados.
+- **Quando:** Informar e-mail (ou nome de usuário) e senha válidos e clicar em "Entrar".
+- **Então:** O sistema deve autenticar o usuário e direcioná-lo à dashboard do sistema do restaurante com as opções correspondentes ao seu cargo.
+
+**2. Cadastro Pendente:**
+- **Dado:** Que o funcionário tenha cadastro com status `pendente`.
+- **Quando:** Informar e-mail e senha válidos e clicar em "Entrar".
+- **Então:** O sistema deve exibir a mensagem de erro **"Seu cadastro ainda está em análise."** e não realizar o login.
+
+**3. Senha/E-mail Inválidos:**
+- **Dado:** Que o funcionário não tenha cadastro no banco ou tenha inserido senha incorreta.
+- **Quando:** Clicar em "Entrar".
+- **Então:** O sistema deve exibir a mensagem de erro **"Credenciais inválidas."**
+
+**4. Campos Vazios:**
+- **Dado:** Que os campos de e-mail e/ou senha estejam vazios.
+- **Quando:** Clicar em "Entrar".
+- **Então:** O sistema deve exibir a mensagem de erro **"Preencha e-mail e senha!"**
+
+---
+
+### Funcionalidade: Acesso de Administrador
+
+**1. Permitir acesso administrativo:**
+- **Dado:** Que um funcionário está cadastrado com `cargo = 'Admin'` e `status = 'ativo'`.
+- **Quando:** O funcionário informar e-mail e senha válidos e acionar o login.
+- **Então:** O sistema deve autenticar o usuário, verificar o cargo `Admin` e conceder acesso às funcionalidades administrativas globais (gestão de restaurantes, gestão de gerentes).
+
+**2. Negar acesso a módulos restritos:**
+- **Dado:** Que um funcionário autenticado não possui o cargo necessário para acessar um módulo.
+- **Quando:** O funcionário tentar navegar para um módulo restrito ao seu cargo.
+- **Então:** O sistema deve negar o acesso e exibir a mensagem **"Seu perfil não possui permissão para acessar este módulo."** Se o usuário for Admin sem restaurante selecionado, exibe **"Selecione um restaurante antes de acessar este módulo."**
+
+**3. Exibir opções de cada perfil de acordo com o cargo:**
+- **Dado:** Que um funcionário autenticado acessa o menu principal.
+- **Quando:** O menu for carregado.
+- **Então:** O sistema deve exibir apenas as opções de menu compatíveis com o cargo: Admin (global) → Restaurantes e Gerentes; Admin (em contexto de restaurante) e Gerente → todos os painéis operacionais; Atendente → Pedidos, Entregas, Mesas; Cozinheiro → Cardápio, Estoque, KDS; Entregador → Entregas.
+
+**4. Confirmação para ações sensíveis (planejado):**
+- **Dado:** Que um Admin acessa uma funcionalidade sensível (como exclusão definitiva de dados).
+- **Quando:** O usuário acionar essa funcionalidade sensível.
+- **Então:** O sistema deverá solicitar confirmação adicional antes de executar a ação. *(Funcionalidade prevista no modelo — `Admin.AcessCode` — pendente de implementação na interface.)*
+
+---
+
+### Funcionalidade: Gestão de Perfil de Funcionário
+
+**1. Visualizar e editar dados de colaboradores:**
+- **Dado:** Que um Admin ou Gerente está autenticado e acessa o painel de Gestão de Usuários.
+- **Quando:** Selecionar um funcionário e acionar a edição.
+- **Então:** O sistema deve exibir e permitir a atualização dos dados do funcionário (nome, e-mail, telefone, cargo, status e senha), registrando a ação.
+
+**2. Validação na edição:**
+- **Dado:** Que um responsável está editando os dados de um funcionário.
+- **Quando:** Informar uma nova senha com menos de 6 caracteres.
+- **Então:** O sistema deve exibir **"A nova senha deve ter no mínimo 6 caracteres."** e não salvar as alterações.
+
+**3. Confirmação de alteração bem-sucedida:**
+- **Dado:** Que os dados editados são válidos.
+- **Quando:** O responsável confirmar as alterações.
+- **Então:** O sistema deve exibir a mensagem **"Cadastro atualizado com sucesso!"** e refletir os dados atualizados na listagem.
+
+---
+
+### Funcionalidade: Gestão de Pedidos
+
+**1. Encaminhamento de Pedidos:**
+- **Dado:** Que um cliente realiza um pedido via plataforma web (delivery) ou o atendente registra um pedido no sistema (local).
+- **Quando:** O pedido é salvo no sistema com o status inicial `pendente`.
+- **Então:** O sistema deve encaminhar automaticamente o pedido para a interface de pedidos com status `pendente`, visível no painel de pedidos e no KDS da cozinha.
+
+**2. Atualização de Status para "em preparo":**
+- **Dado:** Que o pedido está com o status `pendente` no painel de pedidos.
+- **Quando:** O atendente ou cozinheiro acionar "Aceitar" o pedido.
+- **Então:** O sistema deve atualizar o status do pedido para `em preparo` e descontar automaticamente os insumos do estoque conforme a receita (BOM) do prato.
+
+**3. Atualização de Status para "pronto":**
+- **Dado:** Que o pedido está com o status `em preparo`.
+- **Quando:** A equipe da cozinha finalizar o preparo.
+- **Então:** O sistema deve permitir atualizar o status do pedido para `pronto`.
+
+**4. Despacho de Pedido Delivery:**
+- **Dado:** Que o pedido está com o status `pronto` e é do tipo Delivery.
+- **Quando:** O atendente clicar em "Despachar (Entregar ao Motoboy)" e selecionar um entregador disponível.
+- **Então:** O sistema deve atualizar o status do pedido para `em rota` e registrar o nome do entregador no pedido.
+
+**5. Conclusão de Pedido:**
+- **Dado:** Que o pedido de delivery está com status `em rota` ou o pedido local está `pronto`.
+- **Quando:** A entrega for confirmada ou o item for entregue na mesa.
+- **Então:** O sistema deve atualizar o status do pedido para `concluido`.
+
+---
+
+### Funcionalidade: Gestão de Estoque
+
+**1. Cadastro de Ingredientes (Insumos):**
+- **Dado:** Que o Admin, Gerente ou Cozinheiro acessa o painel de estoque.
+- **Quando:** Cadastrar um novo insumo com nome, unidade de medida, quantidade e estoque mínimo.
+- **Então:** O sistema deve salvar o item com `tipo_produto = 'INSUMO'` e exibi-lo corretamente na lista de estoque.
+
+**2. Entrada de Insumos no Estoque:**
+- **Dado:** Que o restaurante adquire novos insumos.
+- **Quando:** O responsável registrar a entrada informando o insumo e a quantidade.
+- **Então:** O estoque deve ser atualizado com a nova quantidade do insumo.
+
+**3. Desconto Automático em Pedido:**
+- **Dado:** Que um pedido foi registrado com itens vinculados a receitas (BOM).
+- **Quando:** O status do pedido for atualizado de `pendente` para `em preparo`.
+- **Então:** O sistema deve descontar automaticamente os insumos do estoque conforme a receita de cada produto pedido (operação idempotente).
+
+**4. Alerta de Baixo Estoque:**
+- **Dado:** Que um insumo tem um estoque mínimo configurado.
+- **Quando:** A quantidade disponível atingir ou ficar abaixo do limite mínimo.
+- **Então:** O sistema deve exibir destaque visual (indicador de alerta) na interface para alertar o responsável.
+
+---
+
+### Funcionalidade: Gestão de Entregadores
+
+**1. Controle de disponibilidade:**
+- **Dado:** Que o entregador está cadastrado no sistema com cargo `Entregador`.
+- **Quando:** A gestão precisar despachar um pedido de delivery.
+- **Então:** O sistema deve listar os entregadores disponíveis para seleção na tela de despacho do pedido.
+
+**2. Consulta de histórico de entregas:**
+- **Dado:** Que existem entregas registradas no sistema para o restaurante.
+- **Quando:** O Atendente, Gerente ou Admin acessa o painel de Entregas.
+- **Então:** O sistema deve exibir a lista de pedidos com status `em rota` e `concluido`, incluindo dados do entregador, endereço e horários.
+
+---
+
+### Funcionalidade: Cadastro e Gestão de Cardápio
+
+**1. Cadastro de item no cardápio:**
+- **Dado:** Que o Gerente ou Admin (em contexto de restaurante) acessa o painel de cardápio.
+- **Quando:** Um novo item é cadastrado com nome, categoria, preço, disponibilidade, imagem, descrição e opções de personalização.
+- **Então:** O sistema deve registrar o novo item com `tipo_produto = 'VENDA'` e exibir mensagem de sucesso.
+
+**2. Edição de item do cardápio:**
+- **Dado:** Que um item já está cadastrado no cardápio.
+- **Quando:** O usuário altera qualquer informação do item.
+- **Então:** O sistema deve atualizar as informações do item no banco, garantindo que o escopo de atualização seja restrito ao restaurante do usuário logado (filtro `AND ID_restaurante = ?`).
+
+**3. Desativação de item do cardápio:**
+- **Dado:** Que um item está cadastrado no cardápio.
+- **Quando:** O usuário opta por desativar o item.
+- **Então:** O sistema deve marcar o item como indisponível (sem excluir os dados), removendo-o das listagens públicas no portal web para clientes.
+
+**4. Visualização de itens do cardápio:**
+- **Dado:** Que existem itens cadastrados com `tipo_produto = 'VENDA'`.
+- **Quando:** Um usuário acessa o cardápio pelo portal web.
+- **Então:** O sistema deve exibir apenas os itens de venda disponíveis, com imagem, descrição, preço e opções de personalização, filtrando por `COALESCE(tipo_produto, 'VENDA') = 'VENDA'`.
+
+---
+
+### Funcionalidade: Gestão de Promoções e Descontos
+
+**1. Cadastro de cupom:**
+- **Dado:** Que o usuário possui permissão para gerenciar cupons (Admin em contexto de restaurante).
+- **Quando:** Um novo cupom é criado com código, valor de desconto e validade.
+- **Então:** O sistema deve registrar o cupom em `tb_cupons` e disponibilizá-lo para uso no portal web dos clientes.
+
+**2. Aplicação de cupom no pedido:**
+- **Dado:** Que o cliente informa um código de cupom válido no checkout.
+- **Quando:** O cliente confirmar o pedido.
+- **Então:** O sistema deve aplicar o desconto ao valor total, registrar o cupom utilizado e persistir o pedido com o valor final correto.
+
+**3. Desativação/expiração de cupom:**
+- **Dado:** Que um cupom está cadastrado com data de validade definida.
+- **Quando:** A data atual ultrapassar a validade do cupom.
+- **Então:** O sistema deve impedir que o cupom seja aplicado a novos pedidos.
+
+---
+
+### Funcionalidade: Processamento de Pagamentos
+
+**1. Cliente registrando pagamento com sucesso (web):**
+- **Dado:** Que o cliente está na tela de finalização do pedido no portal web.
+- **Quando:** O cliente seleciona a forma de pagamento (**Pix**, **Crédito** ou **Débito**) e confirma o pedido.
+- **Então:** O registro de pagamento é salvo em `tb_pagamentos` com o método escolhido e o pedido é criado com status `pendente`.
+
+**2. Funcionário registrando pagamento presencial (desktop):**
+- **Dado:** Que o atendente está gerenciando um pedido local no sistema desktop.
+- **Quando:** O pedido for concluído e o atendente registrar o recebimento.
+- **Então:** O registro de pagamento deve ser salvo no histórico financeiro identificando a forma de pagamento (Dinheiro, PIX, etc.) e o pedido deve ser atualizado para `concluido`.
+
+**3. Erro no processamento:**
+- **Dado:** Que o sistema não consegue salvar o pagamento (erro de banco, falha de rede).
+- **Quando:** Ocorrer um erro durante a confirmação do pedido.
+- **Então:** O sistema deve exibir mensagem de erro clara, manter o pedido sem status final e permitir nova tentativa. O pedido permanece com o status anterior até o pagamento ser confirmado.
 
 ---
 
