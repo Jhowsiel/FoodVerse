@@ -275,7 +275,8 @@ def restaurante_detalhe_view(request, id):
     sugestoes = TbProdutos.objects.filter(
         restaurante=restaurante,
         disponivel=True,
-        categoria__iregex=r'bebida|sobremesa',
+    ).filter(
+        Q(categoria__icontains='bebida') | Q(categoria__icontains='sobremesa')
     ).exclude(tipo_produto='INSUMO')[:6]
 
     return render(request, 'pages/catalogo/restaurante_detalhe.html', {
@@ -302,7 +303,8 @@ def prato_view(request):
     acompanhamentos = TbProdutos.objects.filter(
         restaurante=restaurante,
         disponivel=True,
-        categoria__iregex=r'bebida|sobremesa',
+    ).filter(
+        Q(categoria__icontains='bebida') | Q(categoria__icontains='sobremesa')
     ).exclude(id_produto=prato.id_produto).exclude(tipo_produto='INSUMO')[:6]
 
     return render(request, 'pages/catalogo/prato.html', {
