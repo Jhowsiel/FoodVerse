@@ -77,10 +77,14 @@ public class GestaoMesasPanel extends JPanel {
         btnNova.addActionListener(e -> abrirModalNovaReserva());
         btnNova.setVisible(podeCriarReserva);
 
+        JButton btnGerenciarMesas = createButton("Gerenciar Mesas", GoogleMaterialDesignIcons.TUNE, UIConstants.BG_DARK_ALT);
+        btnGerenciarMesas.addActionListener(e -> abrirModalGerenciarMesas());
+
         JButton btnRefresh = createButton("Atualizar", GoogleMaterialDesignIcons.REFRESH, UIConstants.BG_DARK_ALT);
         btnRefresh.addActionListener(e -> carregarMesas());
 
         botoes.add(btnNova);
+        botoes.add(btnGerenciarMesas);
         botoes.add(btnRefresh);
 
         header.add(textos, BorderLayout.WEST);
@@ -368,6 +372,103 @@ public class GestaoMesasPanel extends JPanel {
         panel.add(lblTitulo, BorderLayout.NORTH);
         panel.add(lblValor, BorderLayout.CENTER);
         return panel;
+    }
+
+    private void abrirModalGerenciarMesas() {
+        JDialog modal = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Gerenciar Mesas", true);
+        modal.setLayout(new BorderLayout(0, 10));
+        modal.getContentPane().setBackground(UIConstants.BG_DARK);
+
+        String[] cols = {"ID", "Mesa", "Capacidade", "Status"};
+        DefaultTableModel model = new DefaultTableModel(cols, 0) {
+            @Override public boolean isCellEditable(int row, int column) { return false; }
+        };
+        JTable tabelaMesas = new JTable(model);
+        UIConstants.styleTable(tabelaMesas);
+
+        Runnable recarregar = () -> {
+            model.setRowCount(0);
+            for (ReservaDAO.MesaConfig m : dao.listarMesasConfig()) {
+                model.addRow(new Object[]{m.getId(), m.getNome(), m.getCapacidade(), m.isAtiva() ? "Ativa" : "Inativa"});
+            }
+        };
+        recarregar.run();
+
+        JPanel topo = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 10));
+        topo.setOpaque(false);
+        JTextField txtMesa = new JTextField(14);
+        UIConstants.styleField(txtMesa);
+        txtMesa.putClientProperty("JTextField.placeholderText", "Mesa 01");
+        JSpinner spCapacidade = new JSpinner(new SpinnerNumberModel(4, 1, 30, 1));
+        UIConstants.styleSpinner(spCapacidade);
+        JButton btnAdicionar = createButton("Adicionar", GoogleMaterialDesignIcons.ADD, UIConstants.SUCCESS_GREEN);
+        btnAdicionar.addActionListener(e -> {
+            String nome = txtMesa.getText() != null ? txtMesa.getText().trim() : "";
+            if (nome.isBlank()) {
+                Toast.show(modal, "Informe o nome da mesa.", Toast.Type.WARNING);
+                return;
+            }
+            if (dao.salvarMesa(nome, ((Number) spCapacidade.getValue()).intValue())) {
+                Toast.show(modal, "Mesa adicionada.", Toast.Type.SUCCESS);
+                txtMesa.setText("");
+                spCapacidade.setValue(4);
+                recarregar.run();
+                carregarMesas();
+            } else {
+                Toast.show(modal, "Não foi possível adicionar a mesa.", Toast.Type.ERROR);
+            }
+        });
+        topo.add(new JLabel("Mesa:"));
+        topo.add(txtMesa);
+        topo.add(new JLabel("Capacidade:"));
+        topo.add(spCapacidade);
+        topo.add(btnAdicionar);
+
+        JPanel acoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 10));
+        acoes.setOpaque(false);
+        JButton btnAtivar = createButton("Ativar/Inativar", GoogleMaterialDesignIcons.SWAP_HORIZ, UIConstants.BG_DARK_ALT);
+        btnAtivar.addActionListener(e -> {
+            int row = tabelaMesas.getSelectedRow();
+            if (row < 0) {
+                Toast.show(modal, "Selecione uma mesa.", Toast.Type.WARNING);
+                return;
+            }
+            int id = (int) model.getValueAt(row, 0);
+            String nome = String.valueOf(model.getValueAt(row, 1));
+            int capacidade = Integer.parseInt(String.valueOf(model.getValueAt(row, 2)));
+            boolean ativaAtual = "Ativa".equals(String.valueOf(model.getValueAt(row, 3)));
+            if (dao.atualizarMesa(id, nome, capacidade, !ativaAtual)) {
+                Toast.show(modal, "Status da mesa atualizado.", Toast.Type.SUCCESS);
+                recarregar.run();
+                carregarMesas();
+            } else {
+                Toast.show(modal, "Não foi possível atualizar a mesa.", Toast.Type.ERROR);
+            }
+        });
+        JButton btnExcluir = createButton("Excluir", GoogleMaterialDesignIcons.DELETE, UIConstants.DANGER_RED);
+        btnExcluir.addActionListener(e -> {
+            int row = tabelaMesas.getSelectedRow();
+            if (row < 0) {
+                Toast.show(modal, "Selecione uma mesa.", Toast.Type.WARNING);
+                return;
+            }
+            int id = (int) model.getValueAt(row, 0);
+            if (dao.excluirMesa(id)) {
+                Toast.show(modal, "Mesa removida.", Toast.Type.SUCCESS);
+                recarregar.run();
+                carregarMesas();
+            } else {
+                Toast.show(modal, "Não foi possível remover a mesa.", Toast.Type.ERROR);
+            }
+        });
+        acoes.add(btnAtivar);
+        acoes.add(btnExcluir);
+
+        modal.add(topo, BorderLayout.NORTH);
+        modal.add(new JScrollPane(tabelaMesas), BorderLayout.CENTER);
+        modal.add(acoes, BorderLayout.SOUTH);
+        configurarDialogResponsivo(modal, 640, 420);
+        modal.setVisible(true);
     }
 
     private void abrirModalNovaReserva() {

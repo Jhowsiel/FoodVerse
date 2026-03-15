@@ -471,7 +471,7 @@ public class AdminRestaurantesPanel extends JPanel {
             btnEditar.setFont(UIConstants.ARIAL_12);
             UIConstants.styleSecondary(btnToggle);
             btnToggle.setFont(UIConstants.ARIAL_12);
-            UIConstants.stylePrimary(btnContexto);
+            UIConstants.styleSecondary(btnContexto);
             btnContexto.setFont(UIConstants.ARIAL_12);
             panel.add(btnEditar);
             panel.add(btnToggle);
@@ -501,7 +501,7 @@ public class AdminRestaurantesPanel extends JPanel {
             btnEditar.setFont(UIConstants.ARIAL_12);
             UIConstants.styleSecondary(btnToggle);
             btnToggle.setFont(UIConstants.ARIAL_12);
-            UIConstants.stylePrimary(btnContexto);
+            UIConstants.styleSecondary(btnContexto);
             btnContexto.setFont(UIConstants.ARIAL_12);
 
             btnEditar.addActionListener(e -> {

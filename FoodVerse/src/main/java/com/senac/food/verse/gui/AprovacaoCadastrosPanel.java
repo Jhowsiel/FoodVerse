@@ -520,7 +520,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
                     ps.setString(4, email);
                     ps.setString(5, cargo);
                     ps.setString(6, telefoneNormalizado);
-                    ps.setString(7, senha);
+                    ps.setString(7, PasswordUtils.hash(senha));
                     ps.setString(8, statusNormalizado);
                     ps.executeUpdate();
                 }
@@ -538,7 +538,7 @@ public class AprovacaoCadastrosPanel extends JPanel {
                     ps.setString(6, telefoneNormalizado);
                     ps.setString(7, statusNormalizado);
                     if (!senha.isBlank()) {
-                        ps.setString(8, senha);
+                        ps.setString(8, PasswordUtils.hash(senha));
                         ps.setInt(9, idFuncionario);
                     } else {
                         ps.setInt(8, idFuncionario);

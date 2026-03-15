@@ -262,12 +262,41 @@ public class CardapioDAO {
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) { PRATOS_MOCK.removeIf(p -> p.getId().equals(id)); return; }
             int rid = SessionContext.getInstance().getRestauranteEfetivo();
-            StringBuilder sql = new StringBuilder("DELETE FROM tb_produtos WHERE ID_produto=?");
-            if (rid > 0) sql.append(" AND ID_restaurante = ?");
-            try(PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-                ps.setLong(1, id);
-                if (rid > 0) ps.setInt(2, rid);
-                ps.executeUpdate();
+            conn.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = conn.prepareStatement("DELETE FROM tb_receitas WHERE ID_produto_venda = ? OR ID_insumo = ?")) {
+                    ps.setLong(1, id);
+                    ps.setLong(2, id);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = conn.prepareStatement("DELETE FROM tb_estoque WHERE ID_produto = ?")) {
+                    ps.setLong(1, id);
+                    ps.executeUpdate();
+                }
+
+                StringBuilder sql = new StringBuilder("DELETE FROM tb_produtos WHERE ID_produto=?");
+                if (rid > 0) sql.append(" AND ID_restaurante = ?");
+                int deletados;
+                try(PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                    ps.setLong(1, id);
+                    if (rid > 0) ps.setInt(2, rid);
+                    deletados = ps.executeUpdate();
+                }
+                if (deletados == 0) {
+                    StringBuilder soft = new StringBuilder("UPDATE tb_produtos SET disponivel = 0 WHERE ID_produto=?");
+                    if (rid > 0) soft.append(" AND ID_restaurante = ?");
+                    try (PreparedStatement ps = conn.prepareStatement(soft.toString())) {
+                        ps.setLong(1, id);
+                        if (rid > 0) ps.setInt(2, rid);
+                        ps.executeUpdate();
+                    }
+                }
+                conn.commit();
+            } catch (Exception ex) {
+                try { conn.rollback(); } catch (Exception ignored) {}
+                throw ex;
+            } finally {
+                try { conn.setAutoCommit(true); } catch (Exception ignored) {}
             }
         } catch(Exception e) { e.printStackTrace(); }
     }
@@ -430,12 +459,35 @@ public class CardapioDAO {
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) { PRODUTOS_MOCK.removeIf(p -> p.getId().equals(id)); return; }
             int rid = SessionContext.getInstance().getRestauranteEfetivo();
-            StringBuilder sql = new StringBuilder("DELETE FROM tb_produtos WHERE ID_produto=?");
-            if (rid > 0) sql.append(" AND ID_restaurante = ?");
-            try(PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-                ps.setLong(1, id);
-                if (rid > 0) ps.setInt(2, rid);
-                ps.executeUpdate();
+            conn.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = conn.prepareStatement("DELETE FROM tb_estoque WHERE ID_produto = ?")) {
+                    ps.setLong(1, id);
+                    ps.executeUpdate();
+                }
+                StringBuilder sql = new StringBuilder("DELETE FROM tb_produtos WHERE ID_produto=?");
+                if (rid > 0) sql.append(" AND ID_restaurante = ?");
+                int deletados;
+                try(PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                    ps.setLong(1, id);
+                    if (rid > 0) ps.setInt(2, rid);
+                    deletados = ps.executeUpdate();
+                }
+                if (deletados == 0) {
+                    StringBuilder soft = new StringBuilder("UPDATE tb_produtos SET disponivel = 0 WHERE ID_produto=?");
+                    if (rid > 0) soft.append(" AND ID_restaurante = ?");
+                    try (PreparedStatement ps = conn.prepareStatement(soft.toString())) {
+                        ps.setLong(1, id);
+                        if (rid > 0) ps.setInt(2, rid);
+                        ps.executeUpdate();
+                    }
+                }
+                conn.commit();
+            } catch (Exception ex) {
+                try { conn.rollback(); } catch (Exception ignored) {}
+                throw ex;
+            } finally {
+                try { conn.setAutoCommit(true); } catch (Exception ignored) {}
             }
         } catch(Exception e) { e.printStackTrace(); }
     }

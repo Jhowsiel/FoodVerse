@@ -145,8 +145,13 @@ public class CardapioPainel extends JPanel {
         UIConstants.styleDanger(btnExcluir);
         btnExcluir.addActionListener(e -> excluirPrato());
 
+        JButton btnFicha = new JButton("Ficha Técnica");
+        UIConstants.styleSecondary(btnFicha);
+        btnFicha.addActionListener(e -> editarPrato());
+
         actionPanel.add(btnNovo);
         actionPanel.add(btnEditar);
+        actionPanel.add(btnFicha);
         actionPanel.add(btnExcluir);
 
         JPanel topContainer = new JPanel(new BorderLayout());
@@ -656,7 +661,7 @@ public class CardapioPainel extends JPanel {
             UIConstants.styleSecondary(btnRemIng); 
             btnRemIng.addActionListener(e -> {
                 int r = tblIng.getSelectedRow();
-                if(r >= 0) ingModel.removeRow(r);
+                if(r >= 0) { ingModel.removeRow(r); } else { Toast.show(this, "Selecione um ingrediente para remover.", Toast.Type.WARNING); }
             });
 
             pIngBtns.add(btnAddIng);
