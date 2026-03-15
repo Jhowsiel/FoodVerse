@@ -1,7 +1,7 @@
 @startuml DiagramaCasoDeUso_FoodVerse
 
 ' ==========================================================
-' CONFIGURAÇÃO — A4 Paisagem (297 x 210 mm)
+' CONFIGURAÇÃO — A4 Paisagem (297 × 210 mm @ 96 dpi)
 ' ==========================================================
 left to right direction
 scale max 1122 width
@@ -25,91 +25,112 @@ skinparam padding 2
 
 title FoodVerse — Diagrama de Caso de Uso
 
-' ========================
-' ATORES — esquerda
-' ========================
-actor "Cliente" as cliente
+' ==========================================================
+' ATORES
+' Declarados antes dos sistemas → ficam à esquerda no layout LTR
+' ==========================================================
 
-' ========================
-' PORTAL WEB (Django) — centro-esquerda
-' ========================
-rectangle "Portal Web (Django)" #EBF5FB {
+actor "Cliente"    as cliente
 
-  package "Conta e Perfil" {
-    usecase "Criar conta" as UC_Cadastro
-    usecase "Fazer login" as UC_LoginCliente
-    usecase "Fazer logout" as UC_LogoutCliente
-    usecase "Ver perfil" as UC_VerPerfil
-    usecase "Editar perfil" as UC_EditarPerfil
-  }
-
-  package "Pedidos e Carrinho" {
-    usecase "Buscar restaurantes" as UC_Buscar
-    usecase "Ver cardápio" as UC_VerCardapio
-    usecase "Ver detalhes do prato" as UC_VerPrato
-    usecase "Adicionar ao carrinho" as UC_Carrinho
-    usecase "Alterar quantidade" as UC_AltQtd
-    usecase "Finalizar pedido" as UC_Finalizar
-    usecase "Aplicar cupom" as UC_Cupom
-    usecase "Histórico de pedidos" as UC_Historico
-  }
-
-  package "Reservas e Avaliações" {
-    usecase "Reservar mesa" as UC_Reserva
-    usecase "Pagar reserva" as UC_PagarReserva
-    usecase "Avaliar restaurante" as UC_Avaliacao
-  }
-
-}
-
-' ========================
-' DESKTOP (Java) — centro-direita
-' ========================
-rectangle "App Desktop (Java/Swing)" #FEF9E7 {
-
-  package "Acesso" {
-    usecase "Fazer login" as UC_LoginFunc
-    usecase "Dashboard / Home" as UC_Dashboard
-  }
-
-  package "Gestão Administrativa" {
-    usecase "Aprovar cadastro\nde funcionário" as UC_Aprovacao
-    usecase "Gerenciar restaurantes" as UC_GerRest
-    usecase "Configurar restaurante" as UC_ConfigRest
-  }
-
-  package "Operações do Restaurante" {
-    usecase "Gerenciar cardápio" as UC_Cardapio
-    usecase "Receita de prato (BOM)" as UC_Receita
-    usecase "Gerenciar estoque" as UC_Estoque
-    usecase "Criar pedido local\n(mesa / balcão)" as UC_PedidoLocal
-    usecase "Gerenciar pedidos" as UC_Pedidos
-    usecase "Painel de cozinha (KDS)" as UC_Cozinha
-    usecase "Gerenciar entregas" as UC_Entregas
-    usecase "Mesas e reservas" as UC_Mesas
-  }
-
-}
-
-' ========================
-' ATORES — direita
-' ========================
 actor "Funcionário" as funcionario
-actor "Admin" as admin
-actor "Gerente" as gerente
-actor "Atendente" as atendente
-actor "Cozinheiro" as cozinheiro
-actor "Entregador" as entregador
+actor "Admin"       as admin
+actor "Gerente"     as gerente
+actor "Atendente"   as atendente
+actor "Cozinheiro"  as cozinheiro
+actor "Entregador"  as entregador
 
+' Generalização de atores — triângulo oco aponta para o pai
 admin      --|> funcionario
 gerente    --|> funcionario
 atendente  --|> funcionario
 cozinheiro --|> funcionario
 entregador --|> funcionario
 
-' ========================
+' ==========================================================
+' SISTEMA 1 — Portal Web (Django)
+' ==========================================================
+rectangle "Portal Web (Django)" #EBF5FB {
+
+  package "Conta e Perfil" {
+    usecase "Criar conta"   as UC_Cadastro
+    usecase "Fazer login"   as UC_LoginCliente
+    usecase "Fazer logout"  as UC_LogoutCliente
+    usecase "Ver perfil"    as UC_VerPerfil
+    usecase "Editar perfil" as UC_EditarPerfil
+  }
+
+  package "Pedidos e Carrinho" {
+    usecase "Buscar restaurantes"   as UC_Buscar
+    usecase "Ver cardápio"          as UC_VerCardapio
+    usecase "Ver detalhes do prato" as UC_VerPrato
+    usecase "Adicionar ao carrinho" as UC_Carrinho
+    usecase "Alterar quantidade"    as UC_AltQtd
+    usecase "Finalizar pedido"      as UC_Finalizar
+    usecase "Aplicar cupom"         as UC_Cupom
+    usecase "Histórico de pedidos"  as UC_Historico
+  }
+
+  package "Reservas e Avaliações" {
+    usecase "Reservar mesa"       as UC_Reserva
+    usecase "Pagar reserva"       as UC_PagarReserva
+    usecase "Avaliar restaurante" as UC_Avaliacao
+  }
+
+}
+
+' ==========================================================
+' SISTEMA 2 — App Desktop (Java/Swing)
+' ==========================================================
+rectangle "App Desktop (Java/Swing)" #FEF9E7 {
+
+  package "Acesso" {
+    usecase "Fazer login"      as UC_LoginFunc
+    usecase "Dashboard / Home" as UC_Dashboard
+  }
+
+  package "Gestão Administrativa" {
+    usecase "Aprovar cadastro\nde funcionário" as UC_Aprovacao
+    usecase "Gerenciar restaurantes"           as UC_GerRest
+    usecase "Configurar restaurante"           as UC_ConfigRest
+  }
+
+  package "Operações do Restaurante" {
+    usecase "Gerenciar cardápio"          as UC_Cardapio
+    usecase "Cadastrar receita (BOM)"     as UC_Receita
+    usecase "Gerenciar estoque"           as UC_Estoque
+    usecase "Criar pedido local\n(mesa / balcão)" as UC_PedidoLocal
+    usecase "Gerenciar pedidos"           as UC_Pedidos
+    usecase "Painel de cozinha (KDS)"     as UC_Cozinha
+    usecase "Gerenciar entregas"          as UC_Entregas
+    usecase "Mesas e reservas"            as UC_Mesas
+  }
+
+}
+
+' ==========================================================
+' RELAÇÕES <<include>> — caso base inclui SEMPRE o caso incluído
+' ==========================================================
+UC_Reserva ..> UC_PagarReserva : <<include>>
+
+' ==========================================================
+' RELAÇÕES <<extend>> — caso de extensão é OPCIONAL
+' seta parte do caso de extensão e aponta para o caso base
+' ==========================================================
+
+' Portal Web
+UC_VerPrato     ..> UC_VerCardapio : <<extend>>
+UC_EditarPerfil ..> UC_VerPerfil   : <<extend>>
+UC_AltQtd       ..> UC_Carrinho   : <<extend>>
+UC_Cupom        ..> UC_Finalizar  : <<extend>>
+
+' App Desktop
+UC_Receita      ..> UC_Cardapio  : <<extend>>
+UC_PedidoLocal  ..> UC_Pedidos   : <<extend>>
+UC_Cozinha      ..> UC_Pedidos   : <<extend>>
+
+' ==========================================================
 ' ASSOCIAÇÕES — CLIENTE
-' ========================
+' ==========================================================
 cliente --> UC_Cadastro
 cliente --> UC_LoginCliente
 cliente --> UC_LogoutCliente
@@ -125,18 +146,21 @@ cliente --> UC_Historico
 cliente --> UC_Reserva
 cliente --> UC_Avaliacao
 
-UC_Finalizar .> UC_Cupom : <<include>>
-UC_Reserva   .> UC_PagarReserva : <<include>>
-
-' ========================
-' ASSOCIAÇÕES — FUNCIONÁRIO
-' ========================
+' ==========================================================
+' ASSOCIAÇÕES — FUNCIONÁRIO (herdadas por todos os papéis)
+' ==========================================================
 funcionario --> UC_LoginFunc
 funcionario --> UC_Dashboard
 
+' ==========================================================
+' ASSOCIAÇÕES — ADMIN
+' ==========================================================
 admin --> UC_Aprovacao
 admin --> UC_GerRest
 
+' ==========================================================
+' ASSOCIAÇÕES — GERENTE
+' ==========================================================
 gerente --> UC_Aprovacao
 gerente --> UC_ConfigRest
 gerente --> UC_Cardapio
@@ -146,19 +170,22 @@ gerente --> UC_Pedidos
 gerente --> UC_Entregas
 gerente --> UC_Mesas
 
+' ==========================================================
+' ASSOCIAÇÕES — ATENDENTE
+' ==========================================================
 atendente --> UC_Pedidos
 atendente --> UC_PedidoLocal
 atendente --> UC_Mesas
 
+' ==========================================================
+' ASSOCIAÇÕES — COZINHEIRO
+' Cozinheiro usa o KDS (UC_Cozinha), que <<extend>> Pedidos
+' ==========================================================
 cozinheiro --> UC_Cozinha
-cozinheiro --> UC_Pedidos
 
+' ==========================================================
+' ASSOCIAÇÕES — ENTREGADOR
+' ==========================================================
 entregador --> UC_Entregas
-
-' ========================
-' EXTENSÕES
-' ========================
-UC_Receita    .> UC_Cardapio  : <<extend>>
-UC_PedidoLocal .> UC_Pedidos  : <<extend>>
 
 @enduml
