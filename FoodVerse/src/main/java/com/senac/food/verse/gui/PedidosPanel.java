@@ -2,6 +2,7 @@ package com.senac.food.verse.gui;
 
 import com.senac.food.verse.ItemPedido;
 import com.senac.food.verse.PedidoDAO;
+import com.senac.food.verse.ReservaDAO;
 import com.senac.food.verse.Pedidos;
 import com.senac.food.verse.SessionContext;
 import jiconfont.icons.google_material_design_icons.GoogleMaterialDesignIcons;
@@ -875,15 +876,14 @@ public class PedidosPanel extends JPanel {
         lblMesa.setFont(UIConstants.ARIAL_12_B);
         form.add(lblMesa, gc);
         gc.gridy++;
-        JTextField txtMesa = new JTextField();
-        UIConstants.styleField(txtMesa);
-        txtMesa.setColumns(10);
-        form.add(txtMesa, gc);
+        JComboBox<String> cbMesa = new JComboBox<>(new ReservaDAO().getListaMesas().toArray(new String[0]));
+        UIConstants.styleCombo(cbMesa);
+        form.add(cbMesa, gc);
 
         cbTipo.addActionListener(e -> {
             boolean isMesa = cbTipo.getSelectedIndex() == 0;
             lblMesa.setVisible(isMesa);
-            txtMesa.setVisible(isMesa);
+            cbMesa.setVisible(isMesa);
         });
 
         // Items table
@@ -958,9 +958,9 @@ public class PedidosPanel extends JPanel {
                 UIConstants.showWarning(dlg, "Adicione pelo menos um item.");
                 return;
             }
-            String mesa = cbTipo.getSelectedIndex() == 0 ? txtMesa.getText().trim() : null;
-            if(cbTipo.getSelectedIndex() == 0 && (mesa == null || mesa.isEmpty())) {
-                UIConstants.showWarning(dlg, "Informe o número da mesa.");
+            String mesa = cbTipo.getSelectedIndex() == 0 ? (String) cbMesa.getSelectedItem() : null;
+            if(cbTipo.getSelectedIndex() == 0 && (mesa == null || mesa.isBlank())) {
+                UIConstants.showWarning(dlg, "Selecione uma mesa para o pedido local.");
                 return;
             }
             String pedidoId = dao.criarPedidoLocal(mesa, itensList);

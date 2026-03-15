@@ -145,8 +145,13 @@ public class CardapioPainel extends JPanel {
         UIConstants.styleDanger(btnExcluir);
         btnExcluir.addActionListener(e -> excluirPrato());
 
+        JButton btnFicha = new JButton("Ficha Técnica");
+        UIConstants.styleSecondary(btnFicha);
+        btnFicha.addActionListener(e -> editarPrato());
+
         actionPanel.add(btnNovo);
         actionPanel.add(btnEditar);
+        actionPanel.add(btnFicha);
         actionPanel.add(btnExcluir);
 
         JPanel topContainer = new JPanel(new BorderLayout());
@@ -352,26 +357,15 @@ public class CardapioPainel extends JPanel {
 
     private void toggleStatusProduto(int row) {
         Long id = (Long) tblProdutos.getValueAt(row, 0);
-        // Simulação de busca pois DAO de produtos pode não ter o metodo publico ainda
-        // Idealmente: ProdutoVenda pv = dao.buscarProdutoPorId(id);
-        // Vou fazer a busca manual na lista do DAO (assumindo que o DAO é aquele em memória)
-        
-        // CORREÇÃO: Implementando lógica rápida baseada nas linhas da tabela para simular
-        // Em produção, implemente dao.buscarProdutoPorId(id)
-        String nome = (String) tblProdutos.getValueAt(row, 1);
-        String cat = (String) tblProdutos.getValueAt(row, 2);
-        boolean ativoAtual = "Ativo".equals(tblProdutos.getValueAt(row, 4));
-        // Recriar para atualizar
-        // Obs: Isso é um workaround pois o DAO original não expôs busca por ID de produtos
-        // Se puder, adicione `buscarProdutoPorId` no DAO.
-        // Vou usar o método de atualizar existente:
-        double preco = 0;
-        try { preco = NumberFormat.getCurrencyInstance(new Locale("pt","BR")).parse(tblProdutos.getValueAt(row, 3).toString()).doubleValue(); } catch(Exception e){}
-        
-        ProdutoVenda pv = new ProdutoVenda(id, nome, cat, !ativoAtual, preco);
+        ProdutoVenda pv = dao.buscarProdutoPorId(id);
+        if (pv == null) {
+            Toast.show(this, "Não foi possível localizar o produto selecionado.", Toast.Type.ERROR);
+            return;
+        }
+        pv.setAtivo(!pv.isAtivo());
         dao.atualizarProduto(pv);
         atualizarTabelaProdutos();
-        Toast.show(this, nome + (!ativoAtual ? " Ativado" : " Desativado"), Toast.Type.INFO);
+        Toast.show(this, pv.getNome() + (pv.isAtivo() ? " ativado" : " desativado"), Toast.Type.INFO);
     }
 
     // AÇÕES CONVENCIONAIS
@@ -390,7 +384,7 @@ public class CardapioPainel extends JPanel {
     private void editarPrato() {
         int row = tblPratos.getSelectedRow();
         if(row < 0) {
-            Toast.show(this, "Selecione um prato para editar", Toast.Type.WARNING);
+            Toast.show(this, "Selecione um prato para editar.", Toast.Type.WARNING);
             return;
         }
         Long id = (Long) tblPratos.getValueAt(row, 0);
@@ -410,7 +404,7 @@ public class CardapioPainel extends JPanel {
 
     private void excluirPrato() {
         int row = tblPratos.getSelectedRow();
-        if(row < 0) { Toast.show(this, "Selecione um prato.", Toast.Type.WARNING); return; }
+        if(row < 0) { Toast.show(this, "Selecione um prato para excluir.", Toast.Type.WARNING); return; }
         Long id = (Long) tblPratos.getValueAt(row, 0);
 
         UIConstants.showConfirmDialog(this, "Confirmar exclusão", "Excluir este prato permanentemente?", () -> {
@@ -457,7 +451,7 @@ public class CardapioPainel extends JPanel {
 
     private void excluirProduto() {
         int row = tblProdutos.getSelectedRow();
-        if(row < 0) { Toast.show(this, "Selecione um produto.", Toast.Type.WARNING); return; }
+        if(row < 0) { Toast.show(this, "Selecione um produto para excluir.", Toast.Type.WARNING); return; }
         Long id = (Long) tblProdutos.getValueAt(row, 0);
 
         UIConstants.showConfirmDialog(this, "Confirmar exclusão", "Excluir este produto?", () -> {
@@ -667,7 +661,7 @@ public class CardapioPainel extends JPanel {
             UIConstants.styleSecondary(btnRemIng); 
             btnRemIng.addActionListener(e -> {
                 int r = tblIng.getSelectedRow();
-                if(r >= 0) ingModel.removeRow(r);
+                if(r >= 0) { ingModel.removeRow(r); } else { Toast.show(this, "Selecione um ingrediente para remover.", Toast.Type.WARNING); }
             });
 
             pIngBtns.add(btnAddIng);
@@ -699,10 +693,7 @@ public class CardapioPainel extends JPanel {
 
             if(base != null) carregarDados(base);
 
-            pack();
-            setMinimumSize(new Dimension(720, 680));
-            if(getWidth() < 720 || getHeight() < 680) setSize(720, 680);
-            setLocationRelativeTo(owner);
+            configurarDialogResponsivo(this, owner, 720, 680);
         }
 
         private void abrirSeletorIngredientes() {
@@ -751,10 +742,7 @@ public class CardapioPainel extends JPanel {
             pBottom.add(sQtd);
             pBottom.add(bAdd);
             d.add(pBottom, BorderLayout.SOUTH);
-            d.pack();
-            d.setMinimumSize(new Dimension(500, 400));
-            if(d.getWidth() < 500 || d.getHeight() < 400) d.setSize(500, 400);
-            d.setLocationRelativeTo(this);
+            configurarDialogResponsivo(d, this, 500, 400);
             d.setVisible(true);
         }
 
@@ -841,6 +829,7 @@ public class CardapioPainel extends JPanel {
         private JSpinner spPreco;
         private JCheckBox chkAtivo;
         private JTextField txtImagem;
+        private JTextField txtImagemUrl;
         private ProdutoVenda resultado;
         private final JCheckBox[] chkRestr = new JCheckBox[RESTRICOES_OPCOES.length];
 
@@ -917,6 +906,13 @@ public class CardapioPainel extends JPanel {
             pImg.add(btnEscolherImg, BorderLayout.EAST);
             form.add(pImg, gc);
 
+            gc.gridy++;
+            form.add(criarLabel("URL da imagem:"), gc);
+            gc.gridy++;
+            txtImagemUrl = new JTextField(); UIConstants.styleField(txtImagemUrl);
+            txtImagemUrl.putClientProperty("JTextField.placeholderText", "https://...");
+            form.add(txtImagemUrl, gc);
+
             // Restrições
             gc.gridy++;
             form.add(criarLabel("Restrições Alimentares:"), gc);
@@ -957,6 +953,8 @@ public class CardapioPainel extends JPanel {
                 resultado.setDescricao(txtDescricao.getText().trim());
                 String imgPath = txtImagem.getText().trim();
                 resultado.setImagem(imgPath.isEmpty() ? null : imgPath);
+                String imgUrl = txtImagemUrl.getText().trim();
+                resultado.setImagemUrl(imgUrl.isEmpty() ? null : imgUrl);
                 // Restrições
                 List<String> tags = new ArrayList<>();
                 for(int i = 0; i < RESTRICOES_OPCOES.length; i++) {
@@ -977,6 +975,7 @@ public class CardapioPainel extends JPanel {
                 chkAtivo.setSelected(base.isAtivo());
                 if(base.getDescricao() != null) txtDescricao.setText(base.getDescricao());
                 if(base.getImagem() != null) txtImagem.setText(base.getImagem());
+                if(base.getImagemUrl() != null) txtImagemUrl.setText(base.getImagemUrl());
                 if(base.getRestricoes() != null && !base.getRestricoes().isEmpty()) {
                     Set<String> rtags = new HashSet<>(Arrays.asList(base.getRestricoes().split(",")));
                     for(int i = 0; i < RESTRICOES_OPCOES.length; i++) {
@@ -985,10 +984,7 @@ public class CardapioPainel extends JPanel {
                 }
             }
 
-            pack();
-            setMinimumSize(new Dimension(540, 520));
-            if(getWidth() < 540 || getHeight() < 520) setSize(540, 520);
-            setLocationRelativeTo(owner);
+            configurarDialogResponsivo(this, owner, 540, 520);
         }
         public ProdutoVenda getResultado() { return resultado; }
     }
@@ -999,6 +995,22 @@ public class CardapioPainel extends JPanel {
         l.setForeground(UIConstants.FG_MUTED);
         l.setFont(UIConstants.FONT_BOLD);
         return l;
+    }
+
+    private void configurarDialogResponsivo(JDialog dialog, Component owner, int minWidth, int minHeight) {
+        dialog.pack();
+        dialog.setMinimumSize(new Dimension(minWidth, minHeight));
+        int largura = Math.max(dialog.getWidth(), minWidth);
+        int altura = Math.max(dialog.getHeight(), minHeight);
+        if (owner != null) {
+            Dimension base = owner.getSize();
+            if (base.width > 0 && base.height > 0) {
+                largura = Math.min(largura, (int) (base.width * 0.95));
+                altura = Math.min(altura, (int) (base.height * 0.95));
+            }
+        }
+        dialog.setSize(largura, altura);
+        dialog.setLocationRelativeTo(owner);
     }
 
     private void selecionarImagem(JTextField campo) {

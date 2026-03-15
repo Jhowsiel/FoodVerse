@@ -2,6 +2,7 @@ package com.senac.food.verse.gui;
 
 import com.senac.food.verse.ConexaoBanco;
 import com.senac.food.verse.Funcionario;
+import com.senac.food.verse.PasswordUtils;
 import com.senac.food.verse.SessionContext;
 import jiconfont.icons.google_material_design_icons.GoogleMaterialDesignIcons;
 import jiconfont.swing.IconFontSwing;
@@ -742,7 +743,7 @@ public class TelaInicial extends JFrame {
                     ps.setString(3, email);
                     ps.setString(4, finalCargo);
                     ps.setString(5, tel);
-                    ps.setString(6, senha);
+                    ps.setString(6, PasswordUtils.hash(senha));
                     ps.executeUpdate();
                     
                 } catch (Exception ex) {

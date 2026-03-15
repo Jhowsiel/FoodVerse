@@ -7,6 +7,26 @@ import java.util.List;
 
 public class ReservaDAO {
 
+
+    public static class MesaConfig {
+        private int id;
+        private String nome;
+        private int capacidade;
+        private boolean ativa;
+
+        public MesaConfig(int id, String nome, int capacidade, boolean ativa) {
+            this.id = id;
+            this.nome = nome;
+            this.capacidade = capacidade;
+            this.ativa = ativa;
+        }
+
+        public int getId() { return id; }
+        public String getNome() { return nome; }
+        public int getCapacidade() { return capacidade; }
+        public boolean isAtiva() { return ativa; }
+    }
+
     // Janela de 90 minutos para evitar sobreposição da mesma mesa durante um ciclo típico de refeição.
     private static final int RESERVA_CONFLITO_MINUTOS = 90;
 
@@ -15,13 +35,176 @@ public class ReservaDAO {
         return ctx.isAdmin() && ctx.getRestauranteEfetivo() <= 0;
     }
     
-    // Lista fixa de mesas para o mapa do restaurante
     public List<String> getListaMesas() {
         List<String> mesas = new ArrayList<>();
-        for (int i = 1; i <= 20; i++) {
-            mesas.add("Mesa " + String.format("%02d", i));
+        if (semContextoOperacional()) {
+            return mesas;
+        }
+        int rid = SessionContext.getInstance().getRestauranteEfetivo();
+        ConexaoBanco cb = new ConexaoBanco();
+        Connection conn = cb.abrirConexao();
+        if (conn == null) {
+            for (int i = 1; i <= 20; i++) {
+                mesas.add("Mesa " + String.format("%02d", i));
+            }
+            return mesas;
+        }
+        try {
+            garantirTabelaMesas(conn);
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT nome FROM tb_mesas WHERE ID_restaurante = ? AND ativa = 1 ORDER BY nome")) {
+                ps.setInt(1, rid);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        mesas.add(rs.getString("nome"));
+                    }
+                }
+            }
+            if (mesas.isEmpty()) {
+                for (int i = 1; i <= 20; i++) {
+                    mesas.add("Mesa " + String.format("%02d", i));
+                }
+            }
+        } catch (SQLException e) {
+            for (int i = 1; i <= 20; i++) {
+                mesas.add("Mesa " + String.format("%02d", i));
+            }
+        } finally {
+            cb.fecharConexao();
         }
         return mesas;
+    }
+
+    public List<MesaConfig> listarMesasConfig() {
+        List<MesaConfig> lista = new ArrayList<>();
+        if (semContextoOperacional()) {
+            return lista;
+        }
+        int rid = SessionContext.getInstance().getRestauranteEfetivo();
+        ConexaoBanco cb = new ConexaoBanco();
+        Connection conn = cb.abrirConexao();
+        if (conn == null) {
+            for (int i = 1; i <= 20; i++) {
+                lista.add(new MesaConfig(i, "Mesa " + String.format("%02d", i), 4, true));
+            }
+            return lista;
+        }
+        try {
+            garantirTabelaMesas(conn);
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT ID_mesa, nome, capacidade, ativa FROM tb_mesas WHERE ID_restaurante = ? ORDER BY nome")) {
+                ps.setInt(1, rid);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        lista.add(new MesaConfig(
+                                rs.getInt("ID_mesa"),
+                                rs.getString("nome"),
+                                rs.getInt("capacidade"),
+                                rs.getBoolean("ativa")));
+                    }
+                }
+            }
+        } catch (SQLException ignored) {
+        } finally {
+            cb.fecharConexao();
+        }
+        return lista;
+    }
+
+    public boolean salvarMesa(String nome, int capacidade) {
+        if (nome == null || nome.isBlank() || semContextoOperacional()) {
+            return false;
+        }
+        int rid = SessionContext.getInstance().getRestauranteEfetivo();
+        ConexaoBanco cb = new ConexaoBanco();
+        Connection conn = cb.abrirConexao();
+        if (conn == null) {
+            return false;
+        }
+        try {
+            garantirTabelaMesas(conn);
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "INSERT INTO tb_mesas (ID_restaurante, nome, capacidade, ativa) VALUES (?, ?, ?, 1)")) {
+                ps.setInt(1, rid);
+                ps.setString(2, nome.trim());
+                ps.setInt(3, Math.max(1, capacidade));
+                return ps.executeUpdate() > 0;
+            }
+        } catch (SQLException ignored) {
+            return false;
+        } finally {
+            cb.fecharConexao();
+        }
+    }
+
+    public boolean atualizarMesa(int idMesa, String nome, int capacidade, boolean ativa) {
+        if (idMesa <= 0 || nome == null || nome.isBlank() || semContextoOperacional()) {
+            return false;
+        }
+        int rid = SessionContext.getInstance().getRestauranteEfetivo();
+        ConexaoBanco cb = new ConexaoBanco();
+        Connection conn = cb.abrirConexao();
+        if (conn == null) {
+            return false;
+        }
+        try {
+            garantirTabelaMesas(conn);
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE tb_mesas SET nome = ?, capacidade = ?, ativa = ? WHERE ID_mesa = ? AND ID_restaurante = ?")) {
+                ps.setString(1, nome.trim());
+                ps.setInt(2, Math.max(1, capacidade));
+                ps.setBoolean(3, ativa);
+                ps.setInt(4, idMesa);
+                ps.setInt(5, rid);
+                return ps.executeUpdate() > 0;
+            }
+        } catch (SQLException ignored) {
+            return false;
+        } finally {
+            cb.fecharConexao();
+        }
+    }
+
+    public boolean excluirMesa(int idMesa) {
+        if (idMesa <= 0 || semContextoOperacional()) {
+            return false;
+        }
+        int rid = SessionContext.getInstance().getRestauranteEfetivo();
+        ConexaoBanco cb = new ConexaoBanco();
+        Connection conn = cb.abrirConexao();
+        if (conn == null) {
+            return false;
+        }
+        try {
+            garantirTabelaMesas(conn);
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "DELETE FROM tb_mesas WHERE ID_mesa = ? AND ID_restaurante = ?")) {
+                ps.setInt(1, idMesa);
+                ps.setInt(2, rid);
+                return ps.executeUpdate() > 0;
+            }
+        } catch (SQLException ignored) {
+            return false;
+        } finally {
+            cb.fecharConexao();
+        }
+    }
+
+    private void garantirTabelaMesas(Connection conn) throws SQLException {
+        String sql = "IF OBJECT_ID('dbo.tb_mesas', 'U') IS NULL " +
+                "BEGIN " +
+                "CREATE TABLE dbo.tb_mesas (" +
+                "ID_mesa INT IDENTITY(1,1) PRIMARY KEY," +
+                "ID_restaurante INT NOT NULL," +
+                "nome NVARCHAR(50) NOT NULL," +
+                "capacidade INT NOT NULL DEFAULT 4," +
+                "ativa BIT NOT NULL DEFAULT 1" +
+                "); " +
+                "CREATE UNIQUE INDEX UX_tb_mesas_rest_nome ON dbo.tb_mesas(ID_restaurante, nome);" +
+                "END";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.execute();
+        }
     }
 
     // Busca reservas ativas para hoje
@@ -31,7 +214,7 @@ public class ReservaDAO {
             return lista;
         }
         int rid = SessionContext.getInstance().getRestauranteEfetivo();
-        String sql = "SELECT r.ID_reserva, r.ID_cliente, c.username, r.data_reserva, r.numero_pessoas, r.mesa " +
+        String sql = "SELECT r.ID_reserva, r.ID_cliente, c.username, c.nome, r.data_reserva, r.numero_pessoas, r.mesa " +
                      "FROM tb_reservas r " +
                      "LEFT JOIN tb_clientes c ON r.ID_cliente = c.id_cliente " +
                      "WHERE CAST(r.data_reserva AS DATE) = CAST(GETDATE() AS DATE)" +
@@ -53,8 +236,11 @@ public class ReservaDAO {
                     Reserva r = new Reserva();
                     r.setIdReserva(rs.getInt("ID_reserva"));
                     r.setIdCliente(rs.getInt("ID_cliente"));
-                    String nomeCliente = rs.getString("username");
-                    r.setNomeCliente(nomeCliente != null ? nomeCliente : "Cliente #" + rs.getInt("ID_cliente"));
+                    String nomeCliente = rs.getString("nome");
+                    if (nomeCliente == null || nomeCliente.isBlank()) {
+                        nomeCliente = rs.getString("username");
+                    }
+                    r.setNomeCliente(nomeCliente != null && !nomeCliente.isBlank() ? nomeCliente : "Cliente sem nome");
                     
                     Timestamp ts = rs.getTimestamp("data_reserva");
                     if (ts != null) r.setDataReserva(ts.toLocalDateTime());
@@ -184,6 +370,72 @@ public class ReservaDAO {
             cb.fecharConexao();
         }
         return clientes;
+    }
+
+
+    public int obterOuCriarClienteLocal(String nomeCliente) {
+        if (nomeCliente == null || nomeCliente.isBlank() || semContextoOperacional()) {
+            return 0;
+        }
+        int rid = SessionContext.getInstance().getRestauranteEfetivo();
+        if (rid <= 0) {
+            return 0;
+        }
+
+        String nomeNormalizado = nomeCliente.trim();
+        ConexaoBanco cb = new ConexaoBanco();
+        Connection conn = cb.abrirConexao();
+        if (conn == null) {
+            return 0;
+        }
+
+        try {
+            String sqlBusca =
+                    "SELECT TOP 1 c.id_cliente " +
+                    "FROM tb_clientes c " +
+                    "WHERE (LOWER(c.nome) = LOWER(?) OR LOWER(c.username) = LOWER(?)) " +
+                    "AND (c.id_cliente IN (SELECT r.ID_cliente FROM tb_reservas r WHERE r.ID_restaurante = ?) " +
+                    "OR c.id_cliente IN (SELECT p.ID_cliente FROM tb_pedidos p WHERE p.ID_restaurante = ?)) " +
+                    "ORDER BY c.id_cliente DESC";
+            try (PreparedStatement ps = conn.prepareStatement(sqlBusca)) {
+                ps.setString(1, nomeNormalizado);
+                ps.setString(2, nomeNormalizado);
+                ps.setInt(3, rid);
+                ps.setInt(4, rid);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getInt("id_cliente");
+                    }
+                }
+            }
+
+            String usernameBase = nomeNormalizado
+                    .toLowerCase()
+                    .replaceAll("[^a-z0-9]+", ".")
+                    .replaceAll("^\\.+|\\.+$", "");
+            if (usernameBase.isBlank()) {
+                usernameBase = "cliente";
+            }
+            String username = usernameBase + "." + System.currentTimeMillis();
+
+            String sqlInsert =
+                    "INSERT INTO tb_clientes (username, nome, data_cadastro) VALUES (?, ?, GETDATE())";
+            try (PreparedStatement ps = conn.prepareStatement(sqlInsert, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setString(1, username);
+                ps.setString(2, nomeNormalizado);
+                ps.executeUpdate();
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        return rs.getInt(1);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            cb.fecharConexao();
+        }
+        return 0;
     }
 
     private boolean existeConflitoReserva(Connection conn, int restauranteId, String mesa, LocalDateTime dataReserva, int idReservaAtual)

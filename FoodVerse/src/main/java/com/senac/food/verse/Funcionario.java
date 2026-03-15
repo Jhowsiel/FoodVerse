@@ -55,7 +55,7 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
             stmt.setString(4, this.email);
             stmt.setString(5, this.role);
             stmt.setString(6, telefoneFormatado);
-            stmt.setString(7, this.password);
+            stmt.setString(7, PasswordUtils.hash(this.password));
             stmt.setString(8, this.status);
 
             int linhasAfetadas = stmt.executeUpdate();
@@ -90,13 +90,12 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
                 return null;
             }
 
-            String query = "SELECT cargo FROM tb_funcionarios WHERE email = ? AND senha = ?";
+            String query = "SELECT cargo, senha FROM tb_funcionarios WHERE email = ?";
             stmt = conn.prepareStatement(query);
             stmt.setString(1, email);
-            stmt.setString(2, senha);
             resultSet = stmt.executeQuery();
 
-            if (resultSet.next()) {
+            if (resultSet.next() && PasswordUtils.matches(senha, resultSet.getString("senha"))) {
                 cargo = resultSet.getString("cargo");
             }
 
@@ -133,18 +132,18 @@ public class Funcionario extends Usuario implements FuncionarioInterface {
 
             String query = "SELECT f.ID_funcionario, f.nome, f.cargo, f.status, "
                     + "ISNULL(f.ID_restaurante, 0) AS ID_restaurante, "
-                    + "ISNULL(r.ativo, 1) AS restaurante_ativo "
+                    + "ISNULL(r.ativo, 1) AS restaurante_ativo, "
+                    + "f.senha "
                     + "FROM tb_funcionarios f "
                     + "LEFT JOIN tb_restaurantes r ON r.ID_restaurante = f.ID_restaurante "
-                    + "WHERE (f.email = ? OR f.username = ?) AND f.senha = ?";
+                    + "WHERE (f.email = ? OR f.username = ?)";
 
             stmt = conn.prepareStatement(query);
             stmt.setString(1, emailOuUsername);
             stmt.setString(2, emailOuUsername);
-            stmt.setString(3, senha);
             rs = stmt.executeQuery();
 
-            if (!rs.next()) {
+            if (!rs.next() || !PasswordUtils.matches(senha, rs.getString("senha"))) {
                 return "Credenciais inválidas.";
             }
 
