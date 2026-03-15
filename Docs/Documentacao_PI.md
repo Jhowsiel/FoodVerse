@@ -66,4 +66,320 @@ Para o cliente, o sistema oferece uma forma prática de pedir comida pela intern
 
 ---
 
+## 3. Banco de Dados
+
+### Tecnologias utilizadas
+
+| Componente | Tecnologia | Versão |
+|---|---|---|
+| SGBD | Microsoft SQL Server | 2022 |
+| Dialeto SQL | T-SQL (Transact-SQL) | — |
+| Driver Java | Microsoft JDBC Driver for SQL Server (`mssql-jdbc`) | 12.x |
+| Driver Python/Django | `mssql-django` + ODBC Driver 17 for SQL Server | — |
+| Nome do banco | `FoodVerseDB` | — |
+
+---
+
+### Dados de conexão
+
+| Parâmetro | Valor |
+|---|---|
+| Servidor | `127.0.0.1` |
+| Porta | `1433` |
+| Banco | `FoodVerseDB` |
+| Usuário | `sa` |
+| Autenticação Java | `jdbc:sqlserver://127.0.0.1:1433;databaseName=FoodVerseDB;encrypt=false;trustServerCertificate=true` |
+| Autenticação Django | `ENGINE: mssql`, `DRIVER: ODBC Driver 17 for SQL Server` |
+
+---
+
+### Rotinas de Backup e Restore
+
+#### 1. Backup do Banco de Dados
+
+**Passo a passo:**
+
+1. Faça login no servidor onde o SQL Server está instalado.
+2. Abra o SQL Server Management Studio (SSMS) e conecte-se ao banco `FoodVerseDB`.
+3. Execute o comando abaixo para realizar o backup completo:
+
+```sql
+BACKUP DATABASE FoodVerseDB
+TO DISK = 'C:\backups\FoodVerseDB.bak'
+WITH FORMAT, INIT, NAME = 'Backup Completo FoodVerseDB';
+```
+
+4. Verifique que o arquivo `FoodVerseDB.bak` foi gerado no diretório especificado.
+5. Para automatizar, utilize o **Agendador de Tarefas do Windows** ou um SQL Server Agent Job.
+
+#### 2. Restore do Banco de Dados
+
+**Passo a passo:**
+
+1. Faça login no servidor onde deseja restaurar o banco.
+2. Abra o SSMS e conecte-se ao SQL Server (sem selecionar um banco específico).
+3. Execute o comando:
+
+```sql
+RESTORE DATABASE FoodVerseDB
+FROM DISK = 'C:\backups\FoodVerseDB.bak'
+WITH REPLACE;
+```
+
+4. Confirme que os dados foram restaurados e que o banco está operacional.
+
+> **Alternativa incremental:** utilize o script `Banco de Dados/Migration_Sprint1.sql` para recriar apenas a estrutura e os dados de referência em um banco vazio, sem necessidade de arquivo `.bak`.
+
+---
+
+### Dicionário de Dados
+
+#### tb_clientes — Clientes do portal web
+
+| Coluna | Tipo | Restrição | Descrição |
+|---|---|---|---|
+| id_cliente | INT IDENTITY | PK | Identificador único do cliente |
+| username | VARCHAR(50) | NULL | Nome de usuário (login) |
+| nome | VARCHAR(100) | NULL | Nome completo |
+| email | VARCHAR(100) | NULL | Endereço de e-mail |
+| telefone | VARCHAR(20) | NULL | Número de telefone |
+| cpf | VARCHAR(14) | NULL | CPF (formato `000.000.000-00`) |
+| senha | VARCHAR(255) | NULL | Senha armazenada com hash |
+| endereco | VARCHAR(255) | NULL | Endereço de entrega padrão |
+| data_cadastro | DATETIME | NULL | Data e hora do cadastro |
+
+#### tb_restaurantes — Restaurantes cadastrados na plataforma
+
+| Coluna | Tipo | Restrição | Descrição |
+|---|---|---|---|
+| ID_restaurante | INT IDENTITY | PK | Identificador único do restaurante |
+| nome | VARCHAR(100) | NULL | Nome do restaurante |
+| categoria | VARCHAR(50) | NULL | Categoria (ex.: Pizzaria, Fast Food) |
+| descricao | VARCHAR(255) | NULL | Descrição resumida |
+| avaliacao | DECIMAL(3,2) | NULL | Média de avaliações (0,00 a 5,00) |
+| tempo_entrega | VARCHAR(20) | NULL | Tempo estimado de entrega |
+| taxa_entrega | DECIMAL(10,2) | NULL | Taxa de entrega em reais |
+| cupom | VARCHAR(50) | NULL | Código de cupom promocional |
+| imagem | VARCHAR(255) | NULL | Caminho da imagem do logo |
+| banner | VARCHAR(255) | NULL | Caminho do banner do restaurante |
+| ativo | BIT NOT NULL | DEFAULT 1 | Controla se o restaurante existe na plataforma (Admin) |
+| aberto | BIT NOT NULL | DEFAULT 1 | Controla se aceita pedidos no momento (Gerente) |
+
+#### tb_funcionarios — Funcionários dos restaurantes
+
+| Coluna | Tipo | Restrição | Descrição |
+|---|---|---|---|
+| ID_funcionario | INT IDENTITY | PK | Identificador único |
+| ID_restaurante | INT | NULL, FK → tb_restaurantes | Restaurante ao qual pertence |
+| nome | VARCHAR(100) | NULL | Nome completo |
+| username | VARCHAR(50) | NULL | Nome de usuário (login) |
+| email | VARCHAR(100) | NULL | E-mail |
+| cargo | VARCHAR(50) | NULL | Cargo (Admin, Gerente, Atendente, Cozinheiro, Entregador) |
+| telefone | VARCHAR(20) | NULL | Telefone |
+| senha | VARCHAR(255) | NULL | Senha armazenada com hash |
+| status | VARCHAR(20) | NULL | Status do cadastro (pendente, aprovado, bloqueado) |
+| data_cadastro | DATETIME | NULL | Data do cadastro |
+
+#### tb_status_pedido — Tabela mestre de status de pedido
+
+| Coluna | Tipo | Restrição | Descrição |
+|---|---|---|---|
+| ID_status | INT | PK (manual) | Identificador do status |
+| nome_status | VARCHAR(50) | NULL | Nome do status |
+
+**Dados de referência:**
+
+| ID_status | nome_status |
+|---|---|
+| 1 | pendente |
+| 2 | em preparo |
+| 3 | pronto |
+| 4 | em rota |
+| 5 | concluido |
+| 6 | cancelado |
+
+#### tb_produtos — Produtos (itens de venda e insumos)
+
+| Coluna | Tipo | Restrição | Descrição |
+|---|---|---|---|
+| ID_produto | INT IDENTITY | PK | Identificador único |
+| ID_restaurante | INT | NULL, FK → tb_restaurantes | Restaurante dono do produto |
+| nome_produto | VARCHAR(100) | NULL | Nome do produto |
+| descricao | VARCHAR(255) | NULL | Descrição |
+| preco | DECIMAL(10,2) | NULL | Preço de venda |
+| categoria | VARCHAR(50) | NULL | Categoria do produto |
+| imagem | VARCHAR(255) | NULL | Caminho da imagem |
+| tempo_preparo | INT | NULL | Tempo de preparo em minutos |
+| disponivel | BIT | NULL | Se o produto está disponível para venda |
+| destaque | BIT | NULL | Se é destaque no cardápio |
+| restricoes | VARCHAR(255) | NULL | Restrições alimentares |
+| data_criacao | DATETIME | NULL | Data de criação |
+| tipo_produto | VARCHAR(20) NOT NULL | DEFAULT 'VENDA' | `'VENDA'` = item do cardápio; `'INSUMO'` = ingrediente de estoque |
+
+#### tb_estoque — Estoque de insumos
+
+| Coluna | Tipo | Restrição | Descrição |
+|---|---|---|---|
+| ID_estoque | INT IDENTITY | PK | Identificador único |
+| ID_produto | INT | NOT NULL, FK → tb_produtos | Produto (tipo INSUMO) |
+| quantidade | INT | NULL | Quantidade disponível em estoque |
+| estoque_minimo | INT | NULL | Quantidade mínima (gatilho de alerta) |
+| ultima_atualizacao | DATETIME | NULL | Última movimentação |
+
+#### tb_nutricao — Informações nutricionais dos produtos
+
+| Coluna | Tipo | Restrição | Descrição |
+|---|---|---|---|
+| ID_nutricao | INT IDENTITY | PK | Identificador único |
+| ID_produto | INT | NOT NULL, FK → tb_produtos | Produto relacionado |
+| kcal | INT | NULL | Calorias (kcal) |
+| proteina | VARCHAR(20) | NULL | Proteínas (ex.: `25g`) |
+| carbo | VARCHAR(20) | NULL | Carboidratos (ex.: `60g`) |
+| gordura | VARCHAR(20) | NULL | Gorduras (ex.: `20g`) |
+
+#### tb_pedidos — Pedidos realizados
+
+| Coluna | Tipo | Restrição | Descrição |
+|---|---|---|---|
+| ID_pedido | INT IDENTITY | PK | Identificador único |
+| ID_cliente | INT | NULL, FK → tb_clientes | Cliente que realizou o pedido |
+| ID_restaurante | INT | NULL, FK → tb_restaurantes | Restaurante do pedido |
+| status_id | INT | NULL, FK → tb_status_pedido | Status atual do pedido |
+| data_pedido | DATETIME | NULL | Data e hora do pedido |
+| endereco_entrega | VARCHAR(255) | NULL | Endereço de entrega (NULL = pedido no salão) |
+| valor_total | DECIMAL(10,2) | NULL | Valor total do pedido |
+| mesa | VARCHAR(50) | NULL | Mesa (para pedidos no salão/retirada) |
+
+#### tb_pedidos_produtos — Itens dos pedidos
+
+| Coluna | Tipo | Restrição | Descrição |
+|---|---|---|---|
+| ID_pedido | INT | PK + FK → tb_pedidos | Pedido ao qual o item pertence |
+| ID_produto | INT | PK + FK → tb_produtos | Produto pedido |
+| quantidade | INT | NULL | Quantidade pedida |
+| preco_unitario | DECIMAL(10,2) | NULL | Preço unitário no momento da compra |
+
+#### tb_reservas — Reservas de mesa
+
+| Coluna | Tipo | Restrição | Descrição |
+|---|---|---|---|
+| ID_reserva | INT IDENTITY | PK | Identificador único |
+| ID_cliente | INT | NULL, FK → tb_clientes | Cliente que fez a reserva |
+| ID_restaurante | INT | NULL, FK → tb_restaurantes | Restaurante da reserva |
+| data_reserva | DATETIME | NULL | Data e horário da reserva |
+| numero_pessoas | INT | NULL | Número de pessoas |
+| mesa | VARCHAR(10) | NULL | Mesa reservada |
+
+#### tb_pagamentos — Pagamentos dos pedidos
+
+| Coluna | Tipo | Restrição | Descrição |
+|---|---|---|---|
+| ID_pagamento | INT IDENTITY | PK | Identificador único |
+| ID_pedido | INT | NULL, FK → tb_pedidos | Pedido relacionado |
+| metodo_pagamento | VARCHAR(50) | NULL | Método (PIX, Cartão, Dinheiro) |
+| valor | DECIMAL(10,2) | NULL | Valor pago |
+| data_pagamento | DATETIME | NULL | Data e hora do pagamento |
+
+#### tb_avaliacoes — Avaliações de restaurantes
+
+| Coluna | Tipo | Restrição | Descrição |
+|---|---|---|---|
+| ID_avaliacao | INT IDENTITY | PK | Identificador único |
+| ID_cliente | INT | NULL, FK → tb_clientes | Cliente que avaliou |
+| ID_restaurante | INT | NULL, FK → tb_restaurantes | Restaurante avaliado |
+| comentario | VARCHAR(255) | NULL | Comentário livre |
+| nota | INT | NULL | Nota de 1 a 5 |
+| data_avaliacao | DATETIME | NULL | Data da avaliação |
+
+#### tb_cupons — Cupons de desconto
+
+| Coluna | Tipo | Restrição | Descrição |
+|---|---|---|---|
+| ID_cupom | INT IDENTITY | PK | Identificador único |
+| codigo | VARCHAR(50) | NULL | Código do cupom |
+| desconto | DECIMAL(5,2) | NULL | Percentual de desconto |
+| validade | DATE | NULL | Data de validade |
+
+#### tb_fidelidade — Programa de fidelidade
+
+| Coluna | Tipo | Restrição | Descrição |
+|---|---|---|---|
+| ID_fidelidade | INT IDENTITY | PK | Identificador único |
+| ID_cliente | INT | NULL, FK → tb_clientes | Cliente participante |
+| pontos | INT | NULL | Pontos acumulados |
+| cashback | DECIMAL(10,2) | NULL | Cashback disponível em reais |
+
+#### tb_receitas — Receitas / BOM (Bill of Materials)
+
+Vincula cada produto de venda (`tipo_produto = 'VENDA'`) aos seus insumos (`tipo_produto = 'INSUMO'`) com as quantidades necessárias para preparo. Utilizada para baixa automática do estoque quando um pedido avança para "em preparo".
+
+| Coluna | Tipo | Restrição | Descrição |
+|---|---|---|---|
+| ID_receita | INT IDENTITY | PK | Identificador único |
+| ID_produto_venda | INT | NOT NULL, FK → tb_produtos | Produto final (prato de venda) |
+| ID_insumo | INT | NOT NULL, FK → tb_produtos | Ingrediente (insumo) |
+| quantidade | DECIMAL(10,4) | NOT NULL | Quantidade do insumo necessária por unidade vendida |
+| unidade | VARCHAR(20) | NULL | Unidade de medida (kg, g, L, ml, un) |
+| ativo | BIT NOT NULL | DEFAULT 1 | Se a linha da receita está ativa |
+
+#### tb_personalizacao_grupos — Grupos de personalização de produtos
+
+| Coluna | Tipo | Restrição | Descrição |
+|---|---|---|---|
+| ID_grupo | INT IDENTITY | PK | Identificador único |
+| ID_produto | INT | NOT NULL, FK → tb_produtos | Produto que possui as opções |
+| nome | VARCHAR(100) | NULL | Nome do grupo (ex.: "Ponto da Carne") |
+| obrigatorio | BIT | NULL | Se a escolha é obrigatória |
+| max_opcoes | INT | NULL | Máximo de opções selecionáveis |
+
+#### tb_personalizacao_opcoes — Opções de personalização
+
+| Coluna | Tipo | Restrição | Descrição |
+|---|---|---|---|
+| ID_opcao | INT IDENTITY | PK | Identificador único |
+| ID_grupo | INT | NOT NULL, FK → tb_personalizacao_grupos | Grupo ao qual pertence |
+| nome | VARCHAR(100) | NULL | Nome da opção (ex.: "Ao ponto") |
+| preco_adicional | DECIMAL(10,2) | NULL | Acréscimo no preço (0,00 se sem custo) |
+
+#### tb_mesas — Configuração de mesas do restaurante
+
+| Coluna | Tipo | Restrição | Descrição |
+|---|---|---|---|
+| ID_mesa | INT IDENTITY | PK | Identificador único |
+| ID_restaurante | INT | NOT NULL | Restaurante dono da mesa |
+| nome | NVARCHAR(50) | NOT NULL | Nome/número da mesa (ex.: "Mesa 01") |
+| capacidade | INT NOT NULL | DEFAULT 4 | Capacidade de pessoas |
+| ativa | BIT NOT NULL | DEFAULT 1 | Se a mesa está ativa |
+
+---
+
+### Script de Criação e Migração
+
+O arquivo `Banco de Dados/Migration_Sprint1.sql` contém o script T-SQL completo e **idempotente** para criar todas as tabelas acima do zero, ou aplicar apenas as colunas e tabelas que ainda não existirem em um banco existente. O script está organizado em 4 waves:
+
+| Wave | Conteúdo |
+|---|---|
+| 0 | Criação de todas as tabelas base (`IF OBJECT_ID ... IS NULL`) |
+| 1 | Adição de colunas faltantes em tabelas existentes (imagem, banner, ativo, aberto, restricoes, ID_restaurante, mesa) |
+| 2 | `tipo_produto`, tabela `tb_receitas` e tabelas de personalização |
+| 3 | Dados de referência: registros da tabela `tb_status_pedido` |
+| 4 | Chaves estrangeiras entre todas as tabelas |
+
+**Como executar:**
+
+```sql
+-- 1. Conecte ao SQL Server e crie o banco (se não existir):
+CREATE DATABASE FoodVerseDB;
+GO
+
+-- 2. Execute o script completo no contexto do banco:
+USE FoodVerseDB;
+GO
+-- (colar ou executar o conteúdo de Migration_Sprint1.sql)
+```
+
+> O script pode ser re-executado quantas vezes forem necessárias sem causar erros — todas as operações são protegidas por verificações `IF NOT EXISTS` ou `IF OBJECT_ID ... IS NULL`.
+
+---
+
 *Documentação elaborada com base no código da Sprint 1 do Projeto Integrador — Senac.*
