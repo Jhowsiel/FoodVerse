@@ -129,8 +129,8 @@
             <label class="form-label fw-bold"><i class="bi bi-calendar-event me-2"></i>Selecione a Data</label>
             <div class="selection-grid">
               {% for data in datas %}
-              <input type="radio" class="btn-check" name="data" id="data_{{ forloop.counter }}" value="{{ data }}" required />
-              <label class="btn btn-outline-danger py-2" for="data_{{ forloop.counter }}">{{ data }}</label>
+              <input type="radio" class="btn-check" name="data" id="data_{{ forloop.counter }}" value="{{ data.valor }}" required />
+              <label class="btn btn-outline-danger py-2" for="data_{{ forloop.counter }}">{{ data.label }}</label>
               {% endfor %}
             </div>
           </div>
@@ -199,7 +199,7 @@
             </div>
             <div class="d-flex justify-content-between">
               <span class="text-muted">Taxa de Reserva:</span>
-              <span class="text-success fw-bold">Grátis</span>
+              <span class="text-success fw-bold">R$ {{ taxa_reserva|floatformat:2 }}</span>
             </div>
           </div>
 

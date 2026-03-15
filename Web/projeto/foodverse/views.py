@@ -29,6 +29,8 @@ from .models import (
 
 RESERVA_HORARIOS = ['12:00', '13:00', '19:00', '20:00', '21:00']
 MESAS_DISPONIVEIS = [f'M{numero}' for numero in range(1, 13)]
+RESERVA_TAXA = Decimal('20.00')
+DIAS_SEMANA_PT = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
 
 
 def _int_param(valor, padrao):
@@ -51,7 +53,17 @@ def restaurantes_operacionais():
 
 def _datas_reserva_validas():
     hoje = timezone.localdate()
-    return [(hoje + timedelta(days=offset)).strftime('%Y-%m-%d') for offset in range(7)]
+    return [hoje + timedelta(days=offset) for offset in range(7)]
+
+
+def _opcoes_data_reserva():
+    opcoes = []
+    for data in _datas_reserva_validas():
+        opcoes.append({
+            'valor': data.strftime('%Y-%m-%d'),
+            'label': f"{data.strftime('%d/%m/%Y')} · {DIAS_SEMANA_PT[data.weekday()]}",
+        })
+    return opcoes
 
 
 def home(request):
@@ -349,7 +361,8 @@ def reserva_view(request):
 
     return render(request, 'pages/pedido/reserva.html', {
         'restaurante': restaurante,
-        'datas': _datas_reserva_validas(),
+        'datas': _opcoes_data_reserva(),
+        'taxa_reserva': RESERVA_TAXA,
         'horarios': RESERVA_HORARIOS,
     })
 
@@ -375,7 +388,8 @@ def reserva_pagamento(request):
     pessoas = _int_param(request.POST.get('pessoas'), 2)
     metodo_pagamento = request.POST.get('metodo_pagamento', 'pix')
 
-    if data_str not in _datas_reserva_validas() or horario_str not in RESERVA_HORARIOS:
+    datas_validas = [d.strftime('%Y-%m-%d') for d in _datas_reserva_validas()]
+    if data_str not in datas_validas or horario_str not in RESERVA_HORARIOS:
         messages.error(request, 'Selecione uma data e horário válidos para os próximos 7 dias.')
         return redirect(f"{redirect('reserva').url}?restaurante_id={r_id}")
 
@@ -412,7 +426,7 @@ def reserva_pagamento(request):
         'metodo_pagamento': metodo_pagamento,
         'mesa': mesa_sorteada,
         'reserva': reserva,
-        'total': 'R$ 20,00',
+        'total': f'R$ {RESERVA_TAXA:.2f}'.replace('.', ','),
         'pagamento_aprovado': True,
     })
 
@@ -430,7 +444,13 @@ def pedido_view(request):
     pedidos = (
         TbPedidos.objects.filter(cliente_id=cliente_id)
         .order_by('-data_pedido')
-        .prefetch_related('tbpedidosprodutos_set__produto')
+        .prefetch_related('tbpedidosprodutos_set__produto', 'tbpagamentos_set')
+    )
+
+    reservas = (
+        TbReservas.objects.filter(cliente=cliente)
+        .select_related('restaurante')
+        .order_by('-data_reserva')
     )
 
     r_id = request.GET.get('restaurante_id')
@@ -440,6 +460,7 @@ def pedido_view(request):
 
     return render(request, 'pages/pedido/pedido.html', {
         'pedidos': pedidos,
+        'reservas': reservas,
         'restaurante_atual': restaurante,
     })
 
@@ -488,13 +509,16 @@ def carrinho_view(request):
 
     carrinho = request.session.get('carrinho', {})
     subtotal = sum(i['preco'] * i['quantidade'] for r in carrinho.values() for i in r['itens'])
+    total_itens = sum(i['quantidade'] for r in carrinho.values() for i in r['itens'])
 
     return render(request, 'pages/pedido/carrinho.html', {
         'carrinho': carrinho,
+        'subtotal_num': subtotal,
         'subtotal': f'R$ {subtotal:.2f}',
         'entrega': 'Grátis',
         'desconto': 'R$ 0,00',
         'total': f'R$ {subtotal:.2f}',
+        'total_itens': total_itens,
     })
 
 
@@ -559,8 +583,19 @@ def finalizacao_view(request):
 
     subtotal = sum(Decimal(str(i['preco'])) * i['quantidade'] for i in dados_venda['itens'])
     entrega = restaurante_instancia.taxa_entrega if restaurante_instancia.taxa_entrega else Decimal('0.00')
+
+    cupom_codigo = (request.POST.get('cupom_codigo') if request.method == 'POST' else request.GET.get('cupom_codigo', '')) or ''
+    cupom_codigo = cupom_codigo.strip()
+
     desconto = Decimal('10.00') if subtotal > 50 else Decimal('0.00')
-    total_final = subtotal + entrega - desconto
+    cupom_aplicado = ''
+    if cupom_codigo and restaurante_instancia.cupom and cupom_codigo.lower() == restaurante_instancia.cupom.lower():
+        desconto += subtotal * Decimal('0.10')
+        cupom_aplicado = cupom_codigo
+    elif cupom_codigo and request.method == 'POST':
+        messages.error(request, 'Cupom inválido para este restaurante.')
+
+    total_final = max(subtotal + entrega - desconto, Decimal('0.00'))
 
     if request.method == 'GET':
         return render(request, 'pages/pedido/finalizacao.html', {
@@ -571,6 +606,8 @@ def finalizacao_view(request):
             'entrega': entrega,
             'desconto': desconto,
             'total': total_final,
+            'cupom_codigo': cupom_codigo,
+            'cupom_aplicado': cupom_aplicado,
         })
 
     endereco = request.POST.get('endereco')
