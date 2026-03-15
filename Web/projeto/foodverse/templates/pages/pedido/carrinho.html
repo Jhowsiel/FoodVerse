@@ -683,7 +683,7 @@
           <i class="bi bi-ticket-perforated-fill"></i>
           <span>Tem um cupom de desconto?</span>
         </div>
-        <button class="btn-coupon">Aplicar cupom</button>
+        <span class="btn-coupon">Aplicar na finalização</span>
       </div>
     </div>
 
@@ -691,6 +691,7 @@
     <div>
       <div class="summary-card">
         <div class="summary-title">Resumo do Pedido</div>
+        <div class="s-row"><span>Itens</span><span class="val">{{ total_itens }}</span></div>
 
         <div class="s-row">
           <span>Subtotal</span>
@@ -717,7 +718,7 @@
 
        {% for r_id, dados in carrinho.items %}
         <a href="{% url 'finalizacao' %}?restaurante_id={{ r_id }}" class="btn-pay">
-        Finalizar Pedido em {{ dados.restaurante }}
+        Finalizar pedido
         </a>
         {% endfor %}
         <a href="{% url 'restaurantes' %}" class="btn-back">

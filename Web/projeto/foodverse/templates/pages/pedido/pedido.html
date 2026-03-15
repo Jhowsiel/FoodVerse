@@ -545,6 +545,44 @@
   </div>
   {% endfor %}
 
+
+  <div class="pg-header" style="margin-top:28px;">
+    <div>
+      <p class="pg-eyebrow">Planejamento gastronômico</p>
+      <h2 class="pg-title" style="font-size:1.6rem;">Minhas Reservas</h2>
+    </div>
+  </div>
+
+  {% for reserva in reservas %}
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="rest-icon"><i class="bi bi-calendar2-check"></i></div>
+        <div>
+          <div class="rest-name">{{ reserva.restaurante.nome }}</div>
+          <div class="item-cat">Mesa {{ reserva.mesa|default:'--' }} · {{ reserva.numero_pessoas|default:1 }} pessoa(s)</div>
+        </div>
+      </div>
+      <span class="order-id">#R{{ reserva.id_reserva }}</span>
+    </div>
+    <div class="card-body">
+      <div class="info-row">
+        <div class="info-icon"><i class="bi bi-clock-fill"></i></div>
+        <span>{{ reserva.data_reserva|date:"d/m/Y · H:i" }}</span>
+      </div>
+      <div class="info-row" style="margin-top:8px;">
+        <div class="info-icon"><i class="bi bi-check-circle-fill"></i></div>
+        <span>Reserva confirmada</span>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty" style="margin-top:8px;">
+    <i class="bi bi-calendar-x empty-icon"></i>
+    <p class="empty-text">Você ainda não tem reservas registradas.</p>
+  </div>
+  {% endfor %}
+
 </div>
 
 {% include "pages/pagePrincipal/footer.html" %}

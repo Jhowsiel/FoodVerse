@@ -9,6 +9,7 @@
 <style>
   /* ── GARANTE QUE O BODY NÃO FICA EMBAIXO DO NAVBAR ── */
   body { padding-top: 68px !important; }
+  :root[data-theme="light"] body { background:#f5f6fb !important; }
 
   /* ── NAVBAR ── */
   .custom-navbar {
@@ -246,6 +247,7 @@
             </li>
             <li><a class="dropdown-item" href="{% url 'perfil' %}"><i class="fa-solid fa-user-gear"></i> Meu Perfil</a></li>
             <li><a class="dropdown-item" href="{% url 'pedido' %}"><i class="fa-solid fa-receipt"></i> Meus Pedidos</a></li>
+            <li><button class="dropdown-item" type="button" onclick="toggleTheme()"><i class="fa-solid fa-circle-half-stroke"></i> Alternar tema</button></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item item-danger" href="{% url 'logout' %}"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></li>
           </ul>
@@ -282,4 +284,26 @@
       icon.classList.add('fa-bars');
     }
   }
+
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    if (theme === 'light') {
+      document.body.style.backgroundColor = '#f4f5f8';
+    } else {
+      document.body.style.backgroundColor = '';
+    }
+  }
+
+  function toggleTheme() {
+    const current = localStorage.getItem('foodverse-theme') || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('foodverse-theme', next);
+    applyTheme(next);
+  }
+
+  (function() {
+    const savedTheme = localStorage.getItem('foodverse-theme') || 'dark';
+    applyTheme(savedTheme);
+  })();
 </script>

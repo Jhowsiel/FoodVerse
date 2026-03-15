@@ -5,479 +5,94 @@
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
 
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900;1,9..144,400&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-
 <style>
-  :root {
-    --red:     #C41017;
-    --red-dk:  #a00d13;
-    --red-lt:  rgba(196,16,23,.18);
-    --ink:     #0d0c0c;
-    --card:    rgba(255,255,255,.05);
-    --stone:   rgba(255,255,255,.08);
-    --muted:   rgba(255,255,255,.45);
-    --white:   #ffffff;
-    --radius:  18px;
-    --shadow:  0 12px 30px rgba(0,0,0,.4);
-  }
+  :root { --bg:#0e0e10; --card:#19191c; --line:#2a2a30; --txt:#f5f5f5; --muted:#a3a3ac; --brand:#e11d2f; }
+  body { padding-top:90px; background:var(--bg); color:var(--txt); }
+  .rd-wrap { max-width:1160px; margin:0 auto; padding:18px 16px 70px; }
+  .rd-back { color:var(--muted); text-decoration:none; font-weight:600; display:inline-flex; gap:8px; margin:8px 0 18px; }
+  .rd-hero { background:var(--card); border:1px solid var(--line); border-radius:22px; overflow:hidden; }
+  .rd-banner { height:260px; width:100%; object-fit:cover; }
+  .rd-body { padding:18px 22px 22px; display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+  .rd-title { font-size:clamp(1.6rem,3.3vw,2.4rem); font-weight:800; margin:0 0 8px; }
+  .rd-meta { display:flex; flex-wrap:wrap; gap:14px; color:var(--muted); font-size:.9rem; }
+  .chip { border:1px solid var(--line); border-radius:999px; padding:6px 11px; background:#121216; color:#ddd; font-size:.82rem; }
+  .rd-btn { border:0; border-radius:999px; padding:12px 20px; font-weight:700; text-decoration:none; background:var(--brand); color:#fff; display:inline-flex; gap:8px; align-items:center; }
 
-  *, *::before, *::after { box-sizing: border-box; }
+  .menu-head { margin:28px 0 14px; display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap; }
+  .menu-title { margin:0; font-size:1.5rem; font-weight:800; }
+  .filters { display:flex; gap:8px; overflow:auto; padding-bottom:2px; }
+  .filter-btn { white-space:nowrap; border:1px solid var(--line); border-radius:999px; padding:8px 14px; text-decoration:none; color:#ddd; background:#141418; font-size:.83rem; font-weight:700; }
+  .filter-btn.active, .filter-btn:hover { background:var(--brand); color:white; border-color:var(--brand); }
 
-  body {
-    padding-top: 90px;
-    background: var(--ink);
-    font-family: 'Instrument Sans', sans-serif;
-    color: var(--white);
-    -webkit-font-smoothing: antialiased;
-  }
-
-  .page-wrap { max-width: 1160px; margin: 0 auto; padding: 0 20px 80px; }
-
-  /* ── BACK ── */
-  .back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: .82rem;
-    font-weight: 600;
-    color: var(--muted);
-    text-decoration: none;
-    padding: 28px 0 24px;
-    transition: color .2s;
-  }
-  .back-link:hover { color: var(--red); }
-  .back-link i { font-size: 1rem; }
-
-  /* ── HERO RESTAURANTE ── */
-  .rest-hero {
-    background: var(--card);
-    border-radius: 24px;
-    border: 1px solid var(--stone);
-    overflow: hidden;
-    margin-bottom: 40px;
-    box-shadow: var(--shadow);
-    animation: fadeUp .5s ease both;
-  }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(14px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .hero-img-wrap {
-    height: 260px;
-    overflow: hidden;
-    position: relative;
-    background: var(--stone);
-  }
-
-  .hero-img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    transition: transform .5s ease;
-  }
-
-  .rest-hero:hover .hero-img { transform: scale(1.03); }
-
-  .hero-img-wrap::after {
-    content: '';
-    position: absolute; inset: 0;
-    background: linear-gradient(to top, rgba(13,12,12,.85) 0%, transparent 55%);
-  }
-
-  .hero-overlay {
-    position: absolute;
-    bottom: 22px; left: 28px; right: 28px;
-    z-index: 2;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .hero-name {
-    font-family: 'Fraunces', serif;
-    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
-    font-weight: 900;
-    color: white;
-    line-height: 1.05;
-    text-shadow: 0 2px 8px rgba(0,0,0,.6);
-  }
-
-  .hero-rating {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    background: rgba(13,12,12,.8);
-    backdrop-filter: blur(6px);
-    border: 1px solid rgba(255,255,255,.1);
-    border-radius: 100px;
-    padding: 6px 14px;
-    font-size: .82rem;
-    font-weight: 700;
-    color: white;
-    white-space: nowrap;
-  }
-
-  .hero-rating i { color: #f59e0b; }
-
-  /* Info bar */
-  .hero-info {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 16px;
-    padding: 22px 28px;
-  }
-
-  .info-pills {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-  }
-
-  .info-pill {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: .85rem;
-    font-weight: 600;
-    color: var(--muted);
-  }
-
-  .info-pill i { color: #ff6b6b; font-size: .9rem; }
-  .info-pill.free { color: #4ade80; }
-  .info-pill.free i { color: #4ade80; }
-
-  .cupom-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(22,163,74,.15);
-    border: 1.5px solid rgba(22,163,74,.3);
-    color: #4ade80;
-    font-size: .75rem;
-    font-weight: 700;
-    border-radius: 100px;
-    padding: 5px 14px;
-    letter-spacing: .3px;
-  }
-
-  .btn-reservar {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: #E01E1E;
-    color: white;
-    border-radius: 100px;
-    padding: 11px 24px;
-    font-size: .85rem;
-    font-weight: 700;
-    text-decoration: none;
-    transition: all .22s;
-    white-space: nowrap;
-    box-shadow: 0 4px 16px rgba(196,16,23,.22);
-  }
-
-  .btn-reservar:hover {
-    background: var(--red-dk);
-    color: white;
-    transform: translateY(-1px);
-    box-shadow: 0 8px 22px rgba(196,16,23,.28);
-  }
-
-  /* ── MENU SECTION ── */
-  .menu-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-    gap: 14px;
-  }
-
-  .menu-title {
-    font-family: 'Fraunces', serif;
-    font-size: 1.6rem;
-    font-weight: 900;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .menu-title::before {
-    content: '';
-    width: 4px; height: 28px;
-    background: #E01E1E;
-    border-radius: 2px;
-  }
-
-  .filters {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    scrollbar-width: none;
-    padding-bottom: 2px;
-  }
-  .filters::-webkit-scrollbar { display: none; }
-
-  .filter-btn {
-    padding: 7px 18px;
-    border-radius: 100px;
-    font-size: .8rem;
-    font-weight: 600;
-    white-space: nowrap;
-    border: 1.5px solid var(--stone);
-    background: var(--card);
-    color: rgba(255,255,255,.7);
-    cursor: pointer;
-    transition: all .2s;
-    font-family: inherit;
-  }
-
-  .filter-btn:hover { border-color: rgba(196,16,23,.5); color: white; }
-  .filter-btn.active { background: #E01E1E; border-color: #E01E1E; color: white; }
-
-  /* ── DISH GRID ── */
-  .dish-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 18px;
-  }
-
-  @media (max-width: 900px) { .dish-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 560px) { .dish-grid { grid-template-columns: 1fr; } }
-
-  /* ── DISH CARD ── */
-  .dish-card {
-    background: var(--card);
-    border-radius: var(--radius);
-    border: 1px solid var(--stone);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    transition: transform .28s, box-shadow .28s, border-color .28s;
-    animation: fadeUp .45s ease both;
-  }
-
-  .dish-card:nth-child(1) { animation-delay: .04s; }
-  .dish-card:nth-child(2) { animation-delay: .09s; }
-  .dish-card:nth-child(3) { animation-delay: .14s; }
-  .dish-card:nth-child(4) { animation-delay: .19s; }
-  .dish-card:nth-child(5) { animation-delay: .24s; }
-  .dish-card:nth-child(6) { animation-delay: .29s; }
-
-  .dish-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 18px 40px rgba(0,0,0,.5);
-    border-color: rgba(196,16,23,.4);
-  }
-
-  .dish-img-wrap {
-    height: 180px;
-    overflow: hidden;
-    position: relative;
-    background: var(--stone);
-    flex-shrink: 0;
-  }
-
-  .dish-img-wrap img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    transition: transform .4s ease;
-  }
-
-  .dish-card:hover .dish-img-wrap img { transform: scale(1.07); }
-
-  .dish-no-img {
-    width: 100%; height: 100%;
-    display: flex; align-items: center; justify-content: center;
-    color: rgba(255,255,255,.2); font-size: 2.4rem;
-    background: linear-gradient(135deg, #1a1a1a, #0d0c0c);
-  }
-
-  .price-tag {
-    position: absolute;
-    bottom: 12px; right: 12px;
-    background: #E01E1E;
-    color: white;
-    font-weight: 700;
-    font-size: .8rem;
-    padding: 5px 12px;
-    border-radius: 100px;
-    box-shadow: 0 3px 10px rgba(196,16,23,.3);
-  }
-
-  .dish-body {
-    padding: 16px 18px 20px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .dish-name {
-    font-family: 'Fraunces', serif;
-    font-size: 1rem;
-    font-weight: 700;
-    margin-bottom: 6px;
-    line-height: 1.25;
-    color: white;
-  }
-
-  .dish-desc {
-    font-size: .78rem;
-    color: var(--muted);
-    line-height: 1.55;
-    flex: 1;
-    margin-bottom: 16px;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .btn-ver {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    background: rgba(255,255,255,.05);
-    color: rgba(255,255,255,.8);
-    border: 1.5px solid var(--stone);
-    border-radius: 100px;
-    padding: 9px 18px;
-    font-size: .8rem;
-    font-weight: 700;
-    text-decoration: none;
-    transition: all .2s;
-    align-self: flex-start;
-  }
-
-  .btn-ver:hover {
-    background: #E01E1E;
-    color: white;
-    border-color: #E01E1E;
-    gap: 9px;
-  }
-
-  /* ── EMPTY ── */
-  .empty-menu {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: 72px 24px;
-    color: var(--muted);
-  }
-
-  .empty-menu i { font-size: 3rem; opacity: .25; display: block; margin-bottom: 14px; }
-  .empty-menu p { font-size: .9rem; }
+  .dish-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+  @media (max-width: 960px){ .dish-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
+  @media (max-width: 640px){ .dish-grid{grid-template-columns:1fr;} }
+  .dish-card { background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden; }
+  .dish-card img { width:100%; height:170px; object-fit:cover; background:#121216; }
+  .dish-body { padding:12px 14px 14px; }
+  .dish-name { margin:0 0 5px; font-size:1rem; font-weight:700; }
+  .dish-desc { margin:0 0 10px; color:var(--muted); font-size:.86rem; min-height:42px; }
+  .dish-row { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .dish-price { color:#ff7c86; font-weight:700; }
+  .dish-link { text-decoration:none; color:white; border:1px solid var(--line); border-radius:10px; padding:7px 10px; font-size:.82rem; font-weight:700; }
 </style>
 
-<div class="page-wrap">
+<div class="rd-wrap">
+  <a class="rd-back" href="{% url 'restaurantes' %}"><i class="fa-solid fa-arrow-left"></i> Voltar para restaurantes</a>
 
-  <a href="{% url 'restaurantes' %}" class="back-link">
-    <i class="fa-solid fa-arrow-left"></i> Voltar para restaurantes
-  </a>
-
-  <div class="rest-hero">
-    <div class="hero-img-wrap">
-      {% if restaurante.imagem %}
-        <img src="{% img_url restaurante.imagem %}" class="hero-img" alt="{{ restaurante.nome }}">
-      {% else %}
-        <div class="hero-img" style="background:linear-gradient(135deg,#1a1a1a,#0d0c0c);"></div>
-      {% endif %}
-
-      <div class="hero-overlay">
-        <h1 class="hero-name">{{ restaurante.nome }}</h1>
-        {% if not restaurante.aberto %}
-        <span class="hero-rating" style="background:rgba(196,16,23,.85);">
-          <i class="fa-solid fa-door-closed"></i> Fechado
-        </span>
-        {% elif restaurante.avaliacao %}
-        <span class="hero-rating">
-          <i class="fa-solid fa-star"></i> {{ restaurante.avaliacao }}
-        </span>
+  <section class="rd-hero">
+    <img class="rd-banner" src="{% img_or_fallback restaurante.banner|default:restaurante.imagem %}" alt="{{ restaurante.nome }}">
+    <div class="rd-body">
+      <div>
+        <h1 class="rd-title">{{ restaurante.nome }}</h1>
+        <div class="rd-meta">
+          <span><i class="fa-solid fa-star"></i> {{ restaurante.avaliacao|default:'—' }}</span>
+          <span><i class="fa-solid fa-clock"></i> {{ restaurante.tempo_entrega|default:'30-45 min' }}</span>
+          <span><i class="fa-solid fa-motorcycle"></i> {% if restaurante.taxa_entrega %}R$ {{ restaurante.taxa_entrega }}{% else %}Entrega grátis{% endif %}</span>
+        </div>
+        {% if restaurante.descricao %}<p style="margin:10px 0 0;color:var(--muted)">{{ restaurante.descricao }}</p>{% endif %}
+      </div>
+      <div>
+        {% if restaurante.cupom %}<div class="chip" style="margin-bottom:8px;"><i class="fa-solid fa-ticket"></i> Cupom {{ restaurante.cupom }}</div>{% endif %}
+        {% if restaurante.aberto %}
+          <a class="rd-btn" href="{% url 'reserva' %}?restaurante_id={{ restaurante.id_restaurante }}"><i class="fa-solid fa-calendar-check"></i> Reservar mesa</a>
+        {% else %}
+          <span class="rd-btn" style="background:#4a4a4f;cursor:not-allowed;"><i class="fa-solid fa-door-closed"></i> Restaurante fechado</span>
         {% endif %}
       </div>
     </div>
+  </section>
 
-    <div class="hero-info">
-      <div class="info-pills">
-        <span class="info-pill">
-          <i class="fa-solid fa-clock"></i> {{ restaurante.tempo_entrega|default:"30-45 min" }}
-        </span>
-        <span class="info-pill free">
-          <i class="fa-solid fa-bicycle"></i> {% if restaurante.taxa_entrega == 0 or restaurante.taxa_entrega == None %}Entrega grátis{% else %}R$ {{ restaurante.taxa_entrega }}{% endif %}
-        </span>
-        {% if restaurante.cupom %}
-        <span class="cupom-chip">
-          <i class="fa-solid fa-ticket"></i> {{ restaurante.cupom }}
-        </span>
-        {% endif %}
-      </div>
-
-      {% if restaurante.aberto %}
-      <a href="{% url 'reserva' %}?restaurante_id={{ restaurante.id_restaurante }}" class="btn-reservar">
-        <i class="fa-solid fa-calendar-check"></i> Reservar mesa
-      </a>
-      {% else %}
-      <span class="btn-reservar" style="opacity:.5; cursor:not-allowed; background:#555;">
-        <i class="fa-solid fa-door-closed"></i> Restaurante fechado
-      </span>
-      {% endif %}
-    </div>
-
-    {% if restaurante.descricao %}
-    <p style="padding: 0 28px 22px; font-size:.88rem; color:var(--muted); line-height:1.6; border-top:1px solid var(--stone); padding-top:16px; margin:0;">
-      {{ restaurante.descricao }}
-    </p>
-    {% endif %}
-  </div>
-
-  <div class="menu-bar">
+  <div class="menu-head">
     <h2 class="menu-title">Cardápio</h2>
     <div class="filters">
-      <a href="{% url 'restaurante_detalhe' restaurante.id_restaurante %}"
-         class="filter-btn {% if not categoria_ativa %}active{% endif %}">Todos</a>
+      <a href="{% url 'restaurante_detalhe' restaurante.id_restaurante %}" class="filter-btn {% if not categoria_ativa %}active{% endif %}"><i class="fa-solid fa-layer-group"></i> Todos</a>
       {% for cat in categorias %}
-      <a href="{% url 'restaurante_detalhe' restaurante.id_restaurante %}?categoria={{ cat }}"
-         class="filter-btn {% if categoria_ativa == cat %}active{% endif %}">{{ cat }}</a>
+      <a href="{% url 'restaurante_detalhe' restaurante.id_restaurante %}?categoria={{ cat }}" class="filter-btn {% if categoria_ativa == cat %}active{% endif %}">
+        {% if 'pizza' in cat|lower %}<i class="fa-solid fa-pizza-slice"></i>{% elif 'bebida' in cat|lower %}<i class="fa-solid fa-glass-water"></i>{% elif 'sobremesa' in cat|lower %}<i class="fa-solid fa-ice-cream"></i>{% else %}<i class="fa-solid fa-utensils"></i>{% endif %}
+        {{ cat }}
+      </a>
       {% endfor %}
     </div>
   </div>
 
   <div class="dish-grid">
     {% for prato in pratos %}
-    <div class="dish-card">
-
-      <div class="dish-img-wrap">
-        {% if prato.imagem %}
-          <img src="{% img_url prato.imagem %}" alt="{{ prato.nome_produto }}">
-        {% else %}
-          <div class="dish-no-img"><i class="fa-solid fa-utensils"></i></div>
-        {% endif %}
-        {% if prato.preco %}<span class="price-tag">R$ {{ prato.preco }}</span>{% endif %}
-      </div>
-
+    <article class="dish-card">
+      <img src="{% img_or_fallback prato.imagem %}" alt="{{ prato.nome_produto }}">
       <div class="dish-body">
-        <h5 class="dish-name">{{ prato.nome_produto|default:"Produto" }}</h5>
-        <p class="dish-desc">{{ prato.descricao|default:""|truncatechars:110 }}</p>
-        <a href="{% url 'prato' %}?restaurante_id={{ restaurante.id_restaurante }}&produto_id={{ prato.id_produto }}"
-           class="btn-ver">
-          Ver prato <i class="fa-solid fa-arrow-right"></i>
-        </a>
+        <h5 class="dish-name">{{ prato.nome_produto|default:'Produto' }}</h5>
+        <p class="dish-desc">{{ prato.descricao|default:''|truncatechars:110 }}</p>
+        <div class="dish-row">
+          <span class="dish-price">R$ {{ prato.preco|default:'0.00' }}</span>
+          <a class="dish-link" href="{% url 'prato' %}?restaurante_id={{ restaurante.id_restaurante }}&produto_id={{ prato.id_produto }}">Ver prato</a>
+        </div>
       </div>
-
-    </div>
+    </article>
     {% empty %}
-    <div class="empty-menu">
-      <i class="fa-solid fa-egg"></i>
-      <p>Nenhum item no cardápio ainda.</p>
-    </div>
+    <p style="color:var(--muted);">Nenhum item disponível no cardápio.</p>
     {% endfor %}
   </div>
-
 </div>
 
 {% include "pages/pagePrincipal/footer.html" %}
