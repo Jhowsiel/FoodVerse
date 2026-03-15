@@ -638,3 +638,465 @@ GO
 ---
 
 *Documentação elaborada com base no código da Sprint 1 do Projeto Integrador — Senac.*
+
+---
+
+## 10. Definição e Elaboração do Plano de Teste
+
+| Campo | Valor |
+|---|---|
+| **Nome do Projeto** | FoodVerse |
+| **Versão** | 1.5.6 |
+| **Período do Plano** | 05/05/2025 a 27/05/2025 |
+| **Equipe Responsável** | Cauan Alves, Felipe Ferreira, Josiel Souza, Marcio Sousa, Miguel Almeida |
+
+### Objetivo do Teste
+
+Validar as funcionalidades críticas do sistema FoodVerse, garantindo:
+
+- Cadastro e autenticação segura de funcionários
+- Controle de acesso baseado em perfis (Admin, Gerente, Atendente, Cozinheiro, Entregador)
+- Gestão correta de pedidos e estoque
+- Interface responsiva e validação adequada de dados
+
+### Ambiente de Testes
+
+| Item | Valor |
+|---|---|
+| Sistema Operacional | Windows 10 |
+| IDE Utilizada | NetBeans |
+| Banco de Dados | SQL Server (MSSQL) |
+| Usuários envolvidos | Testador (Equipe FoodVerse), Admin (perfil de teste), Gerente (perfil de teste), Atendente (perfil de teste), Entregador (perfil de teste) |
+
+### Funcionalidades a Serem Testadas
+
+| Código | Nome da Funcionalidade |
+|---|---|
+| CTF-1 | Cadastro de Funcionário |
+| ACF-1 | Aprovação / Rejeição de Cadastro de Funcionário |
+| LGF-1 | Login de Funcionário |
+| ADM-1 | Acesso de Administrador |
+| GPU-1 | Gestão de Perfil de Funcionário |
+| GPD-1 | Gestão de Pedidos |
+| GEQ-1 | Gestão de Estoque |
+| GE-1 | Gestão de Entregadores |
+| GC-1 | Cadastro e Gestão de Cardápio |
+| GP-1 | Gestão de Cupons |
+| PG-1 | Processamento de Pagamentos |
+
+---
+
+## 11. Casos de Teste
+
+---
+
+### CTF-1 — Cadastro de Funcionário com Sucesso
+
+| Campo | Descrição |
+|---|---|
+| **Nome do Plano** | PT – Cadastro de usuário |
+| **Módulo** | Módulo de Cadastro de Funcionário |
+| **Caso de Teste Nº** | CTF-1 |
+| **Resumo** | Cadastro de funcionário com sucesso |
+| **Prioridade** | Alta |
+| **Data** | 19/03/2025 |
+| **Executor** | Cauan Alves |
+
+**Pré-condições:**
+
+| # | Condição |
+|---|---|
+| 1 | O usuário deve ter acesso à tela de cadastro do sistema. |
+| 2 | O funcionário não pode estar cadastrado previamente no sistema (e-mail e username únicos). |
+
+**Passos:**
+
+| # | Ação |
+|---|---|
+| 1 | Acessar a tela de cadastro de funcionário. |
+| 2 | Preencher o campo "Nome" com um nome válido. |
+| 3 | Preencher o campo "Usuário" (username) com um nome de usuário único. |
+| 4 | Inserir um e-mail válido no campo correspondente. |
+| 5 | Inserir um número de telefone válido. |
+| 6 | Selecionar o cargo clicando em um dos chips disponíveis: **Atendente**, **Cozinheiro** ou **Entregador**. |
+| 7 | Criar uma senha com no mínimo **6 caracteres** e confirmá-la. |
+| 8 | Clicar no botão "Cadastrar". |
+
+| Campo | Valor |
+|---|---|
+| **Resultado Esperado** | O sistema valida os dados, insere o registro em `tb_funcionarios` com `status = 'pendente'` e exibe a mensagem **"Solicitação validada e enviada!"**, redirecionando para a tela de login. O funcionário **não** acessa o sistema imediatamente — o cadastro aguarda aprovação de Admin ou Gerente. |
+| **Observações** | Caso algum campo obrigatório esteja em branco, o sistema deve exibir alerta e não concluir o cadastro. Se a senha tiver menos de 6 caracteres, exibe **"A senha deve ter no mínimo 6 caracteres."** |
+| **Comentários** | O processo garante a unicidade de e-mail e username via verificação prévia no banco. Mensagem de duplicidade: **"Usuário ou E-mail já cadastrado."** |
+
+---
+
+### ACF-1 — Aprovação / Rejeição de Cadastro de Funcionário
+
+| Campo | Descrição |
+|---|---|
+| **Nome do Plano** | PT – Validações de cadastro |
+| **Módulo** | Módulo de Aprovação de Cadastro de Funcionário |
+| **Caso de Teste Nº** | ACF-1 |
+| **Resumo** | Aprovação / Rejeição de cadastro de funcionário |
+| **Prioridade** | Alta |
+| **Data** | 14/05/2025 |
+| **Executor** | Marcio Sousa |
+
+**Pré-condições:**
+
+| # | Condição |
+|---|---|
+| 1 | O Admin ou Gerente deve estar autenticado no sistema com status `ativo`. |
+| 2 | Deve existir ao menos uma solicitação de cadastro com status `pendente`. |
+
+**Passos:**
+
+| # | Ação |
+|---|---|
+| 1 | Acessar o painel de Gestão de Usuários (Aprovação de Cadastros). |
+| 2 | Visualizar a lista de solicitações com status `pendente`. |
+| 3 | Selecionar pelo menos uma solicitação de cadastro na tabela. |
+| 4 | Clicar em "Aprovar" ou "Rejeitar". |
+| 5 | Verificar se o sistema processa a ação e atualiza o status do registro. |
+
+| Campo | Valor |
+|---|---|
+| **Resultado Esperado** | O sistema atualiza o `status` das solicitações selecionadas para `ativo` (aprovado) ou `bloqueado` (rejeitado), registra o responsável pela ação e a data/hora no banco. |
+| **Observações** | Se nenhuma solicitação estiver selecionada ao clicar em "Aprovar" ou "Rejeitar", o sistema deve exibir mensagem solicitando a seleção e não executar nenhuma atualização. |
+| **Comentários** | Admin global gerencia solicitações de Gerentes; Gerente gerencia Atendentes, Cozinheiros e Entregadores do próprio restaurante. A lista exibe apenas cadastros com status `pendente` em destaque. |
+
+---
+
+### LGF-1 — Login de Funcionário com Sucesso
+
+| Campo | Descrição |
+|---|---|
+| **Nome do Plano** | PT – Validações de login funcionário |
+| **Módulo** | Módulo de Login de Funcionário |
+| **Caso de Teste Nº** | LGF-1 |
+| **Resumo** | Login de funcionário com sucesso |
+| **Prioridade** | Alta |
+| **Data** | 19/03/2025 |
+| **Executor** | Josiel Souza |
+
+**Pré-condições:**
+
+| # | Condição |
+|---|---|
+| 1 | O funcionário deve estar cadastrado no sistema com status `ativo` (cadastro aprovado por Admin ou Gerente). |
+| 2 | O funcionário deve possuir e-mail (ou username) e senha válidos. |
+
+**Passos:**
+
+| # | Ação |
+|---|---|
+| 1 | Abrir a tela de login. |
+| 2 | Inserir o e-mail ou username válido. |
+| 3 | Inserir a senha correta. |
+| 4 | Clicar no botão "Entrar". |
+
+| Campo | Valor |
+|---|---|
+| **Resultado Esperado** | O sistema verifica que o status do funcionário é `ativo`, autentica o usuário e direciona-o à dashboard com o menu filtrado pelo seu cargo. |
+| **Observações** | Se o e-mail/senha estiverem incorretos: **"Credenciais inválidas."** · Se o cadastro estiver com status `pendente`: **"Seu cadastro ainda está em análise."** · Se os campos estiverem vazios: **"Preencha e-mail e senha!"** |
+| **Comentários** | O funcionário acessa apenas os módulos compatíveis com seu cargo. Cargos `bloqueado` ou `desligado` recebem mensagem específica e não têm acesso. |
+
+---
+
+### ADM-1 — Acesso de Administrador
+
+| Campo | Descrição |
+|---|---|
+| **Nome do Plano** | PT – Acesso de Administrador |
+| **Módulo** | Dashboard para Admin |
+| **Caso de Teste Nº** | ADM-1 |
+| **Resumo** | Permitir acesso administrativo |
+| **Prioridade** | Alta |
+| **Data** | 14/05/2025 |
+| **Executor** | Cauan Alves |
+
+**Pré-condições:**
+
+| # | Condição |
+|---|---|
+| 1 | O usuário deve estar cadastrado com `cargo = 'Admin'` e `status = 'ativo'`. |
+
+**Passos:**
+
+| # | Ação |
+|---|---|
+| 1 | Acessar a tela de login do sistema. |
+| 2 | Informar e-mail (ou username) e senha válidos do Admin. |
+| 3 | Clicar no botão "Entrar". |
+
+| Campo | Valor |
+|---|---|
+| **Resultado Esperado** | O sistema autentica o usuário, verifica o cargo `Admin` e concede acesso às funcionalidades administrativas globais (gestão de restaurantes e gestão de gerentes). A navegação para funções administrativas é liberada imediatamente após o login. |
+| **Observações** | Funcionários com cargo diferente de `Admin` que tentarem acessar módulos restritos recebem a mensagem: **"Seu perfil não possui permissão para acessar este módulo."** Admin sem restaurante selecionado que tentar acessar módulos operacionais recebe: **"Selecione um restaurante antes de acessar este módulo."** |
+| **Comentários** | Garantir autenticação segura com hash de senha e validação correta dos atributos `cargo` e `status`. O controle de acesso é aplicado via `PermissionChecker` a cada tentativa de abertura de módulo. |
+
+---
+
+### GPU-1 — Gestão de Perfil de Funcionário
+
+| Campo | Descrição |
+|---|---|
+| **Nome do Plano** | PT – Alteração de perfil |
+| **Módulo** | Módulo de Gestão de Perfil de Funcionário |
+| **Caso de Teste Nº** | GPU-1 |
+| **Resumo** | Visualizar e atualizar dados cadastrais de um funcionário |
+| **Prioridade** | Alta |
+| **Data** | 14/05/2025 |
+| **Executor** | Felipe Ferreira |
+
+**Pré-condições:**
+
+| # | Condição |
+|---|---|
+| 1 | O usuário deve estar autenticado com perfil Admin ou Gerente. |
+| 2 | O funcionário a ser editado deve estar cadastrado no sistema. |
+
+**Passos:**
+
+| # | Ação |
+|---|---|
+| 1 | Acessar o painel de Gestão de Usuários. |
+| 2 | Localizar e selecionar o funcionário desejado na lista. |
+| 3 | Clicar no botão de edição do registro. |
+| 4 | Alterar os dados desejados (nome, e-mail, telefone, cargo, status e/ou senha). |
+| 5 | Salvar as alterações. |
+
+| Campo | Valor |
+|---|---|
+| **Resultado Esperado** | O sistema valida os dados, atualiza o registro em `tb_funcionarios` e exibe a mensagem **"Cadastro atualizado com sucesso!"** O funcionário editado é refletido imediatamente na listagem. |
+| **Observações** | Se uma nova senha for informada com menos de 6 caracteres, o sistema exibe **"A nova senha deve ter no mínimo 6 caracteres."** e não salva as alterações. |
+| **Comentários** | A unicidade de e-mail e username é verificada antes de salvar; se houver duplicidade o sistema exibe: **"Já existe um usuário com este login ou e-mail."** |
+
+---
+
+### GPD-1 — Gestão de Pedidos: Finalização com Sucesso
+
+| Campo | Descrição |
+|---|---|
+| **Nome do Plano** | PT – Validações do módulo de Pedidos |
+| **Módulo** | Módulo de Gestão de Pedidos |
+| **Caso de Teste Nº** | GPD-1 |
+| **Resumo** | Finalizando um pedido com sucesso |
+| **Prioridade** | Alta |
+| **Data** | 21/03/2025 |
+| **Executor** | Josiel Souza |
+
+**Pré-condições:**
+
+| # | Condição |
+|---|---|
+| 1 | O usuário deve estar logado com cargo Atendente, Cozinheiro, Gerente ou Admin. |
+| 2 | Devem existir pedidos com status `pendente` no sistema. |
+
+**Passos:**
+
+| # | Ação |
+|---|---|
+| 1 | Acessar o painel de Gestão de Pedidos. |
+| 2 | Visualizar a lista de pedidos com status `pendente`. |
+| 3 | Aceitar o pedido para atualizar o status para `em preparo` (o sistema desconta os insumos do estoque via BOM). |
+| 4 | Atualizar o status do pedido para `pronto` quando o preparo for concluído. |
+| 5 | Para pedidos de delivery: clicar em "Despachar" e selecionar um entregador disponível para atualizar o status para `em rota`. |
+| 6 | Confirmar a entrega ou conclusão para atualizar o status para `concluido`. |
+| 7 | Verificar se o pedido aparece no histórico de pedidos concluídos. |
+
+| Campo | Valor |
+|---|---|
+| **Resultado Esperado** | O sistema permite a atualização dos pedidos em tempo real seguindo o fluxo: `pendente` → `em preparo` → `pronto` → `em rota` (delivery) → `concluido`. A baixa automática de estoque ocorre na transição de `pendente` para `em preparo`, com base na receita (BOM) de cada produto. |
+| **Observações** | Pedidos de salão (local) seguem o fluxo sem a etapa `em rota`. Apenas funcionários com cargo autorizado podem alterar o status dos pedidos. A baixa de estoque é idempotente — não desconta duas vezes o mesmo pedido. |
+| **Comentários** | Os valores de status no banco são exatamente: `pendente`, `em preparo`, `pronto`, `em rota`, `concluido`, `cancelado` (tabela `tb_status_pedido`). |
+
+---
+
+### GEQ-1 — Gestão de Estoque: Entrada de Insumos
+
+| Campo | Descrição |
+|---|---|
+| **Nome do Plano** | PT – Gestão de Estoque |
+| **Módulo** | Módulo de Gestão de Estoque |
+| **Caso de Teste Nº** | GEQ-1 |
+| **Resumo** | Entrada de insumos no estoque |
+| **Prioridade** | Alta |
+| **Data** | 14/05/2025 |
+| **Executor** | Marcio Sousa |
+
+**Pré-condições:**
+
+| # | Condição |
+|---|---|
+| 1 | O usuário está autenticado com cargo Admin, Gerente ou Cozinheiro. |
+| 2 | O insumo desejado já está cadastrado no sistema com `tipo_produto = 'INSUMO'`. |
+| 3 | O restaurante adquiriu novos produtos/insumos. |
+
+**Passos:**
+
+| # | Ação |
+|---|---|
+| 1 | Acessar o módulo de Estoque. |
+| 2 | Selecionar o insumo desejado na lista. |
+| 3 | Registrar a entrada informando a quantidade adquirida. |
+| 4 | Salvar a entrada. |
+
+| Campo | Valor |
+|---|---|
+| **Resultado Esperado** | O sistema atualiza automaticamente a quantidade do insumo na tabela `tb_estoque`. O item exibe a nova quantidade corretamente na lista de estoque. |
+| **Observações** | A baixa automática de insumos ocorre quando um pedido passa de `pendente` para `em preparo`, com base na receita (BOM) definida em `tb_receitas`. Insumos com quantidade abaixo do estoque mínimo recebem destaque visual de alerta. |
+| **Comentários** | Insumos são cadastrados com `tipo_produto = 'INSUMO'` e ficam visíveis apenas no painel de estoque, não no cardápio público. |
+
+---
+
+### GE-1 — Gestão de Entregadores: Atribuição Manual
+
+| Campo | Descrição |
+|---|---|
+| **Nome do Plano** | PT – Gestão de Entregadores |
+| **Módulo** | Módulo de Gestão de Entregadores |
+| **Caso de Teste Nº** | GE-1 |
+| **Resumo** | Seleção manual de entregador para um pedido específico |
+| **Prioridade** | Média |
+| **Data** | 12/05/2025 |
+| **Executor** | Cauan Alves |
+
+**Pré-condições:**
+
+| # | Condição |
+|---|---|
+| 1 | Existem entregadores cadastrados com cargo `Entregador` e status `ativo` disponíveis. |
+| 2 | Há um pedido com status `pronto` aguardando despacho de entrega (delivery). |
+| 3 | O usuário está autenticado como Admin, Gerente ou Atendente. |
+
+**Passos:**
+
+| # | Ação |
+|---|---|
+| 1 | Acessar o módulo de Pedidos ou Entregas. |
+| 2 | Selecionar um pedido com status `pronto` do tipo delivery. |
+| 3 | Clicar em "Despachar (Entregar ao Motoboy)" ou opção equivalente. |
+| 4 | Escolher manualmente um entregador disponível na lista exibida. |
+| 5 | Confirmar a atribuição do pedido ao entregador selecionado. |
+
+| Campo | Valor |
+|---|---|
+| **Resultado Esperado** | O sistema registra a atribuição, atualiza o status do pedido para `em rota` e registra o nome do entregador no pedido. |
+| **Observações** | Deve ser possível reatribuir o pedido a outro entregador em caso de necessidade. Apenas entregadores com status `ativo` são listados para seleção. |
+| **Comentários** | Processo importante para lidar com exceções, preferências ou necessidades específicas do restaurante. |
+
+---
+
+### GC-1 — Cadastro de Item no Cardápio
+
+| Campo | Descrição |
+|---|---|
+| **Nome do Plano** | PT – Cadastro e Gestão de Cardápio |
+| **Módulo** | Módulo de Gestão de Cardápio |
+| **Caso de Teste Nº** | GC-1 |
+| **Resumo** | Cadastro de item no cardápio |
+| **Prioridade** | Alta |
+| **Data** | 18/05/2025 |
+| **Executor** | Miguel Almeida |
+
+**Pré-condições:**
+
+| # | Condição |
+|---|---|
+| 1 | O usuário está autenticado com cargo Admin (em contexto de restaurante) ou Gerente. |
+
+**Passos:**
+
+| # | Ação |
+|---|---|
+| 1 | Acessar o módulo de Cardápio no sistema. |
+| 2 | Selecionar a opção para cadastrar novo item. |
+| 3 | Preencher os campos obrigatórios: nome, categoria, preço, disponibilidade, imagem, descrição e opções de personalização. |
+| 4 | Salvar o novo item. |
+
+| Campo | Valor |
+|---|---|
+| **Resultado Esperado** | O sistema registra o novo item em `tb_produtos` com `tipo_produto = 'VENDA'` vinculado ao restaurante do usuário logado, e exibe mensagem de sucesso. O item passa a aparecer no cardápio público do portal web filtrado por `COALESCE(tipo_produto, 'VENDA') = 'VENDA'`. |
+| **Observações** | Todos os campos obrigatórios devem ser validados; mensagens de erro são exibidas caso estejam incorretos ou em branco. Todas as operações de edição e exclusão são restritas ao restaurante da sessão ativa (filtro `AND ID_restaurante = ?`). |
+| **Comentários** | O cadastro deve ser intuitivo e permitir inclusão de imagens armazenadas em `media/produtos`. |
+
+---
+
+### GP-1 — Gestão de Cupons
+
+| Campo | Descrição |
+|---|---|
+| **Nome do Plano** | PT – Gestão de Promoções e Descontos |
+| **Módulo** | Módulo de Gestão de Cupons |
+| **Caso de Teste Nº** | GP-1 |
+| **Resumo** | Cadastro e aplicação de cupom de desconto |
+| **Prioridade** | Média |
+| **Data** | 14/05/2025 |
+| **Executor** | Cauan Alves |
+
+**Pré-condições:**
+
+| # | Condição |
+|---|---|
+| 1 | O usuário está autenticado com cargo Admin (em contexto de restaurante) ou Gerente. |
+
+**Passos:**
+
+| # | Ação |
+|---|---|
+| 1 | Acessar o módulo de gestão do restaurante no sistema. |
+| 2 | Localizar o campo de cadastro de cupom. |
+| 3 | Informar código do cupom, valor de desconto e validade. |
+| 4 | Salvar o cupom. |
+| 5 | No portal web, um cliente insere o código do cupom no checkout do pedido. |
+| 6 | Confirmar o pedido com o desconto aplicado. |
+
+| Campo | Valor |
+|---|---|
+| **Resultado Esperado** | O sistema registra o cupom em `tb_cupons`. No portal web, ao inserir um código válido, o desconto é aplicado ao valor total do pedido e o registro do cupom utilizado é persistido junto ao pedido. |
+| **Observações** | Cupons com data de validade expirada não podem ser aplicados a novos pedidos. O portal web também aplica desconto automático de 10% para pedidos acima de R$ 50,00, independente de cupom. |
+| **Comentários** | O módulo de promoções por dia/horário e canais (local/delivery) está previsto em funcionalidades futuras. A implementação atual da Sprint 1 contempla cupons por código vinculados ao restaurante. |
+
+---
+
+### PG-1 — Processamento de Pagamentos
+
+| Campo | Descrição |
+|---|---|
+| **Nome do Plano** | PT – Processamento de Pagamentos |
+| **Módulo** | Módulo de Processamento de Pagamentos |
+| **Caso de Teste Nº** | PG-1 |
+| **Resumo** | Registro de pagamento presencial pelo atendente |
+| **Prioridade** | Alta |
+| **Data** | 12/05/2025 |
+| **Executor** | Josiel Souza |
+
+**Pré-condições:**
+
+| # | Condição |
+|---|---|
+| 1 | O atendente está autenticado no sistema desktop. |
+| 2 | Existe um pedido local aguardando conclusão. |
+| 3 | O cliente optou por pagar em dinheiro. |
+
+**Passos:**
+
+| # | Ação |
+|---|---|
+| 1 | Acessar o painel de Pedidos como Atendente. |
+| 2 | Localizar o pedido com status `pronto`. |
+| 3 | Selecionar a opção de finalizar/registrar pagamento. |
+| 4 | Selecionar a forma de pagamento: **Dinheiro** (opção disponível no sistema desktop). |
+| 5 | Registrar o recebimento do valor. |
+| 6 | Confirmar o pagamento. |
+
+| Campo | Valor |
+|---|---|
+| **Resultado Esperado** | O sistema salva o registro de pagamento em `tb_pagamentos` identificando a forma de pagamento como **"Dinheiro"** e atualiza o status do pedido para `concluido`. |
+| **Observações** | No portal web (delivery), as formas de pagamento disponíveis são: **Pix**, **Cartão de Crédito** e **Cartão de Débito**. Em caso de falha de banco ou rede ao salvar o pagamento, o sistema exibe mensagem de erro clara, mantém o pedido com o status anterior e permite nova tentativa. |
+| **Comentários** | O sistema não utiliza API de pagamento externa (sem Stripe). O registro é realizado diretamente em `tb_pagamentos` vinculado ao `ID_pedido`. O fluxo deve ser simples para o atendente, reduzindo erros operacionais no registro manual. |
+
+---
+
+*Documentação elaborada com base no código da Sprint 1 do Projeto Integrador — Senac.*
