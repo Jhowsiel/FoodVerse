@@ -201,8 +201,9 @@ def home(request):
         'categorias': sorted(filter(None, categorias)),
         'cliente_logado': get_cliente_logado(request),
     })
-
-
+# -------------------------------------------------------------------------
+# AUTENTICAÇÃO E CADASTRO
+# -------------------------------------------------------------------------
 def login_view(request):
     if get_cliente_logado(request):
         return redirect('home')
@@ -213,92 +214,125 @@ def login_view(request):
         remember_me = request.POST.get('remember_me')
 
         cliente = TbClientes.objects.filter(username=username).first()
+
         if cliente and check_password(password, cliente.senha):
             request.session['cliente_id'] = cliente.id_cliente
             request.session.set_expiry(1209600 if remember_me else 0)
             messages.success(request, 'Login realizado com sucesso!')
             return redirect('home')
-
-        messages.error(request, 'Usuário ou senha incorretos.')
+        else:
+            messages.error(request, 'Usuário ou senha incorretos.')
 
     return render(request, 'pages/Autentificacao/login.html')
-
 
 def logout_view(request):
     if 'cliente_id' in request.session:
         del request.session['cliente_id']
-    list(messages.get_messages(request))
+    list(messages.get_messages(request))  # limpa todas as mensagens pendentes
     return redirect('login')
 
+import re
+from django.contrib import messages
+from django.contrib.auth.hashers import make_password
+from django.utils import timezone
+from django.shortcuts import render, redirect
 
 def cadastro_view(request):
     if get_cliente_logado(request):
         return redirect('home')
 
     if request.method == 'POST':
-        nome = request.POST.get('name', '').strip()
-        username = request.POST.get('username', '').strip()
-        cpf = re.sub(r'\D', '', request.POST.get('cpf', ''))
-        telefone = re.sub(r'\D', '', request.POST.get('telefone', ''))
-        email = request.POST.get('email', '').strip().lower()
-        password = request.POST.get('password', '')
+        nome             = request.POST.get('name', '').strip()
+        username         = request.POST.get('username', '').strip()
+        cpf              = re.sub(r'\D', '', request.POST.get('cpf', ''))
+        telefone         = re.sub(r'\D', '', request.POST.get('telefone', ''))
+        email            = request.POST.get('email', '').strip().lower()
+        password         = request.POST.get('password', '')
         confirm_password = request.POST.get('confirm_password', '')
 
         erros = []
+
+        # ── Campos obrigatórios ──────────────────────────────────────────
         if not all([nome, username, cpf, telefone, email, password, confirm_password]):
-            erros.append('Todos os campos são obrigatórios.')
+            erros.append("Todos os campos são obrigatórios.")
+
+        # ── Nome ─────────────────────────────────────────────────────────
         if nome and len(nome) < 3:
-            erros.append('O nome deve ter pelo menos 3 caracteres.')
+            erros.append("O nome deve ter pelo menos 3 caracteres.")
         if nome and not re.match(r'^[A-Za-zÀ-ÿ\s]+$', nome):
-            erros.append('O nome deve conter apenas letras.')
+            erros.append("O nome deve conter apenas letras.")
+
+        # ── Username ─────────────────────────────────────────────────────
         if username and len(username) < 3:
-            erros.append('O nome de usuário deve ter pelo menos 3 caracteres.')
+            erros.append("O nome de usuário deve ter pelo menos 3 caracteres.")
         if username and not re.match(r'^[a-zA-Z0-9_]+$', username):
-            erros.append('O usuário só pode conter letras, números e underscore (_).')
+            erros.append("O usuário só pode conter letras, números e underscore (_).")
         if username and TbClientes.objects.filter(username=username).exists():
-            erros.append('Este nome de usuário já está em uso.')
+            erros.append("Este nome de usuário já está em uso.")
+
+        # ── CPF ───────────────────────────────────────────────────────────
         if cpf and len(cpf) != 11:
-            erros.append('CPF deve conter 11 dígitos.')
-        if cpf and len(cpf) == 11 and not _cpf_valido(cpf):
-            erros.append('CPF inválido.')
-        if cpf and TbClientes.objects.filter(cpf=cpf).exists():
-            erros.append('Este CPF já está cadastrado.')
+            erros.append("CPF inválido. Informe os 11 dígitos.")
+        elif cpf and not _cpf_valido(cpf):
+            erros.append("CPF inválido (dígitos verificadores incorretos).")
+        elif cpf and TbClientes.objects.filter(cpf=cpf).exists():
+            erros.append("Este CPF já está cadastrado.")
+
+        # ── Telefone ──────────────────────────────────────────────────────
         if telefone and len(telefone) not in (10, 11):
-            erros.append('Telefone inválido. Informe DDD + número.')
-        if telefone and TbClientes.objects.filter(telefone=telefone).exists():
-            erros.append('Este telefone já está cadastrado.')
-        if email and not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
-            erros.append('E-mail inválido.')
-        if email and TbClientes.objects.filter(email=email).exists():
-            erros.append('Este e-mail já está cadastrado.')
-        if password and len(password) < 8:
-            erros.append('A senha deve ter no mínimo 8 caracteres.')
-        if password != confirm_password:
-            erros.append('As senhas não conferem.')
+            erros.append("Telefone inválido. Informe DDD + número (10 ou 11 dígitos).")
+        elif telefone and TbClientes.objects.filter(telefone=telefone).exists():
+            erros.append("Este telefone já está cadastrado.")
 
+        # ── E-mail ────────────────────────────────────────────────────────
+        if email and not re.match(r'^[\w\.\+\-]+@[\w\-]+\.[a-z]{2,}$', email):
+            erros.append("E-mail inválido.")
+        elif email and TbClientes.objects.filter(email=email).exists():
+            erros.append("Este e-mail já está cadastrado.")
+
+        # ── Senha ─────────────────────────────────────────────────────────
+        if password:
+            if len(password) < 8:
+                erros.append("A senha deve ter pelo menos 8 caracteres.")
+            if not re.search(r'[A-Z]', password):
+                erros.append("A senha deve conter pelo menos uma letra maiúscula.")
+            if not re.search(r'[a-z]', password):
+                erros.append("A senha deve conter pelo menos uma letra minúscula.")
+            if not re.search(r'\d', password):
+                erros.append("A senha deve conter pelo menos um número.")
+            if not re.search(r'[!@#$%^&*(),.?\":{}|<>]', password):
+                erros.append("A senha deve conter pelo menos um caractere especial.")
+        if password and confirm_password and password != confirm_password:
+            erros.append("As senhas não coincidem.")
+
+        # ── Retorna erros ─────────────────────────────────────────────────
         if erros:
-            return render(request, 'pages/Autentificacao/cadastro.html', {'erros': erros})
+            for erro in erros:
+                messages.error(request, erro)
+            return render(request, 'pages/Autentificacao/cadastro.html')
 
+        # ── Criação ───────────────────────────────────────────────────────
         try:
             TbClientes.objects.create(
                 nome=nome,
                 username=username,
+                email=email,
                 cpf=cpf,
                 telefone=telefone,
-                email=email,
                 senha=make_password(password),
-                data_cadastro=timezone.now(),
+                data_cadastro=timezone.now()
             )
             messages.success(request, 'Cadastro realizado com sucesso! Faça login.')
-            return redirect('login')
+            
         except Exception:
             messages.error(request, 'Ocorreu um erro ao criar a conta.')
 
     return render(request, 'pages/Autentificacao/cadastro.html')
 
 
+# ── Validação de CPF (algoritmo oficial) ──────────────────────────────────────
 def _cpf_valido(cpf: str) -> bool:
-    if len(set(cpf)) == 1:
+    if len(set(cpf)) == 1:         
         return False
     for i in range(9, 11):
         soma = sum(int(cpf[j]) * (i + 1 - j) for j in range(i))
