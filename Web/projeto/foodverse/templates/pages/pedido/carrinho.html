@@ -683,7 +683,11 @@
           <i class="bi bi-ticket-perforated-fill"></i>
           <span>Tem um cupom de desconto?</span>
         </div>
-        <span class="btn-coupon">Aplicar na finalização</span>
+        <form method="get" action="{% url 'finalizacao' %}" style="display:flex; gap:8px; align-items:center;">
+          {% for r_id, dados in carrinho.items %}<input type="hidden" name="restaurante_id" value="{{ r_id }}">{% endfor %}
+          <input type="text" name="cupom_codigo" placeholder="Cupom" style="border-radius:8px; border:1px solid #2b2b30; padding:6px 10px; background:#131316; color:#fff;">
+          <button class="btn-coupon" type="submit">Aplicar</button>
+        </form>
       </div>
     </div>
 
@@ -717,7 +721,7 @@
         </div>
 
        {% for r_id, dados in carrinho.items %}
-        <a href="{% url 'finalizacao' %}?restaurante_id={{ r_id }}" class="btn-pay">
+        <a href="{% url 'finalizacao' %}?restaurante_id={{ r_id }}{% if request.GET.cupom_codigo %}&cupom_codigo={{ request.GET.cupom_codigo }}{% endif %}" class="btn-pay">
         Finalizar pedido
         </a>
         {% endfor %}
