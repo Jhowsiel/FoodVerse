@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
+import base64
+import io
 import logging
 import random
 import re
