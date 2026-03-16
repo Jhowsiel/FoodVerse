@@ -1,126 +1,149 @@
 {% extends 'base.html' %}
-{% load static %}
-
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
 
 <style>
-  body { padding-top: 100px; background-color: #f4f7f6; }
-  
-  .payment-card {
-    border: none;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
-    background: #fff;
-  }
-
-  /* Estilo dos métodos de pagamento */
-  .method-option {
-    border: 2px solid #eee;
-    border-radius: 15px;
-    padding: 20px;
-    cursor: pointer;
-    transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    margin-bottom: 15px;
-  }
-
-  .method-option:hover { border-color: #dc3545; background-color: #fff8f8; }
-
-  .btn-check:checked + .method-option {
-    border-color: #dc3545;
-    background-color: #fff8f8;
-    box-shadow: 0 5px 15px rgba(220, 53, 69, 0.1);
-  }
-
-  .summary-badge {
-    background: #f8f9fa;
-    border-radius: 12px;
-    padding: 15px;
-    border-left: 4px solid #dc3545;
-  }
-
-  .total-section {
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: #dc3545;
-  }
+  body { background:#0d0c0c; color:#fff; }
+  .page-wrap { max-width:1000px; margin:0 auto; padding:36px 20px 80px; }
+  .card-fv { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09); border-radius:18px; }
+  .muted { color:rgba(255,255,255,.62); }
+  .btn-main { background:#C41017; border:none; color:#fff; font-weight:700; border-radius:12px; }
+  .btn-main:hover { background:#a00d13; color:#fff; }
+  .pix-qr { width:210px; height:210px; border-radius:12px; background:#fff; padding:8px; }
 </style>
 
-<section class="container py-4">
-  <div class="row g-4">
-    
-    <div class="col-12 col-lg-8">
-      <div class="card payment-card p-4">
-        <h2 class="fw-bold mb-4">Pagamento da Reserva</h2>
-        
-        <div class="summary-badge mb-4">
-          <div class="row text-center text-md-start">
-            <div class="col-md-4">
-              <small class="text-muted d-block">Data</small>
-              <span class="fw-bold">{{ data }}</span>
-            </div>
-            <div class="col-md-4 border-start border-end">
-              <small class="text-muted d-block">Horário</small>
-              <span class="fw-bold">{{ horario }}</span>
-            </div>
-            <div class="col-md-4">
-              <small class="text-muted d-block">Pessoas</small>
-              <span class="fw-bold">{{ pessoas }}</span>
-            </div>
-          </div>
+<div class="page-wrap">
+  <h1 class="h3 mb-4" style="font-family:'Fraunces',serif;">Pagamento da Reserva</h1>
+  <form method="post" action="{% url 'reserva_confirmar_pagamento' %}" id="reservaForm">
+    {% csrf_token %}
+    <input type="hidden" name="metodo_pagamento" value="{{ metodo_pagamento }}">
+    <input type="hidden" name="pix_confirmado" id="pix_confirmado" value="0">
+    <input type="hidden" name="cartao_confirmado" id="cartao_confirmado" value="0">
+    <input type="hidden" name="cartao_numero" id="cartao_numero_hidden">
+    <input type="hidden" name="cartao_validade" id="cartao_validade_hidden">
+    <input type="hidden" name="cartao_cvv" id="cartao_cvv_hidden">
+    <input type="hidden" name="cartao_nome" id="cartao_nome_hidden">
+
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="card-fv p-4">
+          <h5 class="mb-3">Resumo</h5>
+          <div class="d-flex justify-content-between mb-2"><span class="muted">Restaurante</span><strong>{{ restaurante.nome }}</strong></div>
+          <div class="d-flex justify-content-between mb-2"><span class="muted">Data e horário</span><strong>{{ data }} · {{ horario }}</strong></div>
+          <div class="d-flex justify-content-between mb-2"><span class="muted">Pessoas</span><strong>{{ pessoas }}</strong></div>
+          <div class="d-flex justify-content-between"><span class="muted">Mesa</span><strong>{{ mesa }}</strong></div>
+          <hr class="border-secondary">
+          <div class="d-flex justify-content-between align-items-end"><span>Forma de pagamento</span><span class="badge text-bg-dark border border-secondary">{{ metodo_pagamento }}</span></div>
+          <div class="alert alert-info mt-3 mb-0">Após a confirmação, sua reserva ficará disponível em Meus Pedidos.</div>
         </div>
-
-        
-        <div class="alert alert-success border-0" style="background:#e8f8ef;">
-          <strong>Pagamento simulado aprovado!</strong><br>
-          Sua reserva foi registrada com sucesso e já está confirmada no sistema.
-        </div>
-
-        <div class="summary-badge mb-3">
-          <div class="d-flex justify-content-between"><span class="text-muted">Mesa atribuída</span><strong>{{ mesa }}</strong></div>
-          <div class="d-flex justify-content-between"><span class="text-muted">Método</span><strong>{{ metodo_pagamento|title }}</strong></div>
-          <div class="d-flex justify-content-between"><span class="text-muted">Código da reserva</span><strong>#{{ reserva.id_reserva }}</strong></div>
-        </div>
-
-        <a href="{% url 'pedido' %}" class="btn btn-danger btn-lg w-100 py-3 mt-3 fw-bold shadow">
-          Ir para Meus Pedidos
-        </a>
-
       </div>
-    </div>
 
-    <div class="col-12 col-lg-4">
-      <div class="card payment-card p-4 sticky-top" style="top: 110px;">
-        <h5 class="fw-bold mb-4">Resumo do Valor</h5>
-        
-        <div class="d-flex justify-content-between mb-2">
-          <span class="text-muted">Taxa de Serviço</span>
-          <span>R$ 10,00</span>
-        </div>
-        <div class="d-flex justify-content-between mb-2">
-          <span class="text-muted">Consumação Antecipada</span>
-          <span>R$ 10,00</span>
-        </div>
-        
-        <hr class="my-3">
-        
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <span class="fw-bold">Total a Pagar</span>
-          <span class="total-section">{{ total }}</span>
-        </div>
-
-        <div class="bg-danger bg-opacity-10 p-3 rounded-3">
-          <p class="small text-danger mb-0">
-            <strong>Atenção:</strong> Em caso de cancelamento com menos de 2h de antecedência, a taxa de serviço não será reembolsada.
-          </p>
+      <div class="col-lg-4">
+        <div class="card-fv p-4">
+          <div class="muted small">Total</div>
+          <div class="h2 text-danger mb-3">R$ {{ total|floatformat:2 }}</div>
+          <button class="btn btn-main w-100" type="submit" id="btnReservaConfirmar">Confirmar reserva</button>
         </div>
       </div>
     </div>
+  </form>
+</div>
 
+<div class="modal fade" id="pixModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content bg-dark text-light border-secondary">
+  <div class="modal-header border-secondary"><h5 class="modal-title">Pagamento PIX</h5></div>
+  <div class="modal-body text-center">
+    <img src="{{ pix_qr_code }}" class="pix-qr mb-3" alt="QR Code PIX">
+    <div class="input-group mb-3"><input id="pixPayload" class="form-control" value="{{ pix_payload }}" readonly><button class="btn btn-outline-light" type="button" id="copyPix">Copiar código</button></div>
+    <div class="progress" role="progressbar" style="height:8px;"><div class="progress-bar progress-bar-striped progress-bar-animated bg-danger" id="pixProgress" style="width:0%"></div></div>
+    <div class="d-flex justify-content-between mt-2"><small class="muted">Aguardando pagamento...</small><strong id="pixTimer">{{ pix_timeout }}</strong></div>
+    <div class="alert alert-success mt-3 d-none" id="pixOk">Pagamento confirmado. Finalizando reserva...</div>
   </div>
-</section>
+</div></div></div>
+
+<div class="modal fade" id="cardModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content bg-dark text-light border-secondary">
+  <div class="modal-header border-secondary"><h5 class="modal-title">Pagamento com cartão</h5></div>
+  <div class="modal-body">
+    <div class="mb-2"><label class="form-label small muted">Número do cartão</label><input id="cardNumero" class="form-control" maxlength="19"></div>
+    <div class="row g-2"><div class="col-6"><label class="form-label small muted">Validade</label><input id="cardValidade" class="form-control" maxlength="5"></div><div class="col-6"><label class="form-label small muted">CVV</label><input id="cardCvv" class="form-control" maxlength="4"></div></div>
+    <div class="mt-2"><label class="form-label small muted">Nome impresso</label><input id="cardNome" class="form-control" maxlength="60"></div>
+    <div class="alert alert-danger mt-3 d-none" id="cardError">Preencha os dados do cartão corretamente.</div>
+    <div class="text-center mt-3 d-none" id="cardProcessing"><div class="spinner-border text-danger"></div><p class="mt-2 mb-0">Processando pagamento...</p></div>
+    <div class="d-flex justify-content-end gap-2 mt-3"><button class="btn btn-outline-light" data-bs-dismiss="modal" type="button">Voltar</button><button class="btn btn-main" id="processCard" type="button">Pagar</button></div>
+  </div>
+</div></div></div>
+
+<script>
+  const metodo = '{{ metodo_pagamento }}';
+  const form = document.getElementById('reservaForm');
+  const pixModal = new bootstrap.Modal(document.getElementById('pixModal'));
+  const cardModal = new bootstrap.Modal(document.getElementById('cardModal'));
+
+  document.getElementById('copyPix').addEventListener('click', async () => {
+    await navigator.clipboard.writeText(document.getElementById('pixPayload').value);
+    document.getElementById('copyPix').textContent = 'Copiado';
+  });
+
+  ['cardNumero','cardValidade','cardCvv'].forEach(id => document.getElementById(id).addEventListener('input', () => {
+    const n = document.getElementById('cardNumero');
+    n.value = n.value.replace(/\D/g,'').replace(/(.{4})/g,'$1 ').trim().slice(0,19);
+    const v = document.getElementById('cardValidade');
+    v.value = v.value.replace(/\D/g,'').replace(/(\d{2})(\d)/,'$1/$2').slice(0,5);
+    const c = document.getElementById('cardCvv');
+    c.value = c.value.replace(/\D/g,'').slice(0,4);
+  }));
+
+  form.addEventListener('submit', (e) => {
+    if (metodo === 'Pix' && document.getElementById('pix_confirmado').value !== '1') {
+      e.preventDefault();
+      pixModal.show();
+      const total = Number('{{ pix_timeout|default:18 }}');
+      let rest = total;
+      const timer = document.getElementById('pixTimer');
+      const bar = document.getElementById('pixProgress');
+      const ok = document.getElementById('pixOk');
+      const i = setInterval(() => {
+        rest -= 1;
+        timer.textContent = rest;
+        bar.style.width = `${((total-rest)/total)*100}%`;
+        if (rest <= 0) {
+          clearInterval(i);
+          ok.classList.remove('d-none');
+          document.getElementById('pix_confirmado').value = '1';
+          setTimeout(() => form.submit(), 800);
+        }
+      }, 1000);
+      return;
+    }
+
+    if ((metodo === 'Crédito' || metodo === 'Débito') && document.getElementById('cartao_confirmado').value !== '1') {
+      e.preventDefault();
+      cardModal.show();
+    }
+  });
+
+  document.getElementById('processCard').addEventListener('click', () => {
+    const numero = document.getElementById('cardNumero').value.trim();
+    const validade = document.getElementById('cardValidade').value.trim();
+    const cvv = document.getElementById('cardCvv').value.trim();
+    const nome = document.getElementById('cardNome').value.trim();
+    if (numero.replace(/\D/g,'').length < 15 || !/^\d{2}\/\d{2}$/.test(validade) || cvv.length < 3 || nome.length < 3) {
+      document.getElementById('cardError').classList.remove('d-none');
+      return;
+    }
+
+    document.getElementById('cardError').classList.add('d-none');
+    document.getElementById('cardProcessing').classList.remove('d-none');
+
+    setTimeout(() => {
+      document.getElementById('cartao_numero_hidden').value = numero;
+      document.getElementById('cartao_validade_hidden').value = validade;
+      document.getElementById('cartao_cvv_hidden').value = cvv;
+      document.getElementById('cartao_nome_hidden').value = nome;
+      document.getElementById('cartao_confirmado').value = '1';
+      form.submit();
+    }, 2200);
+  });
+</script>
 
 {% include "pages/pagePrincipal/footer.html" %}
 {% endblock %}

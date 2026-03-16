@@ -1,588 +1,75 @@
 {% extends 'base.html' %}
-{% load static %}
-
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
 
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-
 <style>
-  :root {
-    --red:      #C41017;
-    --red-dark: #9b0c12;
-    --red-lt:   #fff5f5;
-    --ink:      #0f0e0e;
-    --warm:     #f5f2ed;
-    --stone:    #e3ded6;
-    --muted:    #908880;
-    --white:    #ffffff;
-    --radius:   16px;
-  }
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    padding-top: 90px;
-    background: var(--warm);
-    font-family: 'DM Sans', sans-serif;
-    color: var(--ink);
-    min-height: 100vh;
-  }
-
-  /* ── Page shell ── */
-  .pg {
-    max-width: 1140px;
-    margin: 0 auto;
-    padding: 48px 24px 100px;
-  }
-
-  /* ── Hero header ── */
-  .pg-header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-bottom: 48px;
-  }
-
-  .pg-eyebrow {
-    font-size: .7rem;
-    font-weight: 700;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--red);
-    margin-bottom: 6px;
-  }
-
-  .pg-title {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(2rem, 4vw, 3rem);
-    font-weight: 900;
-    line-height: 1.05;
-  }
-
-  .btn-new {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--red);
-    color: #fff;
-    text-decoration: none;
-    font-size: .85rem;
-    font-weight: 700;
-    padding: 11px 20px;
-    border-radius: 100px;
-    transition: background .18s, transform .18s, box-shadow .18s;
-    box-shadow: 0 4px 14px rgba(196,16,23,.25);
-    white-space: nowrap;
-  }
-  .btn-new:hover {
-    background: var(--red-dark);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(196,16,23,.35);
-  }
-
-  /* ── Order block ── */
-  .order-block {
-    display: grid;
-    grid-template-columns: 1fr 320px;
-    gap: 20px;
-    align-items: start;
-    margin-bottom: 36px;
-    animation: fadeUp .5s ease both;
-  }
-  .order-block:nth-child(2) { animation-delay: .07s; }
-  .order-block:nth-child(3) { animation-delay: .14s; }
-  .order-block:nth-child(4) { animation-delay: .21s; }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(18px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  @media (max-width: 840px) {
-    .order-block { grid-template-columns: 1fr; }
-    .summary-card { position: static !important; }
-  }
-
-  /* ── Cards ── */
-  .card {
-    background: var(--white);
-    border-radius: var(--radius);
-    border: 1px solid var(--stone);
-    box-shadow: 0 1px 4px rgba(15,14,14,.05), 0 8px 24px rgba(15,14,14,.05);
-    overflow: hidden;
-    margin-bottom: 16px;
-    transition: box-shadow .2s;
-  }
-  .card:hover {
-    box-shadow: 0 2px 8px rgba(15,14,14,.07), 0 12px 32px rgba(15,14,14,.09);
-  }
-  .card:last-child { margin-bottom: 0; }
-
-  .card-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 18px 22px 16px;
-    border-bottom: 1px solid var(--stone);
-    gap: 12px;
-  }
-
-  .card-head-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .rest-icon {
-    width: 38px;
-    height: 38px;
-    background: var(--red-lt);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--red);
-    font-size: 1rem;
-    flex-shrink: 0;
-  }
-
-  .rest-name {
-    font-family: 'Playfair Display', serif;
-    font-size: 1rem;
-    font-weight: 700;
-    line-height: 1.2;
-  }
-
-  .order-id {
-    font-size: .68rem;
-    font-weight: 600;
-    color: var(--muted);
-    background: var(--warm);
-    padding: 3px 8px;
-    border-radius: 6px;
-    border: 1px solid var(--stone);
-    white-space: nowrap;
-  }
-
-  /* ── Items ── */
-  .card-body { padding: 4px 22px; }
-
-  .order-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 13px 0;
-    border-bottom: 1px dashed var(--stone);
-  }
-  .order-item:last-child { border-bottom: none; }
-
-  .item-qty {
-    width: 24px;
-    height: 24px;
-    background: var(--red);
-    color: #fff;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .7rem;
-    font-weight: 800;
-    flex-shrink: 0;
-  }
-
-  .item-name  { font-size: .9rem; font-weight: 600; }
-  .item-cat   { font-size: .72rem; color: var(--muted); margin-top: 1px; }
-  .item-price {
-    font-family: 'Playfair Display', serif;
-    font-size: 1rem;
-    font-weight: 700;
-    white-space: nowrap;
-  }
-
-  /* ── Status card ── */
-  .status-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 5px 12px;
-    border-radius: 100px;
-    font-size: .72rem;
-    font-weight: 800;
-    letter-spacing: .03em;
-    background: var(--red-lt);
-    color: var(--red);
-    margin: 18px 22px 0;
-  }
-  .status-dot {
-    width: 7px; height: 7px;
-    background: var(--red);
-    border-radius: 50%;
-    animation: pulse 1.8s infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50%       { opacity: .5; transform: scale(.8); }
-  }
-
-  .track-wrap { padding: 14px 22px 20px; }
-
-  .steps-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
-    position: relative;
-  }
-
-  .step {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-    flex: 1;
-    z-index: 1;
-  }
-
-  .step-dot {
-    width: 28px; height: 28px;
-    border-radius: 50%;
-    border: 2px solid var(--stone);
-    background: var(--white);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .65rem;
-    color: var(--muted);
-    transition: all .3s;
-  }
-  .step.done .step-dot {
-    background: var(--red);
-    border-color: var(--red);
-    color: #fff;
-  }
-  .step.active .step-dot {
-    background: var(--white);
-    border-color: var(--red);
-    color: var(--red);
-    box-shadow: 0 0 0 4px rgba(196,16,23,.12);
-  }
-
-  .step-label {
-    font-size: .62rem;
-    font-weight: 600;
-    color: var(--muted);
-    text-align: center;
-  }
-  .step.done .step-label, .step.active .step-label { color: var(--red); }
-
-  .track-line {
-    position: absolute;
-    top: 14px;
-    left: 14px;
-    right: 14px;
-    height: 2px;
-    background: var(--stone);
-    z-index: 0;
-  }
-  .track-progress {
-    height: 100%;
-    background: var(--red);
-    border-radius: 2px;
-    transition: width .6s ease;
-  }
-
-  /* ── Summary card ── */
-  .summary-card {
-    background: var(--white);
-    border-radius: var(--radius);
-    border: 1px solid var(--stone);
-    box-shadow: 0 1px 4px rgba(15,14,14,.05), 0 8px 24px rgba(15,14,14,.06);
-    padding: 24px;
-    position: sticky;
-    top: 106px;
-  }
-
-  .s-date {
-    font-size: .7rem;
-    font-weight: 600;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: .06em;
-    margin-bottom: 14px;
-  }
-
-  .s-total-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 18px;
-    padding-bottom: 18px;
-    border-bottom: 1px solid var(--stone);
-  }
-  .s-total-label { font-size: .8rem; font-weight: 700; color: var(--muted); }
-  .s-total-val {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.9rem;
-    font-weight: 900;
-    color: var(--red);
-    line-height: 1;
-  }
-
-  .info-block {
-    background: var(--warm);
-    border-radius: 12px;
-    padding: 14px;
-    border: 1px solid var(--stone);
-    margin-bottom: 16px;
-  }
-
-  .info-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    font-size: .8rem;
-    font-weight: 500;
-    color: var(--ink);
-    margin-bottom: 9px;
-  }
-  .info-row:last-child { margin-bottom: 0; }
-
-  .info-icon {
-    width: 20px;
-    height: 20px;
-    background: var(--red-lt);
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--red);
-    font-size: .65rem;
-    flex-shrink: 0;
-    margin-top: 1px;
-  }
-
-  .btn-help {
-    width: 100%;
-    background: var(--ink);
-    color: #fff;
-    border: none;
-    padding: 13px;
-    border-radius: 12px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: .85rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background .18s, transform .18s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-  .btn-help:hover {
-    background: #2a2828;
-    transform: translateY(-1px);
-  }
-
-  /* ── Empty state ── */
-  .empty {
-    text-align: center;
-    padding: 120px 0;
-    animation: fadeUp .5s ease;
-  }
-  .empty-icon {
-    font-size: 3.5rem;
-    color: var(--stone);
-    margin-bottom: 16px;
-    display: block;
-  }
-  .empty-text { color: var(--muted); font-size: .9rem; margin-bottom: 20px; }
-  .empty-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    color: var(--red);
-    font-weight: 700;
-    text-decoration: none;
-    font-size: .9rem;
-    transition: gap .18s;
-  }
-  .empty-link:hover { gap: 11px; }
+  body { background:#0d0c0c; color:#fff; }
+  .page-wrap { max-width:1200px; margin:0 auto; padding:36px 20px 80px; }
+  .card-fv { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09); border-radius:18px; }
+  .muted { color:rgba(255,255,255,.6); }
+  .status { font-size:.78rem; padding:5px 10px; border-radius:999px; }
+  .nav-pills .nav-link { color:#ddd; border:1px solid rgba(255,255,255,.18); margin-right:8px; }
+  .nav-pills .nav-link.active { background:#C41017; border-color:#C41017; }
 </style>
 
-<div class="pg">
-
-  <div class="pg-header">
+<div class="page-wrap">
+  <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
     <div>
-      <p class="pg-eyebrow">Acompanhe suas delícias</p>
-      <h1 class="pg-title">Meus Pedidos</h1>
+      <p class="text-danger fw-semibold small mb-1 text-uppercase">Histórico</p>
+      <h1 class="h2 mb-0" style="font-family:'Fraunces',serif;">Meus Pedidos</h1>
     </div>
-    <a href="{% url 'restaurantes' %}" class="btn-new">
-      <i class="bi bi-plus-lg"></i> Novo Pedido
-    </a>
+    <a href="{% url 'restaurantes' %}" class="btn btn-danger">Novo pedido</a>
   </div>
 
-  {% for pedido in pedidos %}
-  {% with sid=pedido.status.id_status %}
-  <div class="order-block">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
 
-    <!-- Left column -->
-    <div>
+  <ul class="nav nav-pills mb-3" id="pedidoTabs" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-pendente" type="button">Pendentes</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-andamento" type="button">Em andamento</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-concluido" type="button">Concluídos</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-cancelado" type="button">Cancelados</button></li>
+  </ul>
 
-      <!-- Items card -->
-      <div class="card">
-        <div class="card-head">
-          <div class="card-head-left">
-            <div class="rest-icon"><i class="bi bi-shop"></i></div>
-            <div>
-              <div class="rest-name">{{ pedido.restaurante.nome }}</div>
-            </div>
-          </div>
-          <span class="order-id">#{{ pedido.id_pedido }}</span>
-        </div>
-        <div class="card-body">
-          {% for item in pedido.tbpedidosprodutos_set.all %}
-          <div class="order-item">
-            <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
-              <span class="item-qty">{{ item.quantidade }}</span>
-              <div style="min-width:0;">
-                <div class="item-name">{{ item.produto.nome_produto }}</div>
-                <div class="item-cat">{{ item.produto.categoria }}</div>
-              </div>
-            </div>
-            <span class="item-price">R$ {{ item.produto.preco }}</span>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-
-      <!-- Status card -->
-      <div class="card">
-        <div class="status-pill">
-          <span class="status-dot"></span>
-          {{ pedido.status.nome_status }}
-        </div>
-
-        <div class="track-wrap">
-          <div class="steps-row">
-            <div class="track-line">
-              <div class="track-progress" style="width:
-                {% if sid == 1 %}0% 
-                {% elif sid == 2 %}33%
-                {% elif sid == 3 %}66%
-                {% else %}100%{% endif %}">
-              </div>
-            </div>
-
-            {# sid=1: Confirmado(active) | sid=2: Confirmado(done) Preparando(active) | etc. #}
-            <div class="step {% if sid > 1 %}done{% elif sid == 1 %}active{% endif %}">
-              <div class="step-dot"><i class="bi bi-check-lg"></i></div>
-              <span class="step-label">Confirmado</span>
-            </div>
-            <div class="step {% if sid > 2 %}done{% elif sid == 2 %}active{% endif %}">
-              <div class="step-dot"><i class="bi bi-fire"></i></div>
-              <span class="step-label">Preparando</span>
-            </div>
-            <div class="step {% if sid > 3 %}done{% elif sid == 3 %}active{% endif %}">
-              <div class="step-dot"><i class="bi bi-bicycle"></i></div>
-              <span class="step-label">A caminho</span>
-            </div>
-            <div class="step {% if sid >= 4 %}done{% endif %}">
-              <div class="step-dot"><i class="bi bi-house-check"></i></div>
-              <span class="step-label">Entregue</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Right column: summary -->
-    <div>
-      <div class="summary-card">
-        <div class="s-date">{{ pedido.data_pedido|date:"d M Y · H:i" }}</div>
-        <div class="s-total-row">
-          <span class="s-total-label">Total Pago</span>
-          <span class="s-total-val">R$ {{ pedido.valor_total }}</span>
-        </div>
-
-        <div class="info-block">
-          <div class="info-row">
-            <div class="info-icon"><i class="bi bi-geo-alt-fill"></i></div>
-            <span>{{ pedido.endereco_entrega|default:"Endereço não informado" }}</span>
-          </div>
-          <div class="info-row">
-            <div class="info-icon"><i class="bi bi-credit-card-fill"></i></div>
-            <span>
-              {% for pag in pedido.tbpagamentos_set.all %}
-                {{ pag.metodo_pagamento }}{% if not forloop.last %}, {% endif %}
-              {% empty %}
-                Não informado
-              {% endfor %}
-            </span>
-          </div>
-        </div>
-
-        <button class="btn-help">
-          <i class="bi bi-headset"></i>
-          Ajuda com este pedido
-        </button>
-      </div>
-    </div>
-
+  <div class="tab-content">
+    {% include 'pages/pedido/partials/lista_pedidos.html' with tab_id='tab-pendente' ativa='show active' pedidos_lista=pedidos_pendentes vazio='Nenhum pedido pendente.' %}
+    {% include 'pages/pedido/partials/lista_pedidos.html' with tab_id='tab-andamento' ativa='' pedidos_lista=pedidos_andamento vazio='Nenhum pedido em andamento.' %}
+    {% include 'pages/pedido/partials/lista_pedidos.html' with tab_id='tab-concluido' ativa='' pedidos_lista=pedidos_concluidos vazio='Nenhum pedido concluído.' %}
+    {% include 'pages/pedido/partials/lista_pedidos.html' with tab_id='tab-cancelado' ativa='' pedidos_lista=pedidos_cancelados vazio='Nenhum pedido cancelado.' %}
   </div>
-  {% endwith %}
-  {% empty %}
-  <div class="empty">
-    <i class="bi bi-bag-x empty-icon"></i>
-    <p class="empty-text">Você ainda não fez nenhum pedido.</p>
-    <a href="{% url 'restaurantes' %}" class="empty-link">
-      Explorar restaurantes <i class="bi bi-arrow-right"></i>
-    </a>
-  </div>
-  {% endfor %}
 
-
-  <div class="pg-header" style="margin-top:28px;">
-    <div>
-      <p class="pg-eyebrow">Planejamento gastronômico</p>
-      <h2 class="pg-title" style="font-size:1.6rem;">Minhas Reservas</h2>
-    </div>
+  <div class="d-flex justify-content-between align-items-end mt-5 mb-3">
+    <h2 class="h4 mb-0">Minhas Reservas</h2>
   </div>
 
   {% for reserva in reservas %}
-  <div class="card" style="margin-bottom:14px;">
-    <div class="card-head">
-      <div class="card-head-left">
-        <div class="rest-icon"><i class="bi bi-calendar2-check"></i></div>
-        <div>
-          <div class="rest-name">{{ reserva.restaurante.nome }}</div>
-          <div class="item-cat">Mesa {{ reserva.mesa|default:'--' }} · {{ reserva.numero_pessoas|default:1 }} pessoa(s)</div>
-        </div>
+    <div class="card-fv p-3 mb-3">
+      <div class="d-flex justify-content-between flex-wrap gap-2 mb-1">
+        <strong>{{ reserva.restaurante.nome }}</strong>
+        <span class="muted">#R{{ reserva.id_reserva }}</span>
       </div>
-      <span class="order-id">#R{{ reserva.id_reserva }}</span>
-    </div>
-    <div class="card-body">
-      <div class="info-row">
-        <div class="info-icon"><i class="bi bi-clock-fill"></i></div>
-        <span>{{ reserva.data_reserva|date:"d/m/Y · H:i" }}</span>
-      </div>
-      <div class="info-row" style="margin-top:8px;">
-        <div class="info-icon"><i class="bi bi-check-circle-fill"></i></div>
-        <span>Reserva confirmada</span>
+      <div class="muted">{{ reserva.data_reserva|date:"d/m/Y H:i" }} · Mesa {{ reserva.mesa|default:'--' }} · {{ reserva.numero_pessoas }} pessoa(s)</div>
+      <div class="mt-2">
+        <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelReserva{{ reserva.id_reserva }}">Cancelar reserva</button>
       </div>
     </div>
-  </div>
-  {% empty %}
-  <div class="empty" style="margin-top:8px;">
-    <i class="bi bi-calendar-x empty-icon"></i>
-    <p class="empty-text">Você ainda não tem reservas registradas.</p>
-  </div>
-  {% endfor %}
 
+    <div class="modal fade" id="cancelReserva{{ reserva.id_reserva }}" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered"><div class="modal-content bg-dark text-light border-secondary">
+        <div class="modal-header border-secondary"><h5 class="modal-title">Cancelar reserva</h5></div>
+        <div class="modal-body">Deseja cancelar a reserva #R{{ reserva.id_reserva }}?</div>
+        <div class="modal-footer border-secondary">
+          <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Voltar</button>
+          <form method="post" action="{% url 'cancelar_reserva' reserva.id_reserva %}">{% csrf_token %}<button class="btn btn-danger" type="submit">Confirmar</button></form>
+        </div>
+      </div></div>
+    </div>
+  {% empty %}
+    <div class="card-fv p-4 muted">Nenhuma reserva encontrada.</div>
+  {% endfor %}
 </div>
 
 {% include "pages/pagePrincipal/footer.html" %}
