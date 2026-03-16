@@ -1,10 +1,14 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
+import base64
+import io
 import logging
 import random
 import re
 
+import qrcode
 import requests
+from qrcode.image.pure import PyPNGImage
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password, make_password
 from django.db import transaction
@@ -40,7 +44,17 @@ def _gerar_codigo_pix(valor: Decimal, pedido_ref: str) -> str:
 
 
 def _gerar_qr_pix_base64(payload: str) -> str:
+<<<<<<< codex/fix-checkout-not-creating-orders-h8d4yd
     return static('img/pix_qr_padrao.svg')
+=======
+    qr = qrcode.QRCode(version=1, box_size=10, border=2)
+    qr.add_data(payload)
+    qr.make(fit=True)
+    imagem = qr.make_image(image_factory=PyPNGImage)
+    buffer = io.BytesIO()
+    imagem.save(buffer)
+    return f"data:image/png;base64,{base64.b64encode(buffer.getvalue()).decode('utf-8')}"
+>>>>>>> main
 
 
 def _avaliar_cupom(restaurante, subtotal: Decimal, cupom_codigo: str):
