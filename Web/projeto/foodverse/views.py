@@ -208,12 +208,27 @@ def login_view(request):
         return redirect('home')
 
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        login = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
         remember_me = request.POST.get('remember_me')
 
-        cliente = TbClientes.objects.filter(username=username).first()
-        if cliente and check_password(password, cliente.senha):
+        cliente = TbClientes.objects.filter(
+            Q(username__iexact=login) | Q(email__iexact=login)
+        ).first()
+
+        senha_valida = bool(
+            cliente and cliente.senha and (
+                check_password(password, cliente.senha) or password == cliente.senha
+            )
+        )
+
+        if cliente and senha_valida:
+            # Migração transparente: se a senha antiga estiver em texto puro,
+            # converte para hash no primeiro login bem-sucedido.
+            if password == cliente.senha:
+                cliente.senha = make_password(password)
+                cliente.save(update_fields=['senha'])
+
             request.session['cliente_id'] = cliente.id_cliente
             request.session.set_expiry(1209600 if remember_me else 0)
             messages.success(request, 'Login realizado com sucesso!')
