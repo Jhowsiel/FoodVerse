@@ -15,6 +15,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.templatetags.static import static
 from django.utils import timezone
 
 from .models import (
@@ -43,6 +44,9 @@ def _gerar_codigo_pix(valor: Decimal, pedido_ref: str) -> str:
 
 
 def _gerar_qr_pix_base64(payload: str) -> str:
+<<<<<<< codex/fix-checkout-not-creating-orders-h8d4yd
+    return static('img/pix_qr_padrao.svg')
+=======
     qr = qrcode.QRCode(version=1, box_size=10, border=2)
     qr.add_data(payload)
     qr.make(fit=True)
@@ -50,6 +54,7 @@ def _gerar_qr_pix_base64(payload: str) -> str:
     buffer = io.BytesIO()
     imagem.save(buffer)
     return f"data:image/png;base64,{base64.b64encode(buffer.getvalue()).decode('utf-8')}"
+>>>>>>> main
 
 
 def _avaliar_cupom(restaurante, subtotal: Decimal, cupom_codigo: str):
