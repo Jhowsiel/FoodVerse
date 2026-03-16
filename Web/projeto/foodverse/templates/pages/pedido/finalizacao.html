@@ -1,631 +1,123 @@
 {% extends 'base.html' %}
-
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
 
-<link
-  href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900;1,9..144,400&family=Instrument+Sans:wght@400;500;600;700&display=swap"
-  rel="stylesheet">
-
 <style>
-  :root {
-    --red: #C41017;
-    --red-dk: #a00d13;
-    --red-lt: #fdf2f2;
-    --ink: #111010;
-    --warm: #f8f6f1;
-    --stone: #e8e4dc;
-    --muted: #7a7570;
-    --white: #ffffff;
-    --green: #16a34a;
-    --radius: 20px;
-    --shadow: 0 2px 16px rgba(17, 16, 16, .07);
-  }
-
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-  }
-
-  body {
-    padding-top: 90px;
-    background: var(--warm);
-    font-family: 'Instrument Sans', sans-serif;
-    color: var(--ink);
-    -webkit-font-smoothing: antialiased;
-  }
-
-  .page-wrap {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 32px 20px 80px;
-  }
-
-  /* ── PAGE HEADER ── */
-  .page-header {
-    margin-bottom: 32px;
-  }
-
-  .page-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: .72rem;
-    font-weight: 700;
-    letter-spacing: .8px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-
-  .page-title {
-    font-family: 'Fraunces', serif;
-    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
-    font-weight: 900;
-    line-height: 1.05;
-    letter-spacing: -0.5px;
-  }
-
-  /* ── STEPS ── */
-  .steps {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    margin-bottom: 32px;
-  }
-
-  .step {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: .78rem;
-    font-weight: 600;
-    color: var(--muted);
-  }
-
-  .step.active {
-    color: var(--ink);
-  }
-
-  .step.done {
-    color: var(--green);
-  }
-
-  .step-num {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .75rem;
-    font-weight: 700;
-    background: var(--stone);
-    color: var(--muted);
-    flex-shrink: 0;
-  }
-
-  .step.active .step-num {
-    background: var(--ink);
-    color: white;
-  }
-
-  .step.done .step-num {
-    background: var(--green);
-    color: white;
-  }
-
-  .step-line {
-    flex: 1;
-    height: 1px;
-    background: var(--stone);
-    margin: 0 12px;
-    max-width: 60px;
-  }
-
-  /* ── LAYOUT ── */
-  .checkout-layout {
-    display: grid;
-    grid-template-columns: 1fr 360px;
-    gap: 22px;
-    align-items: start;
-  }
-
-  @media (max-width: 860px) {
-    .checkout-layout {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  /* ── CARDS ── */
-  .co-card {
-    background: var(--white);
-    border-radius: var(--radius);
-    border: 1px solid var(--stone);
-    box-shadow: var(--shadow);
-    padding: 26px 28px;
-    margin-bottom: 18px;
-    animation: fadeUp .4s ease both;
-  }
-
-  .co-card:last-child {
-    margin-bottom: 0;
-  }
-
-  @keyframes fadeUp {
-    from {
-      opacity: 0;
-      transform: translateY(12px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .co-card:nth-child(1) {
-    animation-delay: .04s;
-  }
-
-  .co-card:nth-child(2) {
-    animation-delay: .1s;
-  }
-
-  .co-card:nth-child(3) {
-    animation-delay: .16s;
-  }
-
-  .card-section-title {
-    font-family: 'Fraunces', serif;
-    font-size: 1.05rem;
-    font-weight: 700;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 9px;
-  }
-
-  .card-section-title i {
-    color: var(--red);
-    font-size: .95rem;
-  }
-
-  /* ── FIELD ── */
-  .field {
-    margin-bottom: 18px;
-  }
-
-  .field:last-child {
-    margin-bottom: 0;
-  }
-
-  .field-label {
-    display: block;
-    font-size: .72rem;
-    font-weight: 700;
-    letter-spacing: .5px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 7px;
-  }
-
-  .field-input-wrap {
-    position: relative;
-  }
-
-  .field-icon {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--muted);
-    font-size: .9rem;
-    pointer-events: none;
-  }
-
-  .field-input,
-  .field-select {
-    width: 100%;
-    padding: 12px 16px 12px 40px;
-    border-radius: 12px;
-    border: 1.5px solid var(--stone);
-    background: var(--warm);
-    font-family: 'Instrument Sans', sans-serif;
-    font-size: .88rem;
-    font-weight: 500;
-    color: var(--ink);
-    transition: border-color .2s, box-shadow .2s;
-  }
-
-  .field-input.no-icon,
-  .field-select.no-icon {
-    padding-left: 16px;
-  }
-
-  .field-input:focus,
-  .field-select:focus {
-    outline: none;
-    border-color: var(--red);
-    box-shadow: 0 0 0 3px rgba(196, 16, 23, .08);
-  }
-
-  .field-select {
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237a7570' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-    padding-right: 36px;
-    cursor: pointer;
-  }
-
-  .field-hint {
-    font-size: .72rem;
-    color: var(--muted);
-    margin-top: 5px;
-  }
-
-  /* Coupon row */
-  .coupon-row {
-    display: flex;
-    gap: 8px;
-  }
-
-  .coupon-row .field-input {
-    flex: 1;
-  }
-
-  .btn-apply {
-    padding: 0 20px;
-    background: var(--ink);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-family: 'Instrument Sans', sans-serif;
-    font-size: .82rem;
-    font-weight: 700;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all .2s;
-  }
-
-  .btn-apply:hover {
-    background: #2a2828;
-  }
-
-  /* Payment options */
-  .pay-options {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .pay-opt-input {
-    display: none;
-  }
-
-  .pay-opt-label {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding: 12px 14px;
-    border-radius: 12px;
-    border: 1.5px solid var(--stone);
-    background: var(--warm);
-    font-size: .82rem;
-    font-weight: 600;
-    color: var(--muted);
-    cursor: pointer;
-    transition: all .2s;
-  }
-
-  .pay-opt-label i {
-    font-size: 1.1rem;
-  }
-
-  .pay-opt-label:hover {
-    border-color: var(--ink);
-    color: var(--ink);
-  }
-
-  .pay-opt-input:checked+.pay-opt-label {
-    border-color: var(--ink);
-    background: var(--ink);
-    color: white;
-  }
-
-  /* Info note */
-  .info-note {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    border-radius: 12px;
-    padding: 13px 16px;
-    font-size: .8rem;
-    color: #1e40af;
-    line-height: 1.5;
-  }
-
-  .info-note i {
-    flex-shrink: 0;
-    margin-top: 1px;
-  }
-
-  /* ── SUMMARY ── */
-  .summary-card {
-    background: var(--white);
-    border-radius: var(--radius);
-    border: 1px solid var(--stone);
-    box-shadow: var(--shadow);
-    padding: 26px;
-    position: sticky;
-    top: 106px;
-    animation: fadeUp .4s ease .08s both;
-  }
-
-  .summary-title {
-    font-family: 'Fraunces', serif;
-    font-size: 1.1rem;
-    font-weight: 800;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--stone);
-  }
-
-  .s-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: .88rem;
-    margin-bottom: 12px;
-    color: var(--muted);
-  }
-
-  .s-row .val {
-    font-weight: 600;
-    color: var(--ink);
-  }
-
-  .s-row .val.green {
-    color: var(--green);
-  }
-
-  .s-row .val.red {
-    color: var(--red);
-  }
-
-  .s-divider {
-    border: none;
-    border-top: 1px solid var(--stone);
-    margin: 16px 0;
-  }
-
-  .total-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 24px;
-  }
-
-  .total-label {
-    font-weight: 700;
-    font-size: .95rem;
-  }
-
-  .total-sub {
-    font-size: .7rem;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-
-  .total-num {
-    font-family: 'Fraunces', serif;
-    font-size: 2.1rem;
-    font-weight: 900;
-    color: var(--red);
-    line-height: 1;
-  }
-
-  .btn-confirm {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 9px;
-    background: var(--red);
-    color: white;
-    border-radius: 14px;
-    padding: 17px;
-    font-size: .92rem;
-    font-weight: 700;
-    text-decoration: none;
-    width: 100%;
-    transition: all .25s;
-    box-shadow: 0 6px 20px rgba(196, 16, 23, .22);
-    border: none;
-    cursor: pointer;
-    font-family: inherit;
-  }
-
-  .btn-confirm:hover {
-    background: var(--red-dk);
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 28px rgba(196, 16, 23, .3);
-  }
-
-  .secure-note {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    font-size: .72rem;
-    color: var(--muted);
-    margin-top: 14px;
-  }
-
-  .secure-note i {
-    color: var(--green);
-  }
+  body { padding-top: 90px; background:#0f1115; color:#f3f4f6; }
+  .wrap { max-width:1100px; margin:0 auto; padding:28px 16px 72px; }
+  .grid { display:grid; grid-template-columns: 1fr 360px; gap:16px; }
+  @media (max-width: 920px){ .grid { grid-template-columns:1fr; } }
+  .card { background:#171a21; border:1px solid #2c3140; border-radius:16px; padding:20px; margin-bottom:14px; }
+  .title { font-weight:800; font-size:1.05rem; margin-bottom:14px; }
+  .field { margin-bottom:12px; }
+  .field input { width:100%; border:1px solid #363d4f; background:#0f1115; color:#fff; border-radius:10px; padding:12px; }
+  .pay { display:grid; grid-template-columns: repeat(2,1fr); gap:8px; }
+  .pay label { border:1px solid #363d4f; border-radius:10px; padding:10px; cursor:pointer; }
+  .pay input:checked + label { border-color:#e11d2f; background:#2a1317; }
+  .summary { position:sticky; top:96px; }
+  .rowv { display:flex; justify-content:space-between; margin-bottom:8px; color:#c6cada; }
+  .total { font-size:1.7rem; color:#ff6173; font-weight:800; }
+  .btn-main { width:100%; border:0; border-radius:12px; background:#e11d2f; color:white; font-weight:700; padding:14px; }
+  .btn-main:hover { background:#c41424; }
+  .coupon-inline { display:flex; gap:8px; }
+  .coupon-inline input { flex:1; }
+  .msg { font-size:.85rem; margin-top:8px; }
+  .msg.ok { color:#86efac; }
+  .msg.err { color:#fca5a5; }
+  .pix-overlay { position:fixed; inset:0; background:rgba(0,0,0,.68); display:none; align-items:center; justify-content:center; z-index:1050; }
+  .pix-overlay.show { display:flex; }
+  .pix-card { width:min(520px,92vw); background:#171a21; border:1px solid #2c3140; border-radius:16px; padding:22px; text-align:center; }
+  .qr { width:230px; height:230px; background:white; margin: 14px auto; border-radius:8px; padding:8px; }
+  .timer { font-size:1.8rem; font-weight:800; color:#86efac; }
+  .ok-anim { display:none; font-size:1.1rem; color:#86efac; font-weight:700; }
 </style>
 
-<div class="page-wrap">
-  <form method="POST" action="{% url 'finalizacao' %}">
+<div class="wrap">
+  <h1 style="font-size:2rem; font-weight:800; margin-bottom:20px;">Finalizar pedido</h1>
+  <form method="post" action="{% url 'finalizacao' %}" id="checkoutForm">
     {% csrf_token %}
-
     <input type="hidden" name="restaurante_id" value="{{ restaurante.id_restaurante }}">
-
-    <div class="page-header">
-      <p class="page-eyebrow"><i class="bi bi-bag-check"></i> Quase lá</p>
-      <h1 class="page-title">Finalizar Pedido</h1>
-    </div>
-
-    <div class="steps">
-      <div class="step done">
-        <span class="step-num"><i class="bi bi-check2"></i></span> Carrinho
-      </div>
-      <div class="step-line"></div>
-      <div class="step active">
-        <span class="step-num">2</span> Entrega
-      </div>
-      <div class="step-line"></div>
-      <div class="step">
-        <span class="step-num">3</span> Confirmação
-      </div>
-    </div>
-
-    <div class="checkout-layout">
-
+    <div class="grid">
       <div>
-        <div class="co-card">
-          <div class="card-section-title">
-            <i class="bi bi-geo-alt-fill"></i> Endereço de entrega
-          </div>
-
+        <div class="card">
+          <div class="title">Entrega</div>
           <div class="field">
-            <label class="field-label">Endereço completo</label>
-            <div class="field-input-wrap">
-              <i class="bi bi-search field-icon"></i>
-              <input type="text" name="endereco" id="endereco" class="field-input" placeholder="Rua, número, bairro..."
-                value="{{ cliente.endereco|default:'' }}" required>
-            </div>
-            <p class="field-hint">Confirme ou altere o endereço de entrega acima.</p>
-          </div>
-
-          <div class="field">
-            <label class="field-label">Complemento</label>
-            <div class="field-input-wrap">
-              <i class="bi bi-building field-icon"></i>
-              <input type="text" name="complemento" id="complemento" class="field-input"
-                placeholder="Apto, bloco, referência...">
-            </div>
+            <input type="text" name="endereco" value="{{ endereco_confirmado|default:cliente.endereco|default:'' }}" placeholder="Rua, número, bairro" required>
           </div>
         </div>
 
-        <div class="co-card">
-          <div class="card-section-title">
-            <i class="bi bi-credit-card-fill"></i> Forma de pagamento
+        <div class="card">
+          <div class="title">Pagamento</div>
+          {% with metodo=metodo_pagamento|default:'Pix' %}
+          <div class="pay">
+            <input type="radio" id="pix" name="pagamento" value="Pix" {% if metodo == 'Pix' %}checked{% endif %} hidden><label for="pix">Pix</label>
+            <input type="radio" id="credito" name="pagamento" value="Crédito" {% if metodo == 'Crédito' %}checked{% endif %} hidden><label for="credito">Crédito</label>
+            <input type="radio" id="debito" name="pagamento" value="Débito" {% if metodo == 'Débito' %}checked{% endif %} hidden><label for="debito">Débito</label>
+            <input type="radio" id="dinheiro" name="pagamento" value="Dinheiro" {% if metodo == 'Dinheiro' %}checked{% endif %} hidden><label for="dinheiro">Dinheiro</label>
           </div>
-
-          <div class="pay-options">
-            <input type="radio" name="pagamento" value="Pix" class="pay-opt-input" id="pix" checked>
-            <label class="pay-opt-label" for="pix">
-              <i class="bi bi-qr-code"></i> Pix
-            </label>
-
-            <input type="radio" name="pagamento" value="Crédito" class="pay-opt-input" id="credito">
-            <label class="pay-opt-label" for="credito">
-              <i class="bi bi-credit-card"></i> Crédito
-            </label>
-
-            <input type="radio" name="pagamento" value="Débito" class="pay-opt-input" id="debito">
-            <label class="pay-opt-label" for="debito">
-              <i class="bi bi-bank"></i> Débito
-            </label>
-
-            <input type="radio" name="pagamento" value="Dinheiro" class="pay-opt-input" id="dinheiro">
-            <label class="pay-opt-label" for="dinheiro">
-              <i class="bi bi-cash-coin"></i> Dinheiro
-            </label>
-          </div>
+          {% endwith %}
         </div>
 
-        <div class="co-card">
-          <div class="card-section-title">
-            <i class="bi bi-ticket-perforated-fill"></i> Cupom de desconto
+        <div class="card">
+          <div class="title">Cupom</div>
+          <div class="coupon-inline">
+            <input type="text" name="cupom_codigo" placeholder="Código do cupom" value="{{ cupom_codigo }}">
           </div>
-
-          <div class="field">
-            <div class="coupon-row">
-              <input type="text" name="cupom_codigo" class="field-input no-icon" placeholder="Código do cupom"
-                value="FOOD10">
-              <button type="button" class="btn-apply">Aplicar</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="info-note">
-          <i class="bi bi-info-circle-fill"></i>
-          <span>Você poderá acompanhar o status do seu pedido em tempo real após a confirmação.</span>
+          {% if cupom_aplicado %}<div class="msg ok">Cupom {{ cupom_aplicado }} aplicado.</div>{% endif %}
+          {% if cupom_erro %}<div class="msg err">{{ cupom_erro }}</div>{% endif %}
         </div>
       </div>
 
       <div>
-        <div class="summary-card">
-          <div class="summary-title">Resumo do Pedido</div>
-
-          <div class="s-row">
-            <span>Subtotal</span>
-            <span class="val">R$ {{ subtotal|floatformat:2 }}</span>
-          </div>
-          <div class="s-row">
-            <span>Entrega</span>
-            <span class="val green">R$ {{ entrega|floatformat:2 }}</span>
-          </div>
-          <div class="s-row">
-            <span>Cupom</span>
-            <span class="val red">− R$ {{ desconto|floatformat:2 }}</span>
-          </div>
-
-          <hr class="s-divider">
-
-          <div class="total-row">
-            <div>
-              <div class="total-label">Total</div>
-              <div class="total-sub">em até 2x s/ juros</div>
-            </div>
-            <div class="total-num">R$ {{ total|floatformat:2 }}</div>
-          </div>
-
-          <button type="submit" class="btn-confirm">
-            <i class="bi bi-shield-lock-fill"></i> Confirmar Pedido
-          </button>
-
-          <div class="secure-note">
-            <i class="bi bi-lock-fill"></i> Pagamento 100% seguro e criptografado
-          </div>
+        <div class="card summary">
+          <div class="title">Resumo</div>
+          <div class="rowv"><span>Subtotal</span><strong>R$ {{ subtotal|floatformat:2 }}</strong></div>
+          <div class="rowv"><span>Entrega</span><strong>R$ {{ entrega|floatformat:2 }}</strong></div>
+          <div class="rowv"><span>Desconto</span><strong>- R$ {{ desconto|floatformat:2 }}</strong></div>
+          <hr style="border-color:#2c3140;">
+          <div class="rowv" style="align-items:end;"><span>Total</span><span class="total">R$ {{ total|floatformat:2 }}</span></div>
+          <button class="btn-main" type="submit">Confirmar pedido</button>
         </div>
       </div>
     </div>
   </form>
 </div>
 
+<div id="pixModal" class="pix-overlay {% if mostrar_modal_pix %}show{% endif %}">
+  <div class="pix-card">
+    <h3 style="font-weight:800;">Pagamento Pix</h3>
+    <p style="color:#c6cada; margin-bottom:8px;">Escaneie o código para confirmar.</p>
+    <img class="qr" src="{{ pix_qr_code }}" alt="QR Code Pix">
+    <div id="pixTimer" class="timer">{{ pix_timeout|default:30 }}</div>
+    <div id="pixSuccess" class="ok-anim">Pagamento confirmado</div>
+  </div>
+</div>
 
+{% if mostrar_modal_pix %}
+<form id="pixConfirmForm" method="post" action="{% url 'finalizacao' %}" style="display:none;">
+  {% csrf_token %}
+  <input type="hidden" name="restaurante_id" value="{{ restaurante.id_restaurante }}">
+  <input type="hidden" name="endereco" value="{{ endereco_confirmado }}">
+  <input type="hidden" name="pagamento" value="{{ metodo_pagamento }}">
+  <input type="hidden" name="cupom_codigo" value="{{ cupom_codigo }}">
+  <input type="hidden" name="pix_confirmado" value="1">
+</form>
 <script>
-  const complementoInput = document.getElementById('complemento');
-
-  complementoInput.addEventListener("change", function () {
-    const enderecoInput = document.getElementById('endereco');
-    let endereco = enderecoInput.value.split("Complemento:")[0].trim();
-
-    if (this.value.trim() !== "") {
-      enderecoInput.value = `${endereco} Complemento: ${this.value.trim()}`;
-    } else {
-      enderecoInput.value = endereco;
+  let t = Number("{{ pix_timeout|default:30 }}");
+  const timerEl = document.getElementById('pixTimer');
+  const okEl = document.getElementById('pixSuccess');
+  const i = setInterval(() => {
+    t -= 1;
+    timerEl.textContent = t;
+    if (t <= 0) {
+      clearInterval(i);
+      timerEl.style.display = 'none';
+      okEl.style.display = 'block';
+      setTimeout(() => document.getElementById('pixConfirmForm').submit(), 900);
     }
-  });
+  }, 1000);
 </script>
-<s></s>
+{% endif %}
+
 {% include "pages/pagePrincipal/footer.html" %}
 {% endblock %}

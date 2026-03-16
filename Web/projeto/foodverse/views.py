@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
+import base64
+import hashlib
 import logging
 import random
 import re
@@ -24,6 +26,7 @@ from .models import (
     TbProdutos,
     TbReservas,
     TbRestaurantes,
+    TbCupons,
     TbStatusPedido,
 )
 
@@ -31,6 +34,92 @@ RESERVA_HORARIOS = ['12:00', '13:00', '19:00', '20:00', '21:00']
 MESAS_DISPONIVEIS = [f'M{numero}' for numero in range(1, 13)]
 RESERVA_TAXA = Decimal('20.00')
 DIAS_SEMANA_PT = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
+
+
+def _gerar_qr_svg_base64(payload: str) -> str:
+    digest = hashlib.sha256(payload.encode('utf-8')).hexdigest()
+    size = 21
+    cell = 10
+    blocks = []
+    for y in range(size):
+        for x in range(size):
+            idx = (x + y * size) % len(digest)
+            if int(digest[idx], 16) % 2 == 0:
+                blocks.append(f"<rect x='{x * cell}' y='{y * cell}' width='{cell}' height='{cell}' fill='#111827' />")
+    svg = (
+        f"<svg xmlns='http://www.w3.org/2000/svg' width='{size * cell}' height='{size * cell}' viewBox='0 0 {size * cell} {size * cell}'>"
+        "<rect width='100%' height='100%' fill='white'/>"
+        + ''.join(blocks)
+        + '</svg>'
+    )
+    return f"data:image/svg+xml;base64,{base64.b64encode(svg.encode('utf-8')).decode('utf-8')}"
+
+
+def _avaliar_cupom(restaurante, subtotal: Decimal, cupom_codigo: str):
+    cupom = (cupom_codigo or '').strip()
+    if not cupom:
+        return Decimal('0.00'), '', None
+
+    codigo_normalizado = cupom.lower()
+    desconto = Decimal('0.00')
+
+    cupom_global = TbCupons.objects.filter(codigo__iexact=cupom).first()
+    if cupom_global:
+        if cupom_global.validade and cupom_global.validade < timezone.localdate():
+            return Decimal('0.00'), '', 'Cupom expirado.'
+        percentual = cupom_global.desconto or Decimal('0.00')
+        desconto = (subtotal * percentual / Decimal('100')).quantize(Decimal('0.01'))
+        return desconto, cupom_global.codigo, None
+
+    cupom_restaurante = (restaurante.cupom or '').strip()
+    if cupom_restaurante and cupom_restaurante.lower() == codigo_normalizado:
+        desconto = (subtotal * Decimal('0.10')).quantize(Decimal('0.01'))
+        return desconto, cupom_restaurante, None
+
+    return Decimal('0.00'), '', 'Cupom inválido para este restaurante.'
+
+
+def _criar_pedido_completo(cliente, restaurante, dados_venda, total_final, endereco, metodo_pagamento):
+    status_pendente = get_object_or_404(TbStatusPedido, id_status=1)
+    pedido = TbPedidos.objects.create(
+        cliente=cliente,
+        restaurante=restaurante,
+        status=status_pendente,
+        valor_total=total_final,
+        data_pedido=timezone.now(),
+        endereco_entrega=endereco,
+    )
+
+    metodo_pagamento = (metodo_pagamento or '').strip()
+    if metodo_pagamento.lower() in {'pix'}:
+        pagamento_status = 'Pago'
+    else:
+        pagamento_status = f'{metodo_pagamento} na entrega'
+
+    TbPagamentos.objects.create(
+        pedido=pedido,
+        metodo_pagamento=pagamento_status,
+        valor=total_final,
+        data_pagamento=timezone.now(),
+    )
+
+    for item in dados_venda['itens']:
+        produto_instancia = get_object_or_404(TbProdutos, id_produto=item['id'])
+        TbPedidosProdutos.objects.create(
+            pedido=pedido,
+            produto=produto_instancia,
+            quantidade=item['quantidade'],
+        )
+
+        estoque = TbEstoque.objects.filter(produto=produto_instancia).first()
+        if estoque:
+            if estoque.quantidade >= item['quantidade']:
+                estoque.quantidade -= item['quantidade']
+                estoque.save()
+            else:
+                raise ValueError(f'Estoque insuficiente: {produto_instancia.nome_produto}')
+
+    return pedido
 
 
 def _int_param(valor, padrao):
@@ -432,20 +521,21 @@ def reserva_pagamento(request):
 
 
 def pedido_view(request):
-    cliente_id = request.session.get('cliente_id')
-    if not cliente_id:
-        return redirect('login')
-
-    try:
-        TbClientes.objects.get(id_cliente=cliente_id)
-    except TbClientes.DoesNotExist:
+    cliente = get_cliente_logado(request)
+    if not cliente:
         return redirect('login')
 
     pedidos = (
-        TbPedidos.objects.filter(cliente_id=cliente_id)
+        TbPedidos.objects.filter(cliente=cliente)
+        .select_related('status', 'restaurante')
         .order_by('-data_pedido')
         .prefetch_related('tbpedidosprodutos_set__produto', 'tbpagamentos_set')
     )
+
+    pedidos_pendentes = pedidos.filter(status_id=1)
+    pedidos_andamento = pedidos.filter(status_id__in=[2, 3])
+    pedidos_concluidos = pedidos.filter(status_id=4)
+    pedidos_cancelados = pedidos.filter(status_id=5)
 
     reservas = (
         TbReservas.objects.filter(cliente=cliente)
@@ -460,6 +550,10 @@ def pedido_view(request):
 
     return render(request, 'pages/pedido/pedido.html', {
         'pedidos': pedidos,
+        'pedidos_pendentes': pedidos_pendentes,
+        'pedidos_andamento': pedidos_andamento,
+        'pedidos_concluidos': pedidos_concluidos,
+        'pedidos_cancelados': pedidos_cancelados,
         'reservas': reservas,
         'restaurante_atual': restaurante,
     })
@@ -573,88 +667,133 @@ def finalizacao_view(request):
     if not r_id or r_id not in carrinho:
         return redirect('carrinho')
 
-    cliente_id = request.session.get('cliente_id')
-    if not cliente_id:
+    cliente = get_cliente_logado(request)
+    if not cliente:
         return redirect('login')
 
-    cliente_instancia = get_object_or_404(TbClientes, id_cliente=cliente_id)
-    restaurante_instancia = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True, aberto=True)
+    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True, aberto=True)
     dados_venda = carrinho[r_id]
 
     subtotal = sum(Decimal(str(i['preco'])) * i['quantidade'] for i in dados_venda['itens'])
-    entrega = restaurante_instancia.taxa_entrega if restaurante_instancia.taxa_entrega else Decimal('0.00')
+    entrega = restaurante.taxa_entrega if restaurante.taxa_entrega else Decimal('0.00')
 
-    cupom_codigo = (request.POST.get('cupom_codigo') if request.method == 'POST' else request.GET.get('cupom_codigo', '')) or ''
-    cupom_codigo = cupom_codigo.strip()
-
-    desconto = Decimal('10.00') if subtotal > 50 else Decimal('0.00')
-    cupom_aplicado = ''
-    if cupom_codigo and restaurante_instancia.cupom and cupom_codigo.lower() == restaurante_instancia.cupom.lower():
-        desconto += subtotal * Decimal('0.10')
-        cupom_aplicado = cupom_codigo
-    elif cupom_codigo and request.method == 'POST':
-        messages.error(request, 'Cupom inválido para este restaurante.')
+    cupom_fonte = request.POST if request.method == 'POST' else request.GET
+    cupom_codigo = (cupom_fonte.get('cupom_codigo') or '').strip()
+    desconto, cupom_aplicado, cupom_erro = _avaliar_cupom(restaurante, subtotal, cupom_codigo)
 
     total_final = max(subtotal + entrega - desconto, Decimal('0.00'))
 
     if request.method == 'GET':
         return render(request, 'pages/pedido/finalizacao.html', {
             'carrinho': dados_venda,
-            'restaurante': restaurante_instancia,
-            'cliente': cliente_instancia,
+            'restaurante': restaurante,
+            'cliente': cliente,
             'subtotal': subtotal,
             'entrega': entrega,
             'desconto': desconto,
             'total': total_final,
             'cupom_codigo': cupom_codigo,
             'cupom_aplicado': cupom_aplicado,
+            'cupom_erro': cupom_erro,
+            'pix_timeout': 30,
         })
 
-    endereco = request.POST.get('endereco')
-    metodo_pagamento = request.POST.get('pagamento')
+    if cupom_erro and cupom_codigo:
+        messages.error(request, cupom_erro)
+        return render(request, 'pages/pedido/finalizacao.html', {
+            'carrinho': dados_venda,
+            'restaurante': restaurante,
+            'cliente': cliente,
+            'subtotal': subtotal,
+            'entrega': entrega,
+            'desconto': desconto,
+            'total': total_final,
+            'cupom_codigo': cupom_codigo,
+            'cupom_aplicado': cupom_aplicado,
+            'cupom_erro': cupom_erro,
+            'pix_timeout': 30,
+        })
+
+    endereco = (request.POST.get('endereco') or '').strip()
+    metodo_pagamento = (request.POST.get('pagamento') or 'Pix').strip()
+    pix_confirmado = request.POST.get('pix_confirmado') == '1'
+
+    if not endereco:
+        messages.error(request, 'Informe o endereço de entrega.')
+        return redirect(f"{redirect('finalizacao').url}?restaurante_id={r_id}&cupom_codigo={cupom_aplicado or cupom_codigo}")
+
+    if metodo_pagamento.lower() == 'pix' and not pix_confirmado:
+        payload = f"FV:{cliente.id_cliente}:{restaurante.id_restaurante}:{timezone.now().timestamp()}"
+        return render(request, 'pages/pedido/finalizacao.html', {
+            'carrinho': dados_venda,
+            'restaurante': restaurante,
+            'cliente': cliente,
+            'subtotal': subtotal,
+            'entrega': entrega,
+            'desconto': desconto,
+            'total': total_final,
+            'cupom_codigo': cupom_codigo,
+            'cupom_aplicado': cupom_aplicado,
+            'pix_timeout': 30,
+            'pix_qr_code': _gerar_qr_svg_base64(payload),
+            'pix_payload': payload,
+            'endereco_confirmado': endereco,
+            'metodo_pagamento': metodo_pagamento,
+            'mostrar_modal_pix': True,
+        })
 
     try:
         with transaction.atomic():
-            status_instancia = get_object_or_404(TbStatusPedido, id_status=1)
-            pedido = TbPedidos.objects.create(
-                cliente=cliente_instancia,
-                restaurante=restaurante_instancia,
-                status=status_instancia,
-                valor_total=total_final,
-                data_pedido=timezone.now(),
-                endereco_entrega=endereco,
-            )
-
-            TbPagamentos.objects.create(
-                pedido=pedido,
+            _criar_pedido_completo(
+                cliente=cliente,
+                restaurante=restaurante,
+                dados_venda=dados_venda,
+                total_final=total_final,
+                endereco=endereco,
                 metodo_pagamento=metodo_pagamento,
-                valor=total_final,
-                data_pagamento=timezone.now(),
             )
-
-            for item in dados_venda['itens']:
-                produto_instancia = get_object_or_404(TbProdutos, id_produto=item['id'])
-                TbPedidosProdutos.objects.create(
-                    pedido=pedido,
-                    produto=produto_instancia,
-                    quantidade=item['quantidade'],
-                )
-
-                estoque = TbEstoque.objects.filter(produto=produto_instancia).first()
-                if estoque:
-                    if estoque.quantidade >= item['quantidade']:
-                        estoque.quantidade -= item['quantidade']
-                        estoque.save()
-                    else:
-                        raise ValueError(f'Estoque insuficiente: {produto_instancia.nome_produto}')
-
             del request.session['carrinho'][r_id]
             request.session.modified = True
-            return redirect('pedido')
-
     except Exception as exc:
         logging.getLogger(__name__).error('Erro ao finalizar pedido: %s', exc)
+        messages.error(request, 'Não foi possível concluir o pedido. Tente novamente.')
         return redirect('carrinho')
+
+    messages.success(request, 'Pedido confirmado com sucesso!')
+    return redirect('pedido')
+
+
+def cancelar_pedido_view(request, pedido_id):
+    if request.method != 'POST':
+        return redirect('pedido')
+
+    cliente = get_cliente_logado(request)
+    if not cliente:
+        return redirect('login')
+
+    pedido = get_object_or_404(TbPedidos, id_pedido=pedido_id, cliente=cliente)
+    if pedido.status_id != 1:
+        messages.error(request, 'Este pedido não pode mais ser cancelado.')
+        return redirect('pedido')
+
+    pedido.status = get_object_or_404(TbStatusPedido, id_status=5)
+    pedido.save(update_fields=['status'])
+    messages.success(request, f'Pedido #{pedido.id_pedido} cancelado com sucesso.')
+    return redirect('pedido')
+
+
+def cancelar_reserva_view(request, reserva_id):
+    if request.method != 'POST':
+        return redirect('pedido')
+
+    cliente = get_cliente_logado(request)
+    if not cliente:
+        return redirect('login')
+
+    reserva = get_object_or_404(TbReservas, id_reserva=reserva_id, cliente=cliente)
+    reserva.delete()
+    messages.success(request, f'Reserva #R{reserva_id} cancelada com sucesso.')
+    return redirect('pedido')
 
 
 def feedback_view(request):
