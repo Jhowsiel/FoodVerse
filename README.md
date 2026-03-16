@@ -1,22 +1,45 @@
--🍽️ FoodVerse - README 🚀-
+# 🍽️ FoodVerse
 
-  Bem-vindo ao FoodVerse, a plataforma completa para restaurantes que une tecnologia e gastronomia para oferecer uma experiência única tanto para clientes quanto para gestores. 
-  Este projeto foi desenvolvido como parte do Projeto Integrador (PI) do curso de Infomatica do Senac TBS e visa revolucionar a forma como restaurantes operam e interagem com seus clientes.
+Sistema de gerenciamento de restaurantes desenvolvido como Projeto Integrador (PI) do curso de Informática para Negócios — Senac TBS.
 
--📌 Sobre o Projeto-
+## 📌 Sobre o Projeto
 
-  O FoodVerse é um sistema integrado que oferece funcionalidades avançadas para clientes e gestores de restaurantes. 
-  Desde o cadastro de usuários até a gestão completa de pedidos, cardápios, promoções e muito mais, o FoodVerse é a solução ideal para modernizar o seu negócio.
+O FoodVerse é composto por duas partes:
 
--🛠️ Tecnologias-
+- **Aplicativo Desktop (Java/Swing):** voltado para os funcionários do restaurante. Cobre gestão de pedidos, cardápio, estoque, entregas, reservas de mesa, cozinha (KDS) e controle de equipe.
+- **Portal Web (Python/Django):** voltado para os clientes. Permite navegar pelos restaurantes, fazer pedidos, reservar mesas, aplicar cupons e acompanhar o histórico de compras.
 
--Frontend: 
+Os dois sistemas compartilham o mesmo banco de dados SQL Server.
 
--Backend:
+## 🛠️ Tecnologias
 
--Banco de Dados:
+- **Desktop:** Java 17, Swing, Maven, JDBC
+- **Web:** Python 3, Django
+- **Banco de Dados:** SQL Server (T-SQL)
+- **Autenticação:** Sessão por cargo (desktop) / sessão HTTP com hash de senha (web)
 
--Autenticação:
+## 🗂️ Estrutura do Repositório
 
--Pagamentos: 
+```
+FoodVerse/          # Aplicativo desktop Java (Maven)
+Web/                # Portal web Django
+Docs/               # Documentação do projeto
+Banco de Dados/     # Script de migração SQL (Migration_Sprint1.sql)
+```
+
+## 🚀 Como Rodar
+
+### Desktop (Java)
+```bash
+cd FoodVerse
+mvn clean compile
+mvn exec:java
+```
+
+### Web (Django)
+```bash
+cd Web/projeto
+pip install -r ../requirements.txt
+python manage.py runserver
+```
 

@@ -1,0 +1,286 @@
+@startuml DiagramaDeClasse_FoodVerse
+
+' ==========================================================
+' CONFIGURAÇÃO — A4 Paisagem (297 × 210 mm @ 96 dpi)
+' ==========================================================
+left to right direction
+scale max 1122 width
+scale max 793 height
+
+skinparam classBackgroundColor #EBF5FB
+skinparam classBorderColor #1A5276
+skinparam classArrowColor #444444
+skinparam classHeaderBackgroundColor #2E86AB
+skinparam classHeaderFontColor #FFFFFF
+skinparam classAttributeIconSize 0
+skinparam packageBackgroundColor #FDFEFE
+skinparam packageBorderColor #AAB7B8
+skinparam packageFontSize 9
+skinparam defaultFontName Arial
+skinparam defaultFontSize 8
+skinparam classFontSize 9
+skinparam nodesep 8
+skinparam ranksep 20
+skinparam padding 2
+
+title FoodVerse — Diagrama de Classe
+
+' ==========================================================
+' LINHA SUPERIOR: Restaurante | Cardápio & Estoque | Clientes
+' ==========================================================
+
+package "Restaurante e Funcionários" #FEF9E7 {
+
+  class Restaurante {
+    - id_restaurante : int <<PK>>
+    - nome : String
+    - categoria : String
+    - descricao : String
+    - avaliacao : Decimal
+    - tempo_entrega : String
+    - taxa_entrega : Decimal
+    - imagem : String
+    - ativo : boolean
+    - aberto : boolean
+  }
+
+  class Funcionario {
+    - id_funcionario : int <<PK>>
+    - nome : String
+    - username : String
+    - email : String
+    - cargo : CargoEnum
+    - status : StatusFuncEnum
+    - data_cadastro : DateTime
+    + login() : boolean
+  }
+
+  enum CargoEnum {
+    ADMIN
+    GERENTE
+    ATENDENTE
+    COZINHEIRO
+    ENTREGADOR
+  }
+
+  enum StatusFuncEnum {
+    PENDENTE
+    ATIVO
+    BLOQUEADO
+    DESLIGADO
+  }
+
+}
+
+package "Cardápio e Estoque" #E8F8F5 {
+
+  class Produto {
+    - id_produto : int <<PK>>
+    - nome_produto : String
+    - preco : Decimal
+    - categoria : String
+    - tempo_preparo : int
+    - disponivel : boolean
+    - destaque : boolean
+    - tipo_produto : TipoProdutoEnum
+  }
+
+  enum TipoProdutoEnum {
+    VENDA
+    INSUMO
+  }
+
+  class Nutricao {
+    - id_nutricao : int <<PK>>
+    - kcal : int
+    - proteina : String
+    - carbo : String
+    - gordura : String
+  }
+
+  class Estoque {
+    - id_estoque : int <<PK>>
+    - quantidade : int
+    - estoque_minimo : int
+    - ultima_atualizacao : DateTime
+  }
+
+  class Receita {
+    - id_produto_venda : int <<FK>>
+    - id_insumo : int <<FK>>
+    - quantidade_necessaria : Decimal
+  }
+
+  note right of Receita
+    Tabela BOM (Bill of Materials):
+    id_produto_venda → prato vendido
+    id_insumo → ingrediente utilizado
+  end note
+
+}
+
+package "Clientes" #EBF5FB {
+
+  class Cliente {
+    - id_cliente : int <<PK>>
+    - username : String
+    - nome : String
+    - email : String
+    - cpf : String
+    - endereco : String
+    - data_cadastro : DateTime
+  }
+
+  class Fidelidade {
+    - id_fidelidade : int <<PK>>
+    - pontos : int
+    - cashback : Decimal
+  }
+
+}
+
+' ==========================================================
+' LINHA INFERIOR: Pedidos & Pagamentos | Reservas | Acesso
+' ==========================================================
+
+package "Pedidos e Pagamentos" #FDEDEC {
+
+  class Pedido {
+    - id_pedido : int <<PK>>
+    - data_pedido : DateTime
+    - endereco_entrega : String
+    - valor_total : Decimal
+  }
+
+  class PedidoProduto {
+    - quantidade : int
+    - preco_unitario : Decimal
+  }
+
+  class StatusPedido {
+    - id_status : int <<PK>>
+    - nome_status : String
+  }
+
+  note bottom of StatusPedido
+    1=pendente  2=em preparo
+    3=pronto    4=em rota
+    5=concluído 6=cancelado
+  end note
+
+  class Pagamento {
+    - id_pagamento : int <<PK>>
+    - metodo : MetodoPagamentoEnum
+    - valor : Decimal
+    - data_pagamento : DateTime
+  }
+
+  enum MetodoPagamentoEnum {
+    PIX
+    CARTAO
+    DINHEIRO
+  }
+
+}
+
+package "Reservas e Avaliações" #F9EBEA {
+
+  class Reserva {
+    - id_reserva : int <<PK>>
+    - data_reserva : DateTime
+    - numero_pessoas : int
+    - mesa : String
+  }
+
+  class Avaliacao {
+    - id_avaliacao : int <<PK>>
+    - comentario : String
+    - nota : int
+    - data_avaliacao : DateTime
+  }
+
+}
+
+package "Controle de Acesso" #F5EEF8 {
+
+  class SessionContext <<Singleton>> {
+    - funcionarioId : int
+    - cargo : String
+    - restauranteId : int
+    - isAdmin : boolean
+    + getInstance() : SessionContext
+    + inicializar(...) : void
+    + getRestauranteEfetivo() : int
+    + getRestauranteLabel() : String
+  }
+
+}
+
+' ==========================================================
+' LAYOUT — grade 2 × 3 de pacotes
+' ==========================================================
+Restaurante -[hidden]right- Produto
+Produto     -[hidden]right- Cliente
+Pedido      -[hidden]right- Reserva
+Reserva     -[hidden]right- SessionContext
+Restaurante -[hidden]down-  Pedido
+Produto     -[hidden]down-  Reserva
+Cliente     -[hidden]down-  SessionContext
+
+' ==========================================================
+' RELACIONAMENTOS
+'
+' Tipos usados:
+'   *--  Composição  (♦ preenchido): parte não existe sem o todo
+'   o--  Agregação   (◇ vazio)     : parte pode existir sem o todo
+'   --   Associação               : relação entre objetos
+'   -->  Associação navegável      : unidirecional
+'   ..>  Dependência               : usa / conhece
+' ==========================================================
+
+' --- Composição ---
+' PedidoProduto e Pagamento pertencem ao Pedido;
+' Nutricao e Fidelidade pertencem ao Produto/Cliente.
+Pedido    "1"    *-- "1..*" PedidoProduto  : contém >
+Pedido    "1"    *-- "0..1" Pagamento      : pago com >
+Produto   "1"    *-- "0..1" Nutricao       : contém >
+Cliente   "1"    *-- "0..1" Fidelidade     : acumula >
+
+' --- Agregação ---
+' Restaurante agrega Funcionarios e Produtos do cardápio;
+' cada parte pode ser reusada/transferida.
+Restaurante "1" o-- "0..*" Funcionario : emprega >
+Restaurante "1" o-- "0..*" Produto     : disponibiliza >
+
+' --- Associação simples ---
+' Pedidos, Reservas e Avaliações existem independentemente,
+' apenas referenciam o Restaurante e o Cliente que os originaram.
+Restaurante "1" -- "0..*" Pedido    : recebe >
+Restaurante "1" -- "0..*" Reserva   : tem >
+Restaurante "1" -- "0..*" Avaliacao : recebe >
+
+Cliente "1" -- "0..*" Pedido    : realiza >
+Cliente "1" -- "0..*" Reserva   : faz >
+Cliente "1" -- "0..*" Avaliacao : faz >
+
+' Estoque é entidade independente vinculada ao Produto
+Produto "1" -- "0..1" Estoque : controla >
+
+' Receita (BOM): Produto aparece como prato vendido e como insumo.
+' Os dois FK estão detalhados nos atributos e na nota da classe.
+Produto "1" -- "0..*" Receita : define BOM >
+
+' --- Associação navegável ---
+PedidoProduto "0..*" --> "1" Produto     : referencia >
+Pedido        "0..*" --> "1" StatusPedido : tem status >
+
+' --- Dependência (usa) ---
+Funcionario    ..> CargoEnum           : <<usa>>
+Funcionario    ..> StatusFuncEnum      : <<usa>>
+Produto        ..> TipoProdutoEnum     : <<usa>>
+Pagamento      ..> MetodoPagamentoEnum : <<usa>>
+
+SessionContext ..> Funcionario         : gerencia sessão >
+SessionContext ..> Restaurante         : escopo de >
+
+@enduml
