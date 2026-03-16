@@ -5,790 +5,108 @@
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
 
-{% if messages %}
-  <div class="messages-container" style="max-width: 1180px; margin: 20px auto 0; padding: 0 24px;">
-    {% for message in messages %}
-      <div class="alert {{ message.tags }}" style="padding: 16px; border-radius: var(--radius-md); margin-bottom: 10px; display: flex; align-items: center; gap: 12px; 
-           {% if message.tags == 'error' %} background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; {% endif %}">
-        <i class="bi bi-exclamation-triangle-fill"></i> 
-        <span style="font-weight: 600; font-size: 0.9rem;">{{ message }}</span>
-      </div>
-    {% endfor %}
-  </div>
-{% endif %}
-
-<link
-  href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-  rel="stylesheet">
-
 <style>
-  :root {
-    --red: #E01E1E;
-    --red-dark: #b81818;
-    --red-glow: rgba(224, 30, 30, .18);
-    --red-soft: #fef2f2;
-    --ink: #0f0f0f;
-    --muted: #6b7280;
-    --subtle: #9ca3af;
-    --surface: #ffffff;
-    --bg: #f5f4f1;
-    --line: #e5e7eb;
-    --radius-lg: 22px;
-    --radius-md: 14px;
-    --radius-sm: 10px;
-    --shadow-card: 0 1px 3px rgba(0, 0, 0, .04), 0 8px 24px rgba(0, 0, 0, .06);
-    --shadow-btn: 0 6px 20px var(--red-glow);
-  }
-
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-
-  body {
-    padding-top: 90px;
-    background: var(--bg);
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    color: var(--ink);
-    -webkit-font-smoothing: antialiased;
-  }
-
-  .display-title {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(2rem, 4vw, 2.8rem);
-    font-weight: 800;
-    line-height: 1.1;
-    letter-spacing: -0.5px;
-  }
-
-  .cart-wrapper {
-    max-width: 1180px;
-    margin: 0 auto;
-    padding: 36px 24px 80px;
-  }
-
-  .cart-grid {
-    display: grid;
-    grid-template-columns: 1fr 360px;
-    gap: 28px;
-    align-items: start;
-  }
-
-  @media (max-width: 960px) {
-    .cart-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .page-top {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    margin-bottom: 36px;
-    flex-wrap: wrap;
-    gap: 14px;
-  }
-
-  .page-top-left p {
-    font-size: .82rem;
-    color: var(--muted);
-    margin-bottom: 6px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-
-  .item-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    background: var(--ink);
-    color: white;
-    border-radius: 100px;
-    padding: 8px 18px;
-    font-size: .8rem;
-    font-weight: 700;
-    letter-spacing: .3px;
-  }
-
-  /* Restaurant Block */
-  .restaurant-block {
-    background: var(--surface);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-card);
-    overflow: hidden;
-    margin-bottom: 16px;
-    animation: slideUp .4s ease both;
-  }
-
-  @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(16px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .restaurant-block:nth-child(1) {
-    animation-delay: .05s;
-  }
-
-  .restaurant-block:nth-child(2) {
-    animation-delay: .12s;
-  }
-
-  .restaurant-block:nth-child(3) {
-    animation-delay: .19s;
-  }
-
-  .restaurant-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 28px;
-    border-bottom: 1px solid var(--line);
-    background: linear-gradient(135deg, #fff 60%, var(--red-soft));
-  }
-
-  .restaurant-left {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-
-  .r-icon {
-    width: 46px;
-    height: 46px;
-    background: var(--red-soft);
-    border: 1.5px solid #fecaca;
-    border-radius: var(--radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--red);
-    font-size: 1.1rem;
-    flex-shrink: 0;
-  }
-
-  .r-name {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.05rem;
-    font-weight: 700;
-    margin-bottom: 3px;
-  }
-
-  .open-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: .72rem;
-    font-weight: 600;
-    color: #15803d;
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    border-radius: 100px;
-    padding: 2px 9px;
-  }
-
-  .open-dot {
-    width: 6px;
-    height: 6px;
-    background: #16a34a;
-    border-radius: 50%;
-    animation: blink 2s infinite;
-  }
-
-  @keyframes blink {
-
-    0%,
-    100% {
-      opacity: 1;
-    }
-
-    50% {
-      opacity: .3;
-    }
-  }
-
-  /* Items */
-  .items-list {
-    padding: 0 28px;
-  }
-
-  .cart-item {
-    display: grid;
-    grid-template-columns: 88px 1fr;
-    gap: 18px;
-    padding: 22px 0;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .cart-item:last-child {
-    border-bottom: none;
-  }
-
-  .thumb {
-    width: 88px;
-    height: 88px;
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    background: var(--bg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #d1d5db;
-    font-size: 1.6rem;
-    flex-shrink: 0;
-  }
-
-  .thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .item-body {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-
-  .item-name {
-    font-weight: 700;
-    font-size: .97rem;
-    margin-bottom: 4px;
-    line-height: 1.3;
-  }
-
-  .item-desc {
-    font-size: .78rem;
-    color: var(--muted);
-    line-height: 1.55;
-    margin-bottom: 14px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .item-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .qty-wrap {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    background: var(--bg);
-    border: 1px solid var(--line);
-    border-radius: 100px;
-    padding: 3px;
-  }
-
-  .qty-btn {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    border: none;
-    background: white;
-    color: var(--red);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: .85rem;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, .07);
-    transition: all .18s;
-  }
-
-  .qty-btn:hover {
-    background: var(--red);
-    color: white;
-    transform: scale(1.08);
-  }
-
-  .qty-val {
-    width: 34px;
-    text-align: center;
-    border: none;
-    background: transparent;
-    font-weight: 700;
-    font-size: .88rem;
-    color: var(--ink);
-    font-family: 'Plus Jakarta Sans', sans-serif;
-  }
-
-  .item-price {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--ink);
-  }
-
-  /* Actions */
-  .item-actions {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 28px;
-    background: #fafafa;
-    border-top: 1px solid var(--line);
-  }
-
-  .btn-remove {
-    border: none;
-    background: none;
-    font-size: .78rem;
-    font-weight: 600;
-    color: var(--subtle);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    transition: color .18s;
-    font-family: inherit;
-  }
-
-  .btn-remove:hover {
-    color: var(--red);
-  }
-
-  .btn-add {
-    font-size: .78rem;
-    font-weight: 700;
-    color: var(--red);
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    transition: gap .2s;
-  }
-
-  .btn-add:hover {
-    gap: 8px;
-    color: var(--red-dark);
-  }
-
-  /* Empty */
-  .empty-state {
-    text-align: center;
-    padding: 56px 24px;
-    color: var(--subtle);
-  }
-
-  .empty-state i {
-    font-size: 2.5rem;
-    display: block;
-    margin-bottom: 12px;
-  }
-
-  .empty-state p {
-    font-size: .88rem;
-  }
-
-  /* Coupon */
-  .coupon-bar {
-    background: white;
-    border: 1.5px dashed #d1d5db;
-    border-radius: var(--radius-lg);
-    padding: 18px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-top: 12px;
-  }
-
-  .coupon-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: .88rem;
-    color: var(--muted);
-    font-weight: 500;
-  }
-
-  .coupon-left i {
-    color: var(--red);
-    font-size: 1.1rem;
-  }
-
-  .btn-coupon {
-    border: 1.5px solid var(--red);
-    background: none;
-    color: var(--red);
-    font-size: .78rem;
-    font-weight: 700;
-    border-radius: 100px;
-    padding: 6px 16px;
-    cursor: pointer;
-    transition: all .2s;
-    font-family: inherit;
-  }
-
-  .btn-coupon:hover {
-    background: var(--red);
-    color: white;
-  }
-
-  /* Summary */
-  .summary-card {
-    background: var(--surface);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-card);
-    padding: 30px;
-    position: sticky;
-    top: 106px;
-  }
-
-  .summary-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.25rem;
-    font-weight: 800;
-    margin-bottom: 22px;
-    padding-bottom: 18px;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .s-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: .88rem;
-    margin-bottom: 13px;
-    color: var(--muted);
-  }
-
-  .s-row .val {
-    font-weight: 600;
-    color: var(--ink);
-  }
-
-  .s-row .val.green {
-    color: #16a34a;
-  }
-
-  .s-row .val.red-val {
-    color: var(--red);
-  }
-
-  .s-divider {
-    border: none;
-    border-top: 1px solid var(--line);
-    margin: 20px 0;
-  }
-
-  .total-block {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    margin-bottom: 28px;
-  }
-
-  .total-label {
-    font-weight: 700;
-    font-size: .95rem;
-    color: var(--ink);
-  }
-
-  .total-sub {
-    font-size: .72rem;
-    color: var(--subtle);
-    margin-top: 3px;
-  }
-
-  .total-num {
-    font-family: 'Playfair Display', serif;
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--red);
-    line-height: 1;
-  }
-
-  .btn-pay {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 9px;
-    background: var(--red);
-    color: white;
-    border-radius: var(--radius-md);
-    padding: 17px 24px;
-    font-weight: 700;
-    font-size: .92rem;
-    text-decoration: none;
-    width: 100%;
-    margin-bottom: 11px;
-    transition: all .25s;
-    box-shadow: var(--shadow-btn);
-    border: none;
-    cursor: pointer;
-    font-family: inherit;
-  }
-
-  .btn-pay:hover {
-    background: var(--red-dark);
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 28px var(--red-glow);
-  }
-
-  .btn-back {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    background: var(--bg);
-    color: var(--muted);
-    border-radius: var(--radius-md);
-    padding: 14px 24px;
-    font-size: .85rem;
-    font-weight: 600;
-    text-decoration: none;
-    width: 100%;
-    border: 1px solid var(--line);
-    transition: all .2s;
-  }
-
-  .btn-back:hover {
-    background: var(--line);
-    color: var(--ink);
-  }
-
-  .trust-note {
-    margin-top: 18px;
-    background: var(--bg);
-    border-radius: var(--radius-sm);
-    padding: 12px 14px;
-    display: flex;
-    gap: 9px;
-    align-items: flex-start;
-  }
-
-  .trust-note i {
-    color: var(--subtle);
-    font-size: .82rem;
-    margin-top: 2px;
-    flex-shrink: 0;
-  }
-
-  .trust-note p {
-    font-size: .75rem;
-    color: var(--subtle);
-    line-height: 1.55;
-  }
+  body { background:#0d0c0c; color:#fff; }
+  .page-wrap { max-width:1200px; margin:0 auto; padding:40px 20px 80px; }
+  .card-fv { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:18px; }
+  .muted { color:rgba(255,255,255,.6); }
+  .item-img { width:76px; height:76px; border-radius:12px; object-fit:cover; }
+  .qty-btn { width:32px; height:32px; border-radius:8px; border:1px solid rgba(255,255,255,.2); background:transparent; color:#fff; }
+  .qty-input { width:38px; text-align:center; border:none; background:transparent; color:#fff; font-weight:700; }
+  .btn-main { background:#C41017; border:none; color:#fff; font-weight:700; border-radius:12px; padding:12px; }
+  .btn-main:hover { background:#a00d13; color:#fff; }
+  .btn-outline-fv { border:1px solid rgba(255,255,255,.2); color:#fff; }
+  .btn-outline-fv:hover { background:rgba(255,255,255,.08); color:#fff; }
 </style>
 
-<div class="cart-wrapper">
-
-  <div class="page-top">
-    <div class="page-top-left">
-      <p><i class="bi bi-geo-alt-fill" style="color:var(--red)"></i> Entregar em sua localização atual</p>
-      <h1 class="display-title">Seu Carrinho</h1>
+<div class="page-wrap">
+  <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
+    <div>
+      <p class="text-danger fw-semibold small mb-1 text-uppercase">Pedido</p>
+      <h1 class="h2 mb-0" style="font-family:'Fraunces',serif;">Meu Carrinho</h1>
     </div>
-    <span class="item-chip">
-      <i class="bi bi-bag-check"></i>
-      {{ carrinho|length }} restaurante{% if carrinho|length != 1 %}s{% endif %}
-    </span>
+    <span class="badge rounded-pill text-bg-dark border border-secondary">{{ total_itens }} item(ns)</span>
   </div>
 
-  <div class="cart-grid">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
 
-    <!-- LEFT: Items por restaurante -->
-    <div>
+  <div class="row g-4">
+    <div class="col-lg-8">
       {% for r_id, dados in carrinho.items %}
-      <div class="restaurant-block">
-
-        <div class="restaurant-header">
-          <div class="restaurant-left">
-            <div class="r-icon"><i class="bi bi-shop-window"></i></div>
-            <div>
-              <div class="r-name">{{ dados.restaurante }}</div>
-              <span class="open-tag"><span class="open-dot"></span> Aberto agora</span>
-            </div>
+      <div class="card-fv p-3 p-md-4 mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0">{{ dados.restaurante }}</h5>
+          <div class="d-flex gap-2">
+            <a href="{% url 'restaurante_detalhe' r_id %}" class="btn btn-sm btn-outline-fv">Mais itens</a>
+            <button class="btn btn-sm btn-outline-danger" onclick="removerRestaurante('{{ r_id }}')">Remover</button>
           </div>
         </div>
 
-        <div class="items-list">
-          {% for item in dados.itens %}
-          <div class="cart-item">
-            <div class="thumb">
-              {% if item.imagem %}
-              <img src="{% img_url item.imagem %}" alt="{{ item.nome }}">
-              {% else %}
-              <i class="bi bi-egg-fried"></i>
-              {% endif %}
-            </div>
-            <div class="item-body">
-              <div>
-                <div class="item-name">{{ item.nome }}</div>
-                {% if item.descricao %}
-                <div class="item-desc">{{ item.descricao }}</div>
-                {% endif %}
-              </div>
-              <div class="item-row">
-                <div class="qty-wrap">
-                  <button class="qty-btn" onclick="changeQty(this, -1, '{{ r_id }}', '{{ item.id }}')">
-                    <i class="bi bi-dash"></i>
-                  </button>
-                  <input type="text" class="qty-val" value="{{ item.quantidade }}" readonly>
-                  <button class="qty-btn" onclick="changeQty(this, 1, '{{ r_id }}', '{{ item.id }}')">
-                    <i class="bi bi-plus"></i>
-                  </button>
-                </div>
-                <span class="item-price">R$ {{ item.preco|floatformat:2 }}</span>
-              </div>
-            </div>
+        {% for item in dados.itens %}
+        <div class="d-flex gap-3 align-items-center py-2 border-top border-secondary-subtle">
+          <img src="{% img_or_fallback item.imagem %}" alt="{{ item.nome }}" class="item-img">
+          <div class="flex-grow-1">
+            <div class="fw-semibold">{{ item.nome }}</div>
+            <small class="muted">R$ {{ item.preco|floatformat:2 }}</small>
           </div>
-          {% empty %}
-          <div class="empty-state">
-            <i class="bi bi-cart-x"></i>
-            <p>Nenhum item deste restaurante.</p>
+          <div class="d-flex align-items-center gap-1">
+            <button type="button" class="qty-btn" onclick="changeQty(-1,'{{ r_id }}','{{ item.id }}')"><i class="bi bi-dash"></i></button>
+            <input class="qty-input" value="{{ item.quantidade }}" readonly>
+            <button type="button" class="qty-btn" onclick="changeQty(1,'{{ r_id }}','{{ item.id }}')"><i class="bi bi-plus"></i></button>
           </div>
-          {% endfor %}
         </div>
-
-        <div class="item-actions">
-          <button class="btn-remove" onclick="removerRestaurante('{{ r_id }}')">
-            <i class="bi bi-trash3"></i> Remover restaurante
-          </button>
-          <a href="{% url 'restaurante_detalhe' r_id %}" class="btn-add">
-            <i class="bi bi-plus-lg"></i> Mais itens
-          </a>
-        </div>
-
+        {% endfor %}
       </div>
       {% empty %}
-      <div class="restaurant-block">
-        <div class="empty-state">
-          <i class="bi bi-cart3"></i>
-          <p>Seu carrinho está vazio. Adicione itens para continuar.</p>
-        </div>
+      <div class="card-fv p-5 text-center">
+        <i class="bi bi-cart-x fs-1 muted"></i>
+        <p class="muted mt-2 mb-0">Seu carrinho está vazio.</p>
       </div>
       {% endfor %}
+    </div>
 
-      <div class="coupon-bar">
-        <div class="coupon-left">
-          <i class="bi bi-ticket-perforated-fill"></i>
-          <span>Tem um cupom de desconto?</span>
-        </div>
-        <form method="get" action="{% url 'finalizacao' %}" style="display:flex; gap:8px; align-items:center;">
+    <div class="col-lg-4">
+      <div class="card-fv p-4 position-sticky" style="top:96px;">
+        <h5 class="mb-3">Resumo</h5>
+        <div class="d-flex justify-content-between mb-2"><span class="muted">Subtotal</span><strong>{{ subtotal }}</strong></div>
+        <div class="d-flex justify-content-between mb-2"><span class="muted">Entrega</span><strong>{{ entrega }}</strong></div>
+        <div class="d-flex justify-content-between mb-3"><span class="muted">Desconto</span><strong>{{ desconto }}</strong></div>
+
+        <form method="get" action="{% url 'finalizacao' %}" class="mb-3">
           {% for r_id, dados in carrinho.items %}<input type="hidden" name="restaurante_id" value="{{ r_id }}">{% endfor %}
-          <input type="text" name="cupom_codigo" placeholder="Cupom" style="border-radius:8px; border:1px solid #2b2b30; padding:6px 10px; background:#131316; color:#fff;">
-          <button class="btn-coupon" type="submit">Aplicar</button>
-        </form>
-      </div>
-    </div>
-
-    <!-- RIGHT: Summary -->
-    <div>
-      <div class="summary-card">
-        <div class="summary-title">Resumo do Pedido</div>
-        <div class="s-row"><span>Itens</span><span class="val">{{ total_itens }}</span></div>
-
-        <div class="s-row">
-          <span>Subtotal</span>
-          <span class="val">{{ subtotal }}</span>
-        </div>
-        <div class="s-row">
-          <span>Taxa de entrega</span>
-          <span class="val green">{{ entrega }}</span>
-        </div>
-        <div class="s-row">
-          <span>Desconto</span>
-          <span class="val red-val">{{ desconto }}</span>
-        </div>
-
-        <hr class="s-divider">
-
-        <div class="total-block">
-          <div>
-            <div class="total-label">Total</div>
-            <div class="total-sub">em até 2x s/ juros</div>
+          <label class="form-label small muted">Cupom</label>
+          <div class="input-group">
+            <input class="form-control" name="cupom_codigo" placeholder="Digite o cupom">
+            <button class="btn btn-outline-light" type="submit">Aplicar</button>
           </div>
-          <div class="total-num">{{ total }}</div>
-        </div>
+        </form>
 
-       {% for r_id, dados in carrinho.items %}
-        <a href="{% url 'finalizacao' %}?restaurante_id={{ r_id }}{% if request.GET.cupom_codigo %}&cupom_codigo={{ request.GET.cupom_codigo }}{% endif %}" class="btn-pay">
-        Finalizar pedido
-        </a>
+        <hr class="border-secondary">
+        <div class="d-flex justify-content-between align-items-end mb-3"><span>Total</span><span class="h4 mb-0 text-danger">{{ total }}</span></div>
+
+        {% for r_id, dados in carrinho.items %}
+          <a href="{% url 'finalizacao' %}?restaurante_id={{ r_id }}" class="btn btn-main w-100 mb-2">Finalizar pedido</a>
         {% endfor %}
-        <a href="{% url 'restaurantes' %}" class="btn-back">
-          <i class="bi bi-arrow-left"></i> Continuar comprando
-        </a>
-
-        <div class="trust-note">
-          <i class="bi bi-patch-check-fill"></i>
-          <p>Compra 100% segura. Ao finalizar você concorda com nossos termos de serviço.</p>
-        </div>
+        <a href="{% url 'restaurantes' %}" class="btn btn-outline-fv w-100">Continuar comprando</a>
       </div>
     </div>
-
   </div>
 </div>
 
 <script>
-
-
-setTimeout(function() {
-    const containerMensagens = document.querySelector('.messages-container');
-    if (containerMensagens) {
-        // Cria uma transição suave de desaparecimento
-        containerMensagens.style.transition = "opacity 0.6s ease";
-        containerMensagens.style.opacity = "0";
-        
-        // Remove do HTML de vez após a animação terminar (mais 600ms)
-        setTimeout(() => {
-            containerMensagens.remove();
-        }, 600);
-    }
-}, 5000);
-
   function removerRestaurante(r_id) {
-    fetch(`/remover-restaurante/${r_id}/`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === "ok") {
-          location.reload()
-        }
-      })
+    fetch(`/remover-restaurante/${r_id}/`).then(r => r.json()).then(data => {
+      if (data.status === 'ok') location.reload();
+    });
   }
 
-  function changeQty(btn, amount, rId, produtoId) {
-    const url = amount > 0
-      ? `/carrinho/aumentar/${rId}/${produtoId}/`
-      : `/carrinho/diminuir/${rId}/${produtoId}/`;
-
-    fetch(url)
-      .then(r => r.json())
-      .then(data => {
-
-      if (data.erro) {
-        alert(data.erro)
-        return
-      }
-  
-        const input = btn.parentElement.querySelector('.qty-val');
-        if (data.quantidade === 0) {
-          // remove o item da tela
-          btn.closest('.cart-item').remove();
-        } else {
-          input.value = data.quantidade;
-          location.reload()
-        }
-      });
+  function changeQty(amount, rId, produtoId) {
+    const url = amount > 0 ? `/carrinho/aumentar/${rId}/${produtoId}/` : `/carrinho/diminuir/${rId}/${produtoId}/`;
+    fetch(url).then(r => r.json()).then(() => location.reload());
   }
 </script>
 

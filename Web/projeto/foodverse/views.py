@@ -1,12 +1,14 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
 import base64
-import hashlib
+import io
 import logging
 import random
 import re
 
+import qrcode
 import requests
+from qrcode.image.pure import PyPNGImage
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password, make_password
 from django.db import transaction
@@ -36,32 +38,24 @@ RESERVA_TAXA = Decimal('20.00')
 DIAS_SEMANA_PT = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
 
 
-def _gerar_qr_svg_base64(payload: str) -> str:
-    digest = hashlib.sha256(payload.encode('utf-8')).hexdigest()
-    size = 21
-    cell = 10
-    blocks = []
-    for y in range(size):
-        for x in range(size):
-            idx = (x + y * size) % len(digest)
-            if int(digest[idx], 16) % 2 == 0:
-                blocks.append(f"<rect x='{x * cell}' y='{y * cell}' width='{cell}' height='{cell}' fill='#111827' />")
-    svg = (
-        f"<svg xmlns='http://www.w3.org/2000/svg' width='{size * cell}' height='{size * cell}' viewBox='0 0 {size * cell} {size * cell}'>"
-        "<rect width='100%' height='100%' fill='white'/>"
-        + ''.join(blocks)
-        + '</svg>'
-    )
-    return f"data:image/svg+xml;base64,{base64.b64encode(svg.encode('utf-8')).decode('utf-8')}"
+def _gerar_codigo_pix(valor: Decimal, pedido_ref: str) -> str:
+    return f"00020126580014BR.GOV.BCB.PIX0136foodverse-demo-chave5204000053039865405{valor:.2f}5802BR5913FOODVERSE DEMO6009SAOPAULO62070503***6304{pedido_ref[:4].upper()}"
+
+
+def _gerar_qr_pix_base64(payload: str) -> str:
+    qr = qrcode.QRCode(version=1, box_size=10, border=2)
+    qr.add_data(payload)
+    qr.make(fit=True)
+    imagem = qr.make_image(image_factory=PyPNGImage)
+    buffer = io.BytesIO()
+    imagem.save(buffer)
+    return f"data:image/png;base64,{base64.b64encode(buffer.getvalue()).decode('utf-8')}"
 
 
 def _avaliar_cupom(restaurante, subtotal: Decimal, cupom_codigo: str):
     cupom = (cupom_codigo or '').strip()
     if not cupom:
         return Decimal('0.00'), '', None
-
-    codigo_normalizado = cupom.lower()
-    desconto = Decimal('0.00')
 
     cupom_global = TbCupons.objects.filter(codigo__iexact=cupom).first()
     if cupom_global:
@@ -72,15 +66,45 @@ def _avaliar_cupom(restaurante, subtotal: Decimal, cupom_codigo: str):
         return desconto, cupom_global.codigo, None
 
     cupom_restaurante = (restaurante.cupom or '').strip()
-    if cupom_restaurante and cupom_restaurante.lower() == codigo_normalizado:
+    if cupom_restaurante and cupom_restaurante.lower() == cupom.lower():
         desconto = (subtotal * Decimal('0.10')).quantize(Decimal('0.01'))
         return desconto, cupom_restaurante, None
 
     return Decimal('0.00'), '', 'Cupom inválido para este restaurante.'
 
 
+def _obter_status_por_id_ou_nome(id_status: int, nome_status: str):
+    status = TbStatusPedido.objects.filter(id_status=id_status).first()
+    if status:
+        return status
+
+    status = TbStatusPedido.objects.filter(nome_status__iexact=nome_status).first()
+    if status:
+        return status
+
+    try:
+        status, _ = TbStatusPedido.objects.get_or_create(
+            id_status=id_status,
+            defaults={'nome_status': nome_status},
+        )
+        return status
+    except Exception:
+        return TbStatusPedido.objects.order_by('id_status').first()
+
+
+def _validar_dados_cartao(numero: str, validade: str, cvv: str, nome: str) -> bool:
+    numero_limpo = re.sub(r'\D', '', numero or '')
+    validade_ok = bool(re.match(r'^(0[1-9]|1[0-2])/\d{2}$', (validade or '').strip()))
+    cvv_ok = bool(re.match(r'^\d{3,4}$', (cvv or '').strip()))
+    nome_ok = len((nome or '').strip()) >= 3
+    return len(numero_limpo) in (15, 16) and validade_ok and cvv_ok and nome_ok
+
+
 def _criar_pedido_completo(cliente, restaurante, dados_venda, total_final, endereco, metodo_pagamento):
-    status_pendente = get_object_or_404(TbStatusPedido, id_status=1)
+    status_pendente = _obter_status_por_id_ou_nome(1, 'Pendente')
+    if not status_pendente:
+        raise ValueError('Status de pedido não configurado')
+
     pedido = TbPedidos.objects.create(
         cliente=cliente,
         restaurante=restaurante,
@@ -90,11 +114,11 @@ def _criar_pedido_completo(cliente, restaurante, dados_venda, total_final, ender
         endereco_entrega=endereco,
     )
 
-    metodo_pagamento = (metodo_pagamento or '').strip()
-    if metodo_pagamento.lower() in {'pix'}:
-        pagamento_status = 'Pago'
+    metodo_pagamento_limpo = (metodo_pagamento or '').strip()
+    if metodo_pagamento_limpo.lower() in {'pix', 'crédito', 'credito', 'débito', 'debito'}:
+        pagamento_status = f'{metodo_pagamento_limpo} aprovado'
     else:
-        pagamento_status = f'{metodo_pagamento} na entrega'
+        pagamento_status = f'{metodo_pagamento_limpo} na entrega'
 
     TbPagamentos.objects.create(
         pedido=pedido,
@@ -115,7 +139,7 @@ def _criar_pedido_completo(cliente, restaurante, dados_venda, total_final, ender
         if estoque:
             if estoque.quantidade >= item['quantidade']:
                 estoque.quantidade -= item['quantidade']
-                estoque.save()
+                estoque.save(update_fields=['quantidade'])
             else:
                 raise ValueError(f'Estoque insuficiente: {produto_instancia.nome_produto}')
 
@@ -475,7 +499,7 @@ def reserva_pagamento(request):
     data_str = request.POST.get('data', '')
     horario_str = request.POST.get('horario', '')
     pessoas = _int_param(request.POST.get('pessoas'), 2)
-    metodo_pagamento = request.POST.get('metodo_pagamento', 'pix')
+    metodo_pagamento = request.POST.get('metodo_pagamento', 'Pix').title()
 
     datas_validas = [d.strftime('%Y-%m-%d') for d in _datas_reserva_validas()]
     if data_str not in datas_validas or horario_str not in RESERVA_HORARIOS:
@@ -493,19 +517,23 @@ def reserva_pagamento(request):
         .values_list('mesa', flat=True)
     )
     mesas_livres = [mesa for mesa in MESAS_DISPONIVEIS if mesa not in mesas_ocupadas]
-
     if not mesas_livres:
         messages.error(request, 'Não há mesas disponíveis para este horário. Tente outro horário.')
         return redirect(f"{redirect('reserva').url}?restaurante_id={r_id}")
 
     mesa_sorteada = random.choice(mesas_livres)
-    reserva = TbReservas.objects.create(
-        cliente=client,
-        restaurante=restaurante,
-        data_reserva=reserva_data,
-        numero_pessoas=pessoas,
-        mesa=mesa_sorteada,
-    )
+    payload_pix = _gerar_codigo_pix(RESERVA_TAXA, f"RV{client.id_cliente}{r_id}")
+
+    request.session['reserva_checkout'] = {
+        'restaurante_id': restaurante.id_restaurante,
+        'data': data_str,
+        'horario': horario_str,
+        'pessoas': pessoas,
+        'metodo_pagamento': metodo_pagamento,
+        'mesa': mesa_sorteada,
+        'payload_pix': payload_pix,
+    }
+    request.session.modified = True
 
     return render(request, 'pages/pedido/reserva_pagamento.html', {
         'restaurante': restaurante,
@@ -514,10 +542,65 @@ def reserva_pagamento(request):
         'pessoas': pessoas,
         'metodo_pagamento': metodo_pagamento,
         'mesa': mesa_sorteada,
-        'reserva': reserva,
-        'total': f'R$ {RESERVA_TAXA:.2f}'.replace('.', ','),
-        'pagamento_aprovado': True,
+        'total': RESERVA_TAXA,
+        'pix_payload': payload_pix,
+        'pix_qr_code': _gerar_qr_pix_base64(payload_pix),
+        'pix_timeout': 18,
     })
+
+
+def reserva_confirmar_pagamento(request):
+    if request.method != 'POST':
+        return redirect('pedido')
+
+    cliente = get_cliente_logado(request)
+    if not cliente:
+        return redirect('login')
+
+    checkout = request.session.get('reserva_checkout') or {}
+    if not checkout:
+        messages.error(request, 'Dados da reserva expiraram. Refaça a reserva.')
+        return redirect('restaurantes')
+
+    restaurante = get_object_or_404(TbRestaurantes, id_restaurante=checkout.get('restaurante_id'), ativo=True)
+    metodo = (request.POST.get('metodo_pagamento') or checkout.get('metodo_pagamento') or 'Pix').title()
+
+    if metodo == 'Pix' and request.POST.get('pix_confirmado') != '1':
+        messages.error(request, 'Aguardando confirmação do Pix.')
+        return redirect(f"{redirect('reserva').url}?restaurante_id={restaurante.id_restaurante}")
+
+    if metodo in {'Crédito', 'Debito', 'Débito'}:
+        if request.POST.get('cartao_confirmado') != '1':
+            messages.error(request, 'Pagamento com cartão não confirmado.')
+            return redirect(f"{redirect('reserva').url}?restaurante_id={restaurante.id_restaurante}")
+        if not _validar_dados_cartao(
+            request.POST.get('cartao_numero'),
+            request.POST.get('cartao_validade'),
+            request.POST.get('cartao_cvv'),
+            request.POST.get('cartao_nome'),
+        ):
+            messages.error(request, 'Dados do cartão inválidos.')
+            return redirect(f"{redirect('reserva').url}?restaurante_id={restaurante.id_restaurante}")
+
+    try:
+        reserva_data = timezone.make_aware(datetime.strptime(f"{checkout['data']} {checkout['horario']}", '%Y-%m-%d %H:%M'))
+    except ValueError:
+        messages.error(request, 'Data da reserva inválida.')
+        return redirect('restaurantes')
+
+    with transaction.atomic():
+        TbReservas.objects.create(
+            cliente=cliente,
+            restaurante=restaurante,
+            data_reserva=reserva_data,
+            numero_pessoas=checkout['pessoas'],
+            mesa=checkout['mesa'],
+        )
+
+    request.session.pop('reserva_checkout', None)
+    request.session.modified = True
+    messages.success(request, 'Reserva confirmada com sucesso.')
+    return redirect('pedido')
 
 
 def pedido_view(request):
@@ -673,74 +756,60 @@ def finalizacao_view(request):
 
     restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True, aberto=True)
     dados_venda = carrinho[r_id]
-
     subtotal = sum(Decimal(str(i['preco'])) * i['quantidade'] for i in dados_venda['itens'])
     entrega = restaurante.taxa_entrega if restaurante.taxa_entrega else Decimal('0.00')
 
     cupom_fonte = request.POST if request.method == 'POST' else request.GET
     cupom_codigo = (cupom_fonte.get('cupom_codigo') or '').strip()
     desconto, cupom_aplicado, cupom_erro = _avaliar_cupom(restaurante, subtotal, cupom_codigo)
-
     total_final = max(subtotal + entrega - desconto, Decimal('0.00'))
 
+    payload_pix = _gerar_codigo_pix(total_final, f"PD{cliente.id_cliente}{r_id}")
+    contexto = {
+        'carrinho': dados_venda,
+        'restaurante': restaurante,
+        'cliente': cliente,
+        'subtotal': subtotal,
+        'entrega': entrega,
+        'desconto': desconto,
+        'total': total_final,
+        'cupom_codigo': cupom_codigo,
+        'cupom_aplicado': cupom_aplicado,
+        'cupom_erro': cupom_erro,
+        'pix_timeout': 18,
+        'pix_payload': payload_pix,
+        'pix_qr_code': _gerar_qr_pix_base64(payload_pix),
+    }
+
     if request.method == 'GET':
-        return render(request, 'pages/pedido/finalizacao.html', {
-            'carrinho': dados_venda,
-            'restaurante': restaurante,
-            'cliente': cliente,
-            'subtotal': subtotal,
-            'entrega': entrega,
-            'desconto': desconto,
-            'total': total_final,
-            'cupom_codigo': cupom_codigo,
-            'cupom_aplicado': cupom_aplicado,
-            'cupom_erro': cupom_erro,
-            'pix_timeout': 30,
-        })
+        return render(request, 'pages/pedido/finalizacao.html', contexto)
 
     if cupom_erro and cupom_codigo:
-        messages.error(request, cupom_erro)
-        return render(request, 'pages/pedido/finalizacao.html', {
-            'carrinho': dados_venda,
-            'restaurante': restaurante,
-            'cliente': cliente,
-            'subtotal': subtotal,
-            'entrega': entrega,
-            'desconto': desconto,
-            'total': total_final,
-            'cupom_codigo': cupom_codigo,
-            'cupom_aplicado': cupom_aplicado,
-            'cupom_erro': cupom_erro,
-            'pix_timeout': 30,
-        })
+        return render(request, 'pages/pedido/finalizacao.html', contexto)
 
     endereco = (request.POST.get('endereco') or '').strip()
-    metodo_pagamento = (request.POST.get('pagamento') or 'Pix').strip()
-    pix_confirmado = request.POST.get('pix_confirmado') == '1'
+    metodo_pagamento = (request.POST.get('pagamento') or 'Pix').strip().title()
 
     if not endereco:
         messages.error(request, 'Informe o endereço de entrega.')
-        return redirect(f"{redirect('finalizacao').url}?restaurante_id={r_id}&cupom_codigo={cupom_aplicado or cupom_codigo}")
+        return render(request, 'pages/pedido/finalizacao.html', contexto)
 
-    if metodo_pagamento.lower() == 'pix' and not pix_confirmado:
-        payload = f"FV:{cliente.id_cliente}:{restaurante.id_restaurante}:{timezone.now().timestamp()}"
-        return render(request, 'pages/pedido/finalizacao.html', {
-            'carrinho': dados_venda,
-            'restaurante': restaurante,
-            'cliente': cliente,
-            'subtotal': subtotal,
-            'entrega': entrega,
-            'desconto': desconto,
-            'total': total_final,
-            'cupom_codigo': cupom_codigo,
-            'cupom_aplicado': cupom_aplicado,
-            'pix_timeout': 30,
-            'pix_qr_code': _gerar_qr_svg_base64(payload),
-            'pix_payload': payload,
-            'endereco_confirmado': endereco,
-            'metodo_pagamento': metodo_pagamento,
-            'mostrar_modal_pix': True,
-        })
+    if metodo_pagamento == 'Pix' and request.POST.get('pix_confirmado') != '1':
+        messages.error(request, 'Aguardando confirmação do Pix.')
+        return render(request, 'pages/pedido/finalizacao.html', contexto)
+
+    if metodo_pagamento in {'Crédito', 'Debito', 'Débito'}:
+        if request.POST.get('cartao_confirmado') != '1':
+            messages.error(request, 'Pagamento com cartão não confirmado.')
+            return render(request, 'pages/pedido/finalizacao.html', contexto)
+        if not _validar_dados_cartao(
+            request.POST.get('cartao_numero'),
+            request.POST.get('cartao_validade'),
+            request.POST.get('cartao_cvv'),
+            request.POST.get('cartao_nome'),
+        ):
+            messages.error(request, 'Dados do cartão inválidos.')
+            return render(request, 'pages/pedido/finalizacao.html', contexto)
 
     try:
         with transaction.atomic():
@@ -776,7 +845,11 @@ def cancelar_pedido_view(request, pedido_id):
         messages.error(request, 'Este pedido não pode mais ser cancelado.')
         return redirect('pedido')
 
-    pedido.status = get_object_or_404(TbStatusPedido, id_status=5)
+    status_cancelado = _obter_status_por_id_ou_nome(5, 'Cancelado')
+    if not status_cancelado:
+        messages.error(request, 'Status de cancelamento não configurado.')
+        return redirect('pedido')
+    pedido.status = status_cancelado
     pedido.save(update_fields=['status'])
     messages.success(request, f'Pedido #{pedido.id_pedido} cancelado com sucesso.')
     return redirect('pedido')

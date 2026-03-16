@@ -3,93 +3,126 @@
 {% include "pages/pagePrincipal/header.html" %}
 
 <style>
-  body { padding-top: 90px; background:#0f1115; color:#f3f4f6; }
-  .wrap { max-width:1100px; margin:0 auto; padding:28px 16px 72px; }
-  .grid { display:grid; grid-template-columns: 1fr 360px; gap:16px; }
-  @media (max-width: 920px){ .grid { grid-template-columns:1fr; } }
-  .card { background:#171a21; border:1px solid #2c3140; border-radius:16px; padding:20px; margin-bottom:14px; }
-  .title { font-weight:800; font-size:1.05rem; margin-bottom:14px; }
-  .field { margin-bottom:12px; }
-  .field input { width:100%; border:1px solid #363d4f; background:#0f1115; color:#fff; border-radius:10px; padding:12px; }
-  .pay { display:grid; grid-template-columns: repeat(2,1fr); gap:8px; }
-  .pay label { border:1px solid #363d4f; border-radius:10px; padding:10px; cursor:pointer; }
-  .pay input:checked + label { border-color:#e11d2f; background:#2a1317; }
-  .summary { position:sticky; top:96px; }
-  .rowv { display:flex; justify-content:space-between; margin-bottom:8px; color:#c6cada; }
-  .total { font-size:1.7rem; color:#ff6173; font-weight:800; }
-  .btn-main { width:100%; border:0; border-radius:12px; background:#e11d2f; color:white; font-weight:700; padding:14px; }
-  .btn-main:hover { background:#c41424; }
-  .coupon-inline { display:flex; gap:8px; }
-  .coupon-inline input { flex:1; }
-  .msg { font-size:.85rem; margin-top:8px; }
-  .msg.ok { color:#86efac; }
-  .msg.err { color:#fca5a5; }
-  .pix-overlay { position:fixed; inset:0; background:rgba(0,0,0,.68); display:none; align-items:center; justify-content:center; z-index:1050; }
-  .pix-overlay.show { display:flex; }
-  .pix-card { width:min(520px,92vw); background:#171a21; border:1px solid #2c3140; border-radius:16px; padding:22px; text-align:center; }
-  .qr { width:230px; height:230px; background:white; margin: 14px auto; border-radius:8px; padding:8px; }
-  .timer { font-size:1.8rem; font-weight:800; color:#86efac; }
-  .ok-anim { display:none; font-size:1.1rem; color:#86efac; font-weight:700; }
+  body { background:#0d0c0c; color:#fff; }
+  .page-wrap { max-width:1180px; margin:0 auto; padding:36px 20px 80px; }
+  .card-fv { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09); border-radius:18px; }
+  .muted { color:rgba(255,255,255,.62); }
+  .btn-main { background:#C41017; border:none; color:#fff; font-weight:700; border-radius:12px; padding:12px 16px; }
+  .btn-main:hover { background:#a00d13; color:#fff; }
+  .pix-qr { width:220px; height:220px; border-radius:12px; background:#fff; padding:10px; }
+  .step-line { height:8px; border-radius:8px; background:rgba(255,255,255,.08); overflow:hidden; }
+  .step-progress { height:100%; background:linear-gradient(90deg,#C41017,#ff4d57); width:0%; transition:width 1s linear; }
 </style>
 
-<div class="wrap">
-  <h1 style="font-size:2rem; font-weight:800; margin-bottom:20px;">Finalizar pedido</h1>
-  <form method="post" action="{% url 'finalizacao' %}" id="checkoutForm">
+<div class="page-wrap">
+  <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
+    <div>
+      <p class="text-danger fw-semibold small mb-1 text-uppercase">Checkout</p>
+      <h1 class="h2 mb-0" style="font-family:'Fraunces',serif;">Finalizar Pedido</h1>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post" id="checkoutForm">
     {% csrf_token %}
     <input type="hidden" name="restaurante_id" value="{{ restaurante.id_restaurante }}">
-    <div class="grid">
-      <div>
-        <div class="card">
-          <div class="title">Entrega</div>
-          <div class="field">
-            <input type="text" name="endereco" value="{{ endereco_confirmado|default:cliente.endereco|default:'' }}" placeholder="Rua, número, bairro" required>
-          </div>
+    <input type="hidden" name="pix_confirmado" id="pix_confirmado" value="0">
+    <input type="hidden" name="cartao_confirmado" id="cartao_confirmado" value="0">
+    <input type="hidden" name="cartao_numero" id="cartao_numero_hidden">
+    <input type="hidden" name="cartao_validade" id="cartao_validade_hidden">
+    <input type="hidden" name="cartao_cvv" id="cartao_cvv_hidden">
+    <input type="hidden" name="cartao_nome" id="cartao_nome_hidden">
+
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="card-fv p-4 mb-3">
+          <h5 class="mb-3">Entrega</h5>
+          <label class="form-label muted small">Endereço completo</label>
+          <input class="form-control" name="endereco" required value="{{ cliente.endereco|default:'' }}">
         </div>
 
-        <div class="card">
-          <div class="title">Pagamento</div>
-          {% with metodo=metodo_pagamento|default:'Pix' %}
-          <div class="pay">
-            <input type="radio" id="pix" name="pagamento" value="Pix" {% if metodo == 'Pix' %}checked{% endif %} hidden><label for="pix">Pix</label>
-            <input type="radio" id="credito" name="pagamento" value="Crédito" {% if metodo == 'Crédito' %}checked{% endif %} hidden><label for="credito">Crédito</label>
-            <input type="radio" id="debito" name="pagamento" value="Débito" {% if metodo == 'Débito' %}checked{% endif %} hidden><label for="debito">Débito</label>
-            <input type="radio" id="dinheiro" name="pagamento" value="Dinheiro" {% if metodo == 'Dinheiro' %}checked{% endif %} hidden><label for="dinheiro">Dinheiro</label>
+        <div class="card-fv p-4 mb-3">
+          <h5 class="mb-3">Forma de pagamento</h5>
+          <div class="row g-2">
+            <div class="col-md-6"><input class="btn-check" type="radio" name="pagamento" id="pay_pix" value="Pix" checked><label class="btn btn-outline-light w-100" for="pay_pix">PIX</label></div>
+            <div class="col-md-6"><input class="btn-check" type="radio" name="pagamento" id="pay_credito" value="Crédito"><label class="btn btn-outline-light w-100" for="pay_credito">Cartão de crédito</label></div>
+            <div class="col-md-6"><input class="btn-check" type="radio" name="pagamento" id="pay_debito" value="Débito"><label class="btn btn-outline-light w-100" for="pay_debito">Cartão de débito</label></div>
+            <div class="col-md-6"><input class="btn-check" type="radio" name="pagamento" id="pay_dinheiro" value="Dinheiro"><label class="btn btn-outline-light w-100" for="pay_dinheiro">Dinheiro</label></div>
           </div>
           {% endwith %}
         </div>
 
-        <div class="card">
-          <div class="title">Cupom</div>
-          <div class="coupon-inline">
-            <input type="text" name="cupom_codigo" placeholder="Código do cupom" value="{{ cupom_codigo }}">
+        <div class="card-fv p-4">
+          <h5 class="mb-3">Cupom</h5>
+          <div class="input-group">
+            <input class="form-control" name="cupom_codigo" value="{{ cupom_codigo }}" placeholder="Digite seu cupom">
+            <button type="submit" class="btn btn-outline-light">Atualizar</button>
           </div>
-          {% if cupom_aplicado %}<div class="msg ok">Cupom {{ cupom_aplicado }} aplicado.</div>{% endif %}
-          {% if cupom_erro %}<div class="msg err">{{ cupom_erro }}</div>{% endif %}
+          {% if cupom_aplicado %}<small class="text-success d-block mt-2">Cupom {{ cupom_aplicado }} aplicado.</small>{% endif %}
+          {% if cupom_erro %}<small class="text-danger d-block mt-2">{{ cupom_erro }}</small>{% endif %}
         </div>
       </div>
 
-      <div>
-        <div class="card summary">
-          <div class="title">Resumo</div>
-          <div class="rowv"><span>Subtotal</span><strong>R$ {{ subtotal|floatformat:2 }}</strong></div>
-          <div class="rowv"><span>Entrega</span><strong>R$ {{ entrega|floatformat:2 }}</strong></div>
-          <div class="rowv"><span>Desconto</span><strong>- R$ {{ desconto|floatformat:2 }}</strong></div>
-          <hr style="border-color:#2c3140;">
-          <div class="rowv" style="align-items:end;"><span>Total</span><span class="total">R$ {{ total|floatformat:2 }}</span></div>
-          <button class="btn-main" type="submit">Confirmar pedido</button>
+      <div class="col-lg-4">
+        <div class="card-fv p-4 position-sticky" style="top:96px;">
+          <h5 class="mb-3">Resumo</h5>
+          <div class="d-flex justify-content-between mb-2"><span class="muted">Subtotal</span><strong>R$ {{ subtotal|floatformat:2 }}</strong></div>
+          <div class="d-flex justify-content-between mb-2"><span class="muted">Entrega</span><strong>R$ {{ entrega|floatformat:2 }}</strong></div>
+          <div class="d-flex justify-content-between mb-3"><span class="muted">Desconto</span><strong>- R$ {{ desconto|floatformat:2 }}</strong></div>
+          <hr class="border-secondary">
+          <div class="d-flex justify-content-between align-items-end mb-3"><span>Total</span><span class="h4 mb-0 text-danger">R$ {{ total|floatformat:2 }}</span></div>
+          <button class="btn btn-main w-100" type="submit" id="btnConfirmar">Confirmar pedido</button>
         </div>
       </div>
     </div>
   </form>
 </div>
 
-<div id="pixModal" class="pix-overlay {% if mostrar_modal_pix %}show{% endif %}">
-  <div class="pix-card">
-    <h3 style="font-weight:800;">Pagamento Pix</h3>
-    <p style="color:#c6cada; margin-bottom:8px;">Escaneie o código para confirmar.</p>
-    <img class="qr" src="{{ pix_qr_code }}" alt="QR Code Pix">
-    <div id="pixTimer" class="timer">{{ pix_timeout|default:30 }}</div>
-    <div id="pixSuccess" class="ok-anim">Pagamento confirmado</div>
+<div class="modal fade" id="pixModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-dark text-light border-secondary">
+      <div class="modal-header border-secondary"><h5 class="modal-title">Pagamento PIX</h5></div>
+      <div class="modal-body text-center">
+        <img src="{{ pix_qr_code }}" class="pix-qr mb-3" alt="QR Code PIX">
+        <div class="input-group mb-3">
+          <input id="pixPayload" class="form-control" readonly value="{{ pix_payload }}">
+          <button class="btn btn-outline-light" type="button" id="copyPixBtn">Copiar código</button>
+        </div>
+        <div class="step-line mb-2"><div class="step-progress" id="pixProgress"></div></div>
+        <div class="d-flex justify-content-between"><small class="muted">Aguardando pagamento...</small><strong id="pixTimer">{{ pix_timeout }}</strong></div>
+        <div class="alert alert-success mt-3 d-none" id="pixOk">Pagamento confirmado. Finalizando pedido...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="cardModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-dark text-light border-secondary">
+      <div class="modal-header border-secondary"><h5 class="modal-title">Pagamento com cartão</h5></div>
+      <div class="modal-body">
+        <div class="mb-2"><label class="form-label small muted">Número do cartão</label><input id="cardNumero" class="form-control" maxlength="19" placeholder="0000 0000 0000 0000"></div>
+        <div class="row g-2">
+          <div class="col-6"><label class="form-label small muted">Validade</label><input id="cardValidade" class="form-control" maxlength="5" placeholder="MM/AA"></div>
+          <div class="col-6"><label class="form-label small muted">CVV</label><input id="cardCvv" class="form-control" maxlength="4" placeholder="123"></div>
+        </div>
+        <div class="mt-2"><label class="form-label small muted">Nome impresso</label><input id="cardNome" class="form-control" maxlength="60"></div>
+        <div class="alert alert-danger mt-3 d-none" id="cardError">Preencha os dados do cartão corretamente.</div>
+        <div class="d-flex justify-content-end gap-2 mt-3">
+          <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Voltar</button>
+          <button type="button" class="btn btn-main" id="processCardBtn">Pagar</button>
+        </div>
+        <div class="text-center mt-3 d-none" id="cardProcessing">
+          <div class="spinner-border text-danger"></div>
+          <p class="mt-2 mb-0">Processando pagamento...</p>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -103,21 +136,84 @@
   <input type="hidden" name="pix_confirmado" value="1">
 </form>
 <script>
-  let t = Number("{{ pix_timeout|default:30 }}");
-  const timerEl = document.getElementById('pixTimer');
-  const okEl = document.getElementById('pixSuccess');
-  const i = setInterval(() => {
-    t -= 1;
-    timerEl.textContent = t;
-    if (t <= 0) {
-      clearInterval(i);
-      timerEl.style.display = 'none';
-      okEl.style.display = 'block';
-      setTimeout(() => document.getElementById('pixConfirmForm').submit(), 900);
+  const checkoutForm = document.getElementById('checkoutForm');
+  const pixModal = new bootstrap.Modal(document.getElementById('pixModal'));
+  const cardModal = new bootstrap.Modal(document.getElementById('cardModal'));
+
+  document.getElementById('copyPixBtn').addEventListener('click', async () => {
+    await navigator.clipboard.writeText(document.getElementById('pixPayload').value);
+    document.getElementById('copyPixBtn').textContent = 'Copiado';
+  });
+
+  function maskCard() {
+    const n = document.getElementById('cardNumero');
+    n.value = n.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim().slice(0, 19);
+    const v = document.getElementById('cardValidade');
+    v.value = v.value.replace(/\D/g, '').replace(/(\d{2})(\d)/, '$1/$2').slice(0, 5);
+    const c = document.getElementById('cardCvv');
+    c.value = c.value.replace(/\D/g, '').slice(0, 4);
+  }
+  ['cardNumero','cardValidade','cardCvv'].forEach(id => document.getElementById(id).addEventListener('input', maskCard));
+
+  checkoutForm.addEventListener('submit', (event) => {
+    const metodo = document.querySelector('input[name="pagamento"]:checked')?.value || 'Pix';
+    if (metodo === 'Pix' && document.getElementById('pix_confirmado').value !== '1') {
+      event.preventDefault();
+      iniciarPix();
+      return;
     }
-  }, 1000);
+    if ((metodo === 'Crédito' || metodo === 'Débito') && document.getElementById('cartao_confirmado').value !== '1') {
+      event.preventDefault();
+      cardModal.show();
+    }
+  });
+
+  function iniciarPix() {
+    pixModal.show();
+    const total = Number('{{ pix_timeout|default:18 }}');
+    let restante = total;
+    const timer = document.getElementById('pixTimer');
+    const progress = document.getElementById('pixProgress');
+    const ok = document.getElementById('pixOk');
+    const i = setInterval(() => {
+      restante -= 1;
+      timer.textContent = restante;
+      progress.style.width = `${((total-restante)/total)*100}%`;
+      if (restante <= 0) {
+        clearInterval(i);
+        ok.classList.remove('d-none');
+        document.getElementById('pix_confirmado').value = '1';
+        setTimeout(() => checkoutForm.submit(), 900);
+      }
+    }, 1000);
+  }
+
+  document.getElementById('processCardBtn').addEventListener('click', () => {
+    const numero = document.getElementById('cardNumero').value.trim();
+    const validade = document.getElementById('cardValidade').value.trim();
+    const cvv = document.getElementById('cardCvv').value.trim();
+    const nome = document.getElementById('cardNome').value.trim();
+    const err = document.getElementById('cardError');
+
+    if (numero.replace(/\D/g, '').length < 15 || !/^\d{2}\/\d{2}$/.test(validade) || cvv.length < 3 || nome.length < 3) {
+      err.classList.remove('d-none');
+      return;
+    }
+
+    err.classList.add('d-none');
+    document.getElementById('cardProcessing').classList.remove('d-none');
+    document.getElementById('processCardBtn').disabled = true;
+
+    setTimeout(() => {
+      document.getElementById('cartao_numero_hidden').value = numero;
+      document.getElementById('cartao_validade_hidden').value = validade;
+      document.getElementById('cartao_cvv_hidden').value = cvv;
+      document.getElementById('cartao_nome_hidden').value = nome;
+      document.getElementById('cartao_confirmado').value = '1';
+      checkoutForm.submit();
+    }, 2500);
+  });
 </script>
-{% endif %}
 
 {% include "pages/pagePrincipal/footer.html" %}
 {% endblock %}

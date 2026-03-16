@@ -3,65 +3,73 @@
 {% include "pages/pagePrincipal/header.html" %}
 
 <style>
-  body { padding-top:90px; background:#0f1115; color:#f3f4f6; }
-  .wrap { max-width:1150px; margin:0 auto; padding:30px 16px 70px; }
-  .title { font-size:2rem; font-weight:800; margin-bottom:20px; }
-  .section { margin-bottom:26px; }
-  .section h2 { font-size:1.1rem; font-weight:700; margin-bottom:10px; }
-  .card { background:#171a21; border:1px solid #2c3140; border-radius:14px; padding:16px; margin-bottom:10px; }
-  .head { display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
-  .status { padding:4px 10px; border-radius:999px; font-size:.78rem; font-weight:700; }
-  .s1 { background:#3b2c10; color:#facc15; } .s2,.s3 { background:#10243d; color:#93c5fd; }
-  .s4 { background:#0f2d1b; color:#86efac; } .s5 { background:#3a1217; color:#fda4af; }
-  .muted { color:#c6cada; font-size:.85rem; }
-  .items { color:#c6cada; font-size:.88rem; margin-top:6px; }
-  .actions { margin-top:10px; display:flex; gap:8px; }
-  .btn-cancel { border:1px solid #7f1d1d; color:#fecaca; background:#3a1217; border-radius:10px; padding:8px 12px; font-size:.82rem; }
-  .empty { color:#9ca3af; }
+  body { background:#0d0c0c; color:#fff; }
+  .page-wrap { max-width:1200px; margin:0 auto; padding:36px 20px 80px; }
+  .card-fv { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09); border-radius:18px; }
+  .muted { color:rgba(255,255,255,.6); }
+  .status { font-size:.78rem; padding:5px 10px; border-radius:999px; }
+  .nav-pills .nav-link { color:#ddd; border:1px solid rgba(255,255,255,.18); margin-right:8px; }
+  .nav-pills .nav-link.active { background:#C41017; border-color:#C41017; }
 </style>
 
-<div class="wrap">
-  <div class="title">Meus pedidos</div>
+<div class="page-wrap">
+  <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
+    <div>
+      <p class="text-danger fw-semibold small mb-1 text-uppercase">Histórico</p>
+      <h1 class="h2 mb-0" style="font-family:'Fraunces',serif;">Meus Pedidos</h1>
+    </div>
+    <a href="{% url 'restaurantes' %}" class="btn btn-danger">Novo pedido</a>
+  </div>
 
   {% if messages %}
     {% for message in messages %}
-      <div class="card" style="border-color:{% if message.tags == 'error' %}#7f1d1d{% else %}#14532d{% endif %};">{{ message }}</div>
+      <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
     {% endfor %}
   {% endif %}
 
-  {% include 'pages/pedido/partials/lista_pedidos.html' with titulo='Pendentes' pedidos_lista=pedidos_pendentes %}
-  {% include 'pages/pedido/partials/lista_pedidos.html' with titulo='Em andamento' pedidos_lista=pedidos_andamento %}
-  {% include 'pages/pedido/partials/lista_pedidos.html' with titulo='Concluídos' pedidos_lista=pedidos_concluidos %}
-  {% include 'pages/pedido/partials/lista_pedidos.html' with titulo='Cancelados' pedidos_lista=pedidos_cancelados %}
+  <ul class="nav nav-pills mb-3" id="pedidoTabs" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-pendente" type="button">Pendentes</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-andamento" type="button">Em andamento</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-concluido" type="button">Concluídos</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-cancelado" type="button">Cancelados</button></li>
+  </ul>
 
-  <div class="section">
-    <h2>Reservas</h2>
-    {% for reserva in reservas %}
-      <div class="card">
-        <div class="head">
-          <strong>{{ reserva.restaurante.nome }}</strong>
-          <span class="muted">#R{{ reserva.id_reserva }}</span>
-        </div>
-        <div class="muted">{{ reserva.data_reserva|date:"d/m/Y H:i" }} · Mesa {{ reserva.mesa|default:'--' }} · {{ reserva.numero_pessoas }} pessoa(s)</div>
-        <div class="actions">
-          <button class="btn-cancel" data-bs-toggle="modal" data-bs-target="#cancelReserva{{ reserva.id_reserva }}">Cancelar reserva</button>
-        </div>
-      </div>
-
-      <div class="modal fade" id="cancelReserva{{ reserva.id_reserva }}" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered"><div class="modal-content bg-dark text-light border-secondary">
-          <div class="modal-header border-secondary"><h5 class="modal-title">Cancelar reserva</h5></div>
-          <div class="modal-body">Deseja cancelar a reserva #R{{ reserva.id_reserva }}?</div>
-          <div class="modal-footer border-secondary">
-            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Voltar</button>
-            <form method="post" action="{% url 'cancelar_reserva' reserva.id_reserva %}">{% csrf_token %}<button class="btn btn-danger" type="submit">Confirmar</button></form>
-          </div>
-        </div></div>
-      </div>
-    {% empty %}
-      <div class="empty">Nenhuma reserva encontrada.</div>
-    {% endfor %}
+  <div class="tab-content">
+    {% include 'pages/pedido/partials/lista_pedidos.html' with tab_id='tab-pendente' ativa='show active' pedidos_lista=pedidos_pendentes vazio='Nenhum pedido pendente.' %}
+    {% include 'pages/pedido/partials/lista_pedidos.html' with tab_id='tab-andamento' ativa='' pedidos_lista=pedidos_andamento vazio='Nenhum pedido em andamento.' %}
+    {% include 'pages/pedido/partials/lista_pedidos.html' with tab_id='tab-concluido' ativa='' pedidos_lista=pedidos_concluidos vazio='Nenhum pedido concluído.' %}
+    {% include 'pages/pedido/partials/lista_pedidos.html' with tab_id='tab-cancelado' ativa='' pedidos_lista=pedidos_cancelados vazio='Nenhum pedido cancelado.' %}
   </div>
+
+  <div class="d-flex justify-content-between align-items-end mt-5 mb-3">
+    <h2 class="h4 mb-0">Minhas Reservas</h2>
+  </div>
+
+  {% for reserva in reservas %}
+    <div class="card-fv p-3 mb-3">
+      <div class="d-flex justify-content-between flex-wrap gap-2 mb-1">
+        <strong>{{ reserva.restaurante.nome }}</strong>
+        <span class="muted">#R{{ reserva.id_reserva }}</span>
+      </div>
+      <div class="muted">{{ reserva.data_reserva|date:"d/m/Y H:i" }} · Mesa {{ reserva.mesa|default:'--' }} · {{ reserva.numero_pessoas }} pessoa(s)</div>
+      <div class="mt-2">
+        <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelReserva{{ reserva.id_reserva }}">Cancelar reserva</button>
+      </div>
+    </div>
+
+    <div class="modal fade" id="cancelReserva{{ reserva.id_reserva }}" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered"><div class="modal-content bg-dark text-light border-secondary">
+        <div class="modal-header border-secondary"><h5 class="modal-title">Cancelar reserva</h5></div>
+        <div class="modal-body">Deseja cancelar a reserva #R{{ reserva.id_reserva }}?</div>
+        <div class="modal-footer border-secondary">
+          <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Voltar</button>
+          <form method="post" action="{% url 'cancelar_reserva' reserva.id_reserva %}">{% csrf_token %}<button class="btn btn-danger" type="submit">Confirmar</button></form>
+        </div>
+      </div></div>
+    </div>
+  {% empty %}
+    <div class="card-fv p-4 muted">Nenhuma reserva encontrada.</div>
+  {% endfor %}
 </div>
 
 {% include "pages/pagePrincipal/footer.html" %}
