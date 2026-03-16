@@ -96,24 +96,6 @@
     </aside>
   </div>
 
-  {% if acompanhamentos %}
-  <section class="custom-card" style="margin-top:22px;">
-    <div class="section-label">
-      <i class="fa-solid fa-wine-glass"></i> Sugestões de acompanhamentos
-    </div>
-    <div class="row g-3">
-      {% for item in acompanhamentos %}
-      <div class="col-12 col-md-6">
-        <a href="{% url 'prato' %}?restaurante_id={{ restaurante.id_restaurante }}&produto_id={{ item.id_produto }}" class="btn-ver" style="width:100%; justify-content:space-between; text-decoration:none;">
-          <span>{{ item.nome_produto }}</span>
-          <strong>R$ {{ item.preco|default:"0.00" }}</strong>
-        </a>
-      </div>
-      {% endfor %}
-    </div>
-  </section>
-  {% endif %}
-
 </div>
 
 {% include "pages/pagePrincipal/footer.html" %}
