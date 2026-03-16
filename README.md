@@ -1,6 +1,6 @@
 # 🍽️ FoodVerse
 
-Sistema de gerenciamento de restaurantes desenvolvido como Projeto Integrador (PI) do curso de Informática para Negócios — Senac TBS.
+Sistema de gerenciamento de restaurantes desenvolvido como Projeto Integrador (PI) do curso Tecnico em Informática — Senac Taboão da Serra.
 
 ## 📌 Sobre o Projeto
 
@@ -13,7 +13,7 @@ Os dois sistemas compartilham o mesmo banco de dados SQL Server.
 
 ## 🛠️ Tecnologias
 
-- **Desktop:** Java 17, Swing, Maven, JDBC
+- **Desktop:** Java 25, Swing, Maven, JDBC
 - **Web:** Python 3, Django
 - **Banco de Dados:** SQL Server (T-SQL)
 - **Autenticação:** Sessão por cargo (desktop) / sessão HTTP com hash de senha (web)
