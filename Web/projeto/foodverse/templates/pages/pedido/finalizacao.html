@@ -1,631 +1,209 @@
 {% extends 'base.html' %}
-
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
 
-<link
-  href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900;1,9..144,400&family=Instrument+Sans:wght@400;500;600;700&display=swap"
-  rel="stylesheet">
-
 <style>
-  :root {
-    --red: #C41017;
-    --red-dk: #a00d13;
-    --red-lt: #fdf2f2;
-    --ink: #111010;
-    --warm: #f8f6f1;
-    --stone: #e8e4dc;
-    --muted: #7a7570;
-    --white: #ffffff;
-    --green: #16a34a;
-    --radius: 20px;
-    --shadow: 0 2px 16px rgba(17, 16, 16, .07);
-  }
-
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-  }
-
-  body {
-    padding-top: 90px;
-    background: var(--warm);
-    font-family: 'Instrument Sans', sans-serif;
-    color: var(--ink);
-    -webkit-font-smoothing: antialiased;
-  }
-
-  .page-wrap {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 32px 20px 80px;
-  }
-
-  /* ── PAGE HEADER ── */
-  .page-header {
-    margin-bottom: 32px;
-  }
-
-  .page-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: .72rem;
-    font-weight: 700;
-    letter-spacing: .8px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-
-  .page-title {
-    font-family: 'Fraunces', serif;
-    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
-    font-weight: 900;
-    line-height: 1.05;
-    letter-spacing: -0.5px;
-  }
-
-  /* ── STEPS ── */
-  .steps {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    margin-bottom: 32px;
-  }
-
-  .step {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: .78rem;
-    font-weight: 600;
-    color: var(--muted);
-  }
-
-  .step.active {
-    color: var(--ink);
-  }
-
-  .step.done {
-    color: var(--green);
-  }
-
-  .step-num {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .75rem;
-    font-weight: 700;
-    background: var(--stone);
-    color: var(--muted);
-    flex-shrink: 0;
-  }
-
-  .step.active .step-num {
-    background: var(--ink);
-    color: white;
-  }
-
-  .step.done .step-num {
-    background: var(--green);
-    color: white;
-  }
-
-  .step-line {
-    flex: 1;
-    height: 1px;
-    background: var(--stone);
-    margin: 0 12px;
-    max-width: 60px;
-  }
-
-  /* ── LAYOUT ── */
-  .checkout-layout {
-    display: grid;
-    grid-template-columns: 1fr 360px;
-    gap: 22px;
-    align-items: start;
-  }
-
-  @media (max-width: 860px) {
-    .checkout-layout {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  /* ── CARDS ── */
-  .co-card {
-    background: var(--white);
-    border-radius: var(--radius);
-    border: 1px solid var(--stone);
-    box-shadow: var(--shadow);
-    padding: 26px 28px;
-    margin-bottom: 18px;
-    animation: fadeUp .4s ease both;
-  }
-
-  .co-card:last-child {
-    margin-bottom: 0;
-  }
-
-  @keyframes fadeUp {
-    from {
-      opacity: 0;
-      transform: translateY(12px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .co-card:nth-child(1) {
-    animation-delay: .04s;
-  }
-
-  .co-card:nth-child(2) {
-    animation-delay: .1s;
-  }
-
-  .co-card:nth-child(3) {
-    animation-delay: .16s;
-  }
-
-  .card-section-title {
-    font-family: 'Fraunces', serif;
-    font-size: 1.05rem;
-    font-weight: 700;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 9px;
-  }
-
-  .card-section-title i {
-    color: var(--red);
-    font-size: .95rem;
-  }
-
-  /* ── FIELD ── */
-  .field {
-    margin-bottom: 18px;
-  }
-
-  .field:last-child {
-    margin-bottom: 0;
-  }
-
-  .field-label {
-    display: block;
-    font-size: .72rem;
-    font-weight: 700;
-    letter-spacing: .5px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 7px;
-  }
-
-  .field-input-wrap {
-    position: relative;
-  }
-
-  .field-icon {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--muted);
-    font-size: .9rem;
-    pointer-events: none;
-  }
-
-  .field-input,
-  .field-select {
-    width: 100%;
-    padding: 12px 16px 12px 40px;
-    border-radius: 12px;
-    border: 1.5px solid var(--stone);
-    background: var(--warm);
-    font-family: 'Instrument Sans', sans-serif;
-    font-size: .88rem;
-    font-weight: 500;
-    color: var(--ink);
-    transition: border-color .2s, box-shadow .2s;
-  }
-
-  .field-input.no-icon,
-  .field-select.no-icon {
-    padding-left: 16px;
-  }
-
-  .field-input:focus,
-  .field-select:focus {
-    outline: none;
-    border-color: var(--red);
-    box-shadow: 0 0 0 3px rgba(196, 16, 23, .08);
-  }
-
-  .field-select {
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237a7570' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-    padding-right: 36px;
-    cursor: pointer;
-  }
-
-  .field-hint {
-    font-size: .72rem;
-    color: var(--muted);
-    margin-top: 5px;
-  }
-
-  /* Coupon row */
-  .coupon-row {
-    display: flex;
-    gap: 8px;
-  }
-
-  .coupon-row .field-input {
-    flex: 1;
-  }
-
-  .btn-apply {
-    padding: 0 20px;
-    background: var(--ink);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-family: 'Instrument Sans', sans-serif;
-    font-size: .82rem;
-    font-weight: 700;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all .2s;
-  }
-
-  .btn-apply:hover {
-    background: #2a2828;
-  }
-
-  /* Payment options */
-  .pay-options {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .pay-opt-input {
-    display: none;
-  }
-
-  .pay-opt-label {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding: 12px 14px;
-    border-radius: 12px;
-    border: 1.5px solid var(--stone);
-    background: var(--warm);
-    font-size: .82rem;
-    font-weight: 600;
-    color: var(--muted);
-    cursor: pointer;
-    transition: all .2s;
-  }
-
-  .pay-opt-label i {
-    font-size: 1.1rem;
-  }
-
-  .pay-opt-label:hover {
-    border-color: var(--ink);
-    color: var(--ink);
-  }
-
-  .pay-opt-input:checked+.pay-opt-label {
-    border-color: var(--ink);
-    background: var(--ink);
-    color: white;
-  }
-
-  /* Info note */
-  .info-note {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    border-radius: 12px;
-    padding: 13px 16px;
-    font-size: .8rem;
-    color: #1e40af;
-    line-height: 1.5;
-  }
-
-  .info-note i {
-    flex-shrink: 0;
-    margin-top: 1px;
-  }
-
-  /* ── SUMMARY ── */
-  .summary-card {
-    background: var(--white);
-    border-radius: var(--radius);
-    border: 1px solid var(--stone);
-    box-shadow: var(--shadow);
-    padding: 26px;
-    position: sticky;
-    top: 106px;
-    animation: fadeUp .4s ease .08s both;
-  }
-
-  .summary-title {
-    font-family: 'Fraunces', serif;
-    font-size: 1.1rem;
-    font-weight: 800;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--stone);
-  }
-
-  .s-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: .88rem;
-    margin-bottom: 12px;
-    color: var(--muted);
-  }
-
-  .s-row .val {
-    font-weight: 600;
-    color: var(--ink);
-  }
-
-  .s-row .val.green {
-    color: var(--green);
-  }
-
-  .s-row .val.red {
-    color: var(--red);
-  }
-
-  .s-divider {
-    border: none;
-    border-top: 1px solid var(--stone);
-    margin: 16px 0;
-  }
-
-  .total-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 24px;
-  }
-
-  .total-label {
-    font-weight: 700;
-    font-size: .95rem;
-  }
-
-  .total-sub {
-    font-size: .7rem;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-
-  .total-num {
-    font-family: 'Fraunces', serif;
-    font-size: 2.1rem;
-    font-weight: 900;
-    color: var(--red);
-    line-height: 1;
-  }
-
-  .btn-confirm {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 9px;
-    background: var(--red);
-    color: white;
-    border-radius: 14px;
-    padding: 17px;
-    font-size: .92rem;
-    font-weight: 700;
-    text-decoration: none;
-    width: 100%;
-    transition: all .25s;
-    box-shadow: 0 6px 20px rgba(196, 16, 23, .22);
-    border: none;
-    cursor: pointer;
-    font-family: inherit;
-  }
-
-  .btn-confirm:hover {
-    background: var(--red-dk);
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 28px rgba(196, 16, 23, .3);
-  }
-
-  .secure-note {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    font-size: .72rem;
-    color: var(--muted);
-    margin-top: 14px;
-  }
-
-  .secure-note i {
-    color: var(--green);
-  }
+  body { background:#0d0c0c; color:#fff; }
+  .page-wrap { max-width:1180px; margin:0 auto; padding:36px 20px 80px; }
+  .card-fv { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09); border-radius:18px; }
+  .muted { color:rgba(255,255,255,.62); }
+  .btn-main { background:#C41017; border:none; color:#fff; font-weight:700; border-radius:12px; padding:12px 16px; }
+  .btn-main:hover { background:#a00d13; color:#fff; }
+  .pix-qr { width:220px; height:220px; border-radius:12px; background:#fff; padding:10px; }
+  .step-line { height:8px; border-radius:8px; background:rgba(255,255,255,.08); overflow:hidden; }
+  .step-progress { height:100%; background:linear-gradient(90deg,#C41017,#ff4d57); width:0%; transition:width 1s linear; }
 </style>
 
 <div class="page-wrap">
-  <form method="POST" action="{% url 'finalizacao' %}">
+  <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
+    <div>
+      <p class="text-danger fw-semibold small mb-1 text-uppercase">Checkout</p>
+      <h1 class="h2 mb-0" style="font-family:'Fraunces',serif;">Finalizar Pedido</h1>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post" id="checkoutForm">
     {% csrf_token %}
-
     <input type="hidden" name="restaurante_id" value="{{ restaurante.id_restaurante }}">
+    <input type="hidden" name="pix_confirmado" id="pix_confirmado" value="0">
+    <input type="hidden" name="cartao_confirmado" id="cartao_confirmado" value="0">
+    <input type="hidden" name="cartao_numero" id="cartao_numero_hidden">
+    <input type="hidden" name="cartao_validade" id="cartao_validade_hidden">
+    <input type="hidden" name="cartao_cvv" id="cartao_cvv_hidden">
+    <input type="hidden" name="cartao_nome" id="cartao_nome_hidden">
 
-    <div class="page-header">
-      <p class="page-eyebrow"><i class="bi bi-bag-check"></i> Quase lá</p>
-      <h1 class="page-title">Finalizar Pedido</h1>
-    </div>
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="card-fv p-4 mb-3">
+          <h5 class="mb-3">Entrega</h5>
+          <label class="form-label muted small">Endereço completo</label>
+          <input class="form-control" name="endereco" required value="{{ cliente.endereco|default:'' }}">
+        </div>
 
-    <div class="steps">
-      <div class="step done">
-        <span class="step-num"><i class="bi bi-check2"></i></span> Carrinho
-      </div>
-      <div class="step-line"></div>
-      <div class="step active">
-        <span class="step-num">2</span> Entrega
-      </div>
-      <div class="step-line"></div>
-      <div class="step">
-        <span class="step-num">3</span> Confirmação
-      </div>
-    </div>
-
-    <div class="checkout-layout">
-
-      <div>
-        <div class="co-card">
-          <div class="card-section-title">
-            <i class="bi bi-geo-alt-fill"></i> Endereço de entrega
-          </div>
-
-          <div class="field">
-            <label class="field-label">Endereço completo</label>
-            <div class="field-input-wrap">
-              <i class="bi bi-search field-icon"></i>
-              <input type="text" name="endereco" id="endereco" class="field-input" placeholder="Rua, número, bairro..."
-                value="{{ cliente.endereco|default:'' }}" required>
-            </div>
-            <p class="field-hint">Confirme ou altere o endereço de entrega acima.</p>
-          </div>
-
-          <div class="field">
-            <label class="field-label">Complemento</label>
-            <div class="field-input-wrap">
-              <i class="bi bi-building field-icon"></i>
-              <input type="text" name="complemento" id="complemento" class="field-input"
-                placeholder="Apto, bloco, referência...">
-            </div>
+        <div class="card-fv p-4 mb-3">
+          <h5 class="mb-3">Forma de pagamento</h5>
+          <div class="row g-2">
+            <div class="col-md-6"><input class="btn-check" type="radio" name="pagamento" id="pay_pix" value="Pix" checked><label class="btn btn-outline-light w-100" for="pay_pix">PIX</label></div>
+            <div class="col-md-6"><input class="btn-check" type="radio" name="pagamento" id="pay_credito" value="Crédito"><label class="btn btn-outline-light w-100" for="pay_credito">Cartão de crédito</label></div>
+            <div class="col-md-6"><input class="btn-check" type="radio" name="pagamento" id="pay_debito" value="Débito"><label class="btn btn-outline-light w-100" for="pay_debito">Cartão de débito</label></div>
+            <div class="col-md-6"><input class="btn-check" type="radio" name="pagamento" id="pay_dinheiro" value="Dinheiro"><label class="btn btn-outline-light w-100" for="pay_dinheiro">Dinheiro</label></div>
           </div>
         </div>
 
-        <div class="co-card">
-          <div class="card-section-title">
-            <i class="bi bi-credit-card-fill"></i> Forma de pagamento
+        <div class="card-fv p-4">
+          <h5 class="mb-3">Cupom</h5>
+          <div class="input-group">
+            <input class="form-control" name="cupom_codigo" value="{{ cupom_codigo }}" placeholder="Digite seu cupom">
+            <button type="submit" class="btn btn-outline-light">Atualizar</button>
           </div>
-
-          <div class="pay-options">
-            <input type="radio" name="pagamento" value="Pix" class="pay-opt-input" id="pix" checked>
-            <label class="pay-opt-label" for="pix">
-              <i class="bi bi-qr-code"></i> Pix
-            </label>
-
-            <input type="radio" name="pagamento" value="Crédito" class="pay-opt-input" id="credito">
-            <label class="pay-opt-label" for="credito">
-              <i class="bi bi-credit-card"></i> Crédito
-            </label>
-
-            <input type="radio" name="pagamento" value="Débito" class="pay-opt-input" id="debito">
-            <label class="pay-opt-label" for="debito">
-              <i class="bi bi-bank"></i> Débito
-            </label>
-
-            <input type="radio" name="pagamento" value="Dinheiro" class="pay-opt-input" id="dinheiro">
-            <label class="pay-opt-label" for="dinheiro">
-              <i class="bi bi-cash-coin"></i> Dinheiro
-            </label>
-          </div>
-        </div>
-
-        <div class="co-card">
-          <div class="card-section-title">
-            <i class="bi bi-ticket-perforated-fill"></i> Cupom de desconto
-          </div>
-
-          <div class="field">
-            <div class="coupon-row">
-              <input type="text" name="cupom_codigo" class="field-input no-icon" placeholder="Código do cupom"
-                value="FOOD10">
-              <button type="button" class="btn-apply">Aplicar</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="info-note">
-          <i class="bi bi-info-circle-fill"></i>
-          <span>Você poderá acompanhar o status do seu pedido em tempo real após a confirmação.</span>
+          {% if cupom_aplicado %}<small class="text-success d-block mt-2">Cupom {{ cupom_aplicado }} aplicado.</small>{% endif %}
+          {% if cupom_erro %}<small class="text-danger d-block mt-2">{{ cupom_erro }}</small>{% endif %}
         </div>
       </div>
 
-      <div>
-        <div class="summary-card">
-          <div class="summary-title">Resumo do Pedido</div>
-
-          <div class="s-row">
-            <span>Subtotal</span>
-            <span class="val">R$ {{ subtotal|floatformat:2 }}</span>
-          </div>
-          <div class="s-row">
-            <span>Entrega</span>
-            <span class="val green">R$ {{ entrega|floatformat:2 }}</span>
-          </div>
-          <div class="s-row">
-            <span>Cupom</span>
-            <span class="val red">− R$ {{ desconto|floatformat:2 }}</span>
-          </div>
-
-          <hr class="s-divider">
-
-          <div class="total-row">
-            <div>
-              <div class="total-label">Total</div>
-              <div class="total-sub">em até 2x s/ juros</div>
-            </div>
-            <div class="total-num">R$ {{ total|floatformat:2 }}</div>
-          </div>
-
-          <button type="submit" class="btn-confirm">
-            <i class="bi bi-shield-lock-fill"></i> Confirmar Pedido
-          </button>
-
-          <div class="secure-note">
-            <i class="bi bi-lock-fill"></i> Pagamento 100% seguro e criptografado
-          </div>
+      <div class="col-lg-4">
+        <div class="card-fv p-4 position-sticky" style="top:96px;">
+          <h5 class="mb-3">Resumo</h5>
+          <div class="d-flex justify-content-between mb-2"><span class="muted">Subtotal</span><strong>R$ {{ subtotal|floatformat:2 }}</strong></div>
+          <div class="d-flex justify-content-between mb-2"><span class="muted">Entrega</span><strong>R$ {{ entrega|floatformat:2 }}</strong></div>
+          <div class="d-flex justify-content-between mb-3"><span class="muted">Desconto</span><strong>- R$ {{ desconto|floatformat:2 }}</strong></div>
+          <hr class="border-secondary">
+          <div class="d-flex justify-content-between align-items-end mb-3"><span>Total</span><span class="h4 mb-0 text-danger">R$ {{ total|floatformat:2 }}</span></div>
+          <button class="btn btn-main w-100" type="submit" id="btnConfirmar">Confirmar pedido</button>
         </div>
       </div>
     </div>
   </form>
 </div>
 
+<div class="modal fade" id="pixModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-dark text-light border-secondary">
+      <div class="modal-header border-secondary"><h5 class="modal-title">Pagamento PIX</h5></div>
+      <div class="modal-body text-center">
+        <img src="{{ pix_qr_code }}" class="pix-qr mb-3" alt="QR Code PIX">
+        <div class="input-group mb-3">
+          <input id="pixPayload" class="form-control" readonly value="{{ pix_payload }}">
+          <button class="btn btn-outline-light" type="button" id="copyPixBtn">Copiar código</button>
+        </div>
+        <div class="step-line mb-2"><div class="step-progress" id="pixProgress"></div></div>
+        <div class="d-flex justify-content-between"><small class="muted">Aguardando pagamento...</small><strong id="pixTimer">{{ pix_timeout }}</strong></div>
+        <div class="alert alert-success mt-3 d-none" id="pixOk">Pagamento confirmado. Finalizando pedido...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="cardModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-dark text-light border-secondary">
+      <div class="modal-header border-secondary"><h5 class="modal-title">Pagamento com cartão</h5></div>
+      <div class="modal-body">
+        <div class="mb-2"><label class="form-label small muted">Número do cartão</label><input id="cardNumero" class="form-control" maxlength="19" placeholder="0000 0000 0000 0000"></div>
+        <div class="row g-2">
+          <div class="col-6"><label class="form-label small muted">Validade</label><input id="cardValidade" class="form-control" maxlength="5" placeholder="MM/AA"></div>
+          <div class="col-6"><label class="form-label small muted">CVV</label><input id="cardCvv" class="form-control" maxlength="4" placeholder="123"></div>
+        </div>
+        <div class="mt-2"><label class="form-label small muted">Nome impresso</label><input id="cardNome" class="form-control" maxlength="60"></div>
+        <div class="alert alert-danger mt-3 d-none" id="cardError">Preencha os dados do cartão corretamente.</div>
+        <div class="d-flex justify-content-end gap-2 mt-3">
+          <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Voltar</button>
+          <button type="button" class="btn btn-main" id="processCardBtn">Pagar</button>
+        </div>
+        <div class="text-center mt-3 d-none" id="cardProcessing">
+          <div class="spinner-border text-danger"></div>
+          <p class="mt-2 mb-0">Processando pagamento...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
-  const complementoInput = document.getElementById('complemento');
+  const checkoutForm = document.getElementById('checkoutForm');
+  const pixModal = new bootstrap.Modal(document.getElementById('pixModal'));
+  const cardModal = new bootstrap.Modal(document.getElementById('cardModal'));
 
-  complementoInput.addEventListener("change", function () {
-    const enderecoInput = document.getElementById('endereco');
-    let endereco = enderecoInput.value.split("Complemento:")[0].trim();
+  document.getElementById('copyPixBtn').addEventListener('click', async () => {
+    await navigator.clipboard.writeText(document.getElementById('pixPayload').value);
+    document.getElementById('copyPixBtn').textContent = 'Copiado';
+  });
 
-    if (this.value.trim() !== "") {
-      enderecoInput.value = `${endereco} Complemento: ${this.value.trim()}`;
-    } else {
-      enderecoInput.value = endereco;
+  function maskCard() {
+    const n = document.getElementById('cardNumero');
+    n.value = n.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim().slice(0, 19);
+    const v = document.getElementById('cardValidade');
+    v.value = v.value.replace(/\D/g, '').replace(/(\d{2})(\d)/, '$1/$2').slice(0, 5);
+    const c = document.getElementById('cardCvv');
+    c.value = c.value.replace(/\D/g, '').slice(0, 4);
+  }
+  ['cardNumero','cardValidade','cardCvv'].forEach(id => document.getElementById(id).addEventListener('input', maskCard));
+
+  checkoutForm.addEventListener('submit', (event) => {
+    const metodo = document.querySelector('input[name="pagamento"]:checked')?.value || 'Pix';
+    if (metodo === 'Pix' && document.getElementById('pix_confirmado').value !== '1') {
+      event.preventDefault();
+      iniciarPix();
+      return;
+    }
+    if ((metodo === 'Crédito' || metodo === 'Débito') && document.getElementById('cartao_confirmado').value !== '1') {
+      event.preventDefault();
+      cardModal.show();
     }
   });
+
+  function iniciarPix() {
+    pixModal.show();
+    const total = Number('{{ pix_timeout|default:18 }}');
+    let restante = total;
+    const timer = document.getElementById('pixTimer');
+    const progress = document.getElementById('pixProgress');
+    const ok = document.getElementById('pixOk');
+    const i = setInterval(() => {
+      restante -= 1;
+      timer.textContent = restante;
+      progress.style.width = `${((total-restante)/total)*100}%`;
+      if (restante <= 0) {
+        clearInterval(i);
+        ok.classList.remove('d-none');
+        document.getElementById('pix_confirmado').value = '1';
+        setTimeout(() => checkoutForm.submit(), 900);
+      }
+    }, 1000);
+  }
+
+  document.getElementById('processCardBtn').addEventListener('click', () => {
+    const numero = document.getElementById('cardNumero').value.trim();
+    const validade = document.getElementById('cardValidade').value.trim();
+    const cvv = document.getElementById('cardCvv').value.trim();
+    const nome = document.getElementById('cardNome').value.trim();
+    const err = document.getElementById('cardError');
+
+    if (numero.replace(/\D/g, '').length < 15 || !/^\d{2}\/\d{2}$/.test(validade) || cvv.length < 3 || nome.length < 3) {
+      err.classList.remove('d-none');
+      return;
+    }
+
+    err.classList.add('d-none');
+    document.getElementById('cardProcessing').classList.remove('d-none');
+    document.getElementById('processCardBtn').disabled = true;
+
+    setTimeout(() => {
+      document.getElementById('cartao_numero_hidden').value = numero;
+      document.getElementById('cartao_validade_hidden').value = validade;
+      document.getElementById('cartao_cvv_hidden').value = cvv;
+      document.getElementById('cartao_nome_hidden').value = nome;
+      document.getElementById('cartao_confirmado').value = '1';
+      checkoutForm.submit();
+    }, 2500);
+  });
 </script>
-<s></s>
+
 {% include "pages/pagePrincipal/footer.html" %}
 {% endblock %}

@@ -28,7 +28,10 @@ urlpatterns = [
 
     path('reserva/', views.reserva_view, name='reserva'),
     path('reserva/pagamento', views.reserva_pagamento, name='reserva_pagamento'),
+    path('reserva/confirmar-pagamento/', views.reserva_confirmar_pagamento, name='reserva_confirmar_pagamento'),
     path('pedido/', views.pedido_view, name='pedido'),
+    path('pedido/<int:pedido_id>/cancelar/', views.cancelar_pedido_view, name='cancelar_pedido'),
+    path('reserva/<int:reserva_id>/cancelar/', views.cancelar_reserva_view, name='cancelar_reserva'),
     path('finalizacao/', views.finalizacao_view, name='finalizacao'),
     path('feedback/', views.feedback_view, name='feedback'),
     path('feedback/sucesso/', views.feedback_sucesso_view, name='feedback_sucesso'),

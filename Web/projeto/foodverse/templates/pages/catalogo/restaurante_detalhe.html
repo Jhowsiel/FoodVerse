@@ -85,7 +85,7 @@
         <p class="dish-desc">{{ prato.descricao|default:''|truncatechars:110 }}</p>
         <div class="dish-row">
           <span class="dish-price">R$ {{ prato.preco|default:'0.00' }}</span>
-          <a class="dish-link" href="{% url 'prato' %}?restaurante_id={{ restaurante.id_restaurante }}&produto_id={{ prato.id_produto }}">Ver prato</a>
+          <a class="dish-link" href="{% url 'prato' %}?restaurante_id={{ restaurante.id_restaurante }}&produto_id={{ prato.id_produto }}">{% if 'bebida' in prato.categoria|default:''|lower or 'suco' in prato.nome_produto|default:''|lower or 'refrigerante' in prato.nome_produto|default:''|lower or 'sobremesa' in prato.categoria|default:''|lower %}Ver item{% else %}Ver prato{% endif %}</a>
         </div>
       </div>
     </article>
