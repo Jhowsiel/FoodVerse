@@ -117,6 +117,7 @@ class TbPedidos(models.Model):
         db_table = "tb_pedidos"
 
 class TbPedidosProdutos(models.Model):
+    id_produto_pedido = models.AutoField(primary_key=True)
     pedido = models.ForeignKey(TbPedidos, models.DO_NOTHING, db_column='ID_pedido')
     produto = models.ForeignKey(TbProdutos, models.DO_NOTHING, db_column='ID_produto')
     quantidade = models.IntegerField(db_column='quantidade')
