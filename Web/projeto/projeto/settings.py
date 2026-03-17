@@ -86,7 +86,7 @@ DATABASES = {
         'ENGINE': 'mssql',
         'NAME': 'FoodVerseDB',
         'USER': 'sa',
-        'PASSWORD': 'SenhaForte#2026',
+        'PASSWORD': 'pw_user_app',
         'HOST': 'localhost',
         'PORT': '1433',
         'OPTIONS': {

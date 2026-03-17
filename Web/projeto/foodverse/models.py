@@ -122,7 +122,6 @@ class TbPedidosProdutos(models.Model):
     quantidade = models.IntegerField(db_column='quantidade')
 
     class Meta:
-        managed = False
         db_table = 'tb_pedidos_produtos'
         unique_together = (('pedido', 'produto'),)
 

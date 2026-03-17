@@ -5,94 +5,468 @@
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
 <style>
-  :root { --bg:#0e0e10; --card:#19191c; --line:#2a2a30; --txt:#f5f5f5; --muted:#a3a3ac; --brand:#e11d2f; }
-  body { padding-top:90px; background:var(--bg); color:var(--txt); }
-  .rd-wrap { max-width:1160px; margin:0 auto; padding:18px 16px 70px; }
-  .rd-back { color:var(--muted); text-decoration:none; font-weight:600; display:inline-flex; gap:8px; margin:8px 0 18px; }
-  .rd-hero { background:var(--card); border:1px solid var(--line); border-radius:22px; overflow:hidden; }
-  .rd-banner { height:260px; width:100%; object-fit:cover; }
-  .rd-body { padding:18px 22px 22px; display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; }
-  .rd-title { font-size:clamp(1.6rem,3.3vw,2.4rem); font-weight:800; margin:0 0 8px; }
-  .rd-meta { display:flex; flex-wrap:wrap; gap:14px; color:var(--muted); font-size:.9rem; }
-  .chip { border:1px solid var(--line); border-radius:999px; padding:6px 11px; background:#121216; color:#ddd; font-size:.82rem; }
-  .rd-btn { border:0; border-radius:999px; padding:12px 20px; font-weight:700; text-decoration:none; background:var(--brand); color:#fff; display:inline-flex; gap:8px; align-items:center; }
+  :root {
+    --red: #C41017;
+    --red-muted: rgba(196,16,23,0.10);
+    --surface-1: #111010;
+    --surface-2: #181717;
+    --surface-3: #1f1e1e;
+    --surface-4: #272525;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.13);
+    --text-1: #f5f3f0;
+    --text-2: rgba(245,243,240,0.58);
+    --text-3: rgba(245,243,240,0.32);
+  }
 
-  .menu-head { margin:28px 0 14px; display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap; }
-  .menu-title { margin:0; font-size:1.5rem; font-weight:800; }
-  .filters { display:flex; gap:8px; overflow:auto; padding-bottom:2px; }
-  .filter-btn { white-space:nowrap; border:1px solid var(--line); border-radius:999px; padding:8px 14px; text-decoration:none; color:#ddd; background:#141418; font-size:.83rem; font-weight:700; }
-  .filter-btn.active, .filter-btn:hover { background:var(--brand); color:white; border-color:var(--brand); }
+  *, *::before, *::after { box-sizing: border-box; }
 
-  .dish-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
-  @media (max-width: 960px){ .dish-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
-  @media (max-width: 640px){ .dish-grid{grid-template-columns:1fr;} }
-  .dish-card { background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden; }
-  .dish-card img { width:100%; height:170px; object-fit:cover; background:#121216; }
-  .dish-body { padding:12px 14px 14px; }
-  .dish-name { margin:0 0 5px; font-size:1rem; font-weight:700; }
-  .dish-desc { margin:0 0 10px; color:var(--muted); font-size:.86rem; min-height:42px; }
-  .dish-row { display:flex; justify-content:space-between; align-items:center; gap:8px; }
-  .dish-price { color:#ff7c86; font-weight:700; }
-  .dish-link { text-decoration:none; color:white; border:1px solid var(--line); border-radius:10px; padding:7px 10px; font-size:.82rem; font-weight:700; }
+  body {
+    background: var(--surface-1);
+    color: var(--text-1);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    padding-top: 90px;
+  }
+
+  .rd-wrap {
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 12px 20px 80px;
+  }
+
+  /* ── Back link ───────────────────────── */
+  .rd-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-2);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 20px;
+    transition: color 0.15s;
+    padding: 6px 0;
+  }
+  .rd-back:hover { color: var(--text-1); }
+
+  /* ── Hero ────────────────────────────── */
+  .rd-hero {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    overflow: hidden;
+    margin-bottom: 36px;
+  }
+
+  .rd-banner-wrap {
+    position: relative;
+    height: 280px;
+    overflow: hidden;
+  }
+
+  .rd-banner {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.6s ease;
+  }
+  .rd-hero:hover .rd-banner { transform: scale(1.02); }
+
+  .rd-banner-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(24,23,23,0.85) 0%, transparent 55%);
+    pointer-events: none;
+  }
+
+  .rd-body {
+    padding: 22px 26px 26px;
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .rd-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: clamp(24px, 3.5vw, 36px);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    margin: 0 0 12px;
+    line-height: 1.05;
+  }
+
+  .rd-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    color: var(--text-2);
+    font-size: 13px;
+    font-weight: 400;
+    align-items: center;
+  }
+
+  .rd-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .rd-meta-item i { color: var(--text-3); font-size: 12px; }
+
+  .rd-desc {
+    margin: 12px 0 0;
+    color: var(--text-2);
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 520px;
+  }
+
+  /* ── Chips / Tags ────────────────────── */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(196,16,23,0.28);
+    border-radius: 999px;
+    padding: 6px 13px;
+    background: var(--red-muted);
+    color: #ff8a8a;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+
+  /* ── Buttons ─────────────────────────── */
+  .rd-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    border-radius: 14px;
+    padding: 13px 22px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    background: var(--red);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.12s;
+    white-space: nowrap;
+    position: relative;
+    overflow: hidden;
+  }
+  .rd-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .rd-btn:hover { background: #a50d14; color: #fff; transform: translateY(-1px); text-decoration: none; }
+  .rd-btn:active { transform: translateY(0); }
+  .rd-btn--disabled {
+    background: var(--surface-4);
+    color: var(--text-3);
+    border: 1px solid var(--border);
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  .rd-btn--disabled::before { display: none; }
+
+  /* ── Menu section header ─────────────── */
+  .menu-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .menu-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0 0 16px;
+  }
+
+  /* ── Filters ─────────────────────────── */
+  .filters {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .filters::-webkit-scrollbar { display: none; }
+
+  .filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 16px;
+    text-decoration: none;
+    color: var(--text-2);
+    background: var(--surface-2);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .filter-btn:hover {
+    background: var(--surface-3);
+    border-color: var(--border-hover);
+    color: var(--text-1);
+    text-decoration: none;
+  }
+  .filter-btn.active {
+    background: var(--red);
+    border-color: var(--red);
+    color: #fff;
+  }
+
+  /* ── Dish grid ───────────────────────── */
+  .dish-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+  @media (max-width: 960px) { .dish-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 580px) { .dish-grid { grid-template-columns: 1fr; } }
+
+  /* ── Dish card ───────────────────────── */
+  .dish-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .dish-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+  }
+
+  .dish-img-wrap {
+    position: relative;
+    overflow: hidden;
+    height: 175px;
+  }
+
+  .dish-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: var(--surface-3);
+    display: block;
+    transition: transform 0.4s ease;
+  }
+  .dish-card:hover img { transform: scale(1.05); }
+
+  .dish-body {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .dish-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .dish-desc {
+    font-size: 13px;
+    color: var(--text-2);
+    line-height: 1.55;
+    margin: 0 0 14px;
+    flex: 1;
+  }
+
+  .dish-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-top: auto;
+  }
+
+  .dish-price {
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-1);
+    letter-spacing: -0.03em;
+  }
+
+  .dish-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+    color: var(--text-1);
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 13px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+  .dish-link:hover {
+    background: var(--red);
+    border-color: var(--red);
+    color: #fff;
+    text-decoration: none;
+  }
+
+  /* ── Empty state ─────────────────────── */
+  .empty-menu {
+    grid-column: 1 / -1;
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--text-3);
+    font-size: 15px;
+    background: var(--surface-2);
+    border: 1px dashed var(--border-hover);
+    border-radius: 18px;
+  }
 </style>
 
 <div class="rd-wrap">
-  <a class="rd-back" href="{% url 'restaurantes' %}"><i class="fa-solid fa-arrow-left"></i> Voltar para restaurantes</a>
 
+  <a class="rd-back" href="{% url 'restaurantes' %}">
+    <i class="fa-solid fa-arrow-left"></i>
+    Voltar para restaurantes
+  </a>
+
+  <!-- Hero -->
   <section class="rd-hero">
-    <img class="rd-banner" src="{% img_or_fallback restaurante.banner|default:restaurante.imagem %}" alt="{{ restaurante.nome }}">
+    <div class="rd-banner-wrap">
+      <img class="rd-banner"
+           src="{% img_or_fallback restaurante.banner|default:restaurante.imagem %}"
+           alt="{{ restaurante.nome }}">
+      <div class="rd-banner-overlay"></div>
+    </div>
+
     <div class="rd-body">
       <div>
         <h1 class="rd-title">{{ restaurante.nome }}</h1>
         <div class="rd-meta">
-          <span><i class="fa-solid fa-star"></i> {{ restaurante.avaliacao|default:'—' }}</span>
-          <span><i class="fa-solid fa-clock"></i> {{ restaurante.tempo_entrega|default:'30-45 min' }}</span>
-          <span><i class="fa-solid fa-motorcycle"></i> {% if restaurante.taxa_entrega %}R$ {{ restaurante.taxa_entrega }}{% else %}Entrega grátis{% endif %}</span>
+          <span class="rd-meta-item">
+            <i class="fa-solid fa-star" style="color:#f59e0b;"></i>
+            {{ restaurante.avaliacao|default:'—' }}
+          </span>
+          <span class="rd-meta-item">
+            <i class="fa-solid fa-clock"></i>
+            {{ restaurante.tempo_entrega|default:'30-45 min' }}
+          </span>
+          <span class="rd-meta-item">
+            <i class="fa-solid fa-motorcycle"></i>
+            {% if restaurante.taxa_entrega %}R$ {{ restaurante.taxa_entrega }}{% else %}Entrega grátis{% endif %}
+          </span>
         </div>
-        {% if restaurante.descricao %}<p style="margin:10px 0 0;color:var(--muted)">{{ restaurante.descricao }}</p>{% endif %}
+        {% if restaurante.descricao %}
+          <p class="rd-desc">{{ restaurante.descricao }}</p>
+        {% endif %}
       </div>
-      <div>
-        {% if restaurante.cupom %}<div class="chip" style="margin-bottom:8px;"><i class="fa-solid fa-ticket"></i> Cupom {{ restaurante.cupom }}</div>{% endif %}
+
+      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:0;">
+        {% if restaurante.cupom %}
+          <div class="chip">
+            <i class="fa-solid fa-ticket"></i>
+            Cupom {{ restaurante.cupom }}
+          </div>
+        {% endif %}
         {% if restaurante.aberto %}
-          <a class="rd-btn" href="{% url 'reserva' %}?restaurante_id={{ restaurante.id_restaurante }}"><i class="fa-solid fa-calendar-check"></i> Reservar mesa</a>
+          <a class="rd-btn" href="{% url 'reserva' %}?restaurante_id={{ restaurante.id_restaurante }}">
+            <i class="fa-solid fa-calendar-check"></i>
+            Reservar mesa
+          </a>
         {% else %}
-          <span class="rd-btn" style="background:#4a4a4f;cursor:not-allowed;"><i class="fa-solid fa-door-closed"></i> Restaurante fechado</span>
+          <span class="rd-btn rd-btn--disabled">
+            <i class="fa-solid fa-door-closed"></i>
+            Restaurante fechado
+          </span>
         {% endif %}
       </div>
     </div>
   </section>
 
+  <!-- Menu -->
   <div class="menu-head">
-    <h2 class="menu-title">Cardápio</h2>
-    <div class="filters">
-      <a href="{% url 'restaurante_detalhe' restaurante.id_restaurante %}" class="filter-btn {% if not categoria_ativa %}active{% endif %}"><i class="fa-solid fa-layer-group"></i> Todos</a>
-      {% for cat in categorias %}
-      <a href="{% url 'restaurante_detalhe' restaurante.id_restaurante %}?categoria={{ cat }}" class="filter-btn {% if categoria_ativa == cat %}active{% endif %}">
-        {% if 'pizza' in cat|lower %}<i class="fa-solid fa-pizza-slice"></i>{% elif 'bebida' in cat|lower %}<i class="fa-solid fa-glass-water"></i>{% elif 'sobremesa' in cat|lower %}<i class="fa-solid fa-ice-cream"></i>{% else %}<i class="fa-solid fa-utensils"></i>{% endif %}
-        {{ cat }}
-      </a>
-      {% endfor %}
+    <div>
+      <h2 class="menu-title">Cardápio</h2>
+      <div class="filters">
+        <a href="{% url 'restaurante_detalhe' restaurante.id_restaurante %}"
+           class="filter-btn {% if not categoria_ativa %}active{% endif %}">
+          <i class="fa-solid fa-layer-group"></i> Todos
+        </a>
+        {% for cat in categorias %}
+        <a href="{% url 'restaurante_detalhe' restaurante.id_restaurante %}?categoria={{ cat }}"
+           class="filter-btn {% if categoria_ativa == cat %}active{% endif %}">
+          {% if 'pizza' in cat|lower %}<i class="fa-solid fa-pizza-slice"></i>
+          {% elif 'bebida' in cat|lower or 'suco' in cat|lower %}<i class="fa-solid fa-glass-water"></i>
+          {% elif 'sobremesa' in cat|lower %}<i class="fa-solid fa-ice-cream"></i>
+          {% else %}<i class="fa-solid fa-utensils"></i>{% endif %}
+          {{ cat }}
+        </a>
+        {% endfor %}
+      </div>
     </div>
   </div>
 
   <div class="dish-grid">
     {% for prato in pratos %}
     <article class="dish-card">
-      <img src="{% img_or_fallback prato.imagem %}" alt="{{ prato.nome_produto }}">
+      <div class="dish-img-wrap">
+        <img src="{% img_or_fallback prato.imagem %}" alt="{{ prato.nome_produto }}">
+      </div>
       <div class="dish-body">
         <h5 class="dish-name">{{ prato.nome_produto|default:'Produto' }}</h5>
-        <p class="dish-desc">{{ prato.descricao|default:''|truncatechars:110 }}</p>
+        <p class="dish-desc">{{ prato.descricao|default:''|truncatechars:100 }}</p>
         <div class="dish-row">
           <span class="dish-price">R$ {{ prato.preco|default:'0.00' }}</span>
-          <a class="dish-link" href="{% url 'prato' %}?restaurante_id={{ restaurante.id_restaurante }}&produto_id={{ prato.id_produto }}">{% if 'bebida' in prato.categoria|default:''|lower or 'suco' in prato.nome_produto|default:''|lower or 'refrigerante' in prato.nome_produto|default:''|lower or 'sobremesa' in prato.categoria|default:''|lower %}Ver item{% else %}Ver prato{% endif %}</a>
+          <a class="dish-link"
+             href="{% url 'prato' %}?restaurante_id={{ restaurante.id_restaurante }}&produto_id={{ prato.id_produto }}">
+            {% if 'bebida' in prato.categoria|default:''|lower or 'suco' in prato.nome_produto|default:''|lower or 'refrigerante' in prato.nome_produto|default:''|lower or 'sobremesa' in prato.categoria|default:''|lower %}Ver item{% else %}Ver prato{% endif %}
+            <i class="fa-solid fa-arrow-right" style="font-size:11px;"></i>
+          </a>
         </div>
       </div>
     </article>
     {% empty %}
-    <p style="color:var(--muted);">Nenhum item disponível no cardápio.</p>
+    <div class="empty-menu">
+      <i class="fa-solid fa-bowl-food" style="font-size:28px;margin-bottom:10px;display:block;opacity:0.4;"></i>
+      Nenhum item disponível no cardápio.
+    </div>
     {% endfor %}
   </div>
+
 </div>
 
 {% include "pages/pagePrincipal/footer.html" %}

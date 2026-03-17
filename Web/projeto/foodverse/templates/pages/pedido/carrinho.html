@@ -5,107 +5,603 @@
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
 <style>
-  :root { --red:#C41017; --red-dark:#a00d13; --line:rgba(255,255,255,.10); --card:rgba(255,255,255,.05); --muted:rgba(255,255,255,.62); }
-  body { background:#0d0c0c; color:#fff; font-family:'Instrument Sans',sans-serif; }
-  .page-wrap { max-width:1200px; margin:0 auto; padding:36px 20px 80px; }
-  .card-fv { background:var(--card); border:1px solid var(--line); border-radius:18px; box-shadow:0 12px 30px rgba(0,0,0,.28); }
-  .muted { color:var(--muted); }
-  .eyebrow { display:inline-flex; align-items:center; gap:8px; background:rgba(196,16,23,.16); border:1px solid rgba(196,16,23,.35); color:#ff7c86; font-size:.72rem; font-weight:700; padding:6px 12px; border-radius:999px; text-transform:uppercase; letter-spacing:.06em; }
-  .btn-main { background:linear-gradient(135deg,var(--red),#E01E1E); border:none; color:#fff; font-weight:700; border-radius:12px; padding:12px 16px; box-shadow:0 8px 18px rgba(196,16,23,.30); }
-  .btn-main:hover { background:linear-gradient(135deg,var(--red-dark),#c3121f); color:#fff; transform:translateY(-1px); }
-  .form-control,.form-select { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.2); color:#fff; }
-  .form-control:focus,.form-select:focus { background:rgba(255,255,255,.06); color:#fff; border-color:rgba(196,16,23,.55); box-shadow:0 0 0 .2rem rgba(196,16,23,.18); }
-  .form-control::placeholder { color:rgba(255,255,255,.45); }
+  :root {
+    --red: #C41017;
+    --red-glow: rgba(196, 16, 23, 0.18);
+    --red-muted: rgba(196, 16, 23, 0.08);
+    --surface-1: #111010;
+    --surface-2: #181717;
+    --surface-3: #1f1e1e;
+    --surface-4: #272525;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.14);
+    --text-1: #f5f3f0;
+    --text-2: rgba(245,243,240,0.60);
+    --text-3: rgba(245,243,240,0.35);
+    --radius-sm: 10px;
+    --radius-md: 16px;
+    --radius-lg: 22px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    background: var(--surface-1);
+    color: var(--text-1);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page-wrap {
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 40px 24px 100px;
+  }
+
+  /* ── Header ──────────────────────────── */
+  .page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+  }
+
+  .page-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: #ff7580;
+    background: var(--red-muted);
+    border: 1px solid rgba(196,16,23,0.25);
+    border-radius: 999px;
+    padding: 5px 12px;
+    margin-bottom: 10px;
+    width: fit-content;
+  }
+
+  .page-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: clamp(26px, 4vw, 38px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin: 0;
+    color: var(--text-1);
+  }
+
+  .items-badge {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-2);
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 14px;
+    white-space: nowrap;
+  }
+
+  /* ── Alerts ──────────────────────────── */
+  .alert {
+    border-radius: var(--radius-md);
+    border: none;
+    padding: 14px 18px;
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  .alert-danger { background: rgba(196,16,23,0.15); color: #ff9a9e; }
+  .alert-success { background: rgba(34,197,94,0.10); color: #86efac; }
+
+  /* ── Grid ────────────────────────────── */
+  .cart-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  @media (max-width: 860px) {
+    .cart-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── Restaurant Card ─────────────────── */
+  .restaurant-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+  }
+  .restaurant-card:hover { border-color: var(--border-hover); }
+
+  .restaurant-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .restaurant-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .restaurant-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+  .btn-ghost:hover {
+    background: var(--surface-3);
+    border-color: var(--border-hover);
+    color: var(--text-1);
+  }
+
+  .btn-remove {
+    background: transparent;
+    border: 1px solid rgba(196,16,23,0.28);
+    color: #ff7580;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .btn-remove:hover {
+    background: var(--red-muted);
+    border-color: rgba(196,16,23,0.50);
+  }
+
+  /* ── Cart Item ───────────────────────── */
+  .cart-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .cart-item:last-child { border-bottom: none; }
+  .cart-item:hover { background: rgba(255,255,255,0.02); }
+
+  .item-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--surface-3);
+  }
+
+  .item-info { flex: 1; min-width: 0; }
+
+  .item-name {
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0 0 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .item-price {
+    font-size: 13px;
+    color: var(--text-2);
+    margin: 0;
+  }
+
+  /* ── Qty Controls ────────────────────── */
+  .qty-control {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .qty-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-2);
+    width: 32px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    font-size: 16px;
+    line-height: 1;
+  }
+  .qty-btn:hover { background: var(--surface-4); color: var(--text-1); }
+  .qty-btn:active { background: var(--border); }
+
+  .qty-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-1);
+    width: 28px;
+    text-align: center;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── Empty State ─────────────────────── */
+  .empty-state {
+    background: var(--surface-2);
+    border: 1px dashed var(--border-hover);
+    border-radius: var(--radius-lg);
+    padding: 64px 24px;
+    text-align: center;
+  }
+  .empty-icon {
+    font-size: 40px;
+    margin-bottom: 16px;
+    opacity: 0.4;
+    display: block;
+  }
+  .empty-text {
+    color: var(--text-2);
+    font-size: 15px;
+    margin: 0;
+  }
+
+  /* ── Summary Sidebar ─────────────────── */
+  .summary-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 26px;
+    position: sticky;
+    top: 100px;
+  }
+
+  .summary-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0 0 22px;
+    letter-spacing: -0.01em;
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 14px;
+  }
+  .summary-row span:first-child { color: var(--text-2); }
+  .summary-row strong { font-weight: 500; }
+
+  .summary-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
+  }
+
+  .summary-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 24px;
+  }
+  .summary-total span:first-child {
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .summary-total-value {
+    font-family: 'Outfit', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--red);
+    letter-spacing: -0.03em;
+  }
+
+  /* ── Coupon ──────────────────────────── */
+  .coupon-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-2);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .coupon-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .coupon-input {
+    flex: 1;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    color: var(--text-1);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    border-radius: var(--radius-sm);
+    padding: 9px 14px;
+    outline: none;
+    transition: border-color 0.15s;
+    min-width: 0;
+  }
+  .coupon-input::placeholder { color: var(--text-3); }
+  .coupon-input:focus { border-color: rgba(196,16,23,0.5); }
+
+  .btn-apply {
+    background: var(--surface-4);
+    border: 1px solid var(--border);
+    color: var(--text-1);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    padding: 9px 14px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+  .btn-apply:hover { background: rgba(255,255,255,0.08); border-color: var(--border-hover); }
+
+  /* ── CTA Buttons ─────────────────────── */
+  .btn-checkout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    background: var(--red);
+    border: none;
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    border-radius: var(--radius-md);
+    padding: 15px 20px;
+    cursor: pointer;
+    text-decoration: none;
+    margin-bottom: 10px;
+    transition: background 0.15s, transform 0.12s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-checkout::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .btn-checkout:hover {
+    background: #a50d14;
+    color: #fff;
+    transform: translateY(-1px);
+    text-decoration: none;
+  }
+  .btn-checkout:active { transform: translateY(0); }
+
+  .btn-keep-shopping {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--radius-md);
+    padding: 13px 20px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .btn-keep-shopping:hover {
+    background: var(--surface-3);
+    border-color: var(--border-hover);
+    color: var(--text-1);
+    text-decoration: none;
+  }
+
+  /* ── Security Badge ──────────────────── */
+  .security-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 14px;
+    letter-spacing: 0.02em;
+  }
 </style>
 
 <div class="page-wrap">
-  <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
+
+  <div class="page-header">
     <div>
-      <p class="eyebrow mb-2"><i class="bi bi-bag-check-fill"></i> Pedido</p>
-      <h1 class="h2 mb-0" style="font-family:'Fraunces',serif;">Meu Carrinho</h1>
+      <p class="page-eyebrow">
+        <i class="bi bi-bag-check-fill"></i>
+        Pedido
+      </p>
+      <h1 class="page-title">Meu Carrinho</h1>
     </div>
-    <span class="badge rounded-pill text-bg-dark border border-secondary">{{ total_itens }} item(ns)</span>
+    <span class="items-badge">{{ total_itens }} item(ns)</span>
   </div>
 
   {% if messages %}
     {% for message in messages %}
-      <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+      <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">
+        {{ message }}
+      </div>
     {% endfor %}
   {% endif %}
 
-  <div class="row g-4">
-    <div class="col-lg-8">
+  <div class="cart-grid">
+
+    <!-- Items -->
+    <div>
       {% for r_id, dados in carrinho.items %}
-      <div class="card-fv p-3 p-md-4 mb-3">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5 class="mb-0">{{ dados.restaurante }}</h5>
-          <div class="d-flex gap-2">
-            <a href="{% url 'restaurante_detalhe' r_id %}" class="btn btn-sm btn-outline-fv">Mais itens</a>
-            <button class="btn btn-sm btn-outline-danger" onclick="removerRestaurante('{{ r_id }}')">Remover</button>
+      <div class="restaurant-card">
+
+        <div class="restaurant-header">
+          <h5 class="restaurant-name">{{ dados.restaurante }}</h5>
+          <div class="restaurant-actions">
+            <a href="{% url 'restaurante_detalhe' r_id %}" class="btn-ghost">
+              <i class="bi bi-plus-circle" style="margin-right:5px;"></i>Adicionar
+            </a>
+            <button class="btn-remove" onclick="removerRestaurante('{{ r_id }}')">
+              <i class="bi bi-trash3" style="margin-right:5px;"></i>Remover
+            </button>
           </div>
         </div>
 
         {% for item in dados.itens %}
-        <div class="d-flex gap-3 align-items-center py-2 border-top border-secondary-subtle">
+        <div class="cart-item">
           <img src="{% img_or_fallback item.imagem %}" alt="{{ item.nome }}" class="item-img">
-          <div class="flex-grow-1">
-            <div class="fw-semibold">{{ item.nome }}</div>
-            <small class="muted">R$ {{ item.preco|floatformat:2 }}</small>
+
+          <div class="item-info">
+            <p class="item-name">{{ item.nome }}</p>
+            <p class="item-price">R$ {{ item.preco|floatformat:2 }}</p>
           </div>
-          <div class="d-flex align-items-center gap-1">
-            <button type="button" class="qty-btn" onclick="changeQty(-1,'{{ r_id }}','{{ item.id }}')"><i class="bi bi-dash"></i></button>
-            <input class="qty-input" value="{{ item.quantidade }}" readonly>
-            <button type="button" class="qty-btn" onclick="changeQty(1,'{{ r_id }}','{{ item.id }}')"><i class="bi bi-plus"></i></button>
+
+          <div class="qty-control">
+            <button class="qty-btn" onclick="changeQty(-1,'{{ r_id }}','{{ item.id }}')" aria-label="Diminuir">
+              <i class="bi bi-dash"></i>
+            </button>
+            <span class="qty-value">{{ item.quantidade }}</span>
+            <button class="qty-btn" onclick="changeQty(1,'{{ r_id }}','{{ item.id }}')" aria-label="Aumentar">
+              <i class="bi bi-plus"></i>
+            </button>
           </div>
         </div>
         {% endfor %}
+
       </div>
       {% empty %}
-      <div class="card-fv p-5 text-center">
-        <i class="bi bi-cart-x fs-1 muted"></i>
-        <p class="muted mt-2 mb-0">Seu carrinho está vazio.</p>
+      <div class="empty-state">
+        <span class="empty-icon"><i class="bi bi-cart-x"></i></span>
+        <p class="empty-text">Seu carrinho está vazio.</p>
       </div>
       {% endfor %}
     </div>
 
-    <div class="col-lg-4">
-      <div class="card-fv p-4 position-sticky" style="top:96px;">
-        <h5 class="mb-3">Resumo</h5>
-        <div class="d-flex justify-content-between mb-2"><span class="muted">Subtotal</span><strong>{{ subtotal }}</strong></div>
-        <div class="d-flex justify-content-between mb-2"><span class="muted">Entrega</span><strong>{{ entrega }}</strong></div>
-        <div class="d-flex justify-content-between mb-3"><span class="muted">Desconto</span><strong>{{ desconto }}</strong></div>
+    <!-- Summary -->
+    <div>
+      <div class="summary-card">
+        <h5 class="summary-title">Resumo do pedido</h5>
 
-        <form method="get" action="{% url 'finalizacao' %}" class="mb-3">
-          {% for r_id, dados in carrinho.items %}<input type="hidden" name="restaurante_id" value="{{ r_id }}">{% endfor %}
-          <label class="form-label small muted">Cupom</label>
-          <div class="input-group">
-            <input class="form-control" name="cupom_codigo" placeholder="Digite o cupom">
-            <button class="btn btn-outline-light" type="submit">Aplicar</button>
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <strong>{{ subtotal }}</strong>
+        </div>
+        <div class="summary-row">
+          <span>Entrega</span>
+          <strong>{{ entrega }}</strong>
+        </div>
+        <div class="summary-row">
+          <span>Desconto</span>
+          <strong>{{ desconto }}</strong>
+        </div>
+
+        <hr class="summary-divider">
+
+        <form method="get" action="{% url 'finalizacao' %}">
+          {% for r_id, dados in carrinho.items %}
+            <input type="hidden" name="restaurante_id" value="{{ r_id }}">
+          {% endfor %}
+          <span class="coupon-label">Cupom de desconto</span>
+          <div class="coupon-row">
+            <input class="coupon-input" name="cupom_codigo" placeholder="Ex: FOODVERSE10">
+            <button class="btn-apply" type="submit">Aplicar</button>
           </div>
         </form>
 
-        <hr class="border-secondary">
-        <div class="d-flex justify-content-between align-items-end mb-3"><span>Total</span><span class="h4 mb-0 text-danger">{{ total }}</span></div>
+        <div class="summary-total">
+          <span>Total</span>
+          <span class="summary-total-value">{{ total }}</span>
+        </div>
 
         {% for r_id, dados in carrinho.items %}
-          <a href="{% url 'finalizacao' %}?restaurante_id={{ r_id }}" class="btn btn-main w-100 mb-2">Finalizar pedido</a>
+          <a href="{% url 'finalizacao' %}?restaurante_id={{ r_id }}" class="btn-checkout">
+            Finalizar pedido
+            <i class="bi bi-arrow-right"></i>
+          </a>
         {% endfor %}
-        <a href="{% url 'restaurantes' %}" class="btn btn-outline-fv w-100">Continuar comprando</a>
+
+        <a href="{% url 'restaurantes' %}" class="btn-keep-shopping">
+          Continuar comprando
+        </a>
+
+        <p class="security-note">
+          <i class="bi bi-shield-check"></i>
+          Pagamento 100% seguro
+        </p>
       </div>
     </div>
+
   </div>
 </div>
 
 <script>
   function removerRestaurante(r_id) {
-    fetch(`/remover-restaurante/${r_id}/`).then(r => r.json()).then(data => {
-      if (data.status === 'ok') location.reload();
-    });
+    fetch(`/remover-restaurante/${r_id}/`)
+      .then(r => r.json())
+      .then(data => { if (data.status === 'ok') location.reload(); });
   }
 
   function changeQty(amount, rId, produtoId) {
-    const url = amount > 0 ? `/carrinho/aumentar/${rId}/${produtoId}/` : `/carrinho/diminuir/${rId}/${produtoId}/`;
+    const url = amount > 0
+      ? `/carrinho/aumentar/${rId}/${produtoId}/`
+      : `/carrinho/diminuir/${rId}/${produtoId}/`;
     fetch(url).then(r => r.json()).then(() => location.reload());
   }
 </script>

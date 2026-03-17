@@ -8,12 +8,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'projeto.settings')
 django.setup()
 
 from django.utils import timezone
-from foodverse.models import (
-    TbClientes, TbRestaurantes, TbProdutos, TbPedidos,
-    TbPedidosProdutos, TbStatusPedido, TbPagamentos,
-    TbAvaliacoes, TbReservas, TbNutricao, TbEstoque,
-    TbCupons, TbFidelidade, TbFuncionarios
-)
+from foodverse.models import *
 
 def popular_banco():
 
@@ -34,32 +29,25 @@ def popular_banco():
     TbRestaurantes.objects.all().delete()
     TbClientes.objects.all().delete()
 
-    print("📦 Criando Status Pedido...")
+    print("📦 Criando Status...")
 
-    status_nomes = ["Pendente", "Preparando", "A caminho", "Entregue", "Cancelado"]
     status_lista = []
+    for i, nome in enumerate(["Pendente", "Preparando", "A caminho", "Entregue", "Cancelado"], 1):
+        status_lista.append(TbStatusPedido.objects.create(id_status=i, nome_status=nome))
 
-    for i, nome in enumerate(status_nomes, 1):
-        s = TbStatusPedido.objects.create(
-            id_status=i,
-            nome_status=nome
-        )
-        status_lista.append(s)
-
-    print("👥 Criando Clientes...")
+    print("👥 Criando MUITOS Clientes...")
 
     clientes = []
-
-    for i in range(1, 11):
+    for i in range(1, 101):  # 🔥 100 clientes
 
         cliente = TbClientes.objects.create(
             username=f"user{i}",
             nome=f"Cliente {i}",
             email=f"cliente{i}@foodverse.com",
-            telefone=f"119999900{i:02}",
-            cpf=f"111.222.333-{i:02}",
+            telefone=f"1199999{i:04}",
+            cpf=f"{i:011}",
             senha="123456",
-            endereco=f"Rua Teste {i}",
+            endereco=f"Rua {i}",
             data_cadastro=timezone.now()
         )
 
@@ -67,69 +55,61 @@ def popular_banco():
 
         TbFidelidade.objects.create(
             cliente=cliente,
-            pontos=random.randint(0, 500),
-            cashback=Decimal(random.uniform(5, 50)).quantize(Decimal("0.00"))
+            pontos=random.randint(0, 2000),
+            cashback=Decimal(random.uniform(0, 100)).quantize(Decimal("0.00"))
         )
 
-    print("🍕 Criando Restaurantes...")
+    print("🍕 Criando MUITOS Restaurantes...")
 
-    restaurantes_dados = [
-        ("Burger King", "Fast Food"),
-        ("Sushiloko", "Japonesa"),
-        ("Cantina Italiana", "Massas"),
-        ("Churrasco Prime", "Churrasco"),
-        ("Pizza Master", "Pizzaria")
-    ]
+    categorias = ["Fast Food", "Japonesa", "Italiana", "Churrasco", "Pizzaria", "Saudável"]
 
     restaurantes = []
-
-    for nome, categoria in restaurantes_dados:
+    for i in range(1, 21):  # 🔥 20 restaurantes
 
         r = TbRestaurantes.objects.create(
-            nome=nome,
-            categoria=categoria,
-            descricao=f"O melhor de {categoria}",
-            avaliacao=Decimal(random.uniform(3.5,5)).quantize(Decimal("0.00")),
-            tempo_entrega=f"{random.randint(25,50)} min",
-            taxa_entrega=Decimal(random.uniform(5,10)).quantize(Decimal("0.00")),
+            nome=f"Restaurante {i}",
+            categoria=random.choice(categorias),
+            descricao="Top comida",
+            avaliacao=Decimal(random.uniform(3.0,5)).quantize(Decimal("0.00")),
+            tempo_entrega=f"{random.randint(20,60)} min",
+            taxa_entrega=Decimal(random.uniform(3,15)).quantize(Decimal("0.00")),
             cupom="FOOD10",
-            imagem="restaurante.jpg",
-
-            # controle de disponibilidade
+            imagem="img.jpg",
             ativo=True,
-            aberto=random.choice([True, True, True, False]) 
+            aberto=random.choice([True, True, True, False])
         )
 
         restaurantes.append(r)
 
-        TbFuncionarios.objects.create(
-            restaurante=r,
-            nome=f"Gerente {nome}",
-            username=f"gerente_{nome.lower().replace(' ','')}",
-            email=f"{nome.lower().replace(' ','')}@foodverse.com",
-            cargo="Gerente",
-            telefone="11988887777",
-            senha="123456",
-            status="Ativo",
-            data_cadastro=timezone.now()
-        )
+        # 🔥 vários funcionários
+        for j in range(3):
+            TbFuncionarios.objects.create(
+                restaurante=r,
+                nome=f"Funcionario {i}-{j}",
+                username=f"func_{i}_{j}",
+                email=f"func{i}{j}@mail.com",
+                cargo=random.choice(["Gerente","Atendente"]),
+                telefone="11999999999",
+                senha="123",
+                status="Ativo",
+                data_cadastro=timezone.now()
+            )
 
-    print("🍔 Criando Produtos...")
+    print("🍔 Criando MUITOS Produtos...")
 
     produtos = []
 
     for restaurante in restaurantes:
-
-        for i in range(1,6):
+        for i in range(1, 16):  # 🔥 15 produtos por restaurante
 
             p = TbProdutos.objects.create(
                 restaurante=restaurante,
-                nome_produto=f"{restaurante.categoria} Especial {i}",
-                descricao="Prato preparado com ingredientes frescos",
-                preco=Decimal(random.uniform(20,80)).quantize(Decimal("0.00")),
+                nome_produto=f"Produto {i}",
+                descricao="Muito bom",
+                preco=Decimal(random.uniform(10,120)).quantize(Decimal("0.00")),
                 categoria=restaurante.categoria,
                 imagem="produto.jpg",
-                tempo_preparo=random.randint(10,30),
+                tempo_preparo=random.randint(5,40),
                 disponivel=True,
                 destaque=random.choice([True, False]),
                 data_criacao=timezone.now()
@@ -139,34 +119,33 @@ def popular_banco():
 
             TbEstoque.objects.create(
                 produto=p,
-                quantidade=random.randint(30,100),
-                estoque_minimo=10,
+                quantidade=random.randint(10,200),
+                estoque_minimo=5,
                 ultima_atualizacao=timezone.now()
             )
 
             TbNutricao.objects.create(
                 produto=p,
-                kcal=random.randint(300,900),
-                proteina="25g",
-                carbo="60g",
-                gordura="20g"
+                kcal=random.randint(200,1000),
+                proteina=f"{random.randint(10,50)}g",
+                carbo=f"{random.randint(20,100)}g",
+                gordura=f"{random.randint(5,40)}g"
             )
 
     print("🎟 Criando Cupons...")
 
-    for i in range(1,5):
-
+    for i in range(1, 11):  # 🔥 10 cupons
         TbCupons.objects.create(
-            codigo=f"FOOD{i*10}",
-            desconto=Decimal(i*5),
-            validade=timezone.now().date() + timedelta(days=30)
+            codigo=f"CUPOM{i}",
+            desconto=Decimal(random.randint(5,30)),
+            validade=timezone.now().date() + timedelta(days=60)
         )
 
-    print("📦 Criando Pedidos...")
+    print("📦 Criando MUITOS Pedidos...")
 
     for cliente in clientes:
 
-        for i in range(3):
+        for _ in range(random.randint(3,10)):  # 🔥 até 10 pedidos por cliente
 
             restaurante = random.choice(restaurantes)
 
@@ -186,11 +165,11 @@ def popular_banco():
 
             total = Decimal("0.00")
 
-            itens = random.sample(produtos_restaurante, min(3, len(produtos_restaurante)))
+            itens = random.sample(produtos_restaurante, min(5, len(produtos_restaurante)))
 
             for prod in itens:
 
-                qtd = random.randint(1,3)
+                qtd = random.randint(1,5)
 
                 TbPedidosProdutos.objects.create(
                     pedido=pedido,
@@ -210,37 +189,31 @@ def popular_banco():
                 data_pagamento=timezone.now()
             )
 
-    print("⭐ Criando Avaliações...")
+    print("⭐ Criando MUITAS Avaliações...")
 
-    for i in range(20):
-
+    for _ in range(200):  # 🔥 200 avaliações
         TbAvaliacoes.objects.create(
             cliente=random.choice(clientes),
             restaurante=random.choice(restaurantes),
             comentario=random.choice([
-                "Muito bom!",
-                "Entrega rápida",
-                "Comida deliciosa",
-                "Gostei bastante",
-                "Voltarei a pedir"
+                "Muito bom!", "Top", "Entrega rápida", "Excelente", "Perfeito"
             ]),
-            nota=random.randint(3,5),
+            nota=random.randint(1,5),
             data_avaliacao=timezone.now()
         )
 
     print("📅 Criando Reservas...")
 
-    for cliente in clientes:
-
+    for _ in range(100):  # 🔥 100 reservas
         TbReservas.objects.create(
-            cliente=cliente,
+            cliente=random.choice(clientes),
             restaurante=random.choice(restaurantes),
-            data_reserva=timezone.now() + timedelta(days=random.randint(1,5)),
-            numero_pessoas=random.randint(2,6),
-            mesa=f"Mesa {random.randint(1,20)}"
+            data_reserva=timezone.now() + timedelta(days=random.randint(1,10)),
+            numero_pessoas=random.randint(1,10),
+            mesa=f"Mesa {random.randint(1,50)}"
         )
 
-    print("\n✅ Banco populado com sucesso!")
+    print("\n🔥 BANCO LOTADO COM DADOS!")
 
 if __name__ == "__main__":
     popular_banco()
