@@ -2,26 +2,317 @@
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
 
-<style>
-  :root { --red:#C41017; --red-dark:#a00d13; --line:rgba(255,255,255,.10); --card:rgba(255,255,255,.05); --muted:rgba(255,255,255,.62); }
-  body { background:#0d0c0c; color:#fff; font-family:'Instrument Sans',sans-serif; }
-  .page-wrap { max-width:1200px; margin:0 auto; padding:36px 20px 80px; }
-  .card-fv { background:var(--card); border:1px solid var(--line); border-radius:18px; box-shadow:0 12px 30px rgba(0,0,0,.28); }
-  .muted { color:var(--muted); }
-  .eyebrow { display:inline-flex; align-items:center; gap:8px; background:rgba(196,16,23,.16); border:1px solid rgba(196,16,23,.35); color:#ff7c86; font-size:.72rem; font-weight:700; padding:6px 12px; border-radius:999px; text-transform:uppercase; letter-spacing:.06em; }
-  .btn-main { background:linear-gradient(135deg,var(--red),#E01E1E); border:none; color:#fff; font-weight:700; border-radius:12px; padding:12px 16px; box-shadow:0 8px 18px rgba(196,16,23,.30); }
-  .btn-main:hover { background:linear-gradient(135deg,var(--red-dark),#c3121f); color:#fff; transform:translateY(-1px); }
-  .form-control,.form-select { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.2); color:#fff; }
-  .form-control:focus,.form-select:focus { background:rgba(255,255,255,.06); color:#fff; border-color:rgba(196,16,23,.55); box-shadow:0 0 0 .2rem rgba(196,16,23,.18); }
-  .form-control::placeholder { color:rgba(255,255,255,.45); }
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-  .pix-qr { width:210px; height:210px; border-radius:12px; background:#fff; padding:8px; }
-  .btn-outline-light{border-color:rgba(255,255,255,.28)}
-  .btn-outline-light:hover{background:rgba(196,16,23,.14);border-color:rgba(196,16,23,.6)}
+<style>
+  :root {
+    --red: #C41017;
+    --red-muted: rgba(196,16,23,0.10);
+    --surface-1: #111010;
+    --surface-2: #181717;
+    --surface-3: #1f1e1e;
+    --surface-4: #272525;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.13);
+    --text-1: #f5f3f0;
+    --text-2: rgba(245,243,240,0.58);
+    --text-3: rgba(245,243,240,0.32);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    background: var(--surface-1);
+    color: var(--text-1);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .page-wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 40px 20px 100px;
+  }
+
+  .page-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: clamp(24px, 4vw, 34px);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    margin: 0 0 32px;
+  }
+
+  /* ── Grid ────────────────────────────── */
+  .pay-grid {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 780px) { .pay-grid { grid-template-columns: 1fr; } }
+
+  /* ── Summary card ────────────────────── */
+  .section-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 26px;
+  }
+
+  .section-card-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 20px;
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .summary-row:last-of-type { border-bottom: none; }
+  .summary-row span:first-child { color: var(--text-2); }
+  .summary-row strong { font-weight: 500; text-align: right; }
+
+  .payment-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    color: var(--text-1);
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 4px 12px;
+  }
+
+  .info-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: rgba(96,165,250,0.08);
+    border: 1px solid rgba(96,165,250,0.18);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #93c5fd;
+    margin-top: 20px;
+  }
+  .info-note i { margin-top: 1px; flex-shrink: 0; }
+
+  /* ── Sidebar ─────────────────────────── */
+  .sidebar-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    position: sticky;
+    top: 100px;
+  }
+
+  .sidebar-total-label {
+    font-size: 12px;
+    color: var(--text-2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .sidebar-total-value {
+    font-family: 'Outfit', sans-serif;
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--red);
+    letter-spacing: -0.03em;
+    margin-bottom: 22px;
+    line-height: 1;
+  }
+
+  .btn-submit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    background: var(--red);
+    border: none;
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: 14px;
+    padding: 15px 20px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.12s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-submit::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .btn-submit:hover { background: #a50d14; transform: translateY(-1px); }
+  .btn-submit:active { transform: translateY(0); }
+
+  .security-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 14px;
+  }
+
+  /* ── Modal ───────────────────────────── */
+  .modal-content {
+    background: var(--surface-2) !important;
+    border: 1px solid var(--border-hover) !important;
+    border-radius: 20px !important;
+    color: var(--text-1) !important;
+  }
+  .modal-header, .modal-footer { border-color: var(--border) !important; }
+  .modal-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: -0.02em; }
+  .modal-body { font-size: 14px; color: var(--text-2); padding: 20px 24px; }
+  .modal-footer { padding: 16px 24px; gap: 10px; }
+
+  /* ── PIX ─────────────────────────────── */
+  .pix-qr {
+    width: 200px;
+    height: 200px;
+    border-radius: 14px;
+    background: #fff;
+    padding: 10px;
+    margin: 0 auto 20px;
+    display: block;
+  }
+
+  .pix-copy-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .pix-progress-wrap {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--surface-4);
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .pix-progress-bar {
+    height: 100%;
+    background: var(--red);
+    width: 0%;
+    border-radius: 999px;
+    transition: width 1s linear;
+  }
+
+  .pix-timer-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--text-2);
+  }
+  .pix-timer-row strong { color: var(--text-1); }
+
+  /* ── Card modal ──────────────────────── */
+  .field-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-2);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .field-input {
+    width: 100%;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    color: var(--text-1);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    border-radius: 12px;
+    padding: 11px 14px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .field-input::placeholder { color: var(--text-3); }
+  .field-input:focus { border-color: rgba(196,16,23,0.5); }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 10px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .btn-ghost:hover { background: var(--surface-3); border-color: var(--border-hover); color: var(--text-1); }
+
+  .btn-pay {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--red);
+    border: none;
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-pay:hover { background: #a50d14; }
+  .btn-pay:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-apply {
+    background: var(--surface-4);
+    border: 1px solid var(--border);
+    color: var(--text-1);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .btn-apply:hover { background: rgba(255,255,255,0.08); }
+
+  .spinner-border { width: 24px; height: 24px; border-width: 3px; }
 </style>
 
 <div class="page-wrap">
-  <h1 class="h3 mb-4" style="font-family:'Fraunces',serif;">Pagamento da Reserva</h1>
+
+  <h1 class="page-title">Pagamento da Reserva</h1>
+
   <form method="post" action="{% url 'reserva_confirmar_pagamento' %}" id="reservaForm">
     {% csrf_token %}
     <input type="hidden" name="metodo_pagamento" value="{{ metodo_pagamento }}">
@@ -32,53 +323,133 @@
     <input type="hidden" name="cartao_cvv" id="cartao_cvv_hidden">
     <input type="hidden" name="cartao_nome" id="cartao_nome_hidden">
 
-    <div class="row g-4">
-      <div class="col-lg-8">
-        <div class="card-fv p-4">
-          <h5 class="mb-3">Resumo</h5>
-          <div class="d-flex justify-content-between mb-2"><span class="muted">Restaurante</span><strong>{{ restaurante.nome }}</strong></div>
-          <div class="d-flex justify-content-between mb-2"><span class="muted">Data e horário</span><strong>{{ data }} · {{ horario }}</strong></div>
-          <div class="d-flex justify-content-between mb-2"><span class="muted">Pessoas</span><strong>{{ pessoas }}</strong></div>
-          <div class="d-flex justify-content-between"><span class="muted">Mesa</span><strong>{{ mesa }}</strong></div>
-          <hr class="border-secondary">
-          <div class="d-flex justify-content-between align-items-end"><span>Forma de pagamento</span><span class="badge text-bg-dark border border-secondary">{{ metodo_pagamento }}</span></div>
-          <div class="alert alert-info mt-3 mb-0">Após a confirmação, sua reserva ficará disponível em Meus Pedidos.</div>
+    <div class="pay-grid">
+
+      <!-- Resumo -->
+      <div class="section-card">
+        <h5 class="section-card-title">Resumo da reserva</h5>
+
+        <div class="summary-row">
+          <span>Restaurante</span>
+          <strong>{{ restaurante.nome }}</strong>
+        </div>
+        <div class="summary-row">
+          <span>Data e horário</span>
+          <strong>{{ data }} · {{ horario }}</strong>
+        </div>
+        <div class="summary-row">
+          <span>Pessoas</span>
+          <strong>{{ pessoas }}</strong>
+        </div>
+        <div class="summary-row">
+          <span>Mesa</span>
+          <strong>{{ mesa }}</strong>
+        </div>
+        <div class="summary-row">
+          <span>Pagamento</span>
+          <span class="payment-badge"><i class="bi bi-credit-card"></i> {{ metodo_pagamento }}</span>
+        </div>
+
+        <div class="info-note">
+          <i class="bi bi-info-circle-fill"></i>
+          Após a confirmação, sua reserva ficará disponível em Meus Pedidos.
         </div>
       </div>
 
-      <div class="col-lg-4">
-        <div class="card-fv p-4">
-          <div class="muted small">Total</div>
-          <div class="h2 text-danger mb-3">R$ {{ total|floatformat:2 }}</div>
-          <button class="btn btn-main w-100" type="submit" id="btnReservaConfirmar">Confirmar reserva</button>
+      <!-- Sidebar -->
+      <div>
+        <div class="sidebar-card">
+          <p class="sidebar-total-label">Total a pagar</p>
+          <div class="sidebar-total-value">R$ {{ total|floatformat:2 }}</div>
+
+          <button class="btn-submit" type="submit" id="btnReservaConfirmar">
+            Confirmar reserva
+            <i class="bi bi-arrow-right"></i>
+          </button>
+
+          <p class="security-note">
+            <i class="bi bi-shield-check"></i>
+            Pagamento 100% seguro
+          </p>
         </div>
       </div>
+
     </div>
   </form>
 </div>
 
-<div class="modal fade" id="pixModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content bg-dark text-light border-secondary">
-  <div class="modal-header border-secondary"><h5 class="modal-title">Pagamento PIX</h5></div>
-  <div class="modal-body text-center">
-    <img src="{{ pix_qr_code }}" class="pix-qr mb-3" alt="QR Code PIX">
-    <div class="input-group mb-3"><input id="pixPayload" class="form-control" value="{{ pix_payload }}" readonly><button class="btn btn-outline-light" type="button" id="copyPix">Copiar código</button></div>
-    <div class="progress" role="progressbar" style="height:8px;"><div class="progress-bar progress-bar-striped progress-bar-animated bg-danger" id="pixProgress" style="width:0%"></div></div>
-    <div class="d-flex justify-content-between mt-2"><small class="muted">Aguardando pagamento...</small><strong id="pixTimer">{{ pix_timeout }}</strong></div>
-    <div class="alert alert-success mt-3 d-none" id="pixOk">Pagamento confirmado. Finalizando reserva...</div>
+<!-- PIX Modal -->
+<div class="modal fade" id="pixModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Pagamento via PIX</h5>
+      </div>
+      <div class="modal-body text-center">
+        <img src="{{ pix_qr_code }}" class="pix-qr" alt="QR Code PIX">
+        <div class="pix-copy-row">
+          <input id="pixPayload" class="field-input" value="{{ pix_payload }}" readonly style="flex:1;">
+          <button class="btn-apply" type="button" id="copyPix">Copiar</button>
+        </div>
+        <div class="pix-progress-wrap">
+          <div class="pix-progress-bar" id="pixProgress"></div>
+        </div>
+        <div class="pix-timer-row">
+          <span>Aguardando pagamento...</span>
+          <strong id="pixTimer">{{ pix_timeout }}</strong>
+        </div>
+        <div class="alert d-none mt-3" id="pixOk" style="background:rgba(34,197,94,0.12);color:#4ade80;border:none;border-radius:12px;">
+          <i class="bi bi-check-circle"></i> Pagamento confirmado. Finalizando reserva...
+        </div>
+      </div>
+    </div>
   </div>
-</div></div></div>
+</div>
 
-<div class="modal fade" id="cardModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content bg-dark text-light border-secondary">
-  <div class="modal-header border-secondary"><h5 class="modal-title">Pagamento com cartão</h5></div>
-  <div class="modal-body">
-    <div class="mb-2"><label class="form-label small muted">Número do cartão</label><input id="cardNumero" class="form-control" maxlength="19"></div>
-    <div class="row g-2"><div class="col-6"><label class="form-label small muted">Validade</label><input id="cardValidade" class="form-control" maxlength="5"></div><div class="col-6"><label class="form-label small muted">CVV</label><input id="cardCvv" class="form-control" maxlength="4"></div></div>
-    <div class="mt-2"><label class="form-label small muted">Nome impresso</label><input id="cardNome" class="form-control" maxlength="60"></div>
-    <div class="alert alert-danger mt-3 d-none" id="cardError">Preencha os dados do cartão corretamente.</div>
-    <div class="text-center mt-3 d-none" id="cardProcessing"><div class="spinner-border text-danger"></div><p class="mt-2 mb-0">Processando pagamento...</p></div>
-    <div class="d-flex justify-content-end gap-2 mt-3"><button class="btn btn-outline-light" data-bs-dismiss="modal" type="button">Voltar</button><button class="btn btn-main" id="processCard" type="button">Pagar</button></div>
+<!-- Card Modal -->
+<div class="modal fade" id="cardModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Dados do cartão</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom:14px;">
+          <label class="field-label">Número do cartão</label>
+          <input id="cardNumero" class="field-input" maxlength="19" placeholder="0000 0000 0000 0000">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+          <div>
+            <label class="field-label">Validade</label>
+            <input id="cardValidade" class="field-input" maxlength="5" placeholder="MM/AA">
+          </div>
+          <div>
+            <label class="field-label">CVV</label>
+            <input id="cardCvv" class="field-input" maxlength="4" placeholder="123">
+          </div>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label class="field-label">Nome impresso</label>
+          <input id="cardNome" class="field-input" maxlength="60" placeholder="Como está no cartão">
+        </div>
+        <div class="d-none" id="cardError" style="background:rgba(196,16,23,0.15);color:#ff9a9e;border-radius:12px;padding:12px 16px;font-size:13px;margin-bottom:12px;">
+          <i class="bi bi-exclamation-circle"></i> Preencha os dados do cartão corretamente.
+        </div>
+        <div class="text-center d-none" id="cardProcessing">
+          <div class="spinner-border text-danger"></div>
+          <p class="mt-2 mb-0" style="font-size:13px;color:var(--text-2);">Processando pagamento...</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-ghost" data-bs-dismiss="modal">Voltar</button>
+        <button type="button" class="btn-pay" id="processCard">
+          <i class="bi bi-lock"></i> Pagar
+        </button>
+      </div>
+    </div>
   </div>
-</div></div></div>
+</div>
 
 <script>
   const metodo = '{{ metodo_pagamento }}';
@@ -88,17 +459,19 @@
 
   document.getElementById('copyPix').addEventListener('click', async () => {
     await navigator.clipboard.writeText(document.getElementById('pixPayload').value);
-    document.getElementById('copyPix').textContent = 'Copiado';
+    document.getElementById('copyPix').textContent = 'Copiado!';
   });
 
-  ['cardNumero','cardValidade','cardCvv'].forEach(id => document.getElementById(id).addEventListener('input', () => {
-    const n = document.getElementById('cardNumero');
-    n.value = n.value.replace(/\D/g,'').replace(/(.{4})/g,'$1 ').trim().slice(0,19);
-    const v = document.getElementById('cardValidade');
-    v.value = v.value.replace(/\D/g,'').replace(/(\d{2})(\d)/,'$1/$2').slice(0,5);
-    const c = document.getElementById('cardCvv');
-    c.value = c.value.replace(/\D/g,'').slice(0,4);
-  }));
+  ['cardNumero', 'cardValidade', 'cardCvv'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      const n = document.getElementById('cardNumero');
+      n.value = n.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim().slice(0, 19);
+      const v = document.getElementById('cardValidade');
+      v.value = v.value.replace(/\D/g, '').replace(/(\d{2})(\d)/, '$1/$2').slice(0, 5);
+      const c = document.getElementById('cardCvv');
+      c.value = c.value.replace(/\D/g, '').slice(0, 4);
+    });
+  });
 
   form.addEventListener('submit', (e) => {
     if (metodo === 'Pix' && document.getElementById('pix_confirmado').value !== '1') {
@@ -112,7 +485,7 @@
       const i = setInterval(() => {
         rest -= 1;
         timer.textContent = rest;
-        bar.style.width = `${((total-rest)/total)*100}%`;
+        bar.style.width = `${((total - rest) / total) * 100}%`;
         if (rest <= 0) {
           clearInterval(i);
           ok.classList.remove('d-none');
@@ -122,7 +495,6 @@
       }, 1000);
       return;
     }
-
     if ((metodo === 'Crédito' || metodo === 'Débito') && document.getElementById('cartao_confirmado').value !== '1') {
       e.preventDefault();
       cardModal.show();
@@ -134,13 +506,16 @@
     const validade = document.getElementById('cardValidade').value.trim();
     const cvv = document.getElementById('cardCvv').value.trim();
     const nome = document.getElementById('cardNome').value.trim();
-    if (numero.replace(/\D/g,'').length < 15 || !/^\d{2}\/\d{2}$/.test(validade) || cvv.length < 3 || nome.length < 3) {
-      document.getElementById('cardError').classList.remove('d-none');
+    const err = document.getElementById('cardError');
+
+    if (numero.replace(/\D/g, '').length < 15 || !/^\d{2}\/\d{2}$/.test(validade) || cvv.length < 3 || nome.length < 3) {
+      err.classList.remove('d-none');
       return;
     }
 
-    document.getElementById('cardError').classList.add('d-none');
+    err.classList.add('d-none');
     document.getElementById('cardProcessing').classList.remove('d-none');
+    document.getElementById('processCard').disabled = true;
 
     setTimeout(() => {
       document.getElementById('cartao_numero_hidden').value = numero;

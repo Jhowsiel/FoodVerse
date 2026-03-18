@@ -1,41 +1,59 @@
 <div class="tab-pane fade {{ ativa }}" id="{{ tab_id }}">
   {% for pedido in pedidos_lista %}
-    <div class="card-fv p-3 mb-3">
-      <div class="d-flex justify-content-between flex-wrap gap-2">
-        <div>
-          <strong>{{ pedido.restaurante.nome }}</strong>
-          <div class="muted small">#{{ pedido.id_pedido }} · {{ pedido.data_pedido|date:"d/m/Y H:i" }}</div>
-        </div>
-        <span class="status {% if pedido.status_id == 1 %}bg-warning-subtle text-warning-emphasis{% elif pedido.status_id == 5 %}bg-danger-subtle text-danger-emphasis{% elif pedido.status_id == 4 %}bg-success-subtle text-success-emphasis{% else %}bg-info-subtle text-info-emphasis{% endif %}">{{ pedido.status.nome_status }}</span>
+  <div class="order-card">
+    <div class="order-header">
+      <div class="order-meta">
+        <span class="order-id">{{ pedido.restaurante.nome }}</span>
+        <span class="order-date">#{{ pedido.id_pedido }} · {{ pedido.data_pedido|date:"d/m/Y H:i" }}</span>
       </div>
-
-      <div class="mt-2 muted">
-        {% for item in pedido.tbpedidosprodutos_set.all|slice:':3' %}
-          {{ item.quantidade }}x {{ item.produto.nome_produto }}{% if not forloop.last %} • {% endif %}
-        {% endfor %}
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="badge-status {% if pedido.status_id == 1 %}badge-pendente{% elif pedido.status_id == 5 %}badge-cancelado{% elif pedido.status_id == 4 %}badge-concluido{% else %}badge-andamento{% endif %}">{{ pedido.status.nome_status }}</span>
+        <span class="order-total">R$ {{ pedido.valor_total|floatformat:2 }}</span>
       </div>
-      <div class="mt-2 fw-semibold">Total: R$ {{ pedido.valor_total|floatformat:2 }}</div>
-
-      {% if pedido.status_id == 1 %}
-      <div class="mt-2">
-        <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelPedido{{ pedido.id_pedido }}">Cancelar pedido</button>
-      </div>
-      {% endif %}
     </div>
-
+    <div class="order-body">
+      {% for item in pedido.tbpedidosprodutos_set.all|slice:":3" %}
+      <div class="order-item-row">
+        <span class="order-item-name">{{ item.quantidade }}x {{ item.produto.nome_produto }}</span>
+      </div>
+      {% endfor %}
+    </div>
     {% if pedido.status_id == 1 %}
-    <div class="modal fade" id="cancelPedido{{ pedido.id_pedido }}" tabindex="-1">
-      <div class="modal-dialog modal-dialog-centered"><div class="modal-content bg-dark text-light border-secondary">
-        <div class="modal-header border-secondary"><h5 class="modal-title">Cancelar pedido</h5></div>
-        <div class="modal-body">Deseja cancelar o pedido #{{ pedido.id_pedido }}?</div>
-        <div class="modal-footer border-secondary">
-          <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Voltar</button>
-          <form method="post" action="{% url 'cancelar_pedido' pedido.id_pedido %}">{% csrf_token %}<button class="btn btn-danger" type="submit">Confirmar</button></form>
-        </div>
-      </div></div>
+    <div class="order-actions">
+      <button class="btn-danger-ghost" data-bs-toggle="modal" data-bs-target="#cancelPedido{{ pedido.id_pedido }}">
+        <i class="bi bi-x-circle"></i> Cancelar pedido
+      </button>
     </div>
     {% endif %}
+  </div>
+
+  {% if pedido.status_id == 1 %}
+  <div class="modal fade" id="cancelPedido{{ pedido.id_pedido }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Cancelar pedido</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">Deseja cancelar o pedido <strong style="color:var(--text-1);">#{{ pedido.id_pedido }}</strong>?</div>
+        <div class="modal-footer">
+          <button type="button" class="btn-ghost" data-bs-dismiss="modal">Voltar</button>
+          <form method="post" action="{% url 'cancelar_pedido' pedido.id_pedido %}">
+            {% csrf_token %}
+            <button class="btn-primary-red" type="submit" style="background:#a50d14;">
+              <i class="bi bi-trash3"></i> Confirmar
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   {% empty %}
-    <div class="card-fv p-4 muted">{{ vazio }}</div>
+  <div class="empty-state">
+    <span class="empty-icon"><i class="bi bi-bag-x"></i></span>
+    {{ vazio }}
+  </div>
   {% endfor %}
 </div>

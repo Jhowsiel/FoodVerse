@@ -188,6 +188,10 @@ def home(request):
                         f"{data.get('logradouro', '')}, {data.get('bairro', '')}, "
                         f"{data.get('localidade', '')} - {data.get('uf', '')}"
                     )
+                    cliente = get_cliente_logado(request)
+                    if cliente and endereco:
+                        cliente.endereco = endereco
+                        cliente.save(update_fields=['endereco'])
             except requests.RequestException:
                 endereco = None
 
@@ -201,6 +205,18 @@ def home(request):
         'categorias': sorted(filter(None, categorias)),
         'cliente_logado': get_cliente_logado(request),
     })
+
+def salvar_endereco(request):
+    if request.method == 'POST':
+        endereco = request.POST.get('endereco', '').strip()
+        cliente = get_cliente_logado(request)
+        if not cliente:
+            return redirect('login')
+        cliente.endereco = endereco
+        cliente.save(update_fields=['endereco'])
+        return redirect('home')
+    return redirect('home')
+
 # -------------------------------------------------------------------------
 # AUTENTICAÇÃO E CADASTRO
 # -------------------------------------------------------------------------
@@ -219,7 +235,7 @@ def login_view(request):
             request.session['cliente_id'] = cliente.id_cliente
             request.session.set_expiry(1209600 if remember_me else 0)
             messages.success(request, 'Login realizado com sucesso!')
-            return redirect('home')
+            # return redirect('home')
         else:
             messages.error(request, 'Usuário ou senha incorretos.')
 
