@@ -495,7 +495,6 @@
 {% include "pages/pagePrincipal/footer.html" %}
 
 <script>
-  // Script para a Máscara de CEP e Lógica de Retirada/Delivery
   function toggleSearchType(type) {
     const btnDelivery = document.getElementById('btn-delivery');
     const btnRetirada = document.getElementById('btn-retirada');
@@ -507,30 +506,42 @@
       btnRetirada.classList.remove('active');
       inputCep.placeholder = "Digite seu CEP...";
       inputCep.maxLength = 9;
-      inputCep.value = ""; // Limpa ao trocar
+      inputCep.value = "";
       searchIcon.className = "fa-solid fa-map-location-dot search-field-icon";
     } else {
       btnRetirada.classList.add('active');
       btnDelivery.classList.remove('active');
       inputCep.placeholder = "Buscar por bairro ou cidade...";
       inputCep.removeAttribute('maxLength');
-      inputCep.value = ""; // Limpa ao trocar
+      inputCep.value = "";
       searchIcon.className = "fa-solid fa-store search-field-icon";
     }
   }
 
-  // Máscara Automática de CEP (00000-000)
   document.getElementById('input-cep').addEventListener('input', function(e) {
     const isDelivery = document.getElementById('btn-delivery').classList.contains('active');
     if (isDelivery) {
-      // Remove tudo que não for número
       let x = e.target.value.replace(/\D/g, '').match(/(\d{0,5})(\d{0,3})/);
-      // Aplica formatação
       e.target.value = !x[2] ? x[1] : x[1] + '-' + x[2];
     }
   });
 
-  // UX de Imagens: Suaviza a entrada e oculta emojis caso a imagem carregue
+  // Injeta o endereço encontrado no form antes de submeter
+  document.querySelector('form').addEventListener('submit', function() {
+    const resultado = document.querySelector('.address-result.success');
+    if (resultado) {
+      const texto = resultado.textContent.replace('Encontramos:', '').trim();
+      let hidden = this.querySelector('input[name="endereco"]');
+      if (!hidden) {
+        hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'endereco';
+        this.appendChild(hidden);
+      }
+      hidden.value = texto;
+    }
+  });
+
   document.querySelectorAll('.res-top img').forEach(img => {
     if (img.complete && img.naturalWidth > 0) {
       img.classList.add('loaded');
@@ -542,3 +553,4 @@
     });
   });
 </script>
+

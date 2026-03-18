@@ -2,27 +2,400 @@
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
 <style>
-  :root { --red:#C41017; --red-dark:#a00d13; --line:rgba(255,255,255,.10); --card:rgba(255,255,255,.05); --muted:rgba(255,255,255,.62); }
-  body { background:#0d0c0c; color:#fff; font-family:'Instrument Sans',sans-serif; }
-  .page-wrap { max-width:1200px; margin:0 auto; padding:36px 20px 80px; }
-  .card-fv { background:var(--card); border:1px solid var(--line); border-radius:18px; box-shadow:0 12px 30px rgba(0,0,0,.28); }
-  .muted { color:var(--muted); }
-  .eyebrow { display:inline-flex; align-items:center; gap:8px; background:rgba(196,16,23,.16); border:1px solid rgba(196,16,23,.35); color:#ff7c86; font-size:.72rem; font-weight:700; padding:6px 12px; border-radius:999px; text-transform:uppercase; letter-spacing:.06em; }
-  .btn-main { background:linear-gradient(135deg,var(--red),#E01E1E); border:none; color:#fff; font-weight:700; border-radius:12px; padding:12px 16px; box-shadow:0 8px 18px rgba(196,16,23,.30); }
-  .btn-main:hover { background:linear-gradient(135deg,var(--red-dark),#c3121f); color:#fff; transform:translateY(-1px); }
-  .form-control,.form-select { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.2); color:#fff; }
-  .form-control:focus,.form-select:focus { background:rgba(255,255,255,.06); color:#fff; border-color:rgba(196,16,23,.55); box-shadow:0 0 0 .2rem rgba(196,16,23,.18); }
-  .form-control::placeholder { color:rgba(255,255,255,.45); }
+  :root {
+    --red: #C41017;
+    --red-muted: rgba(196,16,23,0.10);
+    --surface-1: #111010;
+    --surface-2: #181717;
+    --surface-3: #1f1e1e;
+    --surface-4: #272525;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.13);
+    --text-1: #f5f3f0;
+    --text-2: rgba(245,243,240,0.58);
+    --text-3: rgba(245,243,240,0.32);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    background: var(--surface-1);
+    color: var(--text-1);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .page-wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 40px 20px 100px;
+  }
+
+  /* ── Header ──────────────────────────── */
+  .page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 36px;
+  }
+
+  .page-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: #ff7580;
+    background: var(--red-muted);
+    border: 1px solid rgba(196,16,23,0.25);
+    border-radius: 999px;
+    padding: 5px 12px;
+    margin-bottom: 10px;
+    width: fit-content;
+  }
+
+  .page-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: clamp(26px, 4vw, 36px);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    margin: 0;
+  }
+
+  /* ── Alerts ──────────────────────────── */
+  .alert {
+    border-radius: 12px;
+    border: none;
+    padding: 14px 18px;
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  .alert-danger { background: rgba(196,16,23,0.15); color: #ff9a9e; }
+  .alert-success { background: rgba(34,197,94,0.10); color: #86efac; }
+
+  /* ── Tabs ────────────────────────────── */
+  .tab-nav {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .tab-nav::-webkit-scrollbar { display: none; }
+
+  .tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 999px;
+    padding: 8px 18px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .tab-btn:hover {
+    background: var(--surface-3);
+    border-color: var(--border-hover);
+    color: var(--text-1);
+  }
+  .tab-btn.active {
+    background: var(--red);
+    border-color: var(--red);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .tab-count {
+    background: rgba(255,255,255,0.15);
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 7px;
+    min-width: 20px;
+    text-align: center;
+  }
+  .tab-btn.active .tab-count { background: rgba(255,255,255,0.25); }
+
+  /* ── Tab panels ──────────────────────── */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── Section label ───────────────────── */
+  .section-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0 0 16px;
+  }
+
+  /* ── Order card ──────────────────────── */
+  .order-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+  .order-card:hover { border-color: var(--border-hover); }
+
+  .order-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 20px;
+    flex-wrap: wrap;
+  }
+
+  .order-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .order-id {
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .order-date {
+    font-size: 13px;
+    color: var(--text-2);
+  }
+
+  /* ── Status badges ───────────────────── */
+  .badge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    padding: 4px 11px;
+  }
+  .badge-status::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.8;
+  }
+  .badge-pendente   { background: rgba(234,179,8,0.12);  color: #fbbf24; }
+  .badge-andamento  { background: rgba(59,130,246,0.12); color: #60a5fa; }
+  .badge-concluido  { background: rgba(34,197,94,0.12);  color: #4ade80; }
+  .badge-cancelado  { background: rgba(196,16,23,0.12);  color: #ff7580; }
+
+  .order-total {
+    font-family: 'Outfit', sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .order-body {
+    border-top: 1px solid var(--border);
+    padding: 14px 20px;
+  }
+
+  .order-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    padding: 5px 0;
+    color: var(--text-2);
+  }
+  .order-item-row:not(:last-child) { border-bottom: 1px solid rgba(255,255,255,0.04); }
+
+  .order-item-name { color: var(--text-1); font-weight: 500; }
+
+  .order-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── Empty state ─────────────────────── */
+  .empty-state {
+    background: var(--surface-2);
+    border: 1px dashed var(--border-hover);
+    border-radius: 16px;
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--text-3);
+    font-size: 14px;
+  }
+  .empty-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    display: block;
+    opacity: 0.35;
+  }
+
+  /* ── Divider ─────────────────────────── */
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 44px 0 36px;
+  }
+
+  /* ── Reservation card ────────────────── */
+  .reserva-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 18px 22px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    transition: border-color 0.2s;
+  }
+  .reserva-card:hover { border-color: var(--border-hover); }
+
+  .reserva-info {}
+
+  .reserva-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 6px;
+  }
+
+  .reserva-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 13px;
+    color: var(--text-2);
+  }
+
+  .reserva-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .reserva-meta-item i { color: var(--text-3); font-size: 11px; }
+
+  .reserva-id {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-left: 8px;
+  }
+
+  /* ── Buttons ─────────────────────────── */
+  .btn-primary-red {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--red);
+    border: none;
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 12px;
+    padding: 11px 20px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.12s;
+    white-space: nowrap;
+  }
+  .btn-primary-red:hover { background: #a50d14; color: #fff; transform: translateY(-1px); text-decoration: none; }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 10px;
+    padding: 8px 14px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+  .btn-ghost:hover { background: var(--surface-3); border-color: var(--border-hover); color: var(--text-1); text-decoration: none; }
+
+  .btn-danger-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid rgba(196,16,23,0.28);
+    color: #ff7580;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 10px;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+  .btn-danger-ghost:hover { background: var(--red-muted); border-color: rgba(196,16,23,0.5); }
+
+  /* ── Modal ───────────────────────────── */
+  .modal-content {
+    background: var(--surface-2) !important;
+    border: 1px solid var(--border-hover) !important;
+    border-radius: 18px !important;
+    color: var(--text-1) !important;
+  }
+  .modal-header, .modal-footer { border-color: var(--border) !important; }
+  .modal-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: -0.02em; }
+  .modal-body { font-size: 14px; color: var(--text-2); }
 </style>
 
 <div class="page-wrap">
-  <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
+
+  <!-- Header -->
+  <div class="page-header">
     <div>
-      <p class="eyebrow mb-2"><i class="bi bi-clock-history"></i> Histórico</p>
-      <h1 class="h2 mb-0" style="font-family:'Fraunces',serif;">Meus Pedidos</h1>
+      <p class="page-eyebrow"><i class="bi bi-clock-history"></i> Histórico</p>
+      <h1 class="page-title">Meus Pedidos</h1>
     </div>
-    <a href="{% url 'restaurantes' %}" class="btn btn-danger">Novo pedido</a>
+    <a href="{% url 'restaurantes' %}" class="btn-primary-red">
+      <i class="bi bi-plus-lg"></i> Novo pedido
+    </a>
   </div>
 
   {% if messages %}
@@ -31,50 +404,227 @@
     {% endfor %}
   {% endif %}
 
-  <ul class="nav nav-pills mb-3" id="pedidoTabs" role="tablist">
-    <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-pendente" type="button">Pendentes</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-andamento" type="button">Em andamento</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-concluido" type="button">Concluídos</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-cancelado" type="button">Cancelados</button></li>
-  </ul>
-
-  <div class="tab-content">
-    {% include 'pages/pedido/partials/lista_pedidos.html' with tab_id='tab-pendente' ativa='show active' pedidos_lista=pedidos_pendentes vazio='Nenhum pedido pendente.' %}
-    {% include 'pages/pedido/partials/lista_pedidos.html' with tab_id='tab-andamento' ativa='' pedidos_lista=pedidos_andamento vazio='Nenhum pedido em andamento.' %}
-    {% include 'pages/pedido/partials/lista_pedidos.html' with tab_id='tab-concluido' ativa='' pedidos_lista=pedidos_concluidos vazio='Nenhum pedido concluído.' %}
-    {% include 'pages/pedido/partials/lista_pedidos.html' with tab_id='tab-cancelado' ativa='' pedidos_lista=pedidos_cancelados vazio='Nenhum pedido cancelado.' %}
+  <!-- Tabs -->
+  <div class="tab-nav" role="tablist">
+    <button class="tab-btn active" onclick="switchTab('pendente', this)">
+      Pendentes
+      {% if pedidos_pendentes %}<span class="tab-count">{{ pedidos_pendentes|length }}</span>{% endif %}
+    </button>
+    <button class="tab-btn" onclick="switchTab('andamento', this)">
+      Em andamento
+      {% if pedidos_andamento %}<span class="tab-count">{{ pedidos_andamento|length }}</span>{% endif %}
+    </button>
+    <button class="tab-btn" onclick="switchTab('concluido', this)">
+      Concluídos
+      {% if pedidos_concluidos %}<span class="tab-count">{{ pedidos_concluidos|length }}</span>{% endif %}
+    </button>
+    <button class="tab-btn" onclick="switchTab('cancelado', this)">
+      Cancelados
+      {% if pedidos_cancelados %}<span class="tab-count">{{ pedidos_cancelados|length }}</span>{% endif %}
+    </button>
   </div>
 
-  <div class="d-flex justify-content-between align-items-end mt-5 mb-3">
-    <h2 class="h4 mb-0">Minhas Reservas</h2>
+  <!-- Tab panels -->
+
+  <div id="panel-pendente" class="tab-panel active">
+    {% for pedido in pedidos_pendentes %}
+    <div class="order-card">
+      <div class="order-header">
+        <div class="order-meta">
+          <span class="order-id">{{ pedido.restaurante.nome }}</span>
+          <span class="order-date">#{{ pedido.id_pedido }} · {{ pedido.data_pedido|date:"d/m/Y H:i" }}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span class="badge-status {% if pedido.status_id == 1 %}badge-pendente{% elif pedido.status_id == 5 %}badge-cancelado{% elif pedido.status_id == 4 %}badge-concluido{% else %}badge-andamento{% endif %}">{{ pedido.status.nome_status }}</span>
+          <span class="order-total">R$ {{ pedido.valor_total|floatformat:2 }}</span>
+        </div>
+      </div>
+      <div class="order-body">
+        {% for item in pedido.tbpedidosprodutos_set.all|slice:":3" %}
+        <div class="order-item-row">
+          <span class="order-item-name">{{ item.quantidade }}x {{ item.produto.nome_produto }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% if pedido.status_id == 1 %}
+      <div class="order-actions">
+        <button class="btn-danger-ghost" data-bs-toggle="modal" data-bs-target="#cancelPedido{{ pedido.id_pedido }}">
+          <i class="bi bi-x-circle"></i> Cancelar pedido
+        </button>
+      </div>
+      {% endif %}
+    </div>
+    {% if pedido.status_id == 1 %}
+    <div class="modal fade" id="cancelPedido{{ pedido.id_pedido }}" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Cancelar pedido</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">Deseja cancelar o pedido <strong style="color:var(--text-1);">#{{ pedido.id_pedido }}</strong>?</div>
+          <div class="modal-footer">
+            <button type="button" class="btn-ghost" data-bs-dismiss="modal">Voltar</button>
+            <form method="post" action="{% url 'cancelar_pedido' pedido.id_pedido %}">{% csrf_token %}<button class="btn-primary-red" type="submit" style="background:#a50d14;"><i class="bi bi-trash3"></i> Confirmar</button></form>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    {% empty %}
+    <div class="empty-state"><span class="empty-icon"><i class="bi bi-hourglass"></i></span>Nenhum pedido pendente.</div>
+    {% endfor %}
   </div>
+
+  <div id="panel-andamento" class="tab-panel">
+    {% for pedido in pedidos_andamento %}
+    <div class="order-card">
+      <div class="order-header">
+        <div class="order-meta">
+          <span class="order-id">{{ pedido.restaurante.nome }}</span>
+          <span class="order-date">#{{ pedido.id_pedido }} · {{ pedido.data_pedido|date:"d/m/Y H:i" }}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span class="badge-status badge-andamento">{{ pedido.status.nome_status }}</span>
+          <span class="order-total">R$ {{ pedido.valor_total|floatformat:2 }}</span>
+        </div>
+      </div>
+      <div class="order-body">
+        {% for item in pedido.tbpedidosprodutos_set.all|slice:":3" %}
+        <div class="order-item-row">
+          <span class="order-item-name">{{ item.quantidade }}x {{ item.produto.nome_produto }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="empty-state"><span class="empty-icon"><i class="bi bi-bicycle"></i></span>Nenhum pedido em andamento.</div>
+    {% endfor %}
+  </div>
+
+  <div id="panel-concluido" class="tab-panel">
+    {% for pedido in pedidos_concluidos %}
+    <div class="order-card">
+      <div class="order-header">
+        <div class="order-meta">
+          <span class="order-id">{{ pedido.restaurante.nome }}</span>
+          <span class="order-date">#{{ pedido.id_pedido }} · {{ pedido.data_pedido|date:"d/m/Y H:i" }}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span class="badge-status badge-concluido">{{ pedido.status.nome_status }}</span>
+          <span class="order-total">R$ {{ pedido.valor_total|floatformat:2 }}</span>
+        </div>
+      </div>
+      <div class="order-body">
+        {% for item in pedido.tbpedidosprodutos_set.all|slice:":3" %}
+        <div class="order-item-row">
+          <span class="order-item-name">{{ item.quantidade }}x {{ item.produto.nome_produto }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="empty-state"><span class="empty-icon"><i class="bi bi-check-circle"></i></span>Nenhum pedido concluído.</div>
+    {% endfor %}
+  </div>
+
+  <div id="panel-cancelado" class="tab-panel">
+    {% for pedido in pedidos_cancelados %}
+    <div class="order-card">
+      <div class="order-header">
+        <div class="order-meta">
+          <span class="order-id">{{ pedido.restaurante.nome }}</span>
+          <span class="order-date">#{{ pedido.id_pedido }} · {{ pedido.data_pedido|date:"d/m/Y H:i" }}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span class="badge-status badge-cancelado">{{ pedido.status.nome_status }}</span>
+          <span class="order-total">R$ {{ pedido.valor_total|floatformat:2 }}</span>
+        </div>
+      </div>
+      <div class="order-body">
+        {% for item in pedido.tbpedidosprodutos_set.all|slice:":3" %}
+        <div class="order-item-row">
+          <span class="order-item-name">{{ item.quantidade }}x {{ item.produto.nome_produto }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="empty-state"><span class="empty-icon"><i class="bi bi-x-circle"></i></span>Nenhum pedido cancelado.</div>
+    {% endfor %}
+  </div>
+
+  <!-- Reservas -->
+  <hr class="section-divider">
+
+  <h2 class="section-label">Minhas Reservas</h2>
 
   {% for reserva in reservas %}
-    <div class="card-fv p-3 mb-3">
-      <div class="d-flex justify-content-between flex-wrap gap-2 mb-1">
-        <strong>{{ reserva.restaurante.nome }}</strong>
-        <span class="muted">#R{{ reserva.id_reserva }}</span>
-      </div>
-      <div class="muted">{{ reserva.data_reserva|date:"d/m/Y H:i" }} · Mesa {{ reserva.mesa|default:'--' }} · {{ reserva.numero_pessoas }} pessoa(s)</div>
-      <div class="mt-2">
-        <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelReserva{{ reserva.id_reserva }}">Cancelar reserva</button>
+  <div class="reserva-card">
+    <div class="reserva-info">
+      <p class="reserva-name">
+        {{ reserva.restaurante.nome }}
+        <span class="reserva-id">#R{{ reserva.id_reserva }}</span>
+      </p>
+      <div class="reserva-meta">
+        <span class="reserva-meta-item">
+          <i class="bi bi-calendar3"></i>
+          {{ reserva.data_reserva|date:"d/m/Y H:i" }}
+        </span>
+        <span class="reserva-meta-item">
+          <i class="bi bi-grid"></i>
+          Mesa {{ reserva.mesa|default:'--' }}
+        </span>
+        <span class="reserva-meta-item">
+          <i class="bi bi-people"></i>
+          {{ reserva.numero_pessoas }} pessoa(s)
+        </span>
       </div>
     </div>
+    <button class="btn-danger-ghost" data-bs-toggle="modal" data-bs-target="#cancelReserva{{ reserva.id_reserva }}">
+      <i class="bi bi-x-circle"></i> Cancelar
+    </button>
+  </div>
 
-    <div class="modal fade" id="cancelReserva{{ reserva.id_reserva }}" tabindex="-1">
-      <div class="modal-dialog modal-dialog-centered"><div class="modal-content bg-dark text-light border-secondary">
-        <div class="modal-header border-secondary"><h5 class="modal-title">Cancelar reserva</h5></div>
-        <div class="modal-body">Deseja cancelar a reserva #R{{ reserva.id_reserva }}?</div>
-        <div class="modal-footer border-secondary">
-          <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Voltar</button>
-          <form method="post" action="{% url 'cancelar_reserva' reserva.id_reserva %}">{% csrf_token %}<button class="btn btn-danger" type="submit">Confirmar</button></form>
+  <div class="modal fade" id="cancelReserva{{ reserva.id_reserva }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Cancelar reserva</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-      </div></div>
+        <div class="modal-body">
+          Tem certeza que deseja cancelar a reserva <strong style="color:var(--text-1);">#R{{ reserva.id_reserva }}</strong> em {{ reserva.restaurante.nome }}?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-ghost" data-bs-dismiss="modal">Voltar</button>
+          <form method="post" action="{% url 'cancelar_reserva' reserva.id_reserva %}">
+            {% csrf_token %}
+            <button class="btn-primary-red" type="submit" style="background:#a50d14;">
+              <i class="bi bi-trash3"></i> Confirmar cancelamento
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
+  </div>
   {% empty %}
-    <div class="card-fv p-4 muted">Nenhuma reserva encontrada.</div>
+  <div class="empty-state">
+    <span class="empty-icon"><i class="bi bi-calendar-x"></i></span>
+    Nenhuma reserva encontrada.
+  </div>
   {% endfor %}
+
 </div>
+
+<script>
+  function switchTab(id, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + id).classList.add('active');
+    btn.classList.add('active');
+  }
+</script>
 
 {% include "pages/pagePrincipal/footer.html" %}
 {% endblock %}

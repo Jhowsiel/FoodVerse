@@ -3,57 +3,311 @@
 {% block content %}
 {% include "pages/pagePrincipal/header.html" %}
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
 <style>
-  :root { --red:#C41017; --red-dark:#a00d13; --line:rgba(255,255,255,.10); --card:rgba(255,255,255,.05); --muted:rgba(255,255,255,.62); }
-  body { background:#0d0c0c; color:#fff; font-family:'Instrument Sans',sans-serif; }
-  .page-wrap { max-width:1200px; margin:0 auto; padding:36px 20px 80px; }
-  .card-fv { background:var(--card); border:1px solid var(--line); border-radius:18px; box-shadow:0 12px 30px rgba(0,0,0,.28); }
-  .muted { color:var(--muted); }
-  .eyebrow { display:inline-flex; align-items:center; gap:8px; background:rgba(196,16,23,.16); border:1px solid rgba(196,16,23,.35); color:#ff7c86; font-size:.72rem; font-weight:700; padding:6px 12px; border-radius:999px; text-transform:uppercase; letter-spacing:.06em; }
-  .btn-main { background:linear-gradient(135deg,var(--red),#E01E1E); border:none; color:#fff; font-weight:700; border-radius:12px; padding:12px 16px; box-shadow:0 8px 18px rgba(196,16,23,.30); }
-  .btn-main:hover { background:linear-gradient(135deg,var(--red-dark),#c3121f); color:#fff; transform:translateY(-1px); }
-  .form-control,.form-select { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.2); color:#fff; }
-  .form-control:focus,.form-select:focus { background:rgba(255,255,255,.06); color:#fff; border-color:rgba(196,16,23,.55); box-shadow:0 0 0 .2rem rgba(196,16,23,.18); }
-  .form-control::placeholder { color:rgba(255,255,255,.45); }
+  :root {
+    --red: #C41017;
+    --red-muted: rgba(196,16,23,0.10);
+    --surface-1: #111010;
+    --surface-2: #181717;
+    --surface-3: #1f1e1e;
+    --surface-4: #272525;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.13);
+    --text-1: #f5f3f0;
+    --text-2: rgba(245,243,240,0.58);
+    --text-3: rgba(245,243,240,0.32);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    background: var(--surface-1);
+    color: var(--text-1);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .page-wrap {
+    max-width: 1060px;
+    margin: 0 auto;
+    padding: 32px 20px 100px;
+  }
+
+  /* ── Back ────────────────────────────── */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--text-2);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 28px;
+    transition: color 0.15s;
+  }
+  .back-link:hover { color: var(--text-1); text-decoration: none; }
+
+  /* ── Grid ────────────────────────────── */
+  .reserva-grid {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 780px) { .reserva-grid { grid-template-columns: 1fr; } }
+
+  /* ── Section card ────────────────────── */
+  .section-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 16px;
+  }
+  .section-card:last-child { margin-bottom: 0; }
+
+  .section-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px;
+  }
+
+  .field-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-2);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  /* ── Selection grid (dates / times) ──── */
+  .selection-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .sel-option { position: relative; }
+
+  .sel-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .sel-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 10px;
+    padding: 9px 16px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+  .sel-label:hover {
+    background: var(--surface-4);
+    border-color: var(--border-hover);
+    color: var(--text-1);
+  }
+  .sel-option input[type="radio"]:checked + .sel-label {
+    background: var(--red-muted);
+    border-color: rgba(196,16,23,0.45);
+    color: #ff8a8a;
+    font-weight: 600;
+  }
+
+  /* ── Selects ─────────────────────────── */
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 4px;
+  }
+  @media (max-width: 540px) { .field-row { grid-template-columns: 1fr; } }
+
+  .field-select {
+    width: 100%;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    color: var(--text-1);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    border-radius: 12px;
+    padding: 11px 14px;
+    outline: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(245,243,240,0.35)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .field-select:focus { border-color: rgba(196,16,23,0.5); }
+  .field-select option { background: #1f1e1e; }
+
+  /* ── Submit button ───────────────────── */
+  .btn-submit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    background: var(--red);
+    border: none;
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: 14px;
+    padding: 15px 20px;
+    cursor: pointer;
+    margin-top: 24px;
+    transition: background 0.15s, transform 0.12s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-submit::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .btn-submit:hover { background: #a50d14; transform: translateY(-1px); }
+  .btn-submit:active { transform: translateY(0); }
+
+  /* ── Sidebar card ────────────────────── */
+  .sidebar-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    position: sticky;
+    top: 100px;
+  }
+
+  .sidebar-img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .sidebar-body {
+    padding: 20px;
+  }
+
+  .sidebar-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 6px;
+  }
+
+  .sidebar-label {
+    font-size: 12px;
+    color: var(--text-2);
+    margin: 0 0 10px;
+  }
+
+  .sidebar-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 14px 0;
+  }
+
+  .sidebar-taxa-label {
+    font-size: 12px;
+    color: var(--text-2);
+    margin-bottom: 4px;
+  }
+
+  .sidebar-taxa-value {
+    font-family: 'Outfit', sans-serif;
+    font-size: 26px;
+    font-weight: 900;
+    color: var(--red);
+    letter-spacing: -0.03em;
+  }
+
+  .sidebar-note {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 6px;
+  }
 </style>
 
 <div class="page-wrap">
-  <a href="javascript:history.back()" class="text-decoration-none muted small"><i class="bi bi-arrow-left"></i> Voltar</a>
 
-  <div class="row g-4 mt-1">
-    <div class="col-lg-8">
-      <div class="card-fv p-4">
-        <h1 class="h3 mb-4" style="font-family:'Fraunces',serif;">Reservar Mesa</h1>
+  <a href="javascript:history.back()" class="back-link">
+    <i class="bi bi-arrow-left"></i> Voltar
+  </a>
+
+  <div class="reserva-grid">
+
+    <!-- Form -->
+    <div>
+      <div class="section-card">
+        <h1 class="section-title">Reservar Mesa</h1>
+
         <form method="post" action="{% url 'reserva_pagamento' %}">
           {% csrf_token %}
           <input type="hidden" name="restaurante_id" value="{{ restaurante.id_restaurante }}">
 
-          <label class="form-label small muted">Data</label>
-          <div class="selection-grid mb-4">
+          <label class="field-label">Escolha a data</label>
+          <div class="selection-grid">
             {% for data in datas %}
-            <input class="btn-check" type="radio" name="data" id="data_{{ forloop.counter }}" value="{{ data.valor }}" required>
-            <label class="btn btn-outline-light" for="data_{{ forloop.counter }}">{{ data.label }}</label>
+            <div class="sel-option">
+              <input type="radio" name="data" id="data_{{ forloop.counter }}" value="{{ data.valor }}" required>
+              <label class="sel-label" for="data_{{ forloop.counter }}">{{ data.label }}</label>
+            </div>
             {% endfor %}
           </div>
 
-          <label class="form-label small muted">Horário</label>
-          <div class="selection-grid mb-4">
+          <label class="field-label">Escolha o horário</label>
+          <div class="selection-grid">
             {% for horario in horarios %}
-            <input class="btn-check" type="radio" name="horario" id="hora_{{ forloop.counter }}" value="{{ horario }}" required>
-            <label class="btn btn-outline-light" for="hora_{{ forloop.counter }}">{{ horario }}</label>
+            <div class="sel-option">
+              <input type="radio" name="horario" id="hora_{{ forloop.counter }}" value="{{ horario }}" required>
+              <label class="sel-label" for="hora_{{ forloop.counter }}">{{ horario }}</label>
+            </div>
             {% endfor %}
           </div>
 
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label small muted">Pessoas</label>
-              <select class="form-select" name="pessoas" required>
-                <option value="1">1 Pessoa</option><option value="2" selected>2 Pessoas</option><option value="4">4 Pessoas</option><option value="6">6 Pessoas</option><option value="8">8+ Pessoas</option>
+          <div class="field-row">
+            <div>
+              <label class="field-label">Número de pessoas</label>
+              <select class="field-select" name="pessoas" required>
+                <option value="1">1 Pessoa</option>
+                <option value="2" selected>2 Pessoas</option>
+                <option value="4">4 Pessoas</option>
+                <option value="6">6 Pessoas</option>
+                <option value="8">8+ Pessoas</option>
               </select>
             </div>
-            <div class="col-md-6">
-              <label class="form-label small muted">Pagamento</label>
-              <select class="form-select" name="metodo_pagamento" required>
+            <div>
+              <label class="field-label">Forma de pagamento</label>
+              <select class="field-select" name="metodo_pagamento" required>
                 <option value="Pix" selected>PIX</option>
                 <option value="Crédito">Cartão de crédito</option>
                 <option value="Débito">Cartão de débito</option>
@@ -62,19 +316,29 @@
             </div>
           </div>
 
-          <button class="btn btn-main w-100 mt-4" type="submit">Continuar para pagamento</button>
+          <button class="btn-submit" type="submit">
+            Continuar para pagamento
+            <i class="bi bi-arrow-right"></i>
+          </button>
         </form>
       </div>
     </div>
 
-    <div class="col-lg-4">
-      <div class="card-fv p-3 position-sticky" style="top:96px;">
-        <img src="{% img_or_fallback restaurante.imagem %}" class="w-100 rounded-3 mb-3" style="height:170px;object-fit:cover;" alt="{{ restaurante.nome }}">
-        <h5 class="mb-1">{{ restaurante.nome }}</h5>
-        <p class="muted small">Taxa de garantia da reserva</p>
-        <div class="h4 text-danger mb-0">R$ {{ taxa_reserva|floatformat:2 }}</div>
+    <!-- Sidebar -->
+    <div>
+      <div class="sidebar-card">
+        <img src="{% img_or_fallback restaurante.imagem %}" class="sidebar-img" alt="{{ restaurante.nome }}">
+        <div class="sidebar-body">
+          <h5 class="sidebar-name">{{ restaurante.nome }}</h5>
+          <p class="sidebar-label">Detalhes da reserva</p>
+          <hr class="sidebar-divider">
+          <p class="sidebar-taxa-label">Taxa de garantia</p>
+          <div class="sidebar-taxa-value">R$ {{ taxa_reserva|floatformat:2 }}</div>
+          <p class="sidebar-note"><i class="bi bi-shield-check"></i> Valor cobrado para confirmar a reserva</p>
+        </div>
       </div>
     </div>
+
   </div>
 </div>
 
