@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 public class EstoqueDAO {
 
-    // Mantém na aba de histórico apenas os 100 ajustes mais recentes realizados nesta sessão local.
     private static final int MAX_HISTORY_SIZE = 100;
 
     public static class Unidade {
@@ -30,6 +29,7 @@ public class EstoqueDAO {
 
     public static class ItemEstoque {
         private Long id;
+        private Long produtoId; // <-- ADICIONADO PARA LIGAR COM A FICHA TÉCNICA
         private String nome;
         private String categoria;
         private String unidadePadrao;
@@ -47,6 +47,8 @@ public class EstoqueDAO {
         }
         public Long getId() { return id; }
         public void setId(Long id) { this.id = id; }
+        public Long getProdutoId() { return produtoId; }
+        public void setProdutoId(Long produtoId) { this.produtoId = produtoId; }
         public String getNome() { return nome; }
         public void setNome(String nome) { this.nome = nome; }
         public String getCategoria() { return categoria; }
@@ -91,7 +93,6 @@ public class EstoqueDAO {
         public void setDataMovimento(LocalDateTime dataMovimento) { this.dataMovimento = dataMovimento; }
     }
 
-    // Cache / Fallback para modo Offline
     private static final List<ItemEstoque> ITENS_MOCK = new ArrayList<>();
     private static final List<Unidade> UNIDADES_MOCK = new ArrayList<>();
     private static final List<MovimentacaoEstoque> MOVS_MOCK = new ArrayList<>();
@@ -129,6 +130,7 @@ public class EstoqueDAO {
                 0.0);
         item.setEstoqueMinimo(rs.getDouble("estoque_minimo"));
         item.setAtivo(rs.getBoolean("ativo"));
+        item.setProdutoId(rs.getLong("ID_produto")); // <-- CRUCIAL PARA A RECEITA
         return item;
     }
 
@@ -189,7 +191,8 @@ public class EstoqueDAO {
             }
 
             StringBuilder sql = new StringBuilder(
-                "SELECT e.ID_estoque, p.nome_produto AS nome, p.categoria, " +
+                // ADICIONADO p.ID_produto NA CONSULTA
+                "SELECT e.ID_estoque, p.ID_produto, p.nome_produto AS nome, p.categoria, " +
                 "e.quantidade AS estoque_atual, e.estoque_minimo, p.disponivel AS ativo " +
                 "FROM tb_estoque e JOIN tb_produtos p ON e.ID_produto = p.ID_produto " +
                 "WHERE p.nome_produto LIKE ?"
@@ -224,7 +227,8 @@ public class EstoqueDAO {
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) return ITENS_MOCK.stream().filter(i -> i.getId().equals(id)).findFirst().orElse(null);
             
-            String sql = "SELECT e.ID_estoque, p.nome_produto AS nome, p.categoria, " +
+            // ADICIONADO p.ID_produto NA CONSULTA
+            String sql = "SELECT e.ID_estoque, p.ID_produto, p.nome_produto AS nome, p.categoria, " +
                          "e.quantidade AS estoque_atual, e.estoque_minimo, p.disponivel AS ativo " +
                          "FROM tb_estoque e JOIN tb_produtos p ON e.ID_produto = p.ID_produto " +
                          "WHERE e.ID_estoque = ?";
