@@ -7,11 +7,12 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('login/', views.login_view, name='login'),
     path('cadastro/', views.cadastro_view, name='cadastro'),
+    path('recupera-senha/', views.recuperar_senha, name="recuperar_senha"),
     path('perfil/', views.perfil_view, name='perfil'),
     path('perfil/editar/', views.editar_perfil_view, name='editar_perfil'),
     path('logout/', views.logout_view, name='logout'),
     
-    # Restaurantes e Busca
+    # Restaurantes e Buscas
     path('restaurantes/', views.restaurante_view, name='restaurantes'),
     path('restaurantes/<int:id>/', views.restaurante_detalhe_view, name='restaurante_detalhe'),
     path('restaurantes/buscar/', views.buscar_prato_restaurante, name='buscar_prato_restaurante'),

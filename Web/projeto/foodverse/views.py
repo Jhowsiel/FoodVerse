@@ -243,6 +243,69 @@ def login_view(request):
 
     return render(request, 'pages/Autentificacao/login.html')
 
+
+import random
+from django.core.mail import send_mail
+
+def recuperar_senha(request):
+    template = 'pages/Autentificacao/recuperar_senha.html'
+
+    if request.method == 'POST':
+        etapa = request.POST.get('etapa')
+
+        if etapa == 'email':
+            email = request.POST.get('email')
+            cliente = TbClientes.objects.filter(email=email).first()
+
+            if not cliente:
+                messages.error(request, 'E-mail não encontrado.')
+                return render(request, template, {'etapa': 1})
+
+            codigo = str(random.randint(100000, 999999))
+            request.session['reset_email'] = email
+            request.session['reset_codigo'] = codigo
+
+            send_mail(
+                subject='Código de recuperação — FoodVerse',
+                message=f'Seu código de verificação é: {codigo}',
+                from_email='noreply@foodverse.com',
+                recipient_list=[email],
+                fail_silently=False,
+            )
+
+            return render(request, template, {'etapa': 2, 'email_preenchido': email})
+
+        elif etapa == 'codigo':
+            codigo_digitado = request.POST.get('codigo_completo')
+            codigo_correto  = request.session.get('reset_codigo')
+
+            if codigo_digitado != codigo_correto:
+                messages.error(request, 'Código incorreto. Tente novamente.')
+                return render(request, template, {'etapa': 2})
+
+            return render(request, template, {'etapa': 3})
+
+        elif etapa == 'senha':
+            nova_senha = request.POST.get('nova_senha')
+            confirmar  = request.POST.get('confirmar_senha')
+            email      = request.session.get('reset_email')
+
+            if nova_senha != confirmar:
+                messages.error(request, 'As senhas não coincidem.')
+                return render(request, template, {'etapa': 3})
+
+            cliente = TbClientes.objects.filter(email=email).first()
+            if cliente:
+                from django.contrib.auth.hashers import make_password
+                cliente.senha = make_password(nova_senha)
+                cliente.save()
+                request.session.pop('reset_email', None)
+                request.session.pop('reset_codigo', None)
+
+            return render(request, template, {'etapa': 4})
+
+    return render(request, template, {'etapa': 1})
+
 def logout_view(request):
     if 'cliente_id' in request.session:
         del request.session['cliente_id']

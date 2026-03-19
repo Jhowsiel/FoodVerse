@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include "pages/pagePrincipal/header.html" %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --red: #C41017;
+    --red-muted: rgba(196,16,23,0.10);
+    --surface-1: #111010;
+    --surface-2: #181717;
+    --surface-3: #1f1e1e;
+    --surface-4: #272525;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.13);
+    --text-1: #f5f3f0;
+    --text-2: rgba(245,243,240,0.58);
+    --text-3: rgba(245,243,240,0.32);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body { background: var(--surface-1); color: var(--text-1); font-family: 'Inter', sans-serif; font-size: 15px; -webkit-font-smoothing: antialiased; padding-top: 90px; }
+  .rp-wrap { max-width: 460px; margin: 0 auto; padding: 40px 20px 80px; }
+  .rp-back { display: inline-flex; align-items: center; gap: 8px; color: var(--text-2); text-decoration: none; font-size: 13px; font-weight: 500; margin-bottom: 32px; transition: color 0.15s; }
+  .rp-back:hover { color: var(--text-1); text-decoration: none; }
+  .rp-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 22px; padding: 36px 32px 32px; }
+  .rp-icon { width: 52px; height: 52px; border-radius: 15px; background: var(--red-muted); border: 1px solid rgba(196,16,23,0.22); display: flex; align-items: center; justify-content: center; font-size: 20px; color: #ff7580; margin-bottom: 20px; }
+  .rp-title { font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 900; letter-spacing: -0.03em; margin: 0 0 8px; }
+  .rp-sub { font-size: 14px; color: var(--text-2); line-height: 1.6; margin: 0 0 28px; }
+
+  .rp-steps { display: flex; align-items: center; gap: 6px; margin-bottom: 28px; }
+  .rp-step { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text-3); }
+  .rp-step-dot { width: 22px; height: 22px; border-radius: 50%; background: var(--surface-3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .rp-step.active .rp-step-dot { background: var(--red); border-color: var(--red); color: #fff; }
+  .rp-step.active { color: var(--text-1); }
+  .rp-step.done .rp-step-dot { background: rgba(74,222,128,0.15); border-color: rgba(74,222,128,0.3); color: #4ade80; }
+  .rp-step.done { color: var(--text-2); }
+  .rp-step-line { flex: 1; height: 1px; background: var(--border); }
+
+  .rp-field { margin-bottom: 16px; }
+  .rp-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 8px; }
+  .rp-input { width: 100%; background: var(--surface-3); border: 1px solid var(--border); border-radius: 12px; padding: 13px 16px; color: var(--text-1); font-family: 'Inter', sans-serif; font-size: 15px; outline: none; transition: border-color 0.15s, background 0.15s; }
+  .rp-input::placeholder { color: var(--text-3); }
+  .rp-input:focus { border-color: rgba(196,16,23,0.45); background: var(--surface-2); }
+  .rp-input-wrap { position: relative; }
+  .rp-input-wrap .rp-input { padding-left: 44px; }
+  .rp-input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-3); font-size: 15px; pointer-events: none; }
+  .rp-input-wrap .rp-eye { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--text-3); font-size: 14px; cursor: pointer; transition: color 0.15s; background: none; border: none; padding: 0; }
+  .rp-input-wrap .rp-eye:hover { color: var(--text-1); }
+
+  .rp-alert { border-radius: 12px; padding: 12px 16px; font-size: 13px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .rp-alert-error { background: rgba(196,16,23,0.12); color: #ff9a9e; border: 1px solid rgba(196,16,23,0.2); }
+  .rp-alert-success { background: rgba(74,222,128,0.08); color: #86efac; border: 1px solid rgba(74,222,128,0.2); }
+
+  .rp-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; border: none; border-radius: 13px; padding: 14px; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 800; background: var(--red); color: #fff; cursor: pointer; transition: background 0.15s, transform 0.12s; margin-top: 8px; letter-spacing: -0.01em; }
+  .rp-btn:hover { background: #a50d14; transform: translateY(-1px); }
+  .rp-btn:active { transform: translateY(0); }
+
+  .rp-otp { display: flex; gap: 10px; justify-content: center; margin-bottom: 8px; }
+  .rp-otp-input { width: 52px; height: 58px; background: var(--surface-3); border: 1px solid var(--border); border-radius: 13px; color: var(--text-1); font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 800; text-align: center; outline: none; transition: border-color 0.15s, background 0.15s; -moz-appearance: textfield; }
+  .rp-otp-input::-webkit-outer-spin-button, .rp-otp-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .rp-otp-input:focus { border-color: rgba(196,16,23,0.5); background: var(--surface-2); }
+  .rp-otp-input.filled { border-color: rgba(196,16,23,0.3); }
+
+  .rp-resend { text-align: center; font-size: 13px; color: var(--text-3); margin-top: 12px; }
+  .rp-resend a { color: #ff7580; text-decoration: none; font-weight: 600; }
+  .rp-resend a:hover { text-decoration: underline; }
+
+  .rp-divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+  .rp-strength { margin-top: 8px; }
+  .rp-strength-bar { display: flex; gap: 4px; margin-bottom: 5px; }
+  .rp-strength-seg { flex: 1; height: 3px; border-radius: 999px; background: var(--surface-4); transition: background 0.3s; }
+  .rp-strength-label { font-size: 11px; color: var(--text-3); }
+
+  .rp-panel { display: none; }
+  .rp-panel.active { display: block; }
+
+  .rp-success { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 16px 0 8px; gap: 12px; }
+  .rp-success-icon { width: 64px; height: 64px; border-radius: 50%; background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.22); display: flex; align-items: center; justify-content: center; font-size: 26px; color: #4ade80; margin-bottom: 4px; }
+  .rp-success h3 { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 900; letter-spacing: -0.02em; margin: 0; color: var(--text-1); }
+  .rp-success p { font-size: 13px; color: var(--text-3); margin: 0; line-height: 1.6; max-width: 280px; }
+</style>
+
+<div class="rp-wrap">
+
+  <a class="rp-back" href="{% url 'login' %}">
+    <i class="fa-solid fa-arrow-left"></i>
+    Voltar para o login
+  </a>
+
+  <div class="rp-card">
+
+    <div class="rp-icon"><i class="fa-solid fa-key"></i></div>
+    <h1 class="rp-title" id="rpTitle">Recuperar senha</h1>
+    <p class="rp-sub" id="rpSub">Informe seu e-mail e enviaremos um código de verificação.</p>
+
+    <div class="rp-steps">
+      <div class="rp-step" id="step1"><div class="rp-step-dot">1</div>E-mail</div>
+      <div class="rp-step-line"></div>
+      <div class="rp-step" id="step2"><div class="rp-step-dot">2</div>Código</div>
+      <div class="rp-step-line"></div>
+      <div class="rp-step" id="step3"><div class="rp-step-dot">3</div>Nova senha</div>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+      <div class="rp-alert {% if message.tags == 'error' %}rp-alert-error{% else %}rp-alert-success{% endif %}">
+        <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% else %}fa-circle-check{% endif %}"></i>
+        {{ message }}
+      </div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- Painel 1: E-mail -->
+    <div class="rp-panel" id="panel1">
+      <form method="POST" action="{% url 'recuperar_senha' %}">
+        {% csrf_token %}
+        <input type="hidden" name="etapa" value="email">
+        <div class="rp-field">
+          <label class="rp-label" for="email">E-mail cadastrado</label>
+          <div class="rp-input-wrap">
+            <i class="fa-solid fa-envelope rp-input-icon"></i>
+            <input class="rp-input" type="email" id="email" name="email" placeholder="seu@email.com" required autocomplete="email" value="{{ email_preenchido|default:'' }}">
+          </div>
+        </div>
+        <button type="submit" class="rp-btn">
+          <i class="fa-solid fa-paper-plane"></i>
+          Enviar código
+        </button>
+      </form>
+    </div>
+
+    <!-- Painel 2: Código OTP -->
+    <div class="rp-panel" id="panel2">
+      <form method="POST" action="{% url 'recuperar_senha' %}">
+        {% csrf_token %}
+        <input type="hidden" name="etapa" value="codigo">
+        <input type="hidden" name="codigo_completo" id="codigoCompleto">
+        <div class="rp-field">
+          <label class="rp-label">Código de verificação</label>
+          <div class="rp-otp">
+            <input class="rp-otp-input" type="number" maxlength="1" min="0" max="9" inputmode="numeric" id="otp1">
+            <input class="rp-otp-input" type="number" maxlength="1" min="0" max="9" inputmode="numeric" id="otp2">
+            <input class="rp-otp-input" type="number" maxlength="1" min="0" max="9" inputmode="numeric" id="otp3">
+            <input class="rp-otp-input" type="number" maxlength="1" min="0" max="9" inputmode="numeric" id="otp4">
+            <input class="rp-otp-input" type="number" maxlength="1" min="0" max="9" inputmode="numeric" id="otp5">
+            <input class="rp-otp-input" type="number" maxlength="1" min="0" max="9" inputmode="numeric" id="otp6">
+          </div>
+          <p class="rp-resend">Não recebeu? <a href="#" id="reenviarBtn">Reenviar código</a></p>
+        </div>
+        <button type="submit" class="rp-btn" id="btnVerificar" disabled>
+          <i class="fa-solid fa-shield-check"></i>
+          Verificar código
+        </button>
+      </form>
+    </div>
+
+    <!-- Painel 3: Nova senha -->
+    <div class="rp-panel" id="panel3">
+      <form method="POST" action="{% url 'recuperar_senha' %}">
+        {% csrf_token %}
+        <input type="hidden" name="etapa" value="senha">
+        <div class="rp-field">
+          <label class="rp-label" for="nova_senha">Nova senha</label>
+          <div class="rp-input-wrap">
+            <i class="fa-solid fa-lock rp-input-icon"></i>
+            <input class="rp-input" type="password" id="nova_senha" name="nova_senha" placeholder="Mínimo 8 caracteres" required autocomplete="new-password">
+            <button type="button" class="rp-eye" onclick="toggleSenha('nova_senha', this)"><i class="fa-solid fa-eye"></i></button>
+          </div>
+          <div class="rp-strength">
+            <div class="rp-strength-bar">
+              <div class="rp-strength-seg" id="seg1"></div>
+              <div class="rp-strength-seg" id="seg2"></div>
+              <div class="rp-strength-seg" id="seg3"></div>
+              <div class="rp-strength-seg" id="seg4"></div>
+            </div>
+            <span class="rp-strength-label" id="strengthLabel"></span>
+          </div>
+        </div>
+        <div class="rp-field">
+          <label class="rp-label" for="confirmar_senha">Confirmar nova senha</label>
+          <div class="rp-input-wrap">
+            <i class="fa-solid fa-lock rp-input-icon"></i>
+            <input class="rp-input" type="password" id="confirmar_senha" name="confirmar_senha" placeholder="Repita a senha" required autocomplete="new-password">
+            <button type="button" class="rp-eye" onclick="toggleSenha('confirmar_senha', this)"><i class="fa-solid fa-eye"></i></button>
+          </div>
+          <p class="rp-strength-label" id="matchLabel" style="margin-top:6px;"></p>
+        </div>
+        <button type="submit" class="rp-btn">
+          <i class="fa-solid fa-floppy-disk"></i>
+          Salvar nova senha
+        </button>
+      </form>
+    </div>
+
+    <!-- Painel 4: Sucesso -->
+    <div class="rp-panel" id="panel4">
+      <div class="rp-success">
+        <div class="rp-success-icon"><i class="fa-solid fa-check"></i></div>
+        <h3>Senha redefinida!</h3>
+        <p>Sua senha foi alterada com sucesso. Você já pode fazer login com a nova senha.</p>
+      </div>
+      <hr class="rp-divider">
+      <a href="{% url 'login' %}" class="rp-btn" style="text-decoration:none;margin-top:0;">
+        <i class="fa-solid fa-arrow-right-to-bracket"></i>
+        Ir para o login
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const panels = ['panel1','panel2','panel3','panel4'];
+  const steps  = ['step1','step2','step3'];
+  const titles = ['Recuperar senha','Verificar código','Nova senha','Tudo certo!'];
+  const subs   = [
+    'Informe seu e-mail e enviaremos um código de verificação.',
+    'Digite o código de 6 dígitos que apareceu no terminal.',
+    'Escolha uma senha forte para proteger sua conta.',
+    'Senha alterada com sucesso.'
+  ];
+
+  function showPanel(n) {
+    panels.forEach((id, i) => document.getElementById(id).classList.toggle('active', i === n - 1));
+    steps.forEach((id, i) => {
+      const el = document.getElementById(id);
+      el.classList.remove('active','done');
+      if (i < n - 1) el.classList.add('done');
+      if (i === n - 1) el.classList.add('active');
+    });
+    document.getElementById('rpTitle').textContent = titles[n - 1];
+    document.getElementById('rpSub').textContent   = subs[n - 1];
+  }
+
+  /* Abre o painel correto conforme etapa enviada pelo Django */
+  const painelAtual = {{ etapa|default:1 }};
+  showPanel(painelAtual);
+  if (painelAtual === 2) {
+    setTimeout(() => document.getElementById('otp1').focus(), 100);
+  }
+
+  /* OTP inputs */
+  const otpInputs    = document.querySelectorAll('.rp-otp-input');
+  const btnVerificar = document.getElementById('btnVerificar');
+
+  otpInputs.forEach(function(input, idx) {
+    input.addEventListener('input', function() {
+      const val = this.value.toString().slice(-1);
+      this.value = val;
+      this.classList.toggle('filled', val !== '');
+      if (val && idx < otpInputs.length - 1) otpInputs[idx + 1].focus();
+      const code = Array.from(otpInputs).map(i => i.value).join('');
+      document.getElementById('codigoCompleto').value = code;
+      btnVerificar.disabled = code.length < 6;
+    });
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Backspace' && !this.value && idx > 0) otpInputs[idx - 1].focus();
+    });
+    input.addEventListener('paste', function(e) {
+      e.preventDefault();
+      const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
+      paste.split('').forEach(function(ch, i) {
+        if (otpInputs[i]) { otpInputs[i].value = ch; otpInputs[i].classList.add('filled'); }
+      });
+      document.getElementById('codigoCompleto').value = paste;
+      btnVerificar.disabled = paste.length < 6;
+      if (paste.length > 0) otpInputs[Math.min(paste.length, 5)].focus();
+    });
+  });
+
+  /* Toggle senha */
+  function toggleSenha(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon  = btn.querySelector('i');
+    if (input.type === 'password') { input.type = 'text'; icon.classList.replace('fa-eye','fa-eye-slash'); }
+    else { input.type = 'password'; icon.classList.replace('fa-eye-slash','fa-eye'); }
+  }
+
+  /* Força da senha */
+  const colors = ['#ef4444','#f97316','#eab308','#4ade80'];
+  const strengthLabels = ['Muito fraca','Fraca','Boa','Forte'];
+
+  document.getElementById('nova_senha').addEventListener('input', function() {
+    const v = this.value;
+    let score = 0;
+    if (v.length >= 8)          score++;
+    if (/[A-Z]/.test(v))        score++;
+    if (/[0-9]/.test(v))        score++;
+    if (/[^A-Za-z0-9]/.test(v)) score++;
+    for (let i = 1; i <= 4; i++) {
+      document.getElementById('seg' + i).style.background = i <= score ? colors[score-1] : 'var(--surface-4)';
+    }
+    document.getElementById('strengthLabel').textContent = v ? (strengthLabels[score-1] || '') : '';
+    document.getElementById('strengthLabel').style.color = v ? colors[score-1] : 'var(--text-3)';
+    checkMatch();
+  });
+
+  document.getElementById('confirmar_senha').addEventListener('input', checkMatch);
+
+  function checkMatch() {
+    const s1 = document.getElementById('nova_senha').value;
+    const s2 = document.getElementById('confirmar_senha').value;
+    const label = document.getElementById('matchLabel');
+    if (!s2) { label.textContent = ''; return; }
+    label.textContent = s1 === s2 ? '✓ Senhas coincidem' : '✗ Senhas não coincidem';
+    label.style.color = s1 === s2 ? '#4ade80' : '#ff7580';
+  }
+
+  /* Reenviar código */
+  document.getElementById('reenviarBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+    this.textContent = 'Reenviado!';
+    this.style.pointerEvents = 'none';
+    setTimeout(() => { this.textContent = 'Reenviar código'; this.style.pointerEvents = ''; }, 5000);
+  });
+</script>
+
+{% include "pages/pagePrincipal/footer.html" %}
+{% endblock %}
