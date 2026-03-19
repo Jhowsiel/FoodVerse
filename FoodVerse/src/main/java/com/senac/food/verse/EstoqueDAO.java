@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 public class EstoqueDAO {
 
+    // Mantém na aba de histórico apenas os 100 ajustes mais recentes realizados nesta sessão local.
     private static final int MAX_HISTORY_SIZE = 100;
 
     public static class Unidade {
@@ -29,7 +30,7 @@ public class EstoqueDAO {
 
     public static class ItemEstoque {
         private Long id;
-        private Long produtoId; // <-- ADICIONADO PARA LIGAR COM A FICHA TÉCNICA
+        private Long produtoId; // LIGAÇÃO COM A FICHA TÉCNICA
         private String nome;
         private String categoria;
         private String unidadePadrao;
@@ -93,6 +94,7 @@ public class EstoqueDAO {
         public void setDataMovimento(LocalDateTime dataMovimento) { this.dataMovimento = dataMovimento; }
     }
 
+    // Cache / Fallback para modo Offline
     private static final List<ItemEstoque> ITENS_MOCK = new ArrayList<>();
     private static final List<Unidade> UNIDADES_MOCK = new ArrayList<>();
     private static final List<MovimentacaoEstoque> MOVS_MOCK = new ArrayList<>();
@@ -125,12 +127,12 @@ public class EstoqueDAO {
                 rs.getLong("ID_estoque"),
                 rs.getString("nome"),
                 rs.getString("categoria"),
-                "un",
+                rs.getString("unidade") != null ? rs.getString("unidade") : "un", // ATUALIZADO
                 rs.getDouble("estoque_atual"),
                 0.0);
         item.setEstoqueMinimo(rs.getDouble("estoque_minimo"));
         item.setAtivo(rs.getBoolean("ativo"));
-        item.setProdutoId(rs.getLong("ID_produto")); // <-- CRUCIAL PARA A RECEITA
+        item.setProdutoId(rs.getLong("ID_produto")); // ATUALIZADO
         return item;
     }
 
@@ -167,8 +169,8 @@ public class EstoqueDAO {
                     st.setInt(1, rid);
                 }
                 try(ResultSet rs = st.executeQuery()) {
-                while(rs.next()) categorias.add(rs.getString("categoria"));
-            }
+                    while(rs.next()) categorias.add(rs.getString("categoria"));
+                }
             }
         } catch(Exception e) { e.printStackTrace(); }
         return categorias;
@@ -191,9 +193,8 @@ public class EstoqueDAO {
             }
 
             StringBuilder sql = new StringBuilder(
-                // ADICIONADO p.ID_produto NA CONSULTA
                 "SELECT e.ID_estoque, p.ID_produto, p.nome_produto AS nome, p.categoria, " +
-                "e.quantidade AS estoque_atual, e.estoque_minimo, p.disponivel AS ativo " +
+                "e.quantidade AS estoque_atual, e.estoque_minimo, e.unidade, p.disponivel AS ativo " +
                 "FROM tb_estoque e JOIN tb_produtos p ON e.ID_produto = p.ID_produto " +
                 "WHERE p.nome_produto LIKE ?"
             );
@@ -227,9 +228,8 @@ public class EstoqueDAO {
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) return ITENS_MOCK.stream().filter(i -> i.getId().equals(id)).findFirst().orElse(null);
             
-            // ADICIONADO p.ID_produto NA CONSULTA
             String sql = "SELECT e.ID_estoque, p.ID_produto, p.nome_produto AS nome, p.categoria, " +
-                         "e.quantidade AS estoque_atual, e.estoque_minimo, p.disponivel AS ativo " +
+                         "e.quantidade AS estoque_atual, e.estoque_minimo, e.unidade, p.disponivel AS ativo " +
                          "FROM tb_estoque e JOIN tb_produtos p ON e.ID_produto = p.ID_produto " +
                          "WHERE e.ID_estoque = ?";
             int rid = restauranteEfetivo();
@@ -276,11 +276,12 @@ public class EstoqueDAO {
                 try(ResultSet gk = psProd.getGeneratedKeys()) {
                     if(gk.next()) {
                         long idProduto = gk.getLong(1);
-                        String sqlEst = "INSERT INTO tb_estoque (ID_produto, quantidade, estoque_minimo, ultima_atualizacao) VALUES (?, ?, ?, GETDATE())";
+                        String sqlEst = "INSERT INTO tb_estoque (ID_produto, quantidade, estoque_minimo, unidade, ultima_atualizacao) VALUES (?, ?, ?, ?, GETDATE())";
                         try(PreparedStatement psEst = conn.prepareStatement(sqlEst, Statement.RETURN_GENERATED_KEYS)) {
                             psEst.setLong(1, idProduto);
                             psEst.setDouble(2, item.getEstoqueAtual());
                             psEst.setDouble(3, item.getEstoqueMinimo());
+                            psEst.setString(4, item.getUnidadePadrao());
                             psEst.executeUpdate();
                             try(ResultSet gkEst = psEst.getGeneratedKeys()) {
                                 if(gkEst.next()) {
@@ -306,10 +307,11 @@ public class EstoqueDAO {
                 }
                 return false;
             }
-            String sqlEst = "UPDATE tb_estoque SET estoque_minimo=?, ultima_atualizacao=GETDATE() WHERE ID_estoque=?";
+            String sqlEst = "UPDATE tb_estoque SET estoque_minimo=?, unidade=?, ultima_atualizacao=GETDATE() WHERE ID_estoque=?";
             try(PreparedStatement ps = conn.prepareStatement(sqlEst)) {
                 ps.setDouble(1, item.getEstoqueMinimo());
-                ps.setLong(2, item.getId());
+                ps.setString(2, item.getUnidadePadrao());
+                ps.setLong(3, item.getId());
                 ps.executeUpdate();
             }
             String sqlProd = "UPDATE tb_produtos SET nome_produto=?, categoria=?, disponivel=? " +
@@ -334,48 +336,78 @@ public class EstoqueDAO {
     }
 
     public boolean registrarMovimentacao(MovimentacaoEstoque mov) {
-        if (mov == null || mov.getItemId() == null || semContextoOperacional()) {
-            return false;
-        }
+        if (mov == null || mov.getItemId() == null || semContextoOperacional()) return false;
+        
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
             ItemEstoque item = buscarItemPorId(mov.getItemId());
-            if (item == null) {
-                return false;
-            }
+            if (item == null) return false;
+            
             double novoSaldo = item.getEstoqueAtual() + ("ENTRADA".equals(mov.getTipo()) ? mov.getQuantidade() : -mov.getQuantidade());
-            if (novoSaldo < 0) {
-                return false;
-            }
+            if (novoSaldo < 0) return false; // Bloqueia saldo negativo
+
             if(conn == null) {
+                // Fallback offline (ignorado em prod)
                 item.setEstoqueAtual(novoSaldo);
                 registrarHistoricoLocal(item, mov);
                 return true;
             }
             
+            // 1. Atualiza o saldo
             String sqlUpd = "UPDATE tb_estoque SET quantidade = quantidade + ?, ultima_atualizacao = GETDATE() WHERE ID_estoque = ?";
             if (!"ENTRADA".equals(mov.getTipo())) {
-                sqlUpd = "UPDATE tb_estoque SET quantidade = quantidade - ?, ultima_atualizacao = GETDATE() " +
-                        "WHERE ID_estoque = ? AND quantidade >= ?";
+                sqlUpd = "UPDATE tb_estoque SET quantidade = quantidade - ?, ultima_atualizacao = GETDATE() WHERE ID_estoque = ? AND quantidade >= ?";
             }
             try(PreparedStatement ps = conn.prepareStatement(sqlUpd)) {
                 ps.setDouble(1, mov.getQuantidade());
                 ps.setLong(2, mov.getItemId());
-                if (!"ENTRADA".equals(mov.getTipo())) {
-                    ps.setDouble(3, mov.getQuantidade());
-                }
-                int updated = ps.executeUpdate();
-                if (updated == 0) {
-                    return false;
-                }
+                if (!"ENTRADA".equals(mov.getTipo())) ps.setDouble(3, mov.getQuantidade());
+                
+                if (ps.executeUpdate() == 0) return false;
             }
-            registrarHistoricoLocal(item, mov);
+
+            // 2. Grava no Histórico do Banco (tb_movimentacao_estoque)
+            String sqlHist = "INSERT INTO tb_movimentacao_estoque (ID_estoque, tipo, quantidade, observacao, data_movimento) VALUES (?, ?, ?, ?, GETDATE())";
+            try(PreparedStatement psHist = conn.prepareStatement(sqlHist)) {
+                psHist.setLong(1, mov.getItemId());
+                psHist.setString(2, mov.getTipo());
+                psHist.setDouble(3, mov.getQuantidade());
+                psHist.setString(4, mov.getObservacao());
+                psHist.executeUpdate();
+            }
+
             return true;
         } catch(Exception e) { e.printStackTrace(); }
         return false;
     }
 
     public List<MovimentacaoEstoque> listarUltimasMovimentacoes() {
-        return MOVS_MOCK.stream().limit(100).collect(Collectors.toList());
+        if (semContextoOperacional()) return Collections.emptyList();
+        List<MovimentacaoEstoque> lista = new ArrayList<>();
+        ConexaoBanco cb = new ConexaoBanco();
+        try(Connection conn = cb.abrirConexao()) {
+            if(conn == null) return MOVS_MOCK;
+            
+            String sql = "SELECT TOP 100 m.ID_movimentacao, m.ID_estoque, p.nome_produto, m.tipo, m.quantidade, m.observacao, m.data_movimento " +
+                         "FROM tb_movimentacao_estoque m " +
+                         "JOIN tb_estoque e ON m.ID_estoque = e.ID_estoque " +
+                         "JOIN tb_produtos p ON e.ID_produto = p.ID_produto " +
+                         "ORDER BY m.data_movimento DESC";
+                         
+            try(PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+                while(rs.next()) {
+                    MovimentacaoEstoque m = new MovimentacaoEstoque();
+                    m.setId(rs.getLong("ID_movimentacao"));
+                    m.setItemId(rs.getLong("ID_estoque"));
+                    m.setNomeItemSnapshot(rs.getString("nome_produto"));
+                    m.setTipo(rs.getString("tipo"));
+                    m.setQuantidade(rs.getDouble("quantidade"));
+                    m.setObservacao(rs.getString("observacao"));
+                    m.setDataMovimento(rs.getTimestamp("data_movimento").toLocalDateTime());
+                    lista.add(m);
+                }
+            }
+        } catch(Exception e) { e.printStackTrace(); }
+        return lista;
     }
 }
