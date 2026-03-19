@@ -1,81 +1,203 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load foodverse_tags %}
 
 {% block content %}
+{% include "pages/pagePrincipal/header.html" %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
 <style>
-    body { background-color: #f4f7f6; padding-top: 80px; }
-    
-    .feedback-card {
-        border: none;
-        border-radius: 25px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        background: white;
-    }
+  :root {
+    --red: #C41017;
+    --red-muted: rgba(196,16,23,0.10);
+    --surface-1: #111010;
+    --surface-2: #181717;
+    --surface-3: #1f1e1e;
+    --surface-4: #272525;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.13);
+    --text-1: #f5f3f0;
+    --text-2: rgba(245,243,240,0.58);
+    --text-3: rgba(245,243,240,0.32);
+  }
 
-    /* Estrela Interativa */
-    .rating-wrapper {
-        display: flex;
-        flex-direction: row-reverse;
-        justify-content: center;
-    }
-    .rating-wrapper input { display: none; }
-    .rating-wrapper label {
-        cursor: pointer;
-        font-size: 2.5rem;
-        color: #ddd;
-        transition: color 0.2s;
-    }
-    .rating-wrapper label:before { content: "\f588"; font-family: "bootstrap-icons"; }
-    .rating-wrapper input:checked ~ label,
-    .rating-wrapper label:hover,
-    .rating-wrapper label:hover ~ label { color: #ffc107; }
-    .rating-wrapper input:checked ~ label:before { content: "\f586"; }
+  *, *::before, *::after { box-sizing: border-box; }
 
-    .form-control {
-        border-radius: 15px;
-        border: 2px solid #eee;
-        padding: 15px;
-    }
-    .form-control:focus { border-color: #dc3545; box-shadow: none; }
+  body { background: var(--surface-1); color: var(--text-1); font-family: 'Inter', sans-serif; font-size: 15px; -webkit-font-smoothing: antialiased; padding-top: 90px; }
+
+  .fb-wrap { max-width: 560px; margin: 0 auto; padding: 12px 20px 80px; }
+
+  .fb-back { display: inline-flex; align-items: center; gap: 8px; color: var(--text-2); text-decoration: none; font-size: 13px; font-weight: 500; margin-bottom: 24px; transition: color 0.15s; }
+  .fb-back:hover { color: var(--text-1); }
+
+  .fb-restaurant { display: flex; align-items: center; gap: 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; margin-bottom: 28px; }
+  .fb-restaurant img { width: 52px; height: 52px; border-radius: 12px; object-fit: cover; background: var(--surface-3); flex-shrink: 0; }
+  .fb-restaurant-name { font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 2px; }
+  .fb-restaurant-sub { font-size: 12px; color: var(--text-3); }
+
+  .fb-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 22px; padding: 28px 28px 24px; }
+
+  .fb-heading { font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 900; letter-spacing: -0.03em; margin: 0 0 6px; }
+  .fb-sub { font-size: 13px; color: var(--text-2); margin: 0 0 26px; line-height: 1.5; }
+
+  /* Locked / bloqueado */
+  .fb-locked { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 36px 20px; text-align: center; color: var(--text-3); }
+  .fb-locked-icon { width: 56px; height: 56px; border-radius: 50%; background: var(--surface-3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 4px; }
+  .fb-locked h3 { font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 800; color: var(--text-2); margin: 0 0 6px; }
+  .fb-locked p { font-size: 13px; color: var(--text-3); margin: 0; max-width: 300px; line-height: 1.55; }
+  .fb-locked-btn { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; background: var(--surface-3); border: 1px solid var(--border-hover); border-radius: 12px; padding: 11px 20px; color: var(--text-1); font-size: 13px; font-weight: 600; text-decoration: none; transition: background 0.15s, border-color 0.15s; }
+  .fb-locked-btn:hover { background: var(--surface-4); border-color: rgba(255,255,255,0.2); text-decoration: none; color: var(--text-1); }
+
+  /* Já avaliou */
+  .fb-done { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 36px 20px; text-align: center; }
+  .fb-done-icon { width: 56px; height: 56px; border-radius: 50%; background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.22); display: flex; align-items: center; justify-content: center; font-size: 22px; color: #4ade80; margin-bottom: 4px; }
+  .fb-done h3 { font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 800; color: var(--text-1); margin: 0 0 6px; }
+  .fb-done p { font-size: 13px; color: var(--text-3); margin: 0; max-width: 300px; line-height: 1.55; }
+
+  /* Stars */
+  .fb-label { font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 10px; display: block; text-transform: uppercase; letter-spacing: 0.06em; }
+  .stars-wrap { margin-bottom: 24px; }
+  .stars-input { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 6px; }
+  .stars-input input[type="radio"] { display: none; }
+  .stars-input label { font-size: 36px; color: var(--surface-4); cursor: pointer; transition: color 0.1s, transform 0.1s; line-height: 1; user-select: none; }
+  .stars-input label:hover, .stars-input label:hover ~ label { color: #f59e0b !important; transform: scale(1.15); }
+  .stars-input input:checked ~ label { color: #f59e0b; }
+  .star-hint { font-size: 12px; color: var(--text-3); margin-top: 8px; min-height: 16px; transition: color 0.15s; }
+
+  .fb-field { margin-bottom: 20px; }
+  .fb-textarea { width: 100%; background: var(--surface-3); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; color: var(--text-1); font-family: 'Inter', sans-serif; font-size: 14px; resize: vertical; min-height: 110px; outline: none; transition: border-color 0.15s, background 0.15s; line-height: 1.6; }
+  .fb-textarea::placeholder { color: var(--text-3); }
+  .fb-textarea:focus { border-color: rgba(196,16,23,0.45); background: var(--surface-2); }
+
+  .fb-submit { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; border: none; border-radius: 14px; padding: 15px 22px; font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 800; background: var(--red); color: #fff; cursor: pointer; transition: background 0.15s, transform 0.12s; position: relative; overflow: hidden; letter-spacing: -0.01em; }
+  .fb-submit::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%); pointer-events: none; }
+  .fb-submit:hover { background: #a50d14; transform: translateY(-1px); }
+  .fb-submit:active { transform: translateY(0); }
 </style>
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card feedback-card p-4">
-                <div class="text-center mb-4">
-                    <h3 class="fw-bold">O que achou do pedido?</h3>
-                    <p class="text-muted">Sua opinião é muito importante para o {{ restaurante.nome }}</p>
-                </div>
+<div class="fb-wrap">
 
-                <form action="{% url 'feedback' %}" method="POST">
-                    {% csrf_token %}
-                    <input type="hidden" name="restaurante_id" value="{{ restaurante.id }}">
+  <a class="fb-back" href="{% url 'restaurante_detalhe' restaurante.id_restaurante %}">
+    <i class="fa-solid fa-arrow-left"></i>
+    Voltar para {{ restaurante.nome }}
+  </a>
 
-                    <div class="mb-4">
-                        <label class="d-block text-center fw-bold mb-2">Sua nota:</label>
-                        <div class="rating-wrapper">
-                            <input type="radio" name="avaliacao" id="star5" value="5" required><label for="star5"></label>
-                            <input type="radio" name="avaliacao" id="star4" value="4"><label for="star4"></label>
-                            <input type="radio" name="avaliacao" id="star3" value="3"><label for="star3"></label>
-                            <input type="radio" name="avaliacao" id="star2" value="2"><label for="star2"></label>
-                            <input type="radio" name="avaliacao" id="star1" value="1"><label for="star1"></label>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="fw-bold mb-2">Conte mais (opcional):</label>
-                        <textarea name="comentario" class="form-control" rows="4" placeholder="O prato estava bom? A entrega foi rápida?"></textarea>
-                    </div>
-
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-danger btn-lg rounded-pill fw-bold">
-                            Enviar Avaliação
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+  <div class="fb-restaurant">
+    <img src="{% img_or_fallback restaurante.imagem %}" alt="{{ restaurante.nome }}">
+    <div>
+      <p class="fb-restaurant-name">{{ restaurante.nome }}</p>
+      <span class="fb-restaurant-sub">
+        <i class="fa-solid fa-star" style="color:#f59e0b;font-size:11px;"></i>
+        {{ restaurante.avaliacao|default:'—' }} &nbsp;·&nbsp;
+        {{ restaurante.tempo_entrega|default:'30-45 min' }}
+      </span>
     </div>
+  </div>
+
+  <div class="fb-card">
+
+    {% if not cliente %}
+      <div class="fb-locked">
+        <div class="fb-locked-icon"><i class="fa-solid fa-user-slash"></i></div>
+        <h3>Você não está logado</h3>
+        <p>Faça login para deixar sua avaliação sobre este restaurante.</p>
+        <a class="fb-locked-btn" href="{% url 'login' %}?next={{ request.get_full_path }}">
+          <i class="fa-solid fa-arrow-right-to-bracket"></i>
+          Fazer login
+        </a>
+      </div>
+
+    {% elif not ja_pediu %}
+      <div class="fb-locked">
+        <div class="fb-locked-icon"><i class="fa-solid fa-lock"></i></div>
+        <h3>Avaliação bloqueada</h3>
+        <p>Você ainda não fez nenhum pedido neste restaurante. Faça um pedido primeiro para poder avaliar.</p>
+        <a class="fb-locked-btn" href="{% url 'restaurante_detalhe' restaurante.id_restaurante %}">
+          <i class="fa-solid fa-utensils"></i>
+          Ver cardápio
+        </a>
+      </div>
+
+    {% elif ja_avaliou %}
+      <div class="fb-done">
+        <div class="fb-done-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <h3>Obrigado pelo feedback!</h3>
+        <p>Você já avaliou este restaurante. Sua opinião é muito importante para nós.</p>
+        <a class="fb-locked-btn" href="{% url 'restaurante_detalhe' restaurante.id_restaurante %}">
+          <i class="fa-solid fa-arrow-left"></i>
+          Voltar para o restaurante
+        </a>
+      </div>
+
+    {% else %}
+      <h2 class="fb-heading">Como foi sua experiência?</h2>
+      <p class="fb-sub">Sua opinião ajuda outros clientes a escolherem melhor.</p>
+
+      <form method="POST" action="{% url 'feedback' %}?restaurante_id={{ restaurante.id_restaurante }}">
+        {% csrf_token %}
+
+        <div class="stars-wrap">
+          <span class="fb-label">Sua nota</span>
+          <div class="stars-input" id="starsInput">
+            <input type="radio" name="avaliacao" id="s5" value="5">
+            <label for="s5" title="Excelente">★</label>
+            <input type="radio" name="avaliacao" id="s4" value="4">
+            <label for="s4" title="Ótimo">★</label>
+            <input type="radio" name="avaliacao" id="s3" value="3">
+            <label for="s3" title="Bom">★</label>
+            <input type="radio" name="avaliacao" id="s2" value="2">
+            <label for="s2" title="Regular">★</label>
+            <input type="radio" name="avaliacao" id="s1" value="1" checked>
+            <label for="s1" title="Ruim">★</label>
+          </div>
+          <p class="star-hint" id="starHint">Selecione uma nota</p>
+        </div>
+
+        <div class="fb-field">
+          <span class="fb-label">Comentário <span style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;">(opcional)</span></span>
+          <textarea
+            class="fb-textarea"
+            name="comentario"
+            placeholder="Conte como foi o atendimento, a comida, a entrega…"
+            maxlength="500"
+          ></textarea>
+        </div>
+
+        <button type="submit" class="fb-submit">
+          <i class="fa-solid fa-paper-plane"></i>
+          Enviar avaliação
+        </button>
+      </form>
+
+    {% endif %}
+
+  </div>
 </div>
+
+<script>
+  const hints = { 1:'😞 Ruim', 2:'😐 Regular', 3:'🙂 Bom', 4:'😄 Ótimo', 5:'🤩 Excelente!' };
+  const radios = document.querySelectorAll('.stars-input input[type="radio"]');
+  const hint = document.getElementById('starHint');
+
+  if (radios && hint) {
+    radios.forEach(r => {
+      r.addEventListener('change', () => { hint.textContent = hints[r.value] || ''; });
+    });
+    document.querySelectorAll('.stars-input label').forEach(lbl => {
+      lbl.addEventListener('mouseenter', () => {
+        const val = lbl.getAttribute('for').replace('s', '');
+        hint.textContent = hints[val] || '';
+      });
+      lbl.addEventListener('mouseleave', () => {
+        const checked = document.querySelector('.stars-input input:checked');
+        hint.textContent = checked ? (hints[checked.value] || '') : 'Selecione uma nota';
+      });
+    });
+  }
+</script>
+
+{% include "pages/pagePrincipal/footer.html" %}
 {% endblock %}

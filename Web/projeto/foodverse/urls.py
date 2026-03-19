@@ -30,6 +30,7 @@ urlpatterns = [
     path('reserva/pagamento', views.reserva_pagamento, name='reserva_pagamento'),
     path('reserva/confirmar-pagamento/', views.reserva_confirmar_pagamento, name='reserva_confirmar_pagamento'),
     path('pedido/', views.pedido_view, name='pedido'),
+    path('avaliar-pedido/', views.avaliar_pedido_view, name='avaliar_pedido'),
     path('pedido/<int:pedido_id>/cancelar/', views.cancelar_pedido_view, name='cancelar_pedido'),
     path('reserva/<int:reserva_id>/cancelar/', views.cancelar_reserva_view, name='cancelar_reserva'),
     path('finalizacao/', views.finalizacao_view, name='finalizacao'),

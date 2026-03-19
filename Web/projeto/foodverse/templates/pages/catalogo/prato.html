@@ -8,10 +8,12 @@
 <style>
   :root {
     --bg:#0f0f10; --card:#1a1a1d; --line:#2b2b30; --txt:#f5f5f6; --muted:#a6a6ad; --brand:#e11d2f;
+    --surface-3:#222226; --surface-4:#2b2b30; --amber:#f59e0b;
   }
   body { padding-top: 90px; background: var(--bg); color: var(--txt); }
   .pv-wrap { max-width: 1160px; margin: 0 auto; padding: 24px 16px 72px; }
-  .pv-back { color: var(--muted); text-decoration:none; font-weight:600; font-size:.9rem; display:inline-flex; gap:8px; }
+  .pv-back { color: var(--muted); text-decoration:none; font-weight:600; font-size:.9rem; display:inline-flex; gap:8px; align-items:center; }
+  .pv-back:hover { color: var(--txt); }
   .pv-grid { display:grid; grid-template-columns: minmax(0,1fr) 340px; gap:20px; margin-top: 16px; }
   @media (max-width: 980px){ .pv-grid{grid-template-columns:1fr;} }
 
@@ -28,22 +30,286 @@
 
   .pv-side { padding:18px; position:sticky; top:106px; }
   .pv-price { font-size:2rem; font-weight:800; margin:6px 0 14px; }
-  .pv-btn { width:100%; border:0; border-radius:12px; padding:13px; font-weight:700; text-decoration:none; display:flex; justify-content:center; align-items:center; gap:8px; }
+  .pv-btn { width:100%; border:0; border-radius:12px; padding:13px; font-weight:700; text-decoration:none; display:flex; justify-content:center; align-items:center; gap:8px; font-size:15px; cursor:pointer; transition: background 0.15s; }
   .pv-btn-main { background:var(--brand); color:white; }
-  .pv-btn-main:hover { background:#be1525; color:white; }
+  .pv-btn-main:hover { background:#be1525; color:white; text-decoration:none; }
   .pv-note { margin-top:12px; color:var(--muted); font-size:.82rem; text-align:center; }
 
   .acc-grid { display:grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap:12px; }
   @media (max-width: 760px){ .acc-grid { grid-template-columns: 1fr; } }
-  .acc-item { background:#131316; border:1px solid var(--line); border-radius:14px; overflow:hidden; text-decoration:none; color:inherit; }
+  .acc-item { background:#131316; border:1px solid var(--line); border-radius:14px; overflow:hidden; text-decoration:none; color:inherit; transition: border-color 0.15s, transform 0.15s; }
+  .acc-item:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-2px); }
   .acc-item img { width:100%; height:130px; object-fit:cover; }
   .acc-body { padding:10px 12px 12px; }
   .acc-name { font-weight:700; font-size:.95rem; }
   .acc-price { color:#ff7e88; font-weight:700; font-size:.88rem; margin-top:4px; }
+
+  /* ══ AVALIAÇÕES ══════════════════════════════════════ */
+  .rv-section { margin-top: 16px; }
+
+  /* Header */
+  .rv-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .rv-header-left { display: flex; flex-direction: column; gap: 4px; }
+
+  .rv-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  .rv-heading {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+
+  /* Score banner */
+  .rv-score {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--surface-3);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 14px 18px;
+    flex-wrap: wrap;
+  }
+
+  .rv-score-big {
+    font-size: 40px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+
+  .rv-score-right { display: flex; flex-direction: column; gap: 4px; }
+  .rv-score-stars { display: flex; gap: 2px; }
+  .rv-score-stars span { font-size: 16px; }
+  .rv-score-count { font-size: 12px; color: var(--muted); }
+
+  .rv-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding-left: 16px;
+    border-left: 1px solid var(--line);
+  }
+  .rv-bar-row { display: flex; align-items: center; gap: 7px; }
+  .rv-bar-label { font-size: 11px; color: var(--muted); width: 8px; text-align: right; flex-shrink: 0; }
+  .rv-bar-track { width: 80px; height: 4px; background: var(--surface-4); border-radius: 999px; overflow: hidden; flex-shrink: 0; }
+  .rv-bar-fill { height: 100%; border-radius: 999px; background: var(--amber); transition: width 0.6s ease; }
+  .rv-bar-count { font-size: 11px; color: var(--muted); width: 12px; }
+
+  /* Form de avaliação */
+  .rv-form-box {
+    background: var(--surface-3);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .rv-form-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0 0 14px;
+  }
+
+  .rv-locked {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--card);
+    border: 1px dashed rgba(255,255,255,0.1);
+    border-radius: 12px;
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .rv-locked i { font-size: 16px; flex-shrink: 0; }
+
+  .rv-already {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: rgba(74,222,128,0.06);
+    border: 1px solid rgba(74,222,128,0.18);
+    border-radius: 12px;
+    color: #4ade80;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+
+  /* Stars input */
+  .rv-stars-wrap { margin-bottom: 14px; }
+  .rv-stars-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 8px; }
+
+  .rv-stars-input { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 4px; }
+  .rv-stars-input input[type="radio"] { display: none; }
+  .rv-stars-input label { font-size: 30px; color: var(--surface-4); cursor: pointer; transition: color 0.1s, transform 0.1s; line-height: 1; user-select: none; }
+  .rv-stars-input label:hover,
+  .rv-stars-input label:hover ~ label { color: var(--amber) !important; transform: scale(1.15); }
+  .rv-stars-input input:checked ~ label { color: var(--amber); }
+
+  .rv-star-hint { font-size: 12px; color: var(--muted); margin-top: 6px; min-height: 16px; }
+
+  .rv-textarea {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    color: var(--txt);
+    font-family: inherit;
+    font-size: 14px;
+    resize: vertical;
+    min-height: 90px;
+    outline: none;
+    transition: border-color 0.15s;
+    margin-bottom: 12px;
+  }
+  .rv-textarea::placeholder { color: var(--muted); }
+  .rv-textarea:focus { border-color: rgba(225,29,47,0.45); }
+
+  .rv-submit {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+    border-radius: 12px;
+    padding: 13px;
+    font-size: 15px;
+    font-weight: 700;
+    background: var(--brand);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.12s;
+  }
+  .rv-submit:hover { background: #be1525; transform: translateY(-1px); }
+  .rv-submit:active { transform: translateY(0); }
+
+  /* Cards de avaliações */
+  .rv-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  @media (max-width: 640px) { .rv-grid { grid-template-columns: 1fr; } }
+
+  .rv-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .rv-card:hover { border-color: rgba(255,255,255,0.13); transform: translateY(-2px); }
+  .rv-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 16px; right: 16px;
+    height: 2px;
+    border-radius: 0 0 4px 4px;
+    background: var(--amber);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .rv-card:hover::before { opacity: 1; }
+
+  .rv-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .rv-card-stars { display: flex; gap: 2px; }
+  .rv-card-stars span { font-size: 13px; }
+
+  .rv-card-badge {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--amber);
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.18);
+    border-radius: 999px;
+    padding: 2px 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .rv-card-comment { font-size: 13px; color: var(--muted); line-height: 1.6; flex: 1; margin: 0; }
+  .rv-card-comment.empty { font-style: italic; color: rgba(166,166,173,0.5); }
+
+  .rv-card-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+  }
+
+  .rv-avatar {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700;
+    flex-shrink: 0; color: #fff;
+  }
+
+  .rv-author { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .rv-date { font-size: 11px; color: rgba(166,166,173,0.55); }
+
+  .rv-verified {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #4ade80;
+    background: rgba(74,222,128,0.08);
+    border: 1px solid rgba(74,222,128,0.15);
+    border-radius: 999px;
+    padding: 2px 7px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .rv-empty {
+    grid-column: 1 / -1;
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    background: var(--surface-3);
+    border: 1px dashed rgba(255,255,255,0.08);
+    border-radius: 14px;
+    line-height: 1.7;
+  }
 </style>
 
 <div class="pv-wrap">
-  <a href="{% url 'restaurante_detalhe' restaurante.id_restaurante %}" class="pv-back"><i class="fa-solid fa-arrow-left"></i> Voltar para {{ restaurante.nome }}</a>
+  <a href="{% url 'restaurante_detalhe' restaurante.id_restaurante %}" class="pv-back">
+    <i class="fa-solid fa-arrow-left"></i> Voltar para {{ restaurante.nome }}
+  </a>
 
   <div class="pv-grid">
     <div>
@@ -80,6 +346,145 @@
         </div>
       </section>
       {% endif %}
+
+      <!-- ══ AVALIAÇÕES DO PRATO ══ -->
+      <section class="pv-card rv-section">
+
+        <div class="rv-header">
+          <div class="rv-header-left">
+            <span class="rv-label">Opiniões dos clientes</span>
+            <h2 class="rv-heading">Avaliações do prato</h2>
+          </div>
+
+          {% if avaliacoes_produto %}
+          <div class="rv-score">
+            <span class="rv-score-big">{{ media_produto|default:'—' }}</span>
+            <div class="rv-score-right">
+              <div class="rv-score-stars">
+                {% for i in "12345" %}
+                  {% if forloop.counter <= media_produto|default:0 %}
+                    <span style="color:#f59e0b;">★</span>
+                  {% else %}
+                    <span style="color:var(--surface-4);">★</span>
+                  {% endif %}
+                {% endfor %}
+              </div>
+              <span class="rv-score-count">{{ avaliacoes_produto|length }} avaliação{% if avaliacoes_produto|length != 1 %}ões{% endif %}</span>
+            </div>
+            <div class="rv-bars">
+              {% for estrela in "54321" %}
+              <div class="rv-bar-row">
+                <span class="rv-bar-label">{{ estrela }}</span>
+                <div class="rv-bar-track">
+                  <div class="rv-bar-fill" data-estrela="{{ estrela }}" style="width:0%;"></div>
+                </div>
+                <span class="rv-bar-count rv-bar-num" data-estrela="{{ estrela }}">0</span>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Formulário -->
+        {% if not cliente %}
+        <div class="rv-locked">
+          <i class="fa-solid fa-user-slash"></i>
+          Faça <a href="{% url 'login' %}?next={{ request.get_full_path }}" style="color:#ff7e88;margin:0 4px;">login</a> para avaliar este prato.
+        </div>
+
+        {% elif not ja_pediu %}
+        <div class="rv-locked">
+          <i class="fa-solid fa-lock"></i>
+          Só é possível avaliar após um pedido <strong style="color:var(--txt);margin:0 4px;">entregue</strong> neste restaurante.
+        </div>
+
+        {% elif ja_avaliou %}
+        <div class="rv-already">
+          <i class="fa-solid fa-circle-check"></i>
+          Você já avaliou este prato. Obrigado pelo feedback!
+        </div>
+
+        {% else %}
+        <div class="rv-form-box">
+          <p class="rv-form-title">Deixe sua avaliação</p>
+          <form method="POST" action="{% url 'prato' %}?restaurante_id={{ restaurante.id_restaurante }}&produto_id={{ prato.id_produto }}">
+            {% csrf_token %}
+            <div class="rv-stars-wrap">
+              <span class="rv-stars-label">Sua nota</span>
+              <div class="rv-stars-input" id="rvStars">
+                <input type="radio" name="avaliacao" id="rv5" value="5">
+                <label for="rv5" title="Excelente">★</label>
+                <input type="radio" name="avaliacao" id="rv4" value="4">
+                <label for="rv4" title="Ótimo">★</label>
+                <input type="radio" name="avaliacao" id="rv3" value="3">
+                <label for="rv3" title="Bom">★</label>
+                <input type="radio" name="avaliacao" id="rv2" value="2">
+                <label for="rv2" title="Regular">★</label>
+                <input type="radio" name="avaliacao" id="rv1" value="1" checked>
+                <label for="rv1" title="Ruim">★</label>
+              </div>
+              <p class="rv-star-hint" id="rvHint">Selecione uma nota</p>
+            </div>
+            <textarea
+              class="rv-textarea"
+              name="comentario"
+              placeholder="Como foi o prato? Sabor, apresentação, porção…"
+              maxlength="255"
+            ></textarea>
+            <button type="submit" class="rv-submit">
+              <i class="fa-solid fa-paper-plane"></i>
+              Enviar avaliação
+            </button>
+          </form>
+        </div>
+        {% endif %}
+
+        <!-- Lista de avaliações -->
+        <div class="rv-grid" id="rvGrid">
+          {% for av in avaliacoes_produto %}
+          <div class="rv-card">
+            <div class="rv-card-top">
+              <div class="rv-card-stars">
+                {% for i in "12345" %}
+                  {% if forloop.counter <= av.nota %}
+                    <span style="color:#f59e0b;">★</span>
+                  {% else %}
+                    <span style="color:var(--surface-4);">★</span>
+                  {% endif %}
+                {% endfor %}
+              </div>
+              <span class="rv-card-badge" data-nota="{{ av.nota }}">{{ av.nota }} estrela{% if av.nota != 1 %}s{% endif %}</span>
+            </div>
+
+            {% if av.comentario %}
+              <p class="rv-card-comment">{{ av.comentario }}</p>
+            {% else %}
+              <p class="rv-card-comment empty">Sem comentário.</p>
+            {% endif %}
+
+            <div class="rv-card-footer">
+              <div class="rv-avatar">{{ av.cliente.nome|default:'CL'|slice:":2"|upper }}</div>
+              <div>
+                <div class="rv-author">{{ av.cliente.nome|default:'Cliente' }}</div>
+                <div class="rv-date">{{ av.data_avaliacao|date:"d/m/Y" }}</div>
+              </div>
+              <span class="rv-verified">
+                <i class="fa-solid fa-circle-check" style="font-size:10px;"></i>
+                Pedido confirmado
+              </span>
+            </div>
+          </div>
+          {% empty %}
+          <div class="rv-empty">
+            <i class="fa-solid fa-comment-slash" style="font-size:24px;margin-bottom:10px;display:block;opacity:0.3;"></i>
+            Nenhuma avaliação ainda.<br>
+            <span style="font-size:12px;">Seja o primeiro a avaliar!</span>
+          </div>
+          {% endfor %}
+        </div>
+
+      </section>
     </div>
 
     <aside class="pv-side">
@@ -90,13 +495,65 @@
         <i class="fa-solid fa-cart-plus"></i> Adicionar ao carrinho
       </a>
       {% else %}
-      <span class="pv-btn" style="background:#434349;color:#fff;cursor:not-allowed;"><i class="fa-solid fa-door-closed"></i> Restaurante fechado</span>
+      <span class="pv-btn" style="background:#434349;color:#fff;cursor:not-allowed;">
+        <i class="fa-solid fa-door-closed"></i> Restaurante fechado
+      </span>
       {% endif %}
       <p class="pv-note">Pedido protegido • suporte disponível durante todo o processo.</p>
     </aside>
   </div>
 
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const hints = {1:'😞 Ruim', 2:'😐 Regular', 3:'🙂 Bom', 4:'😄 Ótimo', 5:'🤩 Excelente!'};
+    const radios = document.querySelectorAll('#rvStars input[type="radio"]');
+    const hint = document.getElementById('rvHint');
+
+    if (radios.length && hint) {
+      radios.forEach(function(r) {
+        r.addEventListener('change', function() { hint.textContent = hints[r.value] || ''; });
+      });
+      document.querySelectorAll('#rvStars label').forEach(function(lbl) {
+        lbl.addEventListener('mouseenter', function() {
+          hint.textContent = hints[lbl.getAttribute('for').replace('rv','')] || '';
+        });
+        lbl.addEventListener('mouseleave', function() {
+          const checked = document.querySelector('#rvStars input:checked');
+          hint.textContent = checked ? (hints[checked.value] || '') : 'Selecione uma nota';
+        });
+      });
+    }
+
+    /* Barras de distribuição */
+    const badges = document.querySelectorAll('.rv-card-badge[data-nota]');
+    const counts = {1:0,2:0,3:0,4:0,5:0};
+    const total = badges.length;
+
+    badges.forEach(function(b) {
+      const n = parseInt(b.dataset.nota);
+      if (counts[n] !== undefined) counts[n]++;
+    });
+
+    document.querySelectorAll('.rv-bar-fill[data-estrela]').forEach(function(bar) {
+      const e = parseInt(bar.dataset.estrela);
+      const pct = total > 0 ? (counts[e] / total * 100).toFixed(0) : 0;
+      bar.style.width = pct + '%';
+      bar.style.opacity = e >= 4 ? '1' : e === 3 ? '0.65' : '0.4';
+    });
+
+    document.querySelectorAll('.rv-bar-num[data-estrela]').forEach(function(el) {
+      el.textContent = counts[parseInt(el.dataset.estrela)];
+    });
+
+    /* Cores dos avatares */
+    const colors = ['#7c3aed','#0891b2','#be185d','#b45309','#047857','#1d4ed8','#9d174d','#0f766e'];
+    document.querySelectorAll('.rv-avatar').forEach(function(av, i) {
+      av.style.background = colors[i % colors.length];
+    });
+  });
+</script>
 
 {% include "pages/pagePrincipal/footer.html" %}
 {% endblock %}

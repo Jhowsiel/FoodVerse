@@ -19,6 +19,7 @@
     --text-1: #f5f3f0;
     --text-2: rgba(245,243,240,0.58);
     --text-3: rgba(245,243,240,0.32);
+    --amber: #f59e0b;
   }
 
   *, *::before, *::after { box-sizing: border-box; }
@@ -32,362 +33,114 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  .page-wrap {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 40px 20px 100px;
-  }
+  .page-wrap { max-width: 1000px; margin: 0 auto; padding: 40px 20px 100px; }
+  .page-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 36px; }
+  .page-eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.10em; text-transform: uppercase; color: #ff7580; background: var(--red-muted); border: 1px solid rgba(196,16,23,0.25); border-radius: 999px; padding: 5px 12px; margin-bottom: 10px; width: fit-content; }
+  .page-title { font-family: 'Outfit', sans-serif; font-size: clamp(26px, 4vw, 36px); font-weight: 900; letter-spacing: -0.03em; line-height: 1.05; margin: 0; }
 
-  /* ── Header ──────────────────────────── */
-  .page-header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-bottom: 36px;
-  }
-
-  .page-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.10em;
-    text-transform: uppercase;
-    color: #ff7580;
-    background: var(--red-muted);
-    border: 1px solid rgba(196,16,23,0.25);
-    border-radius: 999px;
-    padding: 5px 12px;
-    margin-bottom: 10px;
-    width: fit-content;
-  }
-
-  .page-title {
-    font-family: 'Outfit', sans-serif;
-    font-size: clamp(26px, 4vw, 36px);
-    font-weight: 900;
-    letter-spacing: -0.03em;
-    line-height: 1.05;
-    margin: 0;
-  }
-
-  /* ── Alerts ──────────────────────────── */
-  .alert {
-    border-radius: 12px;
-    border: none;
-    padding: 14px 18px;
-    font-size: 14px;
-    margin-bottom: 20px;
-  }
+  .alert { border-radius: 12px; border: none; padding: 14px 18px; font-size: 14px; margin-bottom: 20px; }
   .alert-danger { background: rgba(196,16,23,0.15); color: #ff9a9e; }
   .alert-success { background: rgba(34,197,94,0.10); color: #86efac; }
 
-  /* ── Tabs ────────────────────────────── */
-  .tab-nav {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 24px;
-    overflow-x: auto;
-    scrollbar-width: none;
-    padding-bottom: 2px;
-  }
+  .tab-nav { display: flex; gap: 6px; margin-bottom: 24px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
   .tab-nav::-webkit-scrollbar { display: none; }
-
-  .tab-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    white-space: nowrap;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    color: var(--text-2);
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    border-radius: 999px;
-    padding: 8px 18px;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s, color 0.15s;
-  }
-  .tab-btn:hover {
-    background: var(--surface-3);
-    border-color: var(--border-hover);
-    color: var(--text-1);
-  }
-  .tab-btn.active {
-    background: var(--red);
-    border-color: var(--red);
-    color: #fff;
-    font-weight: 600;
-  }
-
-  .tab-count {
-    background: rgba(255,255,255,0.15);
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 1px 7px;
-    min-width: 20px;
-    text-align: center;
-  }
+  .tab-btn { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; border-radius: 999px; padding: 8px 18px; cursor: pointer; transition: background 0.15s, border-color 0.15s, color 0.15s; }
+  .tab-btn:hover { background: var(--surface-3); border-color: var(--border-hover); color: var(--text-1); }
+  .tab-btn.active { background: var(--red); border-color: var(--red); color: #fff; font-weight: 600; }
+  .tab-count { background: rgba(255,255,255,0.15); border-radius: 999px; font-size: 11px; font-weight: 700; padding: 1px 7px; min-width: 20px; text-align: center; }
   .tab-btn.active .tab-count { background: rgba(255,255,255,0.25); }
-
-  /* ── Tab panels ──────────────────────── */
   .tab-panel { display: none; }
   .tab-panel.active { display: block; }
 
-  /* ── Section label ───────────────────── */
-  .section-label {
-    font-family: 'Outfit', sans-serif;
-    font-size: 20px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    margin: 0 0 16px;
-  }
+  .section-label { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 16px; }
 
-  /* ── Order card ──────────────────────── */
-  .order-card {
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    overflow: hidden;
-    margin-bottom: 12px;
-    transition: border-color 0.2s;
-  }
+  .order-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; margin-bottom: 12px; transition: border-color 0.2s; }
   .order-card:hover { border-color: var(--border-hover); }
+  .order-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; flex-wrap: wrap; }
+  .order-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .order-id { font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+  .order-date { font-size: 13px; color: var(--text-2); }
 
-  .order-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 16px 20px;
-    flex-wrap: wrap;
-  }
-
-  .order-meta {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .order-id {
-    font-family: 'Outfit', sans-serif;
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-  }
-
-  .order-date {
-    font-size: 13px;
-    color: var(--text-2);
-  }
-
-  /* ── Status badges ───────────────────── */
-  .badge-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    border-radius: 999px;
-    padding: 4px 11px;
-  }
-  .badge-status::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-    opacity: 0.8;
-  }
+  .badge-status { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; border-radius: 999px; padding: 4px 11px; }
+  .badge-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.8; }
   .badge-pendente   { background: rgba(234,179,8,0.12);  color: #fbbf24; }
   .badge-andamento  { background: rgba(59,130,246,0.12); color: #60a5fa; }
   .badge-concluido  { background: rgba(34,197,94,0.12);  color: #4ade80; }
   .badge-cancelado  { background: rgba(196,16,23,0.12);  color: #ff7580; }
 
-  .order-total {
-    font-family: 'Outfit', sans-serif;
-    font-size: 17px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-  }
-
-  .order-body {
-    border-top: 1px solid var(--border);
-    padding: 14px 20px;
-  }
-
-  .order-item-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    font-size: 13px;
-    padding: 5px 0;
-    color: var(--text-2);
-  }
+  .order-total { font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }
+  .order-body { border-top: 1px solid var(--border); padding: 14px 20px; }
+  .order-item-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 13px; padding: 5px 0; color: var(--text-2); }
   .order-item-row:not(:last-child) { border-bottom: 1px solid rgba(255,255,255,0.04); }
-
   .order-item-name { color: var(--text-1); font-weight: 500; }
+  .order-actions { display: flex; gap: 8px; justify-content: flex-end; padding: 12px 20px; border-top: 1px solid var(--border); }
 
-  .order-actions {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-    padding: 12px 20px;
-    border-top: 1px solid var(--border);
-  }
+  .empty-state { background: var(--surface-2); border: 1px dashed var(--border-hover); border-radius: 16px; padding: 48px 24px; text-align: center; color: var(--text-3); font-size: 14px; }
+  .empty-icon { font-size: 32px; margin-bottom: 12px; display: block; opacity: 0.35; }
+  .section-divider { border: none; border-top: 1px solid var(--border); margin: 44px 0 36px; }
 
-  /* ── Empty state ─────────────────────── */
-  .empty-state {
-    background: var(--surface-2);
-    border: 1px dashed var(--border-hover);
-    border-radius: 16px;
-    padding: 48px 24px;
-    text-align: center;
-    color: var(--text-3);
-    font-size: 14px;
-  }
-  .empty-icon {
-    font-size: 32px;
-    margin-bottom: 12px;
-    display: block;
-    opacity: 0.35;
-  }
-
-  /* ── Divider ─────────────────────────── */
-  .section-divider {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 44px 0 36px;
-  }
-
-  /* ── Reservation card ────────────────── */
-  .reserva-card {
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 18px 22px;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-    transition: border-color 0.2s;
-  }
+  .reserva-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 18px; padding: 18px 22px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; transition: border-color 0.2s; }
   .reserva-card:hover { border-color: var(--border-hover); }
-
-  .reserva-info {}
-
-  .reserva-name {
-    font-family: 'Outfit', sans-serif;
-    font-size: 16px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-    margin: 0 0 6px;
-  }
-
-  .reserva-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
-    font-size: 13px;
-    color: var(--text-2);
-  }
-
-  .reserva-meta-item {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
+  .reserva-name { font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 6px; }
+  .reserva-meta { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--text-2); }
+  .reserva-meta-item { display: flex; align-items: center; gap: 5px; }
   .reserva-meta-item i { color: var(--text-3); font-size: 11px; }
+  .reserva-id { font-size: 12px; color: var(--text-3); margin-left: 8px; }
 
-  .reserva-id {
-    font-size: 12px;
-    color: var(--text-3);
-    margin-left: 8px;
-  }
-
-  /* ── Buttons ─────────────────────────── */
-  .btn-primary-red {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    background: var(--red);
-    border: none;
-    color: #fff;
-    font-family: 'Outfit', sans-serif;
-    font-size: 14px;
-    font-weight: 700;
-    border-radius: 12px;
-    padding: 11px 20px;
-    text-decoration: none;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.12s;
-    white-space: nowrap;
-  }
+  .btn-primary-red { display: inline-flex; align-items: center; gap: 7px; background: var(--red); border: none; color: #fff; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; border-radius: 12px; padding: 11px 20px; text-decoration: none; cursor: pointer; transition: background 0.15s, transform 0.12s; white-space: nowrap; }
   .btn-primary-red:hover { background: #a50d14; color: #fff; transform: translateY(-1px); text-decoration: none; }
-
-  .btn-ghost {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-2);
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    border-radius: 10px;
-    padding: 8px 14px;
-    cursor: pointer;
-    text-decoration: none;
-    transition: background 0.15s, border-color 0.15s, color 0.15s;
-    white-space: nowrap;
-  }
+  .btn-ghost { display: inline-flex; align-items: center; gap: 6px; background: transparent; border: 1px solid var(--border); color: var(--text-2); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; border-radius: 10px; padding: 8px 14px; cursor: pointer; text-decoration: none; transition: background 0.15s, border-color 0.15s, color 0.15s; white-space: nowrap; }
   .btn-ghost:hover { background: var(--surface-3); border-color: var(--border-hover); color: var(--text-1); text-decoration: none; }
-
-  .btn-danger-ghost {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: transparent;
-    border: 1px solid rgba(196,16,23,0.28);
-    color: #ff7580;
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    border-radius: 10px;
-    padding: 8px 14px;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-    white-space: nowrap;
-  }
+  .btn-danger-ghost { display: inline-flex; align-items: center; gap: 6px; background: transparent; border: 1px solid rgba(196,16,23,0.28); color: #ff7580; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; border-radius: 10px; padding: 8px 14px; cursor: pointer; transition: background 0.15s, border-color 0.15s; white-space: nowrap; }
   .btn-danger-ghost:hover { background: var(--red-muted); border-color: rgba(196,16,23,0.5); }
+  .btn-avaliar { display: inline-flex; align-items: center; gap: 6px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); color: var(--amber); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; border-radius: 10px; padding: 8px 14px; cursor: pointer; transition: background 0.15s, border-color 0.15s; white-space: nowrap; }
+  .btn-avaliar:hover { background: rgba(245,158,11,0.18); border-color: rgba(245,158,11,0.45); }
 
-  /* ── Modal ───────────────────────────── */
-  .modal-content {
-    background: var(--surface-2) !important;
-    border: 1px solid var(--border-hover) !important;
-    border-radius: 18px !important;
-    color: var(--text-1) !important;
-  }
+  /* Modal overrides */
+  .modal-content { background: var(--surface-2) !important; border: 1px solid var(--border-hover) !important; border-radius: 18px !important; color: var(--text-1) !important; }
   .modal-header, .modal-footer { border-color: var(--border) !important; }
   .modal-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: -0.02em; }
   .modal-body { font-size: 14px; color: var(--text-2); }
+
+  /* Avaliação modal */
+  .av-rest-card { background: var(--surface-3); border-radius: 14px; padding: 14px 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+  .av-rest-icon { width: 40px; height: 40px; border-radius: 11px; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.2); display: flex; align-items: center; justify-content: center; font-size: 17px; color: var(--amber); flex-shrink: 0; }
+  .av-rest-name { font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 800; margin: 0 0 2px; color: var(--text-1); }
+  .av-rest-sub { font-size: 12px; color: var(--text-3); }
+
+  .av-block { margin-bottom: 20px; }
+  .av-block-title { font-size: 12px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+
+  .av-stars { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 4px; }
+  .av-stars input[type="radio"] { display: none; }
+  .av-stars label { font-size: 30px; color: var(--surface-4); cursor: pointer; transition: color 0.1s, transform 0.1s; line-height: 1; user-select: none; }
+  .av-stars label:hover, .av-stars label:hover ~ label { color: var(--amber) !important; transform: scale(1.15); }
+  .av-stars input:checked ~ label { color: var(--amber); }
+  .av-star-hint { font-size: 12px; color: var(--text-3); margin-top: 6px; min-height: 16px; }
+
+  .av-divider { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+
+  .av-pratos { display: flex; flex-direction: column; gap: 12px; }
+  .av-prato-item { background: var(--surface-3); border: 1px solid var(--border); border-radius: 13px; padding: 14px 15px; display: flex; flex-direction: column; gap: 10px; }
+  .av-prato-name { font-size: 13px; font-weight: 600; color: var(--text-1); }
+  .av-prato-stars { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 3px; }
+  .av-prato-stars input[type="radio"] { display: none; }
+  .av-prato-stars label { font-size: 22px; color: var(--surface-4); cursor: pointer; transition: color 0.1s, transform 0.1s; line-height: 1; user-select: none; }
+  .av-prato-stars label:hover, .av-prato-stars label:hover ~ label { color: var(--amber) !important; transform: scale(1.1); }
+  .av-prato-stars input:checked ~ label { color: var(--amber); }
+
+  .av-textarea { width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: 11px; padding: 10px 13px; color: var(--text-1); font-family: 'Inter', sans-serif; font-size: 13px; resize: vertical; min-height: 70px; outline: none; transition: border-color 0.15s; }
+  .av-textarea::placeholder { color: var(--text-3); }
+  .av-textarea:focus { border-color: rgba(196,16,23,0.4); }
+  .av-textarea--rest { min-height: 80px; background: var(--surface-3); margin-top: 10px; }
+
+  .av-submit { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; border: none; border-radius: 13px; padding: 14px; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 800; background: var(--red); color: #fff; cursor: pointer; transition: background 0.15s, transform 0.12s; }
+  .av-submit:hover { background: #a50d14; transform: translateY(-1px); }
+  .av-submit:active { transform: translateY(0); }
 </style>
 
 <div class="page-wrap">
 
-  <!-- Header -->
   <div class="page-header">
     <div>
       <p class="page-eyebrow"><i class="bi bi-clock-history"></i> Histórico</p>
@@ -404,28 +157,22 @@
     {% endfor %}
   {% endif %}
 
-  <!-- Tabs -->
   <div class="tab-nav" role="tablist">
     <button class="tab-btn active" onclick="switchTab('pendente', this)">
-      Pendentes
-      {% if pedidos_pendentes %}<span class="tab-count">{{ pedidos_pendentes|length }}</span>{% endif %}
+      Pendentes {% if pedidos_pendentes %}<span class="tab-count">{{ pedidos_pendentes|length }}</span>{% endif %}
     </button>
     <button class="tab-btn" onclick="switchTab('andamento', this)">
-      Em andamento
-      {% if pedidos_andamento %}<span class="tab-count">{{ pedidos_andamento|length }}</span>{% endif %}
+      Em andamento {% if pedidos_andamento %}<span class="tab-count">{{ pedidos_andamento|length }}</span>{% endif %}
     </button>
-    <button class="tab-btn" onclick="switchTab('concluido', this)">
-      Concluídos
-      {% if pedidos_concluidos %}<span class="tab-count">{{ pedidos_concluidos|length }}</span>{% endif %}
+    <button class="tab-btn" id="tabConcluido" onclick="switchTab('concluido', this)">
+      Concluídos {% if pedidos_concluidos %}<span class="tab-count">{{ pedidos_concluidos|length }}</span>{% endif %}
     </button>
     <button class="tab-btn" onclick="switchTab('cancelado', this)">
-      Cancelados
-      {% if pedidos_cancelados %}<span class="tab-count">{{ pedidos_cancelados|length }}</span>{% endif %}
+      Cancelados {% if pedidos_cancelados %}<span class="tab-count">{{ pedidos_cancelados|length }}</span>{% endif %}
     </button>
   </div>
 
-  <!-- Tab panels -->
-
+  <!-- Pendentes -->
   <div id="panel-pendente" class="tab-panel active">
     {% for pedido in pedidos_pendentes %}
     <div class="order-card">
@@ -441,9 +188,7 @@
       </div>
       <div class="order-body">
         {% for item in pedido.tbpedidosprodutos_set.all|slice:":3" %}
-        <div class="order-item-row">
-          <span class="order-item-name">{{ item.quantidade }}x {{ item.produto.nome_produto }}</span>
-        </div>
+        <div class="order-item-row"><span class="order-item-name">{{ item.quantidade }}x {{ item.produto.nome_produto }}</span></div>
         {% endfor %}
       </div>
       {% if pedido.status_id == 1 %}
@@ -476,6 +221,7 @@
     {% endfor %}
   </div>
 
+  <!-- Em andamento -->
   <div id="panel-andamento" class="tab-panel">
     {% for pedido in pedidos_andamento %}
     <div class="order-card">
@@ -491,9 +237,7 @@
       </div>
       <div class="order-body">
         {% for item in pedido.tbpedidosprodutos_set.all|slice:":3" %}
-        <div class="order-item-row">
-          <span class="order-item-name">{{ item.quantidade }}x {{ item.produto.nome_produto }}</span>
-        </div>
+        <div class="order-item-row"><span class="order-item-name">{{ item.quantidade }}x {{ item.produto.nome_produto }}</span></div>
         {% endfor %}
       </div>
     </div>
@@ -502,6 +246,7 @@
     {% endfor %}
   </div>
 
+  <!-- Concluídos -->
   <div id="panel-concluido" class="tab-panel">
     {% for pedido in pedidos_concluidos %}
     <div class="order-card">
@@ -517,17 +262,109 @@
       </div>
       <div class="order-body">
         {% for item in pedido.tbpedidosprodutos_set.all|slice:":3" %}
-        <div class="order-item-row">
-          <span class="order-item-name">{{ item.quantidade }}x {{ item.produto.nome_produto }}</span>
-        </div>
+        <div class="order-item-row"><span class="order-item-name">{{ item.quantidade }}x {{ item.produto.nome_produto }}</span></div>
         {% endfor %}
       </div>
+      <div class="order-actions">
+        <button class="btn-avaliar" data-bs-toggle="modal" data-bs-target="#modalAvaliar{{ pedido.id_pedido }}">
+          <i class="bi bi-star"></i> Avaliar
+        </button>
+      </div>
     </div>
+
+    <!-- Modal avaliação -->
+    <div class="modal fade" id="modalAvaliar{{ pedido.id_pedido }}" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="bi bi-star-fill" style="color:var(--amber);margin-right:8px;font-size:15px;"></i>
+              Avaliar pedido
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <form method="POST" action="{% url 'avaliar_pedido' %}">
+            {% csrf_token %}
+            <input type="hidden" name="pedido_id" value="{{ pedido.id_pedido }}">
+            <div class="modal-body">
+
+              <div class="av-rest-card">
+                <div class="av-rest-icon"><i class="bi bi-shop"></i></div>
+                <div>
+                  <p class="av-rest-name">{{ pedido.restaurante.nome }}</p>
+                  <span class="av-rest-sub">#{{ pedido.id_pedido }} · {{ pedido.data_pedido|date:"d/m/Y" }} · R$ {{ pedido.valor_total|floatformat:2 }}</span>
+                </div>
+              </div>
+
+              <!-- Avaliação do restaurante -->
+              <div class="av-block">
+                <div class="av-block-title"><i class="bi bi-shop-window"></i> Avalie o restaurante</div>
+                <div class="av-stars" id="starsRest{{ pedido.id_pedido }}">
+                  <input type="radio" name="nota_restaurante" id="rr5_{{ pedido.id_pedido }}" value="5">
+                  <label for="rr5_{{ pedido.id_pedido }}">★</label>
+                  <input type="radio" name="nota_restaurante" id="rr4_{{ pedido.id_pedido }}" value="4">
+                  <label for="rr4_{{ pedido.id_pedido }}">★</label>
+                  <input type="radio" name="nota_restaurante" id="rr3_{{ pedido.id_pedido }}" value="3">
+                  <label for="rr3_{{ pedido.id_pedido }}">★</label>
+                  <input type="radio" name="nota_restaurante" id="rr2_{{ pedido.id_pedido }}" value="2">
+                  <label for="rr2_{{ pedido.id_pedido }}">★</label>
+                  <input type="radio" name="nota_restaurante" id="rr1_{{ pedido.id_pedido }}" value="1" checked>
+                  <label for="rr1_{{ pedido.id_pedido }}">★</label>
+                </div>
+                <p class="av-star-hint" id="hintRest{{ pedido.id_pedido }}">Selecione uma nota</p>
+                <textarea class="av-textarea av-textarea--rest" name="comentario_restaurante" placeholder="Como foi a experiência? Atendimento, entrega, embalagem…" maxlength="255"></textarea>
+              </div>
+
+              <hr class="av-divider">
+
+              <!-- Avaliação dos pratos -->
+              <div class="av-block">
+                <div class="av-block-title"><i class="bi bi-egg-fried"></i> Avalie os pratos</div>
+                <div class="av-pratos">
+                  {% for item in pedido.tbpedidosprodutos_set.all %}
+                  <div class="av-prato-item">
+                    <div class="av-prato-name">{{ item.quantidade }}x {{ item.produto.nome_produto }}</div>
+                    <div class="av-prato-stars">
+                      <input type="radio" name="nota_produto_{{ item.produto.id_produto }}" id="rp5_{{ pedido.id_pedido }}_{{ item.produto.id_produto }}" value="5">
+                      <label for="rp5_{{ pedido.id_pedido }}_{{ item.produto.id_produto }}">★</label>
+                      <input type="radio" name="nota_produto_{{ item.produto.id_produto }}" id="rp4_{{ pedido.id_pedido }}_{{ item.produto.id_produto }}" value="4">
+                      <label for="rp4_{{ pedido.id_pedido }}_{{ item.produto.id_produto }}">★</label>
+                      <input type="radio" name="nota_produto_{{ item.produto.id_produto }}" id="rp3_{{ pedido.id_pedido }}_{{ item.produto.id_produto }}" value="3">
+                      <label for="rp3_{{ pedido.id_pedido }}_{{ item.produto.id_produto }}">★</label>
+                      <input type="radio" name="nota_produto_{{ item.produto.id_produto }}" id="rp2_{{ pedido.id_pedido }}_{{ item.produto.id_produto }}" value="2">
+                      <label for="rp2_{{ pedido.id_pedido }}_{{ item.produto.id_produto }}">★</label>
+                      <input type="radio" name="nota_produto_{{ item.produto.id_produto }}" id="rp1_{{ pedido.id_pedido }}_{{ item.produto.id_produto }}" value="1">
+                      <label for="rp1_{{ pedido.id_pedido }}_{{ item.produto.id_produto }}">★</label>
+                    </div>
+                    <textarea
+                      class="av-textarea"
+                      name="comentario_produto_{{ item.produto.id_produto }}"
+                      placeholder="O que achou deste prato?"
+                      maxlength="255"
+                    ></textarea>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+
+            </div>
+            <div class="modal-footer" style="padding:14px 20px;">
+              <button type="button" class="btn-ghost" data-bs-dismiss="modal">Agora não</button>
+              <button type="submit" class="av-submit" style="flex:1;max-width:220px;">
+                <i class="bi bi-send"></i> Enviar avaliação
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
     {% empty %}
     <div class="empty-state"><span class="empty-icon"><i class="bi bi-check-circle"></i></span>Nenhum pedido concluído.</div>
     {% endfor %}
   </div>
 
+  <!-- Cancelados -->
   <div id="panel-cancelado" class="tab-panel">
     {% for pedido in pedidos_cancelados %}
     <div class="order-card">
@@ -543,9 +380,7 @@
       </div>
       <div class="order-body">
         {% for item in pedido.tbpedidosprodutos_set.all|slice:":3" %}
-        <div class="order-item-row">
-          <span class="order-item-name">{{ item.quantidade }}x {{ item.produto.nome_produto }}</span>
-        </div>
+        <div class="order-item-row"><span class="order-item-name">{{ item.quantidade }}x {{ item.produto.nome_produto }}</span></div>
         {% endfor %}
       </div>
     </div>
@@ -556,36 +391,22 @@
 
   <!-- Reservas -->
   <hr class="section-divider">
-
   <h2 class="section-label">Minhas Reservas</h2>
 
   {% for reserva in reservas %}
   <div class="reserva-card">
     <div class="reserva-info">
-      <p class="reserva-name">
-        {{ reserva.restaurante.nome }}
-        <span class="reserva-id">#R{{ reserva.id_reserva }}</span>
-      </p>
+      <p class="reserva-name">{{ reserva.restaurante.nome }}<span class="reserva-id">#R{{ reserva.id_reserva }}</span></p>
       <div class="reserva-meta">
-        <span class="reserva-meta-item">
-          <i class="bi bi-calendar3"></i>
-          {{ reserva.data_reserva|date:"d/m/Y H:i" }}
-        </span>
-        <span class="reserva-meta-item">
-          <i class="bi bi-grid"></i>
-          Mesa {{ reserva.mesa|default:'--' }}
-        </span>
-        <span class="reserva-meta-item">
-          <i class="bi bi-people"></i>
-          {{ reserva.numero_pessoas }} pessoa(s)
-        </span>
+        <span class="reserva-meta-item"><i class="bi bi-calendar3"></i>{{ reserva.data_reserva|date:"d/m/Y H:i" }}</span>
+        <span class="reserva-meta-item"><i class="bi bi-grid"></i>Mesa {{ reserva.mesa|default:'--' }}</span>
+        <span class="reserva-meta-item"><i class="bi bi-people"></i>{{ reserva.numero_pessoas }} pessoa(s)</span>
       </div>
     </div>
     <button class="btn-danger-ghost" data-bs-toggle="modal" data-bs-target="#cancelReserva{{ reserva.id_reserva }}">
       <i class="bi bi-x-circle"></i> Cancelar
     </button>
   </div>
-
   <div class="modal fade" id="cancelReserva{{ reserva.id_reserva }}" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -593,29 +414,26 @@
           <h5 class="modal-title">Cancelar reserva</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body">
-          Tem certeza que deseja cancelar a reserva <strong style="color:var(--text-1);">#R{{ reserva.id_reserva }}</strong> em {{ reserva.restaurante.nome }}?
-        </div>
+        <div class="modal-body">Tem certeza que deseja cancelar a reserva <strong style="color:var(--text-1);">#R{{ reserva.id_reserva }}</strong> em {{ reserva.restaurante.nome }}?</div>
         <div class="modal-footer">
           <button type="button" class="btn-ghost" data-bs-dismiss="modal">Voltar</button>
           <form method="post" action="{% url 'cancelar_reserva' reserva.id_reserva %}">
             {% csrf_token %}
-            <button class="btn-primary-red" type="submit" style="background:#a50d14;">
-              <i class="bi bi-trash3"></i> Confirmar cancelamento
-            </button>
+            <button class="btn-primary-red" type="submit" style="background:#a50d14;"><i class="bi bi-trash3"></i> Confirmar cancelamento</button>
           </form>
         </div>
       </div>
     </div>
   </div>
   {% empty %}
-  <div class="empty-state">
-    <span class="empty-icon"><i class="bi bi-calendar-x"></i></span>
-    Nenhuma reserva encontrada.
-  </div>
+  <div class="empty-state"><span class="empty-icon"><i class="bi bi-calendar-x"></i></span>Nenhuma reserva encontrada.</div>
   {% endfor %}
 
 </div>
+
+{% if pedido_para_avaliar %}
+<span id="autoAvaliarId" data-id="{{ pedido_para_avaliar.id_pedido }}" style="display:none;"></span>
+{% endif %}
 
 <script>
   function switchTab(id, btn) {
@@ -624,6 +442,47 @@
     document.getElementById('panel-' + id).classList.add('active');
     btn.classList.add('active');
   }
+
+  const hints = {1:'😞 Ruim', 2:'😐 Regular', 3:'🙂 Bom', 4:'😄 Ótimo', 5:'🤩 Excelente!'};
+
+  document.querySelectorAll('.av-stars').forEach(function(wrap) {
+    const pid = wrap.id.replace('starsRest','');
+    const hintEl = document.getElementById('hintRest' + pid);
+    if (!hintEl) return;
+    wrap.querySelectorAll('input').forEach(function(r) {
+      r.addEventListener('change', function() { hintEl.textContent = hints[r.value] || ''; });
+    });
+    wrap.querySelectorAll('label').forEach(function(lbl) {
+      lbl.addEventListener('mouseenter', function() {
+        const v = lbl.getAttribute('for').split('_')[0].replace('rr','');
+        hintEl.textContent = hints[v] || '';
+      });
+      lbl.addEventListener('mouseleave', function() {
+        const c = wrap.querySelector('input:checked');
+        hintEl.textContent = c ? (hints[c.value] || '') : 'Selecione uma nota';
+      });
+    });
+  });
+
+  /* Auto-abrir modal — só uma vez por sessão por pedido */
+  document.addEventListener('DOMContentLoaded', function () {
+    const el = document.getElementById('autoAvaliarId');
+    if (!el) return;
+
+    const pid = el.dataset.id;
+    const key = 'av_shown_' + pid;
+
+    if (!sessionStorage.getItem(key)) {
+      sessionStorage.setItem(key, '1');
+      document.getElementById('tabConcluido').click();
+      setTimeout(function () {
+        const modalEl = document.getElementById('modalAvaliar' + pid);
+        if (modalEl && typeof bootstrap !== 'undefined') {
+          new bootstrap.Modal(modalEl).show();
+        }
+      }, 700);
+    }
+  }); 
 </script>
 
 {% include "pages/pagePrincipal/footer.html" %}

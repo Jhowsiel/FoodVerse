@@ -220,3 +220,22 @@ class TbFuncionarios(models.Model):
 
     class Meta:
         db_table = "tb_funcionarios"
+        
+class TbAvaliacoesProdutos(models.Model):
+    id_avaliacao_produto = models.AutoField(primary_key=True)
+    cliente = models.ForeignKey(
+        TbClientes,
+        on_delete=models.CASCADE,
+        db_column="ID_cliente"
+    )
+    produto = models.ForeignKey(
+        TbProdutos,
+        on_delete=models.CASCADE,
+        db_column="ID_produto"
+    )
+    nota = models.IntegerField(null=True, blank=True)
+    comentario = models.CharField(max_length=255, null=True, blank=True)
+    data_avaliacao = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "tb_avaliacoes_produtos"

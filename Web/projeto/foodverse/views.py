@@ -5,6 +5,7 @@ import io
 import logging
 import random
 import re
+from urllib import request
 
 import requests
 from django.contrib import messages
@@ -18,6 +19,7 @@ from django.utils import timezone
 
 from .models import (
     TbAvaliacoes,
+    TbAvaliacoesProdutos,
     TbClientes,
     TbEstoque,
     TbNutricao,
@@ -447,12 +449,17 @@ def restaurante_detalhe_view(request, id):
         Q(categoria__icontains='bebida') | Q(categoria__icontains='sobremesa')
     ).exclude(tipo_produto='INSUMO')[:6]
 
+    avaliacoes = TbAvaliacoes.objects.filter(
+        restaurante=restaurante
+    ).order_by('-data_avaliacao')
+
     return render(request, 'pages/catalogo/restaurante_detalhe.html', {
         'restaurante': restaurante,
         'pratos': pratos,
         'categorias': list(categorias),
         'categoria_ativa': categoria_ativa,
         'sugestoes': sugestoes,
+        'avaliacoes': avaliacoes,
     })
 
 
@@ -463,7 +470,7 @@ def prato_view(request):
     restaurante = get_object_or_404(TbRestaurantes, id_restaurante=rest_id, ativo=True)
     prato = get_object_or_404(TbProdutos, id_produto=p_id, restaurante=restaurante)
     nutricao = TbNutricao.objects.filter(produto=prato).first()
-
+    cliente = get_cliente_logado(request)
     restricoes_list = []
     if prato.restricoes:
         restricoes_list = [t.strip() for t in prato.restricoes.split(',') if t.strip()]
@@ -475,12 +482,48 @@ def prato_view(request):
         Q(categoria__icontains='bebida') | Q(categoria__icontains='sobremesa')
     ).exclude(id_produto=prato.id_produto).exclude(tipo_produto='INSUMO')[:6]
 
+    ja_pediu = False
+    ja_avaliou = False
+
+    if cliente:
+        ja_pediu = TbPedidos.objects.filter(
+            cliente=cliente,
+            restaurante=restaurante,
+            status__nome_status__iexact='Entregue'
+        ).exists()
+        ja_avaliou = TbAvaliacoesProdutos.objects.filter(
+            cliente=cliente,
+            produto=prato
+        ).exists()
+
+        # POST — salvar avaliação
+    if request.method == 'POST':
+        if cliente and ja_pediu and not ja_avaliou:
+            nota = _int_param(request.POST.get('avaliacao'), 5)
+            comentario = request.POST.get('comentario', '')
+            TbAvaliacoesProdutos.objects.create(
+                cliente=cliente,
+                produto=prato,
+                nota=nota,
+                comentario=comentario,
+                data_avaliacao=timezone.now(),
+            )
+        return redirect(f"{request.path}?restaurante_id={rest_id}&produto_id={p_id}")
+
+    avaliacoes_produto = TbAvaliacoesProdutos.objects.filter(
+        produto=prato
+    ).order_by('-data_avaliacao')
+
     return render(request, 'pages/catalogo/prato.html', {
         'restaurante': restaurante,
         'prato': prato,
         'nutricao': nutricao,
         'restricoes_list': restricoes_list,
         'acompanhamentos': acompanhamentos,
+        'cliente': cliente,
+        'ja_pediu': ja_pediu,
+        'ja_avaliou': ja_avaliou,
+        'avaliacoes_produto': avaliacoes_produto,
     })
 
 
@@ -674,6 +717,13 @@ def pedido_view(request):
     if r_id:
         restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True, aberto=True)
 
+    pedido_para_avaliar = TbPedidos.objects.filter(
+    cliente=cliente,
+    status__nome_status__iexact='Entregue'
+    ).exclude(
+    restaurante__in=TbAvaliacoes.objects.filter(cliente=cliente).values('restaurante')
+    ).order_by('-data_pedido').first()
+
     return render(request, 'pages/pedido/pedido.html', {
         'pedidos': pedidos,
         'pedidos_pendentes': pedidos_pendentes,
@@ -682,6 +732,7 @@ def pedido_view(request):
         'pedidos_cancelados': pedidos_cancelados,
         'reservas': reservas,
         'restaurante_atual': restaurante,
+        'pedido_para_avaliar': pedido_para_avaliar
     })
 
 
@@ -917,23 +968,95 @@ def feedback_view(request):
     restaurante = get_object_or_404(TbRestaurantes, id_restaurante=r_id, ativo=True)
     cliente = get_cliente_logado(request)
 
+    ja_pediu = False
+    ja_avaliou = False
+    if cliente:
+        ja_pediu = TbPedidos.objects.filter(
+            cliente=cliente,
+            restaurante=restaurante,
+            status__nome_status__iexact='Entregue'
+        ).exists()
+        ja_avaliou = TbAvaliacoes.objects.filter(
+            cliente=cliente,
+            restaurante=restaurante
+        ).exists()
+
     if request.method == 'POST':
+        if not cliente or not ja_pediu or ja_avaliou:
+            return redirect(f"{request.path}?restaurante_id={r_id}")
+
         nota = _int_param(request.POST.get('avaliacao'), 5)
         comentario = request.POST.get('comentario', '')
 
-        if cliente:
-            TbAvaliacoes.objects.create(
-                cliente=cliente,
-                restaurante=restaurante,
-                nota=nota,
-                comentario=comentario,
-                data_avaliacao=timezone.now(),
-            )
+        TbAvaliacoes.objects.create(
+            cliente=cliente,
+            restaurante=restaurante,
+            nota=nota,
+            comentario=comentario,
+            data_avaliacao=timezone.now(),
+        )
 
         return render(request, 'pages/pedido/feedback_sucesso.html', {'restaurante': restaurante})
 
-    return render(request, 'pages/pedido/feedback.html', {'restaurante': restaurante})
+    return render(request, 'pages/pedido/feedback.html', {
+        'restaurante': restaurante,
+        'cliente': cliente,
+        'ja_pediu': ja_pediu,
+        'ja_avaliou': ja_avaliou,
+    })
 
 
 def feedback_sucesso_view(request):
     return render(request, 'pages/pedido/feedback_sucesso.html')
+
+def avaliar_pedido_view(request):
+    if request.method != 'POST':
+        return redirect('pedido')
+
+    cliente = get_cliente_logado(request)
+    if not cliente:
+        return redirect('pedido')
+
+    pedido_id = _int_param(request.POST.get('pedido_id'), 0)
+    pedido = get_object_or_404(TbPedidos, id_pedido=pedido_id, cliente=cliente)
+
+    # Salva avaliação do restaurante
+    nota_restaurante = _int_param(request.POST.get('nota_restaurante'), 5)
+    comentario = request.POST.get('comentario_restaurante', '')
+
+    ja_avaliou_rest = TbAvaliacoes.objects.filter(
+        cliente=cliente,
+        restaurante=pedido.restaurante
+    ).exists()
+
+    if not ja_avaliou_rest:
+        TbAvaliacoes.objects.create(
+            cliente=cliente,
+            restaurante=pedido.restaurante,
+            nota=nota_restaurante,
+            comentario=comentario,
+            data_avaliacao=timezone.now(),
+        )
+
+    # Salva avaliação de cada prato
+    for item in pedido.tbpedidosprodutos_set.all():
+        nota_key = f'nota_produto_{item.produto.id_produto}'
+        comentario_key = f'comentario_produto_{item.produto.id_produto}'
+        nota = _int_param(request.POST.get(nota_key), 0)
+        comentario_prato = request.POST.get(comentario_key, '')
+        if nota > 0:
+            ja_avaliou_prato = TbAvaliacoesProdutos.objects.filter(
+                cliente=cliente,
+                produto=item.produto
+            ).exists()
+            if not ja_avaliou_prato:
+                TbAvaliacoesProdutos.objects.create(
+                    cliente=cliente,
+                    produto=item.produto,
+                    nota=nota,
+                    comentario=comentario_prato,
+                    data_avaliacao=timezone.now(),
+                )
+
+    messages.success(request, 'Avaliação enviada com sucesso! Obrigado pelo feedback.')
+    return redirect('pedido')
