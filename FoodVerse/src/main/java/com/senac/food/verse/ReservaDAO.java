@@ -37,18 +37,13 @@ public class ReservaDAO {
     
     public List<String> getListaMesas() {
         List<String> mesas = new ArrayList<>();
-        if (semContextoOperacional()) {
-            return mesas;
-        }
+        if (semContextoOperacional()) return mesas;
+        
         int rid = SessionContext.getInstance().getRestauranteEfetivo();
         ConexaoBanco cb = new ConexaoBanco();
         Connection conn = cb.abrirConexao();
-        if (conn == null) {
-            for (int i = 1; i <= 20; i++) {
-                mesas.add("Mesa " + String.format("%02d", i));
-            }
-            return mesas;
-        }
+        if (conn == null) return mesas; // Se offline, não inventa mesas
+        
         try {
             garantirTabelaMesas(conn);
             try (PreparedStatement ps = conn.prepareStatement(
@@ -60,21 +55,13 @@ public class ReservaDAO {
                     }
                 }
             }
-            if (mesas.isEmpty()) {
-                for (int i = 1; i <= 20; i++) {
-                    mesas.add("Mesa " + String.format("%02d", i));
-                }
-            }
         } catch (SQLException e) {
-            for (int i = 1; i <= 20; i++) {
-                mesas.add("Mesa " + String.format("%02d", i));
-            }
+            System.out.println("Erro ao ler mesas: " + e.getMessage());
         } finally {
             cb.fecharConexao();
         }
         return mesas;
     }
-
     public List<MesaConfig> listarMesasConfig() {
         List<MesaConfig> lista = new ArrayList<>();
         if (semContextoOperacional()) {
