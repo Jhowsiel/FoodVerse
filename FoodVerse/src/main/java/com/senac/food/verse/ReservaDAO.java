@@ -70,7 +70,7 @@ public class ReservaDAO {
         int rid = SessionContext.getInstance().getRestauranteEfetivo();
         ConexaoBanco cb = new ConexaoBanco();
         Connection conn = cb.abrirConexao();
-        if (conn == null) return mesas;
+        if (conn == null) return lista;
         
         try {
             garantirTabelaMesas(conn);

@@ -559,7 +559,7 @@ public class EntregasPainel extends JPanel {
         }
         entregadoresAtivos.add("👤 Adicionar Novo Entregador...");
 
-        String[] opcoes = entregadoresAtivos.toArray(new String);
+        String[] opcoes = entregadoresAtivos.toArray(new String[0]);
         
         String escolha = (String) JOptionPane.showInputDialog(
             this, 

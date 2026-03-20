@@ -208,7 +208,7 @@ public class GestaoCozinhaPanel extends JPanel {
 
                 // Botão de Ficha Técnica (Inteligente e Discreto)
                 JButton btnReceita = new JButton();
-                btnReceita.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.MENU_BOOK, 14, UIConstants.INFO_BLUE));
+                btnReceita.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.RECEIPT, 14, UIConstants.INFO_BLUE));
                 btnReceita.setToolTipText("Ver Receita");
                 btnReceita.setContentAreaFilled(false);
                 btnReceita.setBorderPainted(false);
