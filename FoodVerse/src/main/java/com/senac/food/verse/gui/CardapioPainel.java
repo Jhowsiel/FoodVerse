@@ -6,7 +6,6 @@ import com.senac.food.verse.CardapioDAO.ProdutoVenda;
 import com.senac.food.verse.CardapioDAO.ReceitaItem;
 import com.senac.food.verse.EstoqueDAO;
 import com.senac.food.verse.EstoqueDAO.ItemEstoque;
-import com.senac.food.verse.EstoqueDAO.Unidade;
 
 import jiconfont.icons.google_material_design_icons.GoogleMaterialDesignIcons;
 import jiconfont.swing.IconFontSwing;
@@ -94,9 +93,6 @@ public class CardapioPainel extends JPanel {
         return p;
     }
 
-    // =================================================================================
-    // ABA 1: PRATOS
-    // =================================================================================
     private JPanel criarAbaPratos() {
         JPanel p = new JPanel(new BorderLayout(0, 15));
         p.setBackground(UIConstants.BG_DARK);
@@ -177,9 +173,6 @@ public class CardapioPainel extends JPanel {
         return p;
     }
 
-    // =================================================================================
-    // ABA 2: PRODUTOS
-    // =================================================================================
     private JPanel criarAbaProdutos() {
         JPanel p = new JPanel(new BorderLayout(0, 15));
         p.setBackground(UIConstants.BG_DARK);
@@ -487,7 +480,7 @@ public class CardapioPainel extends JPanel {
             gc.gridx=1;
             JPanel pImg = new JPanel(new BorderLayout(8, 0)); pImg.setOpaque(false);
             txtImagem = new JTextField(); UIConstants.styleField(txtImagem);
-            txtImagem.setEditable(true); // <-- GARANTINDO QUE PODE DIGITAR URL
+            txtImagem.setEditable(true); // Permitir URL
             txtImagem.putClientProperty("JTextField.placeholderText", "Ex: https://... ou clique em Escolher");
             pImg.add(txtImagem, BorderLayout.CENTER);
             JButton btnEscolherImg = new JButton("Escolher..."); UIConstants.styleSecondary(btnEscolherImg);
@@ -609,7 +602,6 @@ public class CardapioPainel extends JPanel {
             DefaultTableModel tm = new DefaultTableModel(new String[]{"ID Produto", "Insumo", "Un.", "Estoque Atual"}, 0);
             JTable t = new JTable(tm); UIConstants.styleTable(t);
             
-            // É fundamental validar se o produtoId existe, senão ele não será salvo no Banco
             for(ItemEstoque ie : estoqueDAO.listarItens("", "Todas", "Ativos")) {
                 if(ie.getProdutoId() != null) {
                     tm.addRow(new Object[]{ie.getProdutoId(), ie.getNome(), ie.getUnidadePadrao(), EstoquePainel.formatarQuantidade(ie.getEstoqueAtual(), ie.getUnidadePadrao())});
@@ -623,7 +615,6 @@ public class CardapioPainel extends JPanel {
             JLabel lQtd = new JLabel("Qtd na receita (ex: 0.050 para 50g):"); 
             lQtd.setForeground(UIConstants.FG_LIGHT);
             
-            // CORREÇÃO: Spinner para suportar miligramas/gramas facilmente (3 casas decimais e passo de 0.010)
             JSpinner sQtd = new JSpinner(new SpinnerNumberModel(1.0, 0.001, 1000.0, 0.010));
             sQtd.setEditor(new JSpinner.NumberEditor(sQtd, "0.000"));
             sQtd.setPreferredSize(new Dimension(100, 30));
@@ -660,10 +651,9 @@ public class CardapioPainel extends JPanel {
             resultado.setTempoPreparo((Integer)spTempoPreparo.getValue());
             resultado.setAtivo(chkAtivo.isSelected());
 
-            // Inteligência para diferenciar URL de Caminho Local
             String imgInput = txtImagem.getText().trim();
             resultado.setImagem(imgInput.isEmpty() ? null : imgInput);
-            resultado.setImagemUrl(null); 
+            
             List<String> tags = new ArrayList<>();
             for(int i = 0; i < RESTRICOES_OPCOES.length; i++) if(chkRestricoes[i].isSelected()) tags.add(RESTRICOES_OPCOES[i]);
             resultado.setRestricoes(tags.isEmpty() ? null : String.join(",", tags));
@@ -686,9 +676,7 @@ public class CardapioPainel extends JPanel {
             spTempoPreparo.setValue(p.getTempoPreparo());
             chkAtivo.setSelected(p.isAtivo());
             
-            // Popula o campo com URL se houver, ou Local se houver
-            if(p.getImagemUrl() != null && !p.getImagemUrl().isEmpty()) txtImagem.setText(p.getImagemUrl());
-            else if(p.getImagem() != null) txtImagem.setText(p.getImagem());
+            if(p.getImagem() != null) txtImagem.setText(p.getImagem());
 
             for(ReceitaItem ri : p.getIngredientes()) {
                 ingModel.addRow(new Object[]{ri.getItemEstoqueId(), ri.getItemNome(), ri.getUnidade(), ri.getQuantidade()});
@@ -767,7 +755,7 @@ public class CardapioPainel extends JPanel {
 
             gc.gridy++; form.add(criarLabel("Imagem (URL da web ou Arquivo Local):"), gc); gc.gridy++;
             txtImagem = new JTextField(); UIConstants.styleField(txtImagem);
-            txtImagem.setEditable(true); // <-- EDITÁVEL
+            txtImagem.setEditable(true);
             txtImagem.putClientProperty("JTextField.placeholderText", "Ex: https://... ou clique em Escolher");
             JPanel pImg = new JPanel(new BorderLayout(8, 0)); pImg.setOpaque(false);
             pImg.add(txtImagem, BorderLayout.CENTER);
@@ -805,7 +793,6 @@ public class CardapioPainel extends JPanel {
                 
                 String imgInput = txtImagem.getText().trim();
                 resultado.setImagem(imgInput.isEmpty() ? null : imgInput);
-                resultado.setImagemUrl(null);
 
                 List<String> tags = new ArrayList<>();
                 for(int i = 0; i < RESTRICOES_OPCOES.length; i++) if(chkRestr[i].isSelected()) tags.add(RESTRICOES_OPCOES[i]);
@@ -820,8 +807,7 @@ public class CardapioPainel extends JPanel {
                 spPreco.setValue(base.getPreco()); chkAtivo.setSelected(base.isAtivo());
                 if(base.getDescricao() != null) txtDescricao.setText(base.getDescricao());
                 
-                if(base.getImagemUrl() != null && !base.getImagemUrl().isEmpty()) txtImagem.setText(base.getImagemUrl());
-                else if(base.getImagem() != null) txtImagem.setText(base.getImagem());
+                if(base.getImagem() != null) txtImagem.setText(base.getImagem());
 
                 if(base.getRestricoes() != null && !base.getRestricoes().isEmpty()) {
                     Set<String> rtags = new HashSet<>(Arrays.asList(base.getRestricoes().split(",")));
