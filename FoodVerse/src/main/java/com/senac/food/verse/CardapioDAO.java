@@ -145,7 +145,7 @@ public class CardapioDAO {
                      "ID_produto_venda INT, " +
                      "ID_insumo INT, " +
                      "quantidade FLOAT, " +
-                     "unidade VARCHAR(20), " +
+                     "unidades VARCHAR(20), " + 
                      "ativo BIT DEFAULT 1)";
         try (Statement st = conn.createStatement()) {
             st.execute(sql);
@@ -611,7 +611,7 @@ public class CardapioDAO {
         if(prato == null || prato.getId() == null) return;
         garantirTabelaReceitas(conn);
         try {
-            String sql = "SELECT r.ID_insumo, p.nome_produto, r.unidade, r.quantidade " +
+            String sql = "SELECT r.ID_insumo, p.nome_produto, r.unidades, r.quantidade " +
                          "FROM tb_receitas r JOIN tb_produtos p ON r.ID_insumo = p.ID_produto " +
                          "WHERE r.ID_produto_venda = ? AND r.ativo = 1";
             try(PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -621,7 +621,7 @@ public class CardapioDAO {
                         prato.getIngredientes().add(new ReceitaItem(
                             rs.getLong("ID_insumo"),
                             rs.getString("nome_produto"),
-                            rs.getString("unidade"),
+                            rs.getString("unidades"),
                             rs.getDouble("quantidade")
                         ));
                     }
@@ -641,7 +641,7 @@ public class CardapioDAO {
                 ps.executeUpdate();
             }
             if(ingredientes != null && !ingredientes.isEmpty()) {
-                String sql = "INSERT INTO tb_receitas (ID_produto_venda, ID_insumo, quantidade, unidade) VALUES (?, ?, ?, ?)";
+                String sql = "INSERT INTO tb_receitas (ID_produto_venda, ID_insumo, quantidade, unidades) VALUES (?, ?, ?, ?)";
                 try(PreparedStatement ps = conn.prepareStatement(sql)) {
                     for(ReceitaItem ri : ingredientes) {
                         ps.setLong(1, produtoVendaId);
@@ -665,7 +665,7 @@ public class CardapioDAO {
         try(Connection conn = cb.abrirConexao()) {
             if(conn == null) return items;
             garantirTabelaReceitas(conn);
-            String sql = "SELECT r.ID_insumo, p.nome_produto, r.unidade, r.quantidade " +
+            String sql = "SELECT r.ID_insumo, p.nome_produto, r.unidades, r.quantidade " +
                          "FROM tb_receitas r JOIN tb_produtos p ON r.ID_insumo = p.ID_produto " +
                          "WHERE r.ID_produto_venda = ? AND r.ativo = 1";
             try(PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -675,7 +675,7 @@ public class CardapioDAO {
                         items.add(new ReceitaItem(
                             rs.getLong("ID_insumo"),
                             rs.getString("nome_produto"),
-                            rs.getString("unidade"),
+                            rs.getString("unidades"),
                             rs.getDouble("quantidade")
                         ));
                     }

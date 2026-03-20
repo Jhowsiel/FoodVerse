@@ -609,29 +609,42 @@ public class CardapioPainel extends JPanel {
             DefaultTableModel tm = new DefaultTableModel(new String[]{"ID Produto", "Insumo", "Un.", "Estoque Atual"}, 0);
             JTable t = new JTable(tm); UIConstants.styleTable(t);
             
+            // É fundamental validar se o produtoId existe, senão ele não será salvo no Banco
             for(ItemEstoque ie : estoqueDAO.listarItens("", "Todas", "Ativos")) {
-                tm.addRow(new Object[]{ie.getProdutoId(), ie.getNome(), ie.getUnidadePadrao(), ie.getEstoqueAtual()});
+                if(ie.getProdutoId() != null) {
+                    tm.addRow(new Object[]{ie.getProdutoId(), ie.getNome(), ie.getUnidadePadrao(), EstoquePainel.formatarQuantidade(ie.getEstoqueAtual(), ie.getUnidadePadrao())});
+                }
             }
 
             d.add(new JScrollPane(t), BorderLayout.CENTER);
 
-            JPanel pBottom = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            JPanel pBottom = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
             pBottom.setBackground(UIConstants.BG_DARK);
-            JLabel lQtd = new JLabel("Qtd para o prato:"); lQtd.setForeground(UIConstants.FG_LIGHT);
-            JSpinner sQtd = new JSpinner(new SpinnerNumberModel(1.0, 0.001, 1000.0, 0.1));
+            JLabel lQtd = new JLabel("Qtd na receita (ex: 0.050 para 50g):"); 
+            lQtd.setForeground(UIConstants.FG_LIGHT);
+            
+            // CORREÇÃO: Spinner para suportar miligramas/gramas facilmente (3 casas decimais e passo de 0.010)
+            JSpinner sQtd = new JSpinner(new SpinnerNumberModel(1.0, 0.001, 1000.0, 0.010));
+            sQtd.setEditor(new JSpinner.NumberEditor(sQtd, "0.000"));
+            sQtd.setPreferredSize(new Dimension(100, 30));
             UIConstants.styleSpinner(sQtd);
             
             JButton bAdd = new JButton("Adicionar"); UIConstants.styleSuccess(bAdd);
             bAdd.addActionListener(e -> {
                 int r = t.getSelectedRow();
                 if(r >= 0) {
-                    ingModel.addRow(new Object[]{t.getValueAt(r, 0), t.getValueAt(r, 1), t.getValueAt(r, 2), sQtd.getValue()});
+                    ingModel.addRow(new Object[]{
+                        t.getValueAt(r, 0), 
+                        t.getValueAt(r, 1), 
+                        t.getValueAt(r, 2), 
+                        sQtd.getValue()
+                    });
                     d.dispose();
                 } else Toast.show(d, "Selecione um item", Toast.Type.WARNING);
             });
             pBottom.add(lQtd); pBottom.add(sQtd); pBottom.add(bAdd);
             d.add(pBottom, BorderLayout.SOUTH);
-            configurarDialogResponsivo(d, this, 500, 400); d.setVisible(true);
+            configurarDialogResponsivo(d, this, 550, 450); d.setVisible(true);
         }
 
         private void salvar() {

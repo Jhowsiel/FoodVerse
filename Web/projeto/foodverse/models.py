@@ -62,8 +62,9 @@ class TbEstoque(models.Model):
         on_delete=models.CASCADE,
         db_column="ID_produto"
     )
-    quantidade = models.IntegerField(null=True, blank=True)
-    estoque_minimo = models.IntegerField(null=True, blank=True)
+    quantidade = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
+    estoque_minimo = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
+    unidade = models.CharField(max_length=10, default='un', null=True, blank=True)
     ultima_atualizacao = models.DateTimeField(null=True, blank=True)
 
     class Meta:
@@ -239,3 +240,43 @@ class TbAvaliacoesProdutos(models.Model):
 
     class Meta:
         db_table = "tb_avaliacoes_produtos"
+
+class TbReceitas(models.Model):
+    """
+    Tabela que armazena a Ficha Técnica (quais insumos compõem um prato).
+    """
+    id_receita = models.AutoField(primary_key=True)
+    produto_venda = models.ForeignKey(
+        TbProdutos,
+        on_delete=models.CASCADE,
+        db_column="ID_produto_venda",
+        related_name="receitas_produto_venda"
+    )
+    insumo = models.ForeignKey(
+        TbProdutos,
+        on_delete=models.CASCADE,
+        db_column="ID_insumo",
+        related_name="receitas_insumo"
+    )
+    quantidade = models.DecimalField(max_digits=10, decimal_places=3)
+    unidade = models.CharField(max_length=20)
+    ativo = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "tb_receitas"
+    
+class TbMovimentacaoEstoque(models.Model):
+
+    id_movimentacao = models.AutoField(primary_key=True)
+    estoque = models.ForeignKey(
+        TbEstoque,
+        on_delete=models.CASCADE,
+        db_column="ID_estoque"
+    )
+    tipo = models.CharField(max_length=20)
+    quantidade = models.DecimalField(max_digits=10, decimal_places=3)
+    observacao = models.CharField(max_length=255, null=True, blank=True)
+    data_movimento = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "tb_movimentacao_estoque"
