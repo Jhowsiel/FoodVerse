@@ -82,6 +82,16 @@ public class GestaoCozinhaPanel extends JPanel {
     private void carregarPedidosAsync(boolean silencioso) {
         if(!silencioso) lblContador.setText("Atualizando...");
         
+        Component comp = ((BorderLayout) getLayout()).getLayoutComponent(BorderLayout.CENTER);
+        int posScroll = 0;
+        JScrollPane currentScroll = null;
+        if (comp instanceof JScrollPane) {
+            currentScroll = (JScrollPane) comp;
+            posScroll = currentScroll.getVerticalScrollBar().getValue();
+        }
+        final int scrollFinal = posScroll;
+        final JScrollPane scrollRef = currentScroll;
+        
         new SwingWorker<List<Pedidos>, Void>() {
             @Override
             protected List<Pedidos> doInBackground() {
@@ -120,6 +130,10 @@ public class GestaoCozinhaPanel extends JPanel {
                     }
                     containerPedidos.revalidate();
                     containerPedidos.repaint();
+                    
+                    if (scrollRef != null) {
+                        SwingUtilities.invokeLater(() -> scrollRef.getVerticalScrollBar().setValue(scrollFinal));
+                    }
                 } catch (Exception e) {
                     LOGGER.log(Level.WARNING, "Falha ao sincronizar pedidos da cozinha.", e);
                     UIConstants.showError(GestaoCozinhaPanel.this, "Não foi possível sincronizar a cozinha.");
@@ -183,11 +197,26 @@ public class GestaoCozinhaPanel extends JPanel {
         
         if(pedido.getItens() != null) {
             for (ItemPedido item : pedido.getItens()) {
+                JPanel linhaItem = new JPanel(new BorderLayout());
+                linhaItem.setOpaque(false);
+                linhaItem.setBorder(new EmptyBorder(0, 0, 8, 0));
+
                 JLabel lblItem = new JLabel("<html><b>" + item.getQuantidade() + "x</b> " + item.getNomeProduto() + "</html>");
                 lblItem.setForeground(UIConstants.FG_LIGHT);
                 lblItem.setFont(UIConstants.FONT_REGULAR_15);
-                lblItem.setBorder(new EmptyBorder(0, 0, 8, 0));
-                painelItens.add(lblItem);
+                linhaItem.add(lblItem, BorderLayout.CENTER);
+
+                // Botão de Ficha Técnica (Inteligente e Discreto)
+                JButton btnReceita = new JButton();
+                btnReceita.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.MENU_BOOK, 14, UIConstants.INFO_BLUE));
+                btnReceita.setToolTipText("Ver Receita");
+                btnReceita.setContentAreaFilled(false);
+                btnReceita.setBorderPainted(false);
+                btnReceita.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                btnReceita.addActionListener(e -> mostrarFichaTecnica(item.getIdItem(), item.getNomeProduto()));
+                
+                linhaItem.add(btnReceita, BorderLayout.EAST);
+                painelItens.add(linhaItem);
             }
         }
         
@@ -210,9 +239,22 @@ public class GestaoCozinhaPanel extends JPanel {
         btnAction.addActionListener(e -> {
             btnAction.setEnabled(false);
             btnAction.setText("Processando...");
-            dao.atualizarStatusPedido(pedido.getIdPedido(), "pronto");
-            carregarPedidosAsync(true);
-            UIConstants.showSuccess(this, "Pedido #" + pedido.getIdPedido() + " finalizado!");
+            btnAction.setBackground(UIConstants.FG_MUTED);
+            
+            new SwingWorker<Boolean, Void>() {
+                @Override
+                protected Boolean doInBackground() {
+                    try {
+                        dao.atualizarStatusPedido(pedido.getIdPedido(), "pronto");
+                        return true;
+                    } catch (Exception ex) { return false; }
+                }
+                @Override
+                protected void done() {
+                    carregarPedidosAsync(true);
+                    UIConstants.showSuccess(GestaoCozinhaPanel.this, "Pedido #" + pedido.getIdPedido() + " finalizado!");
+                }
+            }.execute();
         });
 
         pedidoCard.add(topContainer, BorderLayout.NORTH);
@@ -234,6 +276,80 @@ public class GestaoCozinhaPanel extends JPanel {
         return btn;
     }
 
+
+    private void mostrarFichaTecnica(String idProduto, String nomeProduto) {
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Ficha Técnica: " + nomeProduto, true);
+        dialog.setSize(350, 400);
+        dialog.setLocationRelativeTo(this);
+        dialog.getContentPane().setBackground(UIConstants.BG_DARK);
+        
+        DefaultListModel<String> modeloIngredientes = new DefaultListModel<>();
+        JList<String> lista = new JList<>(modeloIngredientes);
+        lista.setBackground(UIConstants.CARD_DARK);
+        lista.setForeground(UIConstants.FG_LIGHT);
+        lista.setFont(UIConstants.ARIAL_14);
+        lista.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        modeloIngredientes.addElement("Carregando ficha técnica...");
+
+        new SwingWorker<Void, String>() {
+            @Override
+            protected Void doInBackground() {
+                String sql = "SELECT p.nome_produto, r.quantidade, r.unidades " +
+                             "FROM tb_receitas r " +
+                             "JOIN tb_produtos p ON r.ID_insumo = p.ID_produto " +
+                             "WHERE r.ID_produto_venda = ? AND r.ativo = 1";
+                
+                com.senac.food.verse.ConexaoBanco cb = new com.senac.food.verse.ConexaoBanco();
+                java.sql.Connection conn = cb.abrirConexao();
+                if(conn != null) {
+                    try (java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+                        ps.setInt(1, Integer.parseInt(idProduto));
+                        try (java.sql.ResultSet rs = ps.executeQuery()) {
+                            boolean temIngredientes = false;
+                            while(rs.next()) {
+                                if(!temIngredientes) { modeloIngredientes.clear(); temIngredientes = true; }
+                                String nome = rs.getString("nome_produto");
+                                double qtd = rs.getDouble("quantidade");
+                                String unidade = rs.getString("unidades");
+                                // Formatação limpa (ex: 2.0 un -> 2 un)
+                                String linha = String.format("• %s: %.1f %s", nome, qtd, unidade).replace(",0 ", " ");
+                                modeloIngredientes.addElement(linha);
+                            }
+                            if(!temIngredientes) {
+                                modeloIngredientes.clear();
+                                modeloIngredientes.addElement(" Nenhuma receita cadastrada para este item.");
+                            }
+                        }
+                    } catch (Exception e) {
+                        modeloIngredientes.clear();
+                        modeloIngredientes.addElement("Erro ao consultar base de dados.");
+                    } finally {
+                        cb.fecharConexao();
+                    }
+                }
+                return null;
+            }
+        }.execute();
+
+        JScrollPane scroll = new JScrollPane(lista);
+        UIConstants.styleScrollPane(scroll);
+        scroll.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        
+        dialog.add(scroll, BorderLayout.CENTER);
+        
+        JButton btnFechar = new JButton("FECHAR");
+        UIConstants.styleSecondary(btnFechar);
+        btnFechar.addActionListener(e -> dialog.dispose());
+        JPanel pnlBotao = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        pnlBotao.setBackground(UIConstants.BG_DARK);
+        pnlBotao.add(btnFechar);
+        dialog.add(pnlBotao, BorderLayout.SOUTH);
+        
+        dialog.setVisible(true);
+    }
+
+    
     private void renderizarEstadoVazio() {
         containerPedidos.setLayout(new GridBagLayout());
 
