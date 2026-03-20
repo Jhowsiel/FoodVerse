@@ -438,7 +438,6 @@ public class EntregasPainel extends JPanel {
         centerContent.setOpaque(false);
         centerContent.add(gridInfo, BorderLayout.NORTH);
 
-        // Observações em Destaque
         if (p.getObservacoes() != null && !p.getObservacoes().trim().isEmpty()) {
             UIConstants.RoundedPanel pnlObs = new UIConstants.RoundedPanel(12, UIConstants.WARNING_PANEL_BG); 
             pnlObs.setLayout(new BorderLayout(10, 10));
@@ -458,7 +457,6 @@ public class EntregasPainel extends JPanel {
         scrollInfo.getViewport().setOpaque(false);
         containerPrincipal.add(scrollInfo, BorderLayout.CENTER);
         
-        // --- RODAPÉ: AÇÕES DE EXPEDIÇÃO ---
         JPanel bottomActions = new JPanel(new BorderLayout());
         bottomActions.setBackground(UIConstants.BG_DARK_ALT);
         bottomActions.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, UIConstants.GRID_DARK));
@@ -469,7 +467,7 @@ public class EntregasPainel extends JPanel {
         JButton btnWhats = new JButton("Chamar no WhatsApp");
         UIConstants.styleSecondary(btnWhats);
         btnWhats.setIcon(IconFontSwing.buildIcon(GoogleMaterialDesignIcons.CHAT, 20, UIConstants.SUCCESS_GREEN));
-        btnWhats.addActionListener(e -> abrirWhatsApp(p.getTelefoneEntregador(), p.getNomeCliente()));
+        btnWhats.addActionListener(e -> abrirWhatsAppContextualizado(p));
         pnlEsquerda.add(btnWhats);
 
         JPanel pnlDireita = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 18));
@@ -526,52 +524,95 @@ public class EntregasPainel extends JPanel {
         return card;
     }
 
-    // =========================================================================
-    // 6. INTEGRAÇÕES: DIALOG CUSTOMIZADO E DB
-    // =========================================================================
-    private void abrirWhatsApp(String telefone, String nome) {
+
+    private void abrirWhatsAppContextualizado(Pedidos p) {
         try {
+            String telefone = p.getTelefoneEntregador();
             if (telefone == null || telefone.isEmpty()) {
-                UIConstants.showWarning(this, "Telefone não encontrado no cadastro do cliente.");
+                UIConstants.showWarning(this, "Telefone não encontrado no cadastro deste pedido.");
                 return;
             }
             String numeroLimpo = telefone.replaceAll("[^0-9]", "");
-            String msg = "Olá " + nome + ", do " + SessionContext.getInstance().getRestauranteLabel() + ". O motoboy está a caminho!";
-            String url = "https://wa.me/55" + numeroLimpo + "?text=" + msg.replace(" ", "%20");
+            String motoboy = (p.getNomeEntregador() != null && !p.getNomeEntregador().isBlank()) ? p.getNomeEntregador() : "o nosso entregador";
+            
+            String msg = "Olá *" + p.getNomeCliente() + "*, aqui é do *" + SessionContext.getInstance().getRestauranteLabel() + "*! 🛵\n\n"
+                       + "O seu pedido *#" + p.getIdPedido() + "* acabou de sair para entrega com *" + motoboy + "*.\n"
+                       + "Forma de pagamento registrada: *" + p.getFormaPagamento().toUpperCase() + "*.\n\n"
+                       + "Qualquer dúvida, é só chamar aqui. Bom apetite!";
+                       
+            String url = "https://wa.me/55" + numeroLimpo + "?text=" + msg.replace(" ", "%20").replace("\n", "%0A");
             Desktop.getDesktop().browse(new URI(url));
         } catch (Exception ex) {
-            UIConstants.showError(this, "Erro ao abrir o navegador.");
+            UIConstants.showError(this, "Não foi possível abrir o navegador para o WhatsApp.");
         }
     }
 
     private void trocarMotoboy(Pedidos p) {
         operacaoEmAndamento = true;
-        
-        UIConstants.showInputDialog(
-            this, 
-            "Reatribuir Rota", 
-            "Qual o nome do novo Entregador (Motoboy)?", 
-            (novoNome) -> {
-                operacaoEmAndamento = false;
-                if(novoNome != null && !novoNome.trim().isEmpty()) {
-                    p.setNomeEntregador(novoNome); 
-                    executarUpdateBancoAsync(p, "em rota", novoNome, "Entregador alterado com sucesso!");
-                }
+
+        List<String> entregadoresAtivos = new ArrayList<>();
+        for(Pedidos ped : cacheEntregas) {
+            String nome = ped.getNomeEntregador();
+            if(nome != null && !nome.isBlank() && !entregadoresAtivos.contains(nome)) {
+                entregadoresAtivos.add(nome);
             }
+        }
+        entregadoresAtivos.add("👤 Adicionar Novo Entregador...");
+
+        String[] opcoes = entregadoresAtivos.toArray(new String);
+        
+        String escolha = (String) JOptionPane.showInputDialog(
+            this, 
+            "Selecione o Entregador para assumir a rota do Pedido #" + p.getIdPedido() + ":",
+            "Atribuir Motoboy", 
+            JOptionPane.QUESTION_MESSAGE, 
+            null, 
+            opcoes, 
+            opcoes
         );
+
+        if (escolha != null) {
+            String novoNome = escolha;
+            if (escolha.equals("👤 Adicionar Novo Entregador...")) {
+                novoNome = JOptionPane.showInputDialog(this, "Digite o nome do novo entregador:");
+            }
+
+            if (novoNome != null && !novoNome.trim().isEmpty()) {
+                p.setNomeEntregador(novoNome); 
+                executarUpdateBancoAsync(p, "em rota", novoNome, "Entregador alterado para " + novoNome + "!");
+            }
+        }
+        operacaoEmAndamento = false;
     }
 
     private void reportarProblemaEntrega(Pedidos p) {
-        UIConstants.showConfirmDialog(
-            this,
-            "Registrar Problema", 
-            "A entrega falhou? O pedido retornará para a fila de PRONTO (Cozinha).", 
-            () -> {
-                p.setNomeEntregador(null);
-                executarUpdateBancoAsync(p, "pronto", "", "Pedido retornado para a fila de despachos.");
-                entregaSelecionada = null;
-            }
+        operacaoEmAndamento = true;
+        
+        // Categorização de erros operacionais
+        String[] motivos = {
+            "Endereço não localizado",
+            "Cliente ausente / Não atende",
+            "Cliente recusou o pedido",
+            "Acidente / Problema com o Motoboy",
+            "Pedido danificado no trajeto"
+        };
+
+        String motivo = (String) JOptionPane.showInputDialog(
+            this, 
+            "Por que o pedido #" + p.getIdPedido() + " está retornando?\nEle voltará para a fila da Cozinha (Status: Pronto).",
+            "Registrar Falha na Entrega", 
+            JOptionPane.WARNING_MESSAGE, 
+            IconFontSwing.buildIcon(GoogleMaterialDesignIcons.REPORT_PROBLEM, 32, UIConstants.DANGER_RED), 
+            motivos, 
+            motivos
         );
+
+        if (motivo != null) {
+            p.setNomeEntregador(null);
+            executarUpdateBancoAsync(p, "pronto", null, "Retorno registrado por: " + motivo);
+            entregaSelecionada = null;
+        }
+        operacaoEmAndamento = false;
     }
 
     private void tentarConcluirEntrega(Pedidos p) {
