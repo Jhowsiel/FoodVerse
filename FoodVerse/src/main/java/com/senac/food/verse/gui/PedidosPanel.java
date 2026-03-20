@@ -844,7 +844,7 @@ public class PedidosPanel extends JPanel {
     }
 
     // =========================================================================
-    // NOVO PEDIDO LOCAL (BALCÃO / MESA)
+    // PEDIDO LOCAL (BALCÃO / MESA)
     // =========================================================================
     private void abrirDialogPedidoLocal() {
         JDialog dlg = new JDialog(SwingUtilities.getWindowAncestor(this), "Novo Pedido Local", Dialog.ModalityType.APPLICATION_MODAL);
@@ -954,24 +954,25 @@ public class PedidosPanel extends JPanel {
         JButton btnSalvar = new JButton("Criar Pedido");
         UIConstants.stylePrimary(btnSalvar);
         btnSalvar.addActionListener(e -> {
-            if(itensList.isEmpty()) {
-                UIConstants.showWarning(dlg, "Adicione pelo menos um item.");
-                return;
-            }
-            String mesa = cbTipo.getSelectedIndex() == 0 ? (String) cbMesa.getSelectedItem() : null;
-            if(cbTipo.getSelectedIndex() == 0 && (mesa == null || mesa.isBlank())) {
-                UIConstants.showWarning(dlg, "Selecione uma mesa para o pedido local.");
-                return;
-            }
-            String pedidoId = dao.criarPedidoLocal(mesa, itensList);
-            if(pedidoId != null) {
-                UIConstants.showSuccess(dlg, "Pedido local #" + pedidoId + " criado!");
-                dlg.dispose();
-                carregarDadosAsync(false);
-            } else {
-                UIConstants.showError(dlg, "Erro ao criar pedido. Verifique a conexão.");
-            }
-        });
+                if(itensList.isEmpty()) {
+                    UIConstants.showWarning(dlg, "Operação bloqueada: Adicione pelo menos um item à lista.");
+                    return;
+                }
+                String mesa = cbTipo.getSelectedIndex() == 0 ? (String) cbMesa.getSelectedItem() : null;
+                if(cbTipo.getSelectedIndex() == 0 && (mesa == null || mesa.isBlank())) {
+                    UIConstants.showWarning(dlg, "Operação bloqueada: O restaurante não possui mesas ativas. Use 'Retirada' ou crie mesas no Gestor de Mesas.");
+                    return;
+                }
+                
+                String pedidoId = dao.criarPedidoLocal(mesa, itensList);
+                if(pedidoId != null) {
+                    UIConstants.showSuccess(dlg, "Pedido local #" + pedidoId + " registado com sucesso!");
+                    dlg.dispose();
+                    carregarDadosAsync(false);
+                } else {
+                    UIConstants.showError(dlg, "Erro ao gravar pedido. Verifique o console para alertas de Foreign Key.");
+                }
+            });
         pnlBot.add(btnCancel);
         pnlBot.add(btnSalvar);
         dlg.add(pnlBot, BorderLayout.SOUTH);
