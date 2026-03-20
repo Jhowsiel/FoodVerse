@@ -1,12 +1,10 @@
 package com.senac.food.verse;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class CardapioDAO {
@@ -39,7 +37,7 @@ public class CardapioDAO {
         private boolean ativo = true;
         private double preco;
         private String descricao;
-        private String imagem;
+        private String imagem; // Única variável de imagem (Local ou Web)
         private int tempoPreparo;
         private String tipoProduto = "PRATO";
         private final List<ReceitaItem> ingredientes = new ArrayList<>();
@@ -63,8 +61,6 @@ public class CardapioDAO {
         public void setDescricao(String descricao) { this.descricao = descricao; }
         public String getImagem() { return imagem; }
         public void setImagem(String imagem) { this.imagem = imagem; }
-        public String getImagemUrl() { return imagemUrl; }
-        public void setImagemUrl(String imagemUrl) { this.imagemUrl = imagemUrl; }
         public int getTempoPreparo() { return tempoPreparo; }
         public void setTempoPreparo(int tempoPreparo) { this.tempoPreparo = tempoPreparo; }
         public String getTipoProduto() { return tipoProduto; }
@@ -81,8 +77,7 @@ public class CardapioDAO {
         private boolean ativo = true;
         private double preco;
         private String descricao;
-        private String imagem;
-        private String imagemUrl;
+        private String imagem; // Única variável de imagem (Local ou Web)
         private String restricoes;
 
         public ProdutoVenda() {}
@@ -103,40 +98,12 @@ public class CardapioDAO {
         public void setDescricao(String descricao) { this.descricao = descricao; }
         public String getImagem() { return imagem; }
         public void setImagem(String imagem) { this.imagem = imagem; }
-        public String getImagemUrl() { return imagemUrl; }
-        public void setImagemUrl(String imagemUrl) { this.imagemUrl = imagemUrl; }
         public String getRestricoes() { return restricoes; }
         public void setRestricoes(String restricoes) { this.restricoes = restricoes; }
     }
 
-    private static final List<Prato> PRATOS_MOCK = new ArrayList<>();
-    private static final List<ProdutoVenda> PRODUTOS_MOCK = new ArrayList<>();
-    private static final AtomicLong SEQ_ID = new AtomicLong(1000);
-
-    static {
-        PRODUTOS_MOCK.add(new ProdutoVenda(SEQ_ID.getAndIncrement(), "Coca-Cola Lata 350ml", "Bebidas", true, 7.00));
-        Prato p1 = new Prato(SEQ_ID.getAndIncrement(), "Hambúrguer Clássico", "Lanches", true, 24.90);
-        PRATOS_MOCK.add(p1);
-    }
 
     // ================== UTILS / GARANTIA DE ESTRUTURA ==================
-    private boolean hasColumn(Connection conn, String tableName, String columnName) {
-        try {
-            DatabaseMetaData meta = conn.getMetaData();
-            try (ResultSet rs = meta.getColumns(null, null, tableName, columnName)) { return rs.next(); }
-        } catch (Exception ignored) { return false; }
-    }
-
-    private void preencherImagemCompativel(ResultSet rs, Prato prato) {
-        try { prato.setImagem(rs.getString("imagem")); } catch (Exception ignored) { prato.setImagem(null); }
-        try { prato.setImagemUrl(rs.getString("imagem_url")); } catch (Exception ignored) { prato.setImagemUrl(null); }
-    }
-
-    private void preencherImagemCompativel(ResultSet rs, ProdutoVenda produto) {
-        try { produto.setImagem(rs.getString("imagem")); } catch (Exception ignored) { produto.setImagem(null); }
-        try { produto.setImagemUrl(rs.getString("imagem_url")); } catch (Exception ignored) { produto.setImagemUrl(null); }
-    }
-
     private void garantirTabelaReceitas(Connection conn) {
         String sql = "IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='tb_receitas' and xtype='U') " +
                      "CREATE TABLE tb_receitas (" +
@@ -159,13 +126,7 @@ public class CardapioDAO {
         List<Prato> pratos = new ArrayList<>();
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
-            if(conn == null) {
-                String t = termo == null ? "" : termo.toLowerCase();
-                return PRATOS_MOCK.stream()
-                    .filter(p -> p.getNome().toLowerCase().contains(t))
-                    .filter(p -> categoria == null || "Todas".equals(categoria) || categoria.equals(p.getCategoria()))
-                    .collect(Collectors.toList());
-            }
+            if(conn == null) return pratos;
 
             StringBuilder sql = new StringBuilder("SELECT * FROM tb_produtos WHERE nome_produto LIKE ? AND COALESCE(tipo_produto, 'PRATO') = 'PRATO'");
             int rid = SessionContext.getInstance().getRestauranteEfetivo();
@@ -185,9 +146,9 @@ public class CardapioDAO {
                         Prato pr = new Prato(rs.getLong("ID_produto"), rs.getString("nome_produto"),
                                 rs.getString("categoria"), rs.getBoolean("disponivel"), rs.getDouble("preco"));
                         pr.setDescricao(rs.getString("descricao"));
-                        preencherImagemCompativel(rs, pr);
+                        pr.setImagem(rs.getString("imagem"));
                         pr.setTempoPreparo(rs.getInt("tempo_preparo"));
-                        try { pr.setRestricoes(rs.getString("restricoes")); } catch(Exception ignored) {}
+                        pr.setRestricoes(rs.getString("restricoes"));
                         carregarReceita(conn, pr);
                         pratos.add(pr);
                     }
@@ -200,13 +161,10 @@ public class CardapioDAO {
     public Prato salvarPrato(Prato prato) {
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
-            if(conn == null) { prato.setId(SEQ_ID.getAndIncrement()); PRATOS_MOCK.add(prato); return prato; }
+            if(conn == null) return prato;
 
             int rid = SessionContext.getInstance().getRestauranteEfetivo();
-            boolean possuiImagemUrl = hasColumn(conn, "tb_produtos", "imagem_url");
-            String sql = possuiImagemUrl
-                    ? "INSERT INTO tb_produtos (ID_restaurante, nome_produto, categoria, descricao, preco, disponivel, imagem, imagem_url, tempo_preparo, restricoes, tipo_produto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PRATO')"
-                    : "INSERT INTO tb_produtos (ID_restaurante, nome_produto, categoria, descricao, preco, disponivel, imagem, tempo_preparo, restricoes, tipo_produto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PRATO')";
+            String sql = "INSERT INTO tb_produtos (ID_restaurante, nome_produto, categoria, descricao, preco, disponivel, imagem, tempo_preparo, restricoes, tipo_produto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PRATO')";
             
             try(PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setObject(1, rid > 0 ? rid : null);
@@ -216,10 +174,8 @@ public class CardapioDAO {
                 ps.setDouble(5, prato.getPreco());
                 ps.setBoolean(6, prato.isAtivo());
                 ps.setString(7, prato.getImagem());
-                int idx = 8;
-                if (possuiImagemUrl) { ps.setString(idx++, prato.getImagemUrl()); }
-                ps.setInt(idx++, prato.getTempoPreparo());
-                ps.setString(idx, prato.getRestricoes());
+                ps.setInt(8, prato.getTempoPreparo());
+                ps.setString(9, prato.getRestricoes());
                 ps.executeUpdate();
                 try(ResultSet rs = ps.getGeneratedKeys()) { if(rs.next()) prato.setId(rs.getLong(1)); }
             }
@@ -232,15 +188,10 @@ public class CardapioDAO {
         if(prato.getId() == null) return;
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
-            if(conn == null) {
-                for(int i=0; i<PRATOS_MOCK.size(); i++) if(PRATOS_MOCK.get(i).getId().equals(prato.getId())) { PRATOS_MOCK.set(i, prato); break; }
-                return;
-            }
+            if(conn == null) return;
+            
             int rid = SessionContext.getInstance().getRestauranteEfetivo();
-            boolean possuiImagemUrl = hasColumn(conn, "tb_produtos", "imagem_url");
-            StringBuilder sql = new StringBuilder("UPDATE tb_produtos SET nome_produto=?, categoria=?, descricao=?, preco=?, disponivel=?, imagem=?");
-            if (possuiImagemUrl) sql.append(", imagem_url=?");
-            sql.append(", tempo_preparo=?, restricoes=? WHERE ID_produto=?");
+            StringBuilder sql = new StringBuilder("UPDATE tb_produtos SET nome_produto=?, categoria=?, descricao=?, preco=?, disponivel=?, imagem=?, tempo_preparo=?, restricoes=? WHERE ID_produto=?");
             if (rid > 0) sql.append(" AND ID_restaurante = ?");
             
             try(PreparedStatement ps = conn.prepareStatement(sql.toString())) {
@@ -250,12 +201,10 @@ public class CardapioDAO {
                 ps.setDouble(4, prato.getPreco());
                 ps.setBoolean(5, prato.isAtivo());
                 ps.setString(6, prato.getImagem());
-                int idx = 7;
-                if (possuiImagemUrl) { ps.setString(idx++, prato.getImagemUrl()); }
-                ps.setInt(idx++, prato.getTempoPreparo());
-                ps.setString(idx++, prato.getRestricoes());
-                ps.setLong(idx++, prato.getId());
-                if (rid > 0) ps.setInt(idx, rid);
+                ps.setInt(7, prato.getTempoPreparo());
+                ps.setString(8, prato.getRestricoes());
+                ps.setLong(9, prato.getId());
+                if (rid > 0) ps.setInt(10, rid);
                 ps.executeUpdate();
             }
             salvarReceita(conn, prato.getId(), prato.getIngredientes());
@@ -265,7 +214,7 @@ public class CardapioDAO {
     public void excluirPrato(Long id) {
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
-            if(conn == null) { PRATOS_MOCK.removeIf(p -> p.getId().equals(id)); return; }
+            if(conn == null) return;
             garantirTabelaReceitas(conn);
             int rid = SessionContext.getInstance().getRestauranteEfetivo();
             conn.setAutoCommit(false);
@@ -304,7 +253,7 @@ public class CardapioDAO {
     public Prato buscarPratoPorId(Long id) {
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
-            if(conn == null) return PRATOS_MOCK.stream().filter(p -> p.getId().equals(id)).findFirst().orElse(null);
+            if(conn == null) return null;
             
             int rid = SessionContext.getInstance().getRestauranteEfetivo();
             StringBuilder sql = new StringBuilder("SELECT * FROM tb_produtos WHERE ID_produto=?");
@@ -317,9 +266,9 @@ public class CardapioDAO {
                         Prato pr = new Prato(rs.getLong("ID_produto"), rs.getString("nome_produto"),
                                     rs.getString("categoria"), rs.getBoolean("disponivel"), rs.getDouble("preco"));
                         pr.setDescricao(rs.getString("descricao"));
-                        preencherImagemCompativel(rs, pr);
+                        pr.setImagem(rs.getString("imagem"));
                         pr.setTempoPreparo(rs.getInt("tempo_preparo"));
-                        try { pr.setRestricoes(rs.getString("restricoes")); } catch(Exception ignored) {}
+                        pr.setRestricoes(rs.getString("restricoes"));
                         carregarReceita(conn, pr);
                         return pr;
                     }
@@ -333,7 +282,7 @@ public class CardapioDAO {
         List<String> cat = new ArrayList<>();
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
-            if(conn == null) return PRATOS_MOCK.stream().map(Prato::getCategoria).distinct().collect(Collectors.toList());
+            if(conn == null) return cat;
             int rid = SessionContext.getInstance().getRestauranteEfetivo();
             String sql = "SELECT DISTINCT categoria FROM tb_produtos WHERE categoria IS NOT NULL AND COALESCE(tipo_produto, 'PRATO') = 'PRATO'"
                     + (rid > 0 ? " AND ID_restaurante = ?" : "");
@@ -353,12 +302,7 @@ public class CardapioDAO {
         List<ProdutoVenda> prods = new ArrayList<>();
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
-            if(conn == null) {
-                String t = termo == null ? "" : termo.toLowerCase();
-                return PRODUTOS_MOCK.stream().filter(p -> p.getNome().toLowerCase().contains(t))
-                    .filter(p -> categoria == null || "Todas".equals(categoria) || categoria.equals(p.getCategoria()))
-                    .collect(Collectors.toList());
-            }
+            if(conn == null) return prods;
 
             StringBuilder sql = new StringBuilder("SELECT * FROM tb_produtos WHERE nome_produto LIKE ? AND COALESCE(tipo_produto, 'PRODUTO') = 'PRODUTO'");
             int rid = SessionContext.getInstance().getRestauranteEfetivo();
@@ -378,8 +322,8 @@ public class CardapioDAO {
                         ProdutoVenda pv = new ProdutoVenda(rs.getLong("ID_produto"), rs.getString("nome_produto"),
                                 rs.getString("categoria"), rs.getBoolean("disponivel"), rs.getDouble("preco"));
                         pv.setDescricao(rs.getString("descricao"));
-                        preencherImagemCompativel(rs, pv);
-                        try { pv.setRestricoes(rs.getString("restricoes")); } catch(Exception ignored) {}
+                        pv.setImagem(rs.getString("imagem"));
+                        pv.setRestricoes(rs.getString("restricoes"));
                         prods.add(pv);
                     }
                 }
@@ -391,13 +335,10 @@ public class CardapioDAO {
     public ProdutoVenda salvarProduto(ProdutoVenda p) {
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
-            if(conn == null) { p.setId(SEQ_ID.getAndIncrement()); PRODUTOS_MOCK.add(p); return p; }
+            if(conn == null) return p;
 
             int rid = SessionContext.getInstance().getRestauranteEfetivo();
-            boolean possuiImagemUrl = hasColumn(conn, "tb_produtos", "imagem_url");
-            String sql = possuiImagemUrl
-                    ? "INSERT INTO tb_produtos (ID_restaurante, nome_produto, categoria, descricao, preco, disponivel, imagem, imagem_url, restricoes, tipo_produto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PRODUTO')"
-                    : "INSERT INTO tb_produtos (ID_restaurante, nome_produto, categoria, descricao, preco, disponivel, imagem, restricoes, tipo_produto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PRODUTO')";
+            String sql = "INSERT INTO tb_produtos (ID_restaurante, nome_produto, categoria, descricao, preco, disponivel, imagem, restricoes, tipo_produto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PRODUTO')";
             try(PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setObject(1, rid > 0 ? rid : null);
                 ps.setString(2, p.getNome());
@@ -406,9 +347,7 @@ public class CardapioDAO {
                 ps.setDouble(5, p.getPreco());
                 ps.setBoolean(6, p.isAtivo());
                 ps.setString(7, p.getImagem());
-                int idx = 8;
-                if (possuiImagemUrl) { ps.setString(idx++, p.getImagemUrl()); }
-                ps.setString(idx, p.getRestricoes());
+                ps.setString(8, p.getRestricoes());
                 ps.executeUpdate();
                 try(ResultSet rs = ps.getGeneratedKeys()) { if(rs.next()) p.setId(rs.getLong(1)); }
             }
@@ -420,15 +359,10 @@ public class CardapioDAO {
         if(p.getId() == null) return;
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
-            if(conn == null) {
-                for(int i=0; i<PRODUTOS_MOCK.size(); i++) if(PRODUTOS_MOCK.get(i).getId().equals(p.getId())) { PRODUTOS_MOCK.set(i, p); break; }
-                return;
-            }
+            if(conn == null) return;
+            
             int rid = SessionContext.getInstance().getRestauranteEfetivo();
-            boolean possuiImagemUrl = hasColumn(conn, "tb_produtos", "imagem_url");
-            StringBuilder sql = new StringBuilder("UPDATE tb_produtos SET nome_produto=?, categoria=?, descricao=?, preco=?, disponivel=?, imagem=?");
-            if (possuiImagemUrl) sql.append(", imagem_url=?");
-            sql.append(", restricoes=? WHERE ID_produto=?");
+            StringBuilder sql = new StringBuilder("UPDATE tb_produtos SET nome_produto=?, categoria=?, descricao=?, preco=?, disponivel=?, imagem=?, restricoes=? WHERE ID_produto=?");
             if (rid > 0) sql.append(" AND ID_restaurante = ?");
             try(PreparedStatement ps = conn.prepareStatement(sql.toString())) {
                 ps.setString(1, p.getNome());
@@ -437,11 +371,9 @@ public class CardapioDAO {
                 ps.setDouble(4, p.getPreco());
                 ps.setBoolean(5, p.isAtivo());
                 ps.setString(6, p.getImagem());
-                int idx = 7;
-                if (possuiImagemUrl) { ps.setString(idx++, p.getImagemUrl()); }
-                ps.setString(idx++, p.getRestricoes());
-                ps.setLong(idx++, p.getId());
-                if (rid > 0) ps.setInt(idx, rid);
+                ps.setString(7, p.getRestricoes());
+                ps.setLong(8, p.getId());
+                if (rid > 0) ps.setInt(9, rid);
                 ps.executeUpdate();
             }
         } catch(Exception e) { e.printStackTrace(); }
@@ -450,7 +382,7 @@ public class CardapioDAO {
     public void excluirProduto(Long id) {
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
-            if(conn == null) { PRODUTOS_MOCK.removeIf(p -> p.getId().equals(id)); return; }
+            if(conn == null) return;
             int rid = SessionContext.getInstance().getRestauranteEfetivo();
             conn.setAutoCommit(false);
             try {
@@ -483,7 +415,7 @@ public class CardapioDAO {
     public ProdutoVenda buscarProdutoPorId(Long id) {
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
-            if(conn == null) return PRODUTOS_MOCK.stream().filter(p -> p.getId().equals(id)).findFirst().orElse(null);
+            if(conn == null) return null;
             int rid = SessionContext.getInstance().getRestauranteEfetivo();
             StringBuilder sql = new StringBuilder("SELECT * FROM tb_produtos WHERE ID_produto=?");
             if (rid > 0) sql.append(" AND ID_restaurante = ?");
@@ -495,8 +427,8 @@ public class CardapioDAO {
                         ProdutoVenda pv = new ProdutoVenda(rs.getLong("ID_produto"), rs.getString("nome_produto"),
                                 rs.getString("categoria"), rs.getBoolean("disponivel"), rs.getDouble("preco"));
                         pv.setDescricao(rs.getString("descricao"));
-                        preencherImagemCompativel(rs, pv);
-                        try { pv.setRestricoes(rs.getString("restricoes")); } catch(Exception ignored) {}
+                        pv.setImagem(rs.getString("imagem"));
+                        pv.setRestricoes(rs.getString("restricoes"));
                         return pv;
                     }
                 }
@@ -509,7 +441,7 @@ public class CardapioDAO {
         List<String> cat = new ArrayList<>();
         ConexaoBanco cb = new ConexaoBanco();
         try(Connection conn = cb.abrirConexao()) {
-            if(conn == null) return PRODUTOS_MOCK.stream().map(ProdutoVenda::getCategoria).distinct().collect(Collectors.toList());
+            if(conn == null) return cat;
             int rid = SessionContext.getInstance().getRestauranteEfetivo();
             String sql = "SELECT DISTINCT categoria FROM tb_produtos WHERE categoria IS NOT NULL AND COALESCE(tipo_produto, 'PRODUTO') = 'PRODUTO'"
                     + (rid > 0 ? " AND ID_restaurante = ?" : "");
@@ -671,7 +603,7 @@ public class CardapioDAO {
                         items.add(new ReceitaItem(
                             rs.getLong("ID_insumo"),
                             rs.getString("nome_produto"),
-                            rs.getString("unidades"), // <-- Lendo do plural
+                            rs.getString("unidades"),
                             rs.getDouble("quantidade")
                         ));
                     }
