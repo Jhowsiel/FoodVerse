@@ -73,7 +73,20 @@ public class PedidoDAO {
                 String idPedido = rs.getString("ID_pedido");
                 List<ItemPedido> itens = buscarItensDoPedido(idPedido);
                 String enderecoEntrega = rs.getString("endereco_entrega");
-                String modoEntrega = (enderecoEntrega != null && !enderecoEntrega.isEmpty()) ? "Delivery" : "Salão";
+                String modoEntrega = "Delivery";
+                String mesaExtraida = null;
+                
+                if (enderecoEntrega == null || enderecoEntrega.isEmpty() || enderecoEntrega.contains("Retirada")) {
+                    modoEntrega = "Salão";
+                } else if (enderecoEntrega.toLowerCase().startsWith("mesa")) {
+                    modoEntrega = "Salão";
+                    mesaExtraida = enderecoEntrega.replace("Mesa ", "").trim();
+                }
+
+                Pedidos pedido = new Pedidos(idPedido, rs.getString("nome_cliente"), rs.getString("hora_pedido"), null,
+                        null, enderecoEntrega, null,
+                        rs.getString("telefone_cliente"), modoEntrega, null,
+                        itens, rs.getString("nome_status"), null, rs.getString("forma_pagamento"), rs.getDouble("subtotal"), mesaExtraida);
 
                 Pedidos pedido = new Pedidos(idPedido, rs.getString("nome_cliente"), rs.getString("hora_pedido"), null,
                         null, enderecoEntrega, null,
