@@ -342,14 +342,6 @@ public class PedidoDAO {
         return itens;
     }
 
-    /**
-     * Creates a local order (dine-in/takeout) directly from the Java management panel.
-     * Sets status to 'pendente' (1) and tipo to 'Salão'.
-     * @param mesa table number or null for takeout
-     * @param itens list of items with product ID, name, quantity, price
-     * @return generated order ID or null on error
-     */
-
     private boolean hasColumn(Connection conn, String tableName, String columnName) {
         try {
             DatabaseMetaData metaData = conn.getMetaData();
@@ -448,7 +440,6 @@ public class PedidoDAO {
             if (rs.next()) {
                 int statusId = rs.getInt("ID_status");
 
-                // BOM stock deduction: only on transition 1 (pendente) → 2 (em preparo)
                 if(statusAtual == 1 && statusId == 2) {
                     baixarEstoquePorReceita(conexao.conn, idPedido);
                 }
@@ -479,13 +470,8 @@ public class PedidoDAO {
         }
     }
 
-    /**
-     * Deduct ingredient stock based on recipe (BOM) when an order moves to preparation.
-     * For each order item: qty_ordered * recipe_qty is deducted from the ingredient's stock.
-     */
     private void baixarEstoquePorReceita(java.sql.Connection conn, String idPedido) {
         try {
-            // Get order items
             String sqlItens = "SELECT pp.ID_produto, pp.quantidade FROM tb_pedidos_produtos pp WHERE pp.ID_pedido = ?";
             try(PreparedStatement ps = conn.prepareStatement(sqlItens)) {
                 ps.setInt(1, Integer.parseInt(idPedido));
@@ -493,7 +479,6 @@ public class PedidoDAO {
                     while(rs.next()) {
                         long produtoId = rs.getLong("ID_produto");
                         int qtdPedido = rs.getInt("quantidade");
-                        // Deduct ingredients for this product
                         String sqlReceita = "SELECT r.ID_insumo, r.quantidade FROM tb_receitas r WHERE r.ID_produto_venda = ? AND r.ativo = 1";
                         try(PreparedStatement psR = conn.prepareStatement(sqlReceita)) {
                             psR.setLong(1, produtoId);
@@ -502,7 +487,6 @@ public class PedidoDAO {
                                     long insumoId = rsR.getLong("ID_insumo");
                                     double qtdReceita = rsR.getDouble("quantidade");
                                     double totalBaixar = qtdPedido * qtdReceita;
-                                    // Deduct from tb_estoque where ID_produto = insumoId
                                     String sqlBaixa = "UPDATE tb_estoque SET quantidade = quantidade - ? WHERE ID_produto = ? AND quantidade >= ?";
                                     try(PreparedStatement psBaixa = conn.prepareStatement(sqlBaixa)) {
                                         psBaixa.setDouble(1, totalBaixar);
