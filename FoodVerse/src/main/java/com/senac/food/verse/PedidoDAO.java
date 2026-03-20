@@ -88,11 +88,6 @@ public class PedidoDAO {
                         rs.getString("telefone_cliente"), modoEntrega, null,
                         itens, rs.getString("nome_status"), null, rs.getString("forma_pagamento"), rs.getDouble("subtotal"), mesaExtraida);
 
-                Pedidos pedido = new Pedidos(idPedido, rs.getString("nome_cliente"), rs.getString("hora_pedido"), null,
-                        null, enderecoEntrega, null,
-                        rs.getString("telefone_cliente"), modoEntrega, null,
-                        itens, rs.getString("nome_status"), null, rs.getString("forma_pagamento"), rs.getDouble("subtotal"), null);
-
                 pedidosFresh.add(pedido);
 
                 if (ultimoIdCarregado == null || idPedido.compareTo(ultimoIdCarregado) > 0) {
