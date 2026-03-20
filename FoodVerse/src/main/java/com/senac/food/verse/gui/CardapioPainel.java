@@ -662,14 +662,8 @@ public class CardapioPainel extends JPanel {
 
             // Inteligência para diferenciar URL de Caminho Local
             String imgInput = txtImagem.getText().trim();
-            if (imgInput.toLowerCase().startsWith("http://") || imgInput.toLowerCase().startsWith("https://")) {
-                resultado.setImagemUrl(imgInput);
-                resultado.setImagem(null);
-            } else {
-                resultado.setImagem(imgInput.isEmpty() ? null : imgInput);
-                resultado.setImagemUrl(null);
-            }
-
+            resultado.setImagem(imgInput.isEmpty() ? null : imgInput);
+            resultado.setImagemUrl(null); 
             List<String> tags = new ArrayList<>();
             for(int i = 0; i < RESTRICOES_OPCOES.length; i++) if(chkRestricoes[i].isSelected()) tags.add(RESTRICOES_OPCOES[i]);
             resultado.setRestricoes(tags.isEmpty() ? null : String.join(",", tags));
@@ -810,11 +804,8 @@ public class CardapioPainel extends JPanel {
                 resultado.setDescricao(txtDescricao.getText().trim());
                 
                 String imgInput = txtImagem.getText().trim();
-                if (imgInput.toLowerCase().startsWith("http://") || imgInput.toLowerCase().startsWith("https://")) {
-                    resultado.setImagemUrl(imgInput); resultado.setImagem(null);
-                } else {
-                    resultado.setImagem(imgInput.isEmpty() ? null : imgInput); resultado.setImagemUrl(null);
-                }
+                resultado.setImagem(imgInput.isEmpty() ? null : imgInput);
+                resultado.setImagemUrl(null);
 
                 List<String> tags = new ArrayList<>();
                 for(int i = 0; i < RESTRICOES_OPCOES.length; i++) if(chkRestr[i].isSelected()) tags.add(RESTRICOES_OPCOES[i]);

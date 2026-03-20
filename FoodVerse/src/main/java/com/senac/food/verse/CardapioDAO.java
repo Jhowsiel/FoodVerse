@@ -40,7 +40,6 @@ public class CardapioDAO {
         private double preco;
         private String descricao;
         private String imagem;
-        private String imagemUrl;
         private int tempoPreparo;
         private String tipoProduto = "PRATO";
         private final List<ReceitaItem> ingredientes = new ArrayList<>();
