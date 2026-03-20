@@ -37,12 +37,33 @@
 
   .acc-grid { display:grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap:12px; }
   @media (max-width: 760px){ .acc-grid { grid-template-columns: 1fr; } }
+
+  .acc-item { position: relative; }
+  .acc-img-wrap { width:100%; height:130px; display:flex; align-items:center; justify-content:center; background:#131316; }
+  .acc-item img { width:100%; height:100%; object-fit:cover; }
+  .acc-name { font-weight:700; font-size:.95rem; padding-right: 36px; } /* Evita que o texto encoste no botão */
   .acc-item { background:#131316; border:1px solid var(--line); border-radius:14px; overflow:hidden; text-decoration:none; color:inherit; transition: border-color 0.15s, transform 0.15s; }
   .acc-item:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-2px); }
   .acc-item img { width:100%; height:130px; object-fit:cover; }
   .acc-body { padding:10px 12px 12px; }
   .acc-name { font-weight:700; font-size:.95rem; }
   .acc-price { color:#ff7e88; font-weight:700; font-size:.88rem; margin-top:4px; }
+
+
+
+  .acc-add-btn {
+    position: absolute; bottom: 12px; right: 12px;
+    width: 32px; height: 32px;
+    background: var(--surface-4); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--txt); text-decoration: none;
+    transition: background 0.2s, color 0.2s, transform 0.2s;
+    z-index: 2;
+  }
+  .acc-add-btn:hover { background: var(--brand); color: #fff; transform: scale(1.05); }
+  
+  .fallback-icon { font-size: 3.5rem; color: #2b2b30; }
+  .fallback-hero { font-size: 6rem; color: #2b2b30; }
 
   /* ══ AVALIAÇÕES ══════════════════════════════════════ */
   .rv-section { margin-top: 16px; }
@@ -314,7 +335,16 @@
   <div class="pv-grid">
     <div>
       <article class="pv-hero">
-        <img class="pv-hero-img" src="{% img_or_fallback prato.imagem %}" alt="{{ prato.nome_produto }}">
+        {% if prato.imagem and "http" in prato.imagem %}
+          <img class="pv-hero-img" src="{{ prato.imagem }}" alt="{{ prato.nome_produto }}">
+        {% elif prato.imagem %}
+          <img class="pv-hero-img" src="{% img_or_fallback prato.imagem %}" alt="{{ prato.nome_produto }}">
+        {% else %}
+          <div class="pv-hero-img" style="display:flex; align-items:center; justify-content:center; background:#131316;">
+            <i class="fa-solid fa-utensils fallback-hero"></i>
+          </div>
+        {% endif %}
+        
         <div class="pv-meta">
           <h1 class="pv-title">{{ prato.nome_produto|default:"Produto" }}</h1>
           {% if prato.descricao %}<p class="pv-desc">{{ prato.descricao }}</p>{% endif %}
@@ -335,13 +365,29 @@
         <div class="pv-section-title"><i class="fa-solid fa-wine-glass"></i> Sugestões de acompanhamentos</div>
         <div class="acc-grid">
           {% for item in acompanhamentos %}
-          <a class="acc-item" href="{% url 'prato' %}?restaurante_id={{ restaurante.id_restaurante }}&produto_id={{ item.id_produto }}">
-            <img src="{% img_or_fallback item.imagem %}" alt="{{ item.nome_produto }}">
-            <div class="acc-body">
-              <div class="acc-name">{{ item.nome_produto }}</div>
-              <div class="acc-price">R$ {{ item.preco|default:"0.00" }}</div>
-            </div>
-          </a>
+          <div class="acc-item">
+            <a href="{% url 'prato' %}?restaurante_id={{ restaurante.id_restaurante }}&produto_id={{ item.id_produto }}" style="text-decoration:none; color:inherit; display:block;">
+              
+              <div class="acc-img-wrap">
+                {% if item.imagem and "http" in item.imagem %}
+                  <img src="{{ item.imagem }}" alt="{{ item.nome_produto }}">
+                {% elif item.imagem %}
+                  <img src="{% img_or_fallback item.imagem %}" alt="{{ item.nome_produto }}">
+                {% else %}
+                  <i class="fa-solid fa-utensils fallback-icon"></i>
+                {% endif %}
+              </div>
+
+              <div class="acc-body">
+                <div class="acc-name">{{ item.nome_produto }}</div>
+                <div class="acc-price">R$ {{ item.preco|default:"0.00" }}</div>
+              </div>
+            </a>
+            
+            <a href="{% url 'adicionar_carrinho' %}?restaurante_id={{ restaurante.id_restaurante }}&produto_id={{ item.id_produto }}" class="acc-add-btn" title="Adicionar ao carrinho">
+              <i class="fa-solid fa-plus"></i>
+            </a>
+          </div>
           {% endfor %}
         </div>
       </section>

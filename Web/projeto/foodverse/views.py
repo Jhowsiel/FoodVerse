@@ -27,6 +27,7 @@ from .models import (
     TbPedidos,
     TbPedidosProdutos,
     TbProdutos,
+    TbReceitas,
     TbReservas,
     TbRestaurantes,
     TbCupons,
@@ -532,8 +533,18 @@ def prato_view(request):
 
     restaurante = get_object_or_404(TbRestaurantes, id_restaurante=rest_id, ativo=True)
     prato = get_object_or_404(TbProdutos, id_produto=p_id, restaurante=restaurante)
+    
+    # 1. Busca a Nutrição
     nutricao = TbNutricao.objects.filter(produto=prato).first()
+    
+    ingredientes = TbReceitas.objects.filter(
+        produto_venda=prato, 
+        ativo=True
+    ).select_related('insumo')
+    
     cliente = get_cliente_logado(request)
+    
+    # Restrições
     restricoes_list = []
     if prato.restricoes:
         restricoes_list = [t.strip() for t in prato.restricoes.split(',') if t.strip()]
@@ -559,7 +570,7 @@ def prato_view(request):
             produto=prato
         ).exists()
 
-        # POST — salvar avaliação
+    # POST — salvar avaliação
     if request.method == 'POST':
         if cliente and ja_pediu and not ja_avaliou:
             nota = _int_param(request.POST.get('avaliacao'), 5)
@@ -581,6 +592,7 @@ def prato_view(request):
         'restaurante': restaurante,
         'prato': prato,
         'nutricao': nutricao,
+        'ingredientes': ingredientes,
         'restricoes_list': restricoes_list,
         'acompanhamentos': acompanhamentos,
         'cliente': cliente,

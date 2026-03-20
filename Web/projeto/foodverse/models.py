@@ -259,7 +259,7 @@ class TbReceitas(models.Model):
         related_name="receitas_insumo"
     )
     quantidade = models.DecimalField(max_digits=10, decimal_places=3)
-    unidade = models.CharField(max_length=20)
+    unidades = models.CharField(max_length=20)
     ativo = models.BooleanField(default=True)
 
     class Meta:
