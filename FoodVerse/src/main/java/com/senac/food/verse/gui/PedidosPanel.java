@@ -587,11 +587,11 @@ public class PedidosPanel extends JPanel {
         
         String s = statusAtual.toLowerCase();
         int step = 0;
-        if(s.equals("pendente")) step = 1;
-        else if(s.equals("em preparo")) step = 2;
-        else if(s.equals("pronto")) step = 3;
-        else if(s.equals("em rota")) step = 4;
-        else if(s.equals("concluido")) step = 5;
+        if(s.equals("Pendente")) step = 1;
+        else if(s.equals("Preparando")) step = 2;
+        else if(s.equals("A caminho")) step = 3;
+        else if(s.equals("Entregue")) step = 4;
+        else if(s.equals("Cancelado")) step = 5;
         
         boolean isDelivery = modoEntrega.equalsIgnoreCase("Delivery");
         
@@ -599,16 +599,15 @@ public class PedidosPanel extends JPanel {
         pnl.add(criarSetaTimeline());
         pnl.add(criarBadgeTimeline("2. Cozinha", step >= 2));
         pnl.add(criarSetaTimeline());
-        pnl.add(criarBadgeTimeline("3. Pronto", step >= 3));
         
         if (isDelivery) {
             pnl.add(criarSetaTimeline());
-            pnl.add(criarBadgeTimeline("4. Em Rota", step >= 4));
+            pnl.add(criarBadgeTimeline("3. A caminho", step >= 3));
             pnl.add(criarSetaTimeline());
-            pnl.add(criarBadgeTimeline("5. Entregue", step >= 5));
+            pnl.add(criarBadgeTimeline("5. Entregue", step >= 4));
         } else {
             pnl.add(criarSetaTimeline());
-            pnl.add(criarBadgeTimeline("4. Concluído", step >= 4));
+            pnl.add(criarBadgeTimeline("4. Cancelado", step >= 5));
         }
         
         return pnl;
@@ -769,7 +768,7 @@ public class PedidosPanel extends JPanel {
             (nome) -> {
                 operacaoEmAndamento = false;
                 if(nome != null && !nome.trim().isEmpty()) {
-                    atualizarStatusEDespachoAsync(p, "em rota", nome);
+                    atualizarStatusEDespachoAsync(p, "A caminho", nome);
                 } else {
                     UIConstants.showWarning(this, "O nome do entregador é obrigatório.");
                 }
@@ -782,11 +781,11 @@ public class PedidosPanel extends JPanel {
     // =========================================================================
     static Color resolverCorStatus(String status) {
         String s = status.toLowerCase();
-        if(s.equals("pendente")) return UIConstants.WARNING_ORANGE; 
-        if(s.equals("em preparo")) return UIConstants.PRIMARY_RED; 
-        if(s.equals("pronto")) return UIConstants.SUCCESS_GREEN; 
-        if(s.equals("em rota")) return UIConstants.INFO_BLUE; 
-        if(s.equals("cancelado")) return UIConstants.DANGER_RED; 
+        if(s.equals("Pendente")) return UIConstants.WARNING_ORANGE; 
+        if(s.equals("Peparando")) return UIConstants.PRIMARY_RED; 
+        if(s.equals("A caminho")) return UIConstants.SUCCESS_GREEN; 
+        if(s.equals("Entregue")) return UIConstants.INFO_BLUE; 
+        if(s.equals("Cancelado")) return UIConstants.DANGER_RED; 
         return UIConstants.FG_MUTED; 
     }
 
