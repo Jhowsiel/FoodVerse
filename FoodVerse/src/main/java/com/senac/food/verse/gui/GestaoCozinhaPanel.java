@@ -102,7 +102,7 @@ public class GestaoCozinhaPanel extends JPanel {
                 
                 // Filtra apenas os pedidos que a cozinha precisa fazer AGORA
                 for(Pedidos p : todos) {
-                    if(p.getStatusPedido().equalsIgnoreCase("em preparo")) {
+                    if(p.getStatusPedido().equalsIgnoreCase("Preparando")) {
                         filaCozinha.add(p);
                     }
                 }
@@ -245,7 +245,7 @@ public class GestaoCozinhaPanel extends JPanel {
                 @Override
                 protected Boolean doInBackground() {
                     try {
-                        dao.atualizarStatusPedido(pedido.getIdPedido(), "pronto");
+                        dao.atualizarStatusPedido(pedido.getIdPedido(), "A caminho");
                         return true;
                     } catch (Exception ex) { return false; }
                 }

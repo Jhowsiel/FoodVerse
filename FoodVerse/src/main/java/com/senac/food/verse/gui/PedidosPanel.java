@@ -114,7 +114,7 @@ public class PedidosPanel extends JPanel {
         JPanel filters = new JPanel(new BorderLayout(10, 0));
         filters.setOpaque(false);
         
-        cbFiltro = new JComboBox<>(new String[] { "Ativos (Cozinha/Fila)", "Todos", "Pendente", "Em preparo", "Pronto", "Em rota", "Delivery", "Salão" });
+        cbFiltro = new JComboBox<>(new String[] { "Ativos (Cozinha/Fila)", "Todos", "Pendente", "Preparando", "A caminho", "Entregue", "Cancelado", "Salão" });
         UIConstants.styleCombo(cbFiltro);
         cbFiltro.setPreferredSize(new Dimension(160, 35));
         cbFiltro.addActionListener(e -> renderizarListaLocal());
@@ -540,7 +540,7 @@ public class PedidosPanel extends JPanel {
             JButton btnAccept = new JButton("ENVIAR PARA COZINHA");
             UIConstants.stylePrimary(btnAccept);
             btnAccept.setPreferredSize(new Dimension(280, 45));
-            btnAccept.addActionListener(e -> processarStatusAsync(p, "em preparo"));
+            btnAccept.addActionListener(e -> processarStatusAsync(p, "Preparando"));
             
             pnlFluxo.add(btnCancel); pnlFluxo.add(btnAccept);
             
@@ -548,7 +548,7 @@ public class PedidosPanel extends JPanel {
             JButton btnReady = new JButton("MARCAR COMO PRONTO");
             UIConstants.styleSuccess(btnReady);
             btnReady.setPreferredSize(new Dimension(300, 45));
-            btnReady.addActionListener(e -> processarStatusAsync(p, "pronto"));
+            btnReady.addActionListener(e -> processarStatusAsync(p, "A caminho"));
             pnlFluxo.add(btnReady);
             
         } else if ("pronto".equals(statusAtual)) {
