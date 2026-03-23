@@ -104,7 +104,7 @@ def popular_banco():
     bebidas_bra = [
         {"nome": "Guaraná Antarctica (Lata)", "preco": 8.00, "img": "https://assets.propmark.com.br/uploads/2020/01/guarana-antarctica.jpg"},
         {"nome": "Caipirinha de Limão", "preco": 12.00, "img": "https://guiadacozinha.com.br/wp-content/uploads/2023/09/Caipirinha-de-limao.jpg"},
-        {"nome": "Coca-Cola (Vidro)", "preco": 10.90, "img": "https://images.unsplash.com/photo-1618914059174-40767c46f838?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0"}
+        {"nome": "Coca-Cola (Vidro)", "preco": 10.90, "img": "https://images.unsplash.com/photo-1618914059174-40767c46f838?q=80&w=1170&auto=format&fit=crop"}
     ]
     for b in bebidas_bra:
         prods_bra.append(TbProdutos.objects.create(restaurante=rest_bra, nome_produto=b["nome"], preco=Decimal(str(b["preco"])), categoria="Bebidas", tipo_produto='PRODUTO', disponivel=True, imagem=b["img"]))
@@ -177,39 +177,88 @@ def popular_banco():
         ped.valor_total = total + rest_alvo.taxa_entrega
         ped.save()
 
-    print("⭐ [9/9] Gerando Avaliações, Reservas e Cupons...")
+    print("⭐ [9/9] Gerando Avaliações Personalizadas, Reservas e Cupons...")
     
-    comentarios = ["Comida maravilhosa, nota 10!", "Chegou super rápido e quente.", "O melhor prato que já pedi.", "Atendimento excelente do restaurante.", "Sabor impecável e porção generosa."]
+    # Dicionários de Avaliações Hiper-Realistas e Personalizadas por Categoria
+    comentarios_carnes = [
+        "A carne estava no ponto perfeito, extremamente suculenta! Nota 10.",
+        "Tempero maravilhoso, desmancha na boca. Chegou super quente.",
+        "Porção muito bem servida, a farofa e o vinagrete que acompanham são ótimos.",
+        "Excelente! A carne estava macia, mas a entrega demorou uns minutos a mais.",
+        "Melhor churrasco que já pedi por delivery aqui em São Paulo!",
+        "Qualidade premium mesmo, vale cada centavo pago."
+    ]
+
+    comentarios_japonesa = [
+        "Peixe muito fresquinho, cortes precisos. Montagem do prato impecável!",
+        "O salmão estava derretendo na boca. Qualidade de restaurante presencial.",
+        "Tudo muito bem embalado, sachês de shoyu e hashi vieram na medida certa.",
+        "Sushi de altíssima qualidade, o arroz (gohan) estava no ponto perfeito.",
+        "Chegou rápido e a apresentação estava linda. Muito saboroso!",
+        "Ótimo custo-benefício, as peças são de bom tamanho."
+    ]
+
+    comentarios_bebidas = [
+        "Chegou super gelada! Salvou o meu almoço.",
+        "Veio bem embalada, não derramou e estava na temperatura ideal.",
+        "Refrescante! Excelente para acompanhar o prato.",
+        "Tudo certo, bebida original e geladinha."
+    ]
     
-    # Avaliações dos Pratos (Para popular o Django no detalhe do prato)
+    # Lógica Inteligente para Distribuir as Avaliações sem repetição
     todos_produtos = prods_bra + prods_jap
     for prod in todos_produtos:
-        # Cria de 2 a 4 avaliações por produto
-        for _ in range(random.randint(2, 4)):
+        
+        # Seleciona o banco de frases com base na categoria do produto
+        if prod.categoria == "Bebidas":
+            lista_comentarios = comentarios_bebidas
+        elif prod.categoria == "Japonesa":
+            lista_comentarios = comentarios_japonesa
+        else: # "Carnes e Acompanhamentos"
+            lista_comentarios = comentarios_carnes
+
+        # Sorteia a quantidade de comentários a exibir (entre 2 e 4, garantindo que não excede o tamanho da lista)
+        qtd_avaliacoes = min(random.randint(2, 4), len(lista_comentarios))
+        
+        # O random.sample() garante que NÃO haverá repetição de comentários no mesmo prato
+        comentarios_escolhidos = random.sample(lista_comentarios, k=qtd_avaliacoes)
+
+        for comentario_texto in comentarios_escolhidos:
+            nota_sorteada = random.choice(  [Decimal("4.0"), Decimal("4.5"), Decimal("5.0")] if prod.categoria != "Bebidas" else [Decimal("3.5"), Decimal("4.0"), Decimal("4.5")])
+            
             TbAvaliacoesProdutos.objects.create(
                 cliente=random.choice(outros_clientes),
                 produto=prod,
-                nota=random.randint(4, 5),
-                comentario=random.choice(comentarios),
+                nota=nota_sorteada,
+                comentario=comentario_texto,
                 data_avaliacao=agora - timedelta(days=random.randint(1, 15))
             )
 
     # Avaliações Gerais dos Restaurantes
+    comentarios_restaurante = [
+        "Um dos melhores restaurantes de São Paulo, recomendo vivamente!",
+        "Ambiente ótimo (quando fui presencialmente) e delivery muito rápido.",
+        "Sempre peço e nunca me decepciono. Qualidade impecável da comida.",
+        "Muito bom, mas a taxa de entrega podia ser ligeiramente mais baixa.",
+        "Excelente atendimento, a embalagem é sustentável e a comida deliciosa."
+    ]
+
     for rest in [rest_bra, rest_jap]:
-        for _ in range(5):
+        comentarios_escolhidos_rest = random.sample(comentarios_restaurante, k=3)
+        for comentario_texto in comentarios_escolhidos_rest:
             TbAvaliacoes.objects.create(
                 cliente=random.choice(outros_clientes),
                 restaurante=rest,
-                nota=random.randint(4, 5),
-                comentario="Um dos melhores restaurantes de São Paulo, recomendo demais!",
+                nota=random.choice([Decimal("4.0"), Decimal("4.5"), Decimal("5.0")]),
+                comentario=comentario_texto,
                 data_avaliacao=agora - timedelta(days=random.randint(1, 15))
             )
 
-    # Reservas de Mesas (Para aparecer no Java e no Perfil do Cliente Django)
+    # Reservas de Mesas
     TbReservas.objects.create(cliente=cliente_site, restaurante=rest_bra, data_reserva=agora + timedelta(days=2), numero_pessoas=4, mesa="A12")
     TbReservas.objects.create(cliente=cliente_site, restaurante=rest_jap, data_reserva=agora + timedelta(days=5), numero_pessoas=2, mesa="M05")
 
-    # Cupons de Desconto (Para uso no carrinho)
+    # Cupons de Desconto
     TbCupons.objects.create(codigo="BEMVINDO10", desconto=Decimal("10.00"), validade=agora.date() + timedelta(days=30))
     TbCupons.objects.create(codigo="MASTER20", desconto=Decimal("20.00"), validade=agora.date() + timedelta(days=30))
 
