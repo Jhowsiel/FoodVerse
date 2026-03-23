@@ -14,7 +14,7 @@ from django.contrib.auth.models import User
 from foodverse.models import *
 
 def popular_banco():
-    print("🧹 [1/8] Limpando banco de dados (Estratégia Cascata)...")
+    print("🧹 [1/9] Limpando banco de dados (Estratégia Cascata)...")
     TbMovimentacaoEstoque.objects.all().delete()
     TbReceitas.objects.all().delete()
     TbAvaliacoesProdutos.objects.all().delete()
@@ -36,7 +36,7 @@ def popular_banco():
     senha_padrao = make_password('123456')
     agora = timezone.now()
 
-    print("🔐 [2/8] Criando Credenciais (Django, E-commerce e Java)...")
+    print("🔐 [2/9] Criando Credenciais (Django, E-commerce e Java)...")
     if not User.objects.filter(username='admin').exists():
         User.objects.create_superuser('admin', 'admin@foodverse.com', '123456')
 
@@ -53,21 +53,18 @@ def popular_banco():
 
     TbFuncionarios.objects.create(restaurante=None, nome="Administrador Master", username="admin", senha=123456, cargo="Admin", status="Ativo")
 
-    print("📦 [3/8] Criando Domínio de Status de Pedido...")
+    print("📦 [3/9] Criando Domínio de Status de Pedido...")
     status_dict = {}
     for i, nome in enumerate(["Pendente", "Preparando", "A caminho", "Entregue", "Cancelado"], 1):
         status_dict[nome] = TbStatusPedido.objects.create(id_status=i, nome_status=nome)
 
-    print("🏢 [4/8] Criando 12 Restaurantes (Foco em São Paulo)...")
-    
-    # Restaurantes 1 e 2 (Terão Pratos)
+    print("🏢 [4/9] Criando 12 Restaurantes (Foco em São Paulo)...")
     rest_bra = TbRestaurantes.objects.create(nome="O Braseiro Paulista", categoria="Brasileira", descricao="A verdadeira experiência do churrasco e culinária paulista.", avaliacao=Decimal("4.8"), tempo_entrega="40-55 min", taxa_entrega=Decimal("8.50"), cupom="BRASEIRO10", imagem="https://images.unsplash.com/photo-1544025162-d76694265947?w=400&q=80", ativo=True, aberto=True)
     rest_jap = TbRestaurantes.objects.create(nome="Tokyo Sushi SP", categoria="Japonesa", descricao="Peixes frescos diariamente do Mercadão. Tradição e sabor.", avaliacao=Decimal("4.9"), tempo_entrega="30-50 min", taxa_entrega=Decimal("12.00"), imagem="https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400&q=80", ativo=True, aberto=True)
     
     TbFuncionarios.objects.create(restaurante=rest_bra, nome="Gerente Braseiro", username="gerente_braseiro", senha=senha_padrao, cargo="Gerente", status="Ativo")
     TbFuncionarios.objects.create(restaurante=rest_jap, nome="Gerente Sushi", username="gerente_sushi", senha=senha_padrao, cargo="Gerente", status="Ativo")
 
-    # 10 Restaurantes Figurantes (Apenas para a Home)
     nomes_fig = ["Cantina da Nonna", "Smash Burger Berrini", "Vegano da Vila", "Nordeste Arretado", "Pizzaria Mooca", "Tacos Mexicanos", "Cozinha Árabe", "Doceria Gourmet", "Bar dos Espetos", "Pastelaria da Praça"]
     cats_fig = ["Italiana", "Fast Food", "Vegano", "Regional", "Pizzaria", "Mexicana", "Árabe", "Sobremesas", "Churrasco", "Lanches"]
     imgs_fig = [
@@ -80,7 +77,7 @@ def popular_banco():
     for i in range(10):
         TbRestaurantes.objects.create(nome=nomes_fig[i], categoria=cats_fig[i], descricao=f"Especialidade em {cats_fig[i]} na sua região.", avaliacao=Decimal(random.uniform(4.0, 4.9)).quantize(Decimal("0.0")), tempo_entrega="30-45 min", taxa_entrega=Decimal("6.00"), imagem=imgs_fig[i], ativo=True, aberto=True)
 
-    print("🥩 [5/8] Gerando Pratos e Bebidas (O Braseiro Paulista)...")
+    print("🥩 [5/9] Gerando Pratos e Bebidas (O Braseiro Paulista)...")
     insumo_carne = TbProdutos.objects.create(restaurante=rest_bra, nome_produto="Corte Bovino Premium", tipo_produto='INSUMO', preco=Decimal("45.00"), disponivel=True)
     TbEstoque.objects.create(produto=insumo_carne, quantidade=Decimal("150"), estoque_minimo=Decimal("30"), unidade="kg")
     
@@ -104,17 +101,15 @@ def popular_banco():
         TbReceitas.objects.create(produto_venda=p, insumo=insumo_carne, quantidade=Decimal("0.500"), unidades="kg")
         prods_bra.append(p)
 
-    # 3 Bebidas Braseiro
     bebidas_bra = [
         {"nome": "Guaraná Antarctica (Lata)", "preco": 8.00, "img": "https://assets.propmark.com.br/uploads/2020/01/guarana-antarctica.jpg"},
-        {"nome": "Agua com Limão", "preco": 12.00, "img": "https://guiadacozinha.com.br/wp-content/uploads/2023/09/Caipirinha-de-limao.jpg"},
-        {"nome": "Coca-Cola (Vidro)", "preco": 10.90, "img": "https://images.unsplash.com/photo-1618914059174-40767c46f838?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"}
+        {"nome": "Caipirinha de Limão", "preco": 12.00, "img": "https://guiadacozinha.com.br/wp-content/uploads/2023/09/Caipirinha-de-limao.jpg"},
+        {"nome": "Coca-Cola (Vidro)", "preco": 10.90, "img": "https://images.unsplash.com/photo-1618914059174-40767c46f838?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0"}
     ]
     for b in bebidas_bra:
         prods_bra.append(TbProdutos.objects.create(restaurante=rest_bra, nome_produto=b["nome"], preco=Decimal(str(b["preco"])), categoria="Bebidas", tipo_produto='PRODUTO', disponivel=True, imagem=b["img"]))
 
-
-    print("🍣 [6/8] Gerando Pratos e Bebidas (Tokyo Sushi SP)...")
+    print("🍣 [6/9] Gerando Pratos e Bebidas (Tokyo Sushi SP)...")
     insumo_peixe = TbProdutos.objects.create(restaurante=rest_jap, nome_produto="Salmão Chileno", tipo_produto='INSUMO', preco=Decimal("85.00"), disponivel=True)
     TbEstoque.objects.create(produto=insumo_peixe, quantidade=Decimal("40"), estoque_minimo=Decimal("10"), unidade="kg")
     
@@ -138,7 +133,6 @@ def popular_banco():
         TbReceitas.objects.create(produto_venda=p, insumo=insumo_peixe, quantidade=Decimal("0.250"), unidades="kg")
         prods_jap.append(p)
 
-    # 3 Bebidas Japonesa
     bebidas_jap = [
         {"nome": "Sake Nacional 175ml", "preco": 25.00, "img": "https://lovefoodfeed.com/wp-content/uploads/2024/02/what-is-sake-px-1200-03-1024x1024.jpg"},
         {"nome": "Chá Verde Gelado (Matcha)", "preco": 12.00, "img": "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400&q=80"},
@@ -147,11 +141,10 @@ def popular_banco():
     for b in bebidas_jap:
         prods_jap.append(TbProdutos.objects.create(restaurante=rest_jap, nome_produto=b["nome"], preco=Decimal(str(b["preco"])), categoria="Bebidas", tipo_produto='PRODUTO', disponivel=True, imagem=b["img"]))
 
-    print("📈 [7/8] Injetando Pedidos para Testar todos os 5 Status...")
+    print("📈 [7/9] Injetando Pedidos para Testar todos os 5 Status...")
     todos_clientes = [cliente_site] + outros_clientes
     status_lista_nome = ["Pendente", "Preparando", "A caminho", "Entregue", "Cancelado"]
     
-    # Cliente do E-commerce vai ter 5 pedidos, um em cada status
     for i, nome_status in enumerate(status_lista_nome):
         rest_alvo = rest_bra if i % 2 == 0 else rest_jap
         prods_alvo = prods_bra if rest_alvo == rest_bra else prods_jap
@@ -167,12 +160,10 @@ def popular_banco():
         
         pedido.valor_total = total + rest_alvo.taxa_entrega
         pedido.save()
-        
         if nome_status in ["Entregue", "Cancelado"]:
             TbPagamentos.objects.create(pedido=pedido, metodo_pagamento="Pix", valor=pedido.valor_total, data_pagamento=agora)
 
-    print("📊 [8/8] Criando Histórico Pesado para Popular Relatórios Java...")
-    # 30 pedidos entregues no histórico
+    print("📊 [8/9] Criando Histórico Pesado para Popular Relatórios Java...")
     for _ in range(30):
         c = random.choice(outros_clientes)
         rest_alvo = random.choice([rest_bra, rest_jap])
@@ -186,12 +177,48 @@ def popular_banco():
         ped.valor_total = total + rest_alvo.taxa_entrega
         ped.save()
 
+    print("⭐ [9/9] Gerando Avaliações, Reservas e Cupons...")
+    
+    comentarios = ["Comida maravilhosa, nota 10!", "Chegou super rápido e quente.", "O melhor prato que já pedi.", "Atendimento excelente do restaurante.", "Sabor impecável e porção generosa."]
+    
+    # Avaliações dos Pratos (Para popular o Django no detalhe do prato)
+    todos_produtos = prods_bra + prods_jap
+    for prod in todos_produtos:
+        # Cria de 2 a 4 avaliações por produto
+        for _ in range(random.randint(2, 4)):
+            TbAvaliacoesProdutos.objects.create(
+                cliente=random.choice(outros_clientes),
+                produto=prod,
+                nota=random.randint(4, 5),
+                comentario=random.choice(comentarios),
+                data_avaliacao=agora - timedelta(days=random.randint(1, 15))
+            )
+
+    # Avaliações Gerais dos Restaurantes
+    for rest in [rest_bra, rest_jap]:
+        for _ in range(5):
+            TbAvaliacoes.objects.create(
+                cliente=random.choice(outros_clientes),
+                restaurante=rest,
+                nota=random.randint(4, 5),
+                comentario="Um dos melhores restaurantes de São Paulo, recomendo demais!",
+                data_avaliacao=agora - timedelta(days=random.randint(1, 15))
+            )
+
+    # Reservas de Mesas (Para aparecer no Java e no Perfil do Cliente Django)
+    TbReservas.objects.create(cliente=cliente_site, restaurante=rest_bra, data_reserva=agora + timedelta(days=2), numero_pessoas=4, mesa="A12")
+    TbReservas.objects.create(cliente=cliente_site, restaurante=rest_jap, data_reserva=agora + timedelta(days=5), numero_pessoas=2, mesa="M05")
+
+    # Cupons de Desconto (Para uso no carrinho)
+    TbCupons.objects.create(codigo="BEMVINDO10", desconto=Decimal("10.00"), validade=agora.date() + timedelta(days=30))
+    TbCupons.objects.create(codigo="MASTER20", desconto=Decimal("20.00"), validade=agora.date() + timedelta(days=30))
+
     print("\n✅ MEGA SEED FINALIZADA COM SUCESSO! Sistema pronto e realista para a Banca.")
     print("\n📋 DADOS PARA LOGIN - DJANGO (E-Commerce):")
-    print("   Usuário (Cliente): cliente@email.com (ou cliente_teste) | Senha: 123456")
+    print("   Usuário (Cliente): cliente | Senha: 123456")
     print("   Administrador do Django (/admin): admin | Senha: 123456")
     print("\n📋 DADOS PARA LOGIN - JAVA (Desktop Backoffice):")
-    print("   Administrador Geral: admin_java | Senha: 123456")
+    print("   Administrador Geral: admin | Senha: 123456")
     print("   Gerente O Braseiro: gerente_braseiro | Senha: 123456")
     print("   Gerente Tokyo Sushi: gerente_sushi | Senha: 123456")
 
